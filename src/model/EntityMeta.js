@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {NotifyFn} from './interfaces'
+import type {NotifyFn} from '../interfaces'
 
 export type EntityMetaRec = {
     loading?: ?boolean;

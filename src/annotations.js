@@ -2,10 +2,9 @@
 
 import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
-import Cursor from './model/Cursor'
 import DepMeta from './meta/DepMeta'
 import MetaLoader from './meta/MetaLoader'
-import Selector from './model/Selector'
+import {AbstractCursor, AbstractSelector} from './selectorInterfaces'
 import type {Dependency, DepId, Setter} from './interfaces'
 import type {StateModel} from './model/interfaces'
 
@@ -40,7 +39,6 @@ function normalizeDeps(rDeps: Array<Object>): NormalizedDeps {
     }
 }
 
-
 export function klass(...rawDeps: Array<Dependency>): DepDecoratorFn {
     return function _klass<T>(proto: Class<T>): Dependency<T> {
         function fn(...args: Array<any>): T {
@@ -72,19 +70,19 @@ export function factory(...rawDeps: Array<Dependency>): DepDecoratorFn {
 export function model<T: StateModel>(mdl: Class<T>): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
 
-    function _select(selector: Selector): Cursor<T> {
+    function _select(selector: AbstractSelector): AbstractCursor<T> {
         return selector.select(mdl)
     }
     _select.displayName = 'select@' + debugName
-    const select = new DepMeta({deps: [DepMeta.get(Selector)], fn: _select})
+    const select = new DepMeta({deps: [DepMeta.get(AbstractSelector)], fn: _select})
 
-    function _getter(cursor: Cursor<T>): T {
+    function _getter(cursor: AbstractCursor<T>): T {
         return cursor.get()
     }
     _getter.displayName = 'getter@' + debugName
     const getter = new DepMeta({deps: [select], fn: _getter})
 
-    function _setter(cursor: Cursor<T>): Setter<T> {
+    function _setter(cursor: AbstractCursor<T>): Setter<T> {
         return function set(value: T): void {
             cursor.set(value)
         }

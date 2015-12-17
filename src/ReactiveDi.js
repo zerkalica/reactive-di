@@ -3,7 +3,7 @@
 import createProxy from './utils/createProxy'
 import DepMeta from './meta/DepMeta'
 import MetaLoader from './meta/MetaLoader'
-import Selector from './model/Selector'
+import {AbstractSelector} from './selectorInterfaces'
 import type {Dependency, NotifyDepFn, DepId} from './interfaces'
 
 type CacheRec = {
@@ -20,7 +20,7 @@ export default class ReactiveDi {
     _middlewares: {[id: DepId]: Array<DepMeta>};
 
     constructor(
-        selector: Selector,
+        selector: AbstractSelector,
         registeredDeps?: Array<[Dependency, Dependency]>,
         middlewares?: Array<[Dependency, Array<Dependency>]>
     ) {
@@ -35,7 +35,7 @@ export default class ReactiveDi {
         (middlewares || []).forEach(([frm, toDeps]) => {
             this._middlewares[loader.get(frm).id] = toDeps.map(toDep => loader.get(toDep))
         })
-        this._cache[DepMeta.get(Selector).id] = {
+        this._cache[DepMeta.get(AbstractSelector).id] = {
             value: selector,
             reCalculate: false
         };

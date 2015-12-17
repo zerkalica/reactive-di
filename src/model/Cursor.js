@@ -1,5 +1,6 @@
 /* @flow */
 import type {StateModel} from './interfaces'
+import {AbstractCursor} from '../selectorInterfaces'
 
 function setInPath<V: Object, S: StateModel>(
     newModel: V,
@@ -18,12 +19,13 @@ function setInPath<V: Object, S: StateModel>(
     return state.copy(rec)
 }
 
-export default class Cursor<V: StateModel> {
+export default class Cursor<V: StateModel> extends AbstractCursor<V> {
     _path: Array<string>;
     _state: StateModel;
     _selector: (v: StateModel) => any;
 
     constructor(path: Array<string>, state: StateModel) {
+        super()
         this._path = path
         /* eslint-disable no-new-func */
         this._selector = new Function('s', 'return ' + ['s'].concat(this._path).join('.'))
