@@ -1,0 +1,13 @@
+[ignore]
+.*/dist/.*
+.*/examples/.*
+
+[include]
+./src/.*
+
+[libs]
+
+[options]
+strip_root=true
+suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
+esproposal.decorators=ignore

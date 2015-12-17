@@ -1,0 +1,3 @@
+--timeout 5000
+--compilers js:babel/register
+test/tests.js

@@ -1,0 +1,74 @@
+{
+  "name": "reactive-di",
+  "version": "0.0.1",
+  "description": "Reactive dependency injection",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
+  "options": {
+    "builddir": "dist"
+  },
+  "scripts": {
+    "postinstall": "test -d conf && conf/resources/postinstall.sh $npm_package_name || exit 0",
+    "prepublish": "conf/resources/prepublish.sh",
+    "preversion": "conf/resources/checkgit.sh && npm test",
+    "version": "npm run build",
+    "postversion": "git push && git push --tags",
+    "precommit": "npm test",
+    "update": "ncu -ua && npm install",
+    "clean": "rm -rf $npm_package_options_builddir coverage",
+    "ver": "conf/resources/gen-version.sh",
+    "build": "npm run clean && babel src --source-maps --out-dir $npm_package_options_builddir",
+    "build.dev": "npm run build -- --watch",
+    "lint": "eslint src",
+    "check": "flow check",
+    "testonly": "mocha",
+    "test": "npm run lint && npm run check && npm run testonly",
+    "test.dev": "npm run testonly -- --growl --watch",
+    "test.cov": "babel-istanbul cover --report text --report html node_modules/mocha/bin/_mocha"
+  },
+  "author": "Stefan Zerkalica <zerkalica@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/zerkalica/reactive-di.git"
+  },
+  "keywords": [
+    "reactive-di",
+    "dependency injection",
+    "di",
+    "modular",
+    "state",
+    "functional",
+    "immutable",
+    "hot",
+    "live",
+    "replay",
+    "flux",
+    "elm"
+  ],
+  "files": [
+    "*.map",
+    "*.js",
+    "README.md",
+    "LICENSE",
+    "dist"
+  ],
+  "dependencies": {
+    "babel-runtime": "^6.3.19"
+  },
+  "devDependencies": {
+    "babel": "^6.3.13",
+    "babel-core": "^6.3.17",
+    "babel-eslint": "^5.0.0-beta6",
+    "babel-plugin-espower": "^2.0.0",
+    "eslint": "^1.10.3",
+    "eslint-config-airbnb": "2.1.1",
+    "eslint-config-airplus": "^1.0.4",
+    "eslint-plugin-react": "^3.11.3",
+    "glob": "^6.0.1",
+    "mocha": "^2.3.4",
+    "power-assert": "^1.2.0",
+    "sinon": "^1.17.2"
+  }
+}

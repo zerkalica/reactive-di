@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+# Check if any .js file changed
+CUR_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+git ls-remote --heads origin $CUR_BRANCH | grep -q 'refs/heads/'
+if [[ $? == 0 ]]; then
+    REFS=$(git diff --name-only origin/$CUR_BRANCH..HEAD)
+    if [[ $? == 0 ]]; then
+        if [ -z "$REFS" ]; then
+            echo "No local commits detected, bailing out."
+            exit 0
+        else
+            echo "Detected files in diff: $REFS"
+            npm run prepush
+        fi
+    else
+        echo "Failed to check for commits. Cannot run the tests."
+        exit 1
+    fi
+
+else
+    npm run prepush
+fi
+
+exit $?
