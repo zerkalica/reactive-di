@@ -1,6 +1,8 @@
 /* @flow */
 import EntityMeta from './EntityMeta'
+/* eslint-disable no-unused-vars */
 import type {Entity, EntityMetaRec} from './EntityMeta'
+/* eslint-enable no-unused-vars */
 
 type MapFn<T> = (v: T, index?: number) => T;
 type FilterFn<T> = (v: T, index?: number) => boolean;
@@ -31,7 +33,9 @@ export default class Collection<T: Entity> {
     }
 
     _create(items: Array<T>): Collection<T> {
-        this.$meta.notify && this.$meta.notify()
+        if (this.$meta.notify) {
+            this.$meta.notify()
+        }
         return new this.constructor(items)
     }
 
@@ -48,7 +52,7 @@ export default class Collection<T: Entity> {
     }
 
     remove(id: ?string): Collection<T> {
-            return this.filter(el => el.id !== id)
+        return this.filter(el => el.id !== id)
     }
 
     set(id: ?string, setFn: SetFn<T>): Collection<T> {
@@ -83,12 +87,14 @@ const obj: {
 obj[Symbol.iterator] = function iterator() {
     return {
         next() {
+            let rec
             if (this._pos < this.items.length) {
                 this._pos++
-                return {value: this.items[this._pos], done: false}
+                rec = {value: this.items[this._pos], done: false}
             } else {
-                return {done: true}
+                rec = {done: true}
             }
+            return rec
         },
         items: this.items,
         _pos: 0

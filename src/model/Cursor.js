@@ -26,6 +26,7 @@ export default class Cursor<V: StateModel> extends AbstractCursor<V> {
 
     constructor(path: Array<string>, state: StateModel) {
         super()
+        this._state = state
         this._path = path
         /* eslint-disable no-new-func */
         this._selector = new Function('s', 'return ' + ['s'].concat(this._path).join('.'))

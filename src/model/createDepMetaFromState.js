@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {Dependency, NotifyDepFn, DepId} from '../interfaces'
+import type {NotifyDepFn, DepId} from '../interfaces'
 import type {StateModel, DepIdGetter} from './interfaces'
 
 export class StateDepsMeta {

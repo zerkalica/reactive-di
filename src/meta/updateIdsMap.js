@@ -49,7 +49,7 @@ class PathMapUpdater {
         const stateIdToIdsMap = this._stateIdToIdsMap
         const paths: Array<DepId> = [];
 
-        this._pathsSets[id].forEach(function(stateId) {
+        this._pathsSets[id].forEach(function iterate(stateId) {
             let facets: Array<DepId> = stateIdToIdsMap[stateId];
             if (!facets) {
                 facets = []
@@ -72,8 +72,8 @@ function dependencyScanner(
     if (!acc.isAffected(id)) {
         acc.begin(id)
         for (let i = 0, j = parentDeps.length; i < j; i++) {
-            const {id, deps} = parentDeps[i];
-            dependencyScanner(id, deps, acc)
+            const dep = parentDeps[i];
+            dependencyScanner(dep.id, dep.deps, acc)
         }
         acc.end(id)
     }

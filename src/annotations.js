@@ -3,11 +3,11 @@
 import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
 import DepMeta, {createId} from './meta/DepMeta'
-import MetaLoader from './meta/MetaLoader'
 import {AbstractCursor, AbstractSelector} from './selectorInterfaces'
-import type {Dependency, DepId, Setter} from './interfaces'
+import type {Dependency, Setter} from './interfaces'
+/* eslint-disable no-unused-vars */
 import type {StateModel} from './model/interfaces'
-
+/* eslint-enable no-unused-vars */
 type DepDecoratorFn<T> = (target: Dependency<T>) => T;
 
 type NormalizedDeps = {
@@ -40,7 +40,7 @@ function normalizeDeps(rDeps: Array<Object>): NormalizedDeps {
 }
 
 export function klass(...rawDeps: Array<Dependency>): DepDecoratorFn {
-    return function _klass<T>(proto: Class<T>): Dependency<T> {
+    return function _klass<T>(proto: Dependency<T>): Dependency<T> {
         function fn(...args: Array<any>): T {
             /* eslint-disable new-cap */
             return new (proto: any)(args[0], args[1], args[2], args[3], args[4], args[5], args[6])
@@ -67,7 +67,7 @@ export function factory(...rawDeps: Array<Dependency>): DepDecoratorFn {
     }
 }
 
-export function model<T: StateModel>(mdl: Class<T>): Dependency<T> {
+export function model<T: StateModel>(mdl: Dependency<T>): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
     const id = createId()
 
@@ -84,7 +84,7 @@ export function model<T: StateModel>(mdl: Class<T>): Dependency<T> {
     const getter = new DepMeta({deps: [select], fn: _getter})
 
     function _setter(cursor: AbstractCursor<T>): Setter<T> {
-        return function set(value: T): void {
+        return function __setter(value: T): void {
             cursor.set(value)
         }
     }
@@ -103,32 +103,34 @@ export function model<T: StateModel>(mdl: Class<T>): Dependency<T> {
     return DepMeta.set(mdl, meta)
 }
 
-export function nonReactive<T: StateModel>(model: Dependency<T>): Function {
-    const debugName: string = getFunctionName((model: Function));
+export function nonReactive<T: StateModel>(dep: Dependency<T>): Function {
+    const {displayName, getter} = DepMeta.get(dep)
     function fn() {}
-    fn.displayName = 'nonReactiveGetter@' + debugName
-    const {displayName, getter} = DepMeta.get(model)
+    fn.displayName = 'nonReactiveGetter@' + displayName
     if (!getter) {
-        throw new Error('Not a state dependency: ' + debugName)
+        throw new Error('Not a state dependency: ' + displayName)
     }
     DepMeta.set(fn, getter)
     return fn;
 }
 
-export function setter<T: StateModel>(model: Dependency<T>, ...rawDeps: Array<Dependency>): DepDecoratorFn {
-    return function _setter<T>(sourceFn: Class<T>): Dependency<T> {
-        const debugName: string = getFunctionName((model: Function));
+export function set<S: StateModel>(
+    dep: Dependency<S>,
+    ...rawDeps: Array<Dependency>
+): DepDecoratorFn {
+    return function _set<T>(sourceFn: Dependency<T>): Dependency<T> {
+        const debugName: string = getFunctionName((dep: Function));
         const source: DepMeta = new DepMeta({
             ...normalizeDeps(rawDeps),
             fn: sourceFn
         });
 
-        const {setter}: DepMeta = DepMeta.get(model);
+        const {setter} = DepMeta.get(dep);
         if (!setter) {
             throw new Error('Not a state dependency: ' + debugName)
         }
-        function proxifyResult<R: Function>(source: R, setter: Setter): R {
-            return createProxy(source, [setter])
+        function proxifyResult<R: Function>(src: R, _setter: Setter): R {
+            return createProxy(src, [_setter])
         }
         proxifyResult.displayName = 'setter@' + debugName
 

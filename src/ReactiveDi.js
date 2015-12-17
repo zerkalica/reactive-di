@@ -4,7 +4,7 @@ import createProxy from './utils/createProxy'
 import DepMeta from './meta/DepMeta'
 import MetaLoader from './meta/MetaLoader'
 import {AbstractSelector} from './selectorInterfaces'
-import type {Dependency, NotifyDepFn, DepId} from './interfaces'
+import type {Dependency, DepId} from './interfaces'
 
 type CacheRec = {
     value: any;
@@ -73,17 +73,18 @@ export default class ReactiveDi {
     }
 
     _get(
-        {
+        depMeta: DepMeta,
+        tempCache: CacheMap,
+        debugCtx: Array<string>
+    ): any {
+        const {
             id,
             getter,
             displayName,
             deps,
             depNames,
             fn
-        }: DepMeta,
-        tempCache: CacheMap,
-        debugCtx: Array<string>
-    ): any {
+        } = depMeta
         const cache = getter ? tempCache : this._cache
         let cacheRec = cache[id]
         if (!cacheRec) {
@@ -113,7 +114,7 @@ export default class ReactiveDi {
             let result
             try {
                 result = fn(...defArgs)
-            } catch(e) {
+            } catch (e) {
                 e.message = e.message + ', @path: '
                     + debugCtx.concat([displayName]).join('.')
                 throw e
@@ -140,7 +141,9 @@ export default class ReactiveDi {
         return createProxy(result, resolvedMdls)
     }
 
-    get<T>(dep: Dependency<T>): T {
+    /* eslint-disable all */
+    get(dep: Dependency): any {
+    /* eslint-enable all */
         return this._get(this._metaLoader.get(dep), {}, [])
     }
 }

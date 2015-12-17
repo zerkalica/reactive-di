@@ -23,7 +23,7 @@ export default class MetaLoader {
         this._idToStateIdsMap = depMap;
 
         (registeredDeps || []).forEach(([depSrc, depTarget]) => {
-            this._cache[DepMeta.get(depSrc).id] =  DepMeta.get(depTarget)
+            this._cache[DepMeta.get(depSrc).id] = DepMeta.get(depTarget)
         })
     }
 

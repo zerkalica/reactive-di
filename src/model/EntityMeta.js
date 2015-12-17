@@ -10,25 +10,6 @@ export type EntityMetaRec = {
     notify?: ?NotifyFn;
 }
 
-export type Entity = {
-    id?: ?string;
-    $meta: EntityMeta;
-}
-
-export function create<R: Object, T: Object>(rec?: ?R, Entity: Class<T>): T {
-    return rec instanceof Entity
-        ? rec
-        : new Entity(rec)
-}
-
-export function copyProps<C: Entity, R: Object>(obj: C, rec: R): R {
-    const $meta = rec.$meta instanceof EntityMeta
-        ? rec.$meta
-        : obj.$meta.copy(rec.$meta)
-
-    return {...obj, ...rec, $meta}
-}
-
 export default class EntityMeta {
     loading: ?boolean;
     invalid: ?boolean;
@@ -79,4 +60,27 @@ export default class EntityMeta {
 
         return meta
     }
+}
+export function create<R: Object, T: Object>(
+    rec?: ?R,
+    /* eslint-disable no-undef */
+    Entity: Class<T>
+    /* eslint-enable no-undef */
+): T {
+    return rec instanceof Entity
+        ? rec
+        : new Entity(rec)
+}
+
+export function copyProps<C: Entity, R: Object>(obj: C, rec: R): R {
+    const $meta = rec.$meta instanceof EntityMeta
+        ? rec.$meta
+        : obj.$meta.copy(rec.$meta)
+
+    return {...obj, ...rec, $meta}
+}
+
+export type Entity = {
+    id?: ?string;
+    $meta: EntityMeta;
 }

@@ -3,8 +3,10 @@
 import createDepMetaFromState from './createDepMetaFromState'
 import Cursor from './Cursor'
 import DepMeta from '../meta/DepMeta'
-import type {DepId, Dependency, IdsMap, NotifyDepFn} from '../interfaces'
+import type {DepId, IdsMap, NotifyDepFn} from '../interfaces'
+/* eslint-disable no-unused-vars */
 import type {StateModel, DepIdGetter} from './interfaces'
+/* eslint-enable no-unused-vars */
 import {AbstractSelector, AbstractCursor} from '../selectorInterfaces'
 
 type PathMap = {[id: DepId]: Array<string>};

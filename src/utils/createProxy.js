@@ -9,7 +9,7 @@ function createFunctionProxy(source: Function, middlewares: Array<MiddlewareFn>)
         for (let i = 0, j = middlewares.length; i < j; i++) {
             const mdlRes = middlewares[i](res, args[0], args[1], args[2], args[3], args[4], args[5])
             if (mdlRes !== undefined) {
-                // res = mdlRes
+                res = mdlRes
             }
         }
         return res
@@ -19,6 +19,29 @@ function createFunctionProxy(source: Function, middlewares: Array<MiddlewareFn>)
     return functionProxy
 }
 
+function createMethodProxy(
+    name: string,
+    source: Object,
+    middlewares: Array<MiddlewareMap>
+): Function {
+    function methodProxy(...args: Array<any>): any {
+        let res = source[name].call(source, args[0], args[1], args[2], args[3], args[4], args[5])
+        for (let it = 0, jt = middlewares.length; it < jt; it++) {
+            const obj = middlewares[it]
+            if (obj[name]) {
+                const mdlRes = obj[name].call(obj, res, args[0], args[1], args[2], args[3], args[4], args[5])
+                if (mdlRes !== undefined) {
+                    res = mdlRes
+                }
+            }
+        }
+        return res
+    }
+    methodProxy.displayName = 'proxy@' + name
+
+    return methodProxy
+}
+
 function createObjectProxy(source: Object, middlewares: Array<MiddlewareMap>): Object {
     const props: {[prop: string]: Function} = {};
     const methods: Array<string> = Object.getOwnPropertyNames(Object.getPrototypeOf(source));
@@ -26,21 +49,7 @@ function createObjectProxy(source: Object, middlewares: Array<MiddlewareMap>): O
         const name = methods[i]
         const method = source[name]
         if ((method instanceof Function) && (method !== source.constructor)) {
-            function methodProxy(...args: Array<any>): any {
-                let res = source[name].call(source, args[0], args[1], args[2], args[3], args[4], args[5])
-                for (let it = 0, jt = middlewares.length; it < jt; it++) {
-                    const obj = middlewares[it]
-                    if (obj[name]) {
-                        const mdlRes = obj[name].call(obj, res, args[0], args[1], args[2], args[3], args[4], args[5])
-                        if (mdlRes !== undefined) {
-                            // res = mdlRes
-                        }
-                    }
-                }
-                return res
-            }
-            methodProxy.displayName = 'proxy@' + name
-            props[name] = methodProxy
+            props[name] = createMethodProxy(name, source, middlewares)
         }
     }
 
@@ -53,9 +62,9 @@ export default function createProxy(
 ): any {
     let result
     if (source instanceof Function) {
-        result: Function = createFunctionProxy((source: Function), (middlewares: Array<MiddlewareFn>));
+        result = createFunctionProxy((source: Function), (middlewares: Array<MiddlewareFn>));
     } else {
-        result: Object = createObjectProxy((source: Object), (middlewares: Array<MiddlewareMap>));
+        result = createObjectProxy((source: Object), (middlewares: Array<MiddlewareMap>));
     }
     return result
 }

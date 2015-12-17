@@ -1,6 +1,7 @@
 [ignore]
 .*/dist/.*
 .*/examples/.*
+.*/node_modules/.*
 
 [include]
 ./src/.*

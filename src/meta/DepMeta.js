@@ -2,20 +2,9 @@
 
 import type {DepId, Dependency} from '../interfaces'
 
-type DepMetaRec = {
-    id?: DepId;
-    displayName?: string;
-    fn: Function;
-    deps?: Array<DepMeta>;
-    depNames?: ?Array<string>;
-    tags?: Array<string>;
-    getter?: DepMeta;
-    setter?: DepMeta;
-}
-
 const metaSymbol = Symbol('__rdi__meta')
 
-let id: number = 0
+let id: number = 0;
 
 export function createId(): DepId {
     return '' + (++id)
@@ -50,7 +39,7 @@ export default class DepMeta {
         this.setter = rec.setter || null
     }
 
-    static set<T>(dep: Dependency<T>, meta: DepMeta): Dependency<T> {
+    static set(dep: Dependency, meta: DepMeta): Dependency {
         if ((dep: Function)[metaSymbol]) {
             throw new Error('Annotation already defined for ' + ((dep: Function).displayName || String(dep)))
         }
@@ -58,11 +47,22 @@ export default class DepMeta {
         return dep
     }
 
-    static get<T>(dep: Dependency<T>): DepMeta {
+    static get(dep: Dependency): DepMeta {
         const meta: DepMeta = (dep: Function)[metaSymbol];
         if (!meta || !(meta instanceof DepMeta)) {
             throw new TypeError('Not an annotated dependency: ' + ((dep: Function).displayName || String(dep)))
         }
         return meta
     }
+}
+
+type DepMetaRec = {
+    id?: DepId;
+    displayName?: string;
+    fn: Function;
+    deps?: Array<DepMeta>;
+    depNames?: ?Array<string>;
+    tags?: Array<string>;
+    getter?: DepMeta;
+    setter?: DepMeta;
 }
