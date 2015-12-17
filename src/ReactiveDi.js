@@ -1,8 +1,8 @@
 /* @flow */
 
 import createProxy from './utils/createProxy'
-import DepMeta from './DepMeta'
-import MetaLoader from './MetaLoader'
+import DepMeta from './meta/DepMeta'
+import MetaLoader from './meta/MetaLoader'
 import Selector from './model/Selector'
 import type {Dependency, NotifyDepFn, DepId} from './interfaces'
 

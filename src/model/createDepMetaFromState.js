@@ -1,6 +1,6 @@
 /* @flow */
 
-import DepMeta from '../DepMeta'
+import DepMeta from '../meta/DepMeta'
 import type {Dependency, NotifyDepFn, DepId} from '../interfaces'
 import type {StateModel} from './interfaces'
 

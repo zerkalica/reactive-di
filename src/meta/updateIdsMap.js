@@ -1,7 +1,7 @@
 /* @flow */
 
 import DepMeta from './DepMeta'
-import type {DepId, IdsMap} from './interfaces'
+import type {DepId, IdsMap} from '../interfaces'
 
 class PathMapUpdater {
     _pathsSets: {[id: DepId]: Set<DepId>};
@@ -32,12 +32,12 @@ class PathMapUpdater {
         return false
     }
 
-    begin(id: DepId) {
+    begin(id: DepId): void {
         this._pathsSets[id] = new Set()
         this._pathsSetsValues.push(id)
     }
 
-    addPath(stateId: DepId) {
+    addPath(stateId: DepId): void {
         const pathsSets = this._pathsSets
         const pathsSetsValues = this._pathsSetsValues
         for (let i = 0, j = pathsSetsValues.length; i < j; i++) {
@@ -45,7 +45,7 @@ class PathMapUpdater {
         }
     }
 
-    end(id: DepId) {
+    end(id: DepId): void {
         const stateIdToIdsMap = this._stateIdToIdsMap
         const paths: Array<DepId> = [];
 

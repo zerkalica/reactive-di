@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {DepId, Dependency} from './interfaces'
+import type {DepId, Dependency} from '../interfaces'
 
 type DepMetaRec = {
     id?: DepId;

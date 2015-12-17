@@ -2,8 +2,8 @@
 
 import updateIdsMap from './updateIdsMap'
 import DepMeta from './DepMeta'
-import Selector from './model/Selector'
-import type {Dependency, NotifyDepsFn, IdsMap, DepId} from './interfaces'
+import Selector from '../model/Selector'
+import type {Dependency, NotifyDepsFn, IdsMap, DepId} from '../interfaces'
 
 export default class MetaLoader {
     _cache: {[id: DepId]: DepMeta};
