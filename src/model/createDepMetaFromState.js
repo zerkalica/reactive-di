@@ -1,8 +1,7 @@
 /* @flow */
 
-import DepMeta from '../meta/DepMeta'
 import type {Dependency, NotifyDepFn, DepId} from '../interfaces'
-import type {StateModel} from './interfaces'
+import type {StateModel, DepIdGetter} from './interfaces'
 
 export class StateDepsMeta {
     depMap: {[id: DepId]: Array<DepId>};
@@ -19,11 +18,11 @@ function getPathIds(
     path: Array<string>,
     parents: Array<DepId>,
     meta: StateDepsMeta,
-    notify: NotifyDepFn
+    notify: NotifyDepFn,
+    getDepId: DepIdGetter
 ): void {
     const {depMap, pathMap} = meta
-    const modelMeta = DepMeta.get(obj.constructor)
-    const {id} = modelMeta
+    const id = getDepId(obj)
 
     pathMap[id] = path
     obj.$meta.notify = function _notify() {
@@ -43,7 +42,7 @@ function getPathIds(
         const key: string = keys[i];
         const prop: StateModel = obj[key];
         if (prop !== null && typeof prop === 'object') {
-            getPathIds(prop, path.concat(key), parents, meta, notify)
+            getPathIds(prop, path.concat(key), parents, meta, notify, getDepId)
         }
     }
     parents.pop()
@@ -51,14 +50,15 @@ function getPathIds(
 
 export default function createDepMetaFromState(
     obj: StateModel,
-    notify: NotifyDepFn
+    notify: NotifyDepFn,
+    getDepId: DepIdGetter
 ): StateDepsMeta {
     if (obj === null || typeof obj !== 'object') {
         throw new TypeError('Not an object: ' + String(obj))
     }
 
     const stateDepsMeta = new StateDepsMeta()
-    getPathIds(obj, [], [], stateDepsMeta, notify)
+    getPathIds(obj, [], [], stateDepsMeta, notify, getDepId)
 
     return stateDepsMeta
 }

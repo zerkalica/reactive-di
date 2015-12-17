@@ -2,7 +2,7 @@
 
 import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
-import DepMeta from './meta/DepMeta'
+import DepMeta, {createId} from './meta/DepMeta'
 import MetaLoader from './meta/MetaLoader'
 import {AbstractCursor, AbstractSelector} from './selectorInterfaces'
 import type {Dependency, DepId, Setter} from './interfaces'
@@ -69,9 +69,10 @@ export function factory(...rawDeps: Array<Dependency>): DepDecoratorFn {
 
 export function model<T: StateModel>(mdl: Class<T>): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
+    const id = createId()
 
     function _select(selector: AbstractSelector): AbstractCursor<T> {
-        return selector.select(mdl)
+        return selector.select(id)
     }
     _select.displayName = 'select@' + debugName
     const select = new DepMeta({deps: [DepMeta.get(AbstractSelector)], fn: _select})
@@ -91,6 +92,7 @@ export function model<T: StateModel>(mdl: Class<T>): Dependency<T> {
     const setter = new DepMeta({deps: [select], fn: _setter})
 
     const meta = new DepMeta({
+        id,
         fn: _getter,
         deps: [select],
         getter,

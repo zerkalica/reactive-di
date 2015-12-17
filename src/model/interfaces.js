@@ -1,4 +1,7 @@
 /* @flow */
+
+import {DepId} from '../interfaces'
+
 export type MergeRec = {
     [prop: string]: any;
 };
@@ -9,3 +12,5 @@ export type StateModel<T> = {
     },
     copy: (arg: MergeRec) => StateModel & T;
 };
+
+export type DepIdGetter<T: Object> = (obj: T) => DepId;

@@ -1,7 +1,7 @@
 /* @flow */
 
 import DepMeta from './meta/DepMeta'
-import type {IdsMap, NotifyDepFn, Dependency} from './interfaces'
+import type {DepId, IdsMap, NotifyDepFn, Dependency} from './interfaces'
 
 export class AbstractCursor<V> {
     get(): V|any {
@@ -16,7 +16,7 @@ export class AbstractSelector {
         return {}
     }
 
-    select<T: Object>(cls: Dependency<T>): AbstractCursor<T> {
+    select<T: Object>(id: DepId): AbstractCursor<T> {
         return new AbstractCursor()
     }
 }
