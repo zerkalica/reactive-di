@@ -50,7 +50,7 @@ export default class ReactiveDi {
         }
     }
 
-    mount(dep: Dependency): void {
+    mount<T>(dep: Dependency<T>): void {
         const {id, deps} = this._metaLoader.get(dep)
         this._metaLoader.update(id, deps)
         this._cache[id] = {
@@ -61,7 +61,7 @@ export default class ReactiveDi {
         this._listeners.push(dep)
     }
 
-    unmount(dep: Dependency): void {
+    unmount<T>(dep: Dependency<T>): void {
         const {id} = this._metaLoader.get(dep)
         // do not call listener on first state change
         const cache = this._cache[id] || {}
@@ -125,7 +125,7 @@ export default class ReactiveDi {
         return cacheRec.value
     }
 
-    _proxify(result: any, id: DepId): any {
+    _proxify<T: Function>(result: T, id: DepId): T {
         const middlewares = this._middlewares[id]
         if (!middlewares) {
             return result
@@ -140,7 +140,7 @@ export default class ReactiveDi {
         return createProxy(result, resolvedMdls)
     }
 
-    get(dep: Dependency): any {
+    get<T>(dep: Dependency<T>): T {
         return this._get(this._metaLoader.get(dep), {}, [])
     }
 }
