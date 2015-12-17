@@ -11,11 +11,12 @@
   },
   "scripts": {
     "postinstall": "test -d conf && conf/resources/postinstall.sh $npm_package_name || exit 0",
+    "prepush": "npm test",
     "prepublish": "conf/resources/prepublish.sh",
     "preversion": "conf/resources/checkgit.sh && npm test",
     "version": "npm run build",
     "postversion": "git push && git push --tags",
-    "precommit": "npm test",
+    "precommit": "exit 0",
     "update": "ncu -ua && npm install",
     "clean": "rm -rf $npm_package_options_builddir coverage",
     "ver": "conf/resources/gen-version.sh",
