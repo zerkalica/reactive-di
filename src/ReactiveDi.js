@@ -141,9 +141,7 @@ export default class ReactiveDi {
         return createProxy(result, resolvedMdls)
     }
 
-    /* eslint-disable all */
     get(dep: Dependency): any {
-    /* eslint-enable all */
         return this._get(this._metaLoader.get(dep), {}, [])
     }
 }

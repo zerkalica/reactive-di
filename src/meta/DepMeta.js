@@ -1,6 +1,7 @@
 /* @flow */
 
 import type {DepId, Dependency} from '../interfaces'
+import getFunctionName from '../utils/getFunctionName'
 
 const metaSymbol = Symbol('__rdi__meta')
 
@@ -28,7 +29,7 @@ export default class DepMeta {
         this.kind = rec.getter ? 'state' : 'func'
 
         this.id = rec.id || createId()
-        this.displayName = rec.displayName || rec.fn.displayName
+        this.displayName = rec.displayName || getFunctionName(rec.fn)
         this.fn = rec.fn
 
         this.deps = rec.deps || []
