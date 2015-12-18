@@ -11,7 +11,7 @@
   },
   "scripts": {
     "postinstall": "test -d conf && conf/resources/postinstall.sh $npm_package_name || exit 0",
-    "prepush": "npm test",
+    "prepush": "exit 0 && npm test",
     "prepublish": "conf/resources/prepublish.sh",
     "preversion": "conf/resources/checkgit.sh && npm test",
     "version": "npm run build",

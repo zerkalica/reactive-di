@@ -89,16 +89,28 @@ function model<T: StateModel>(tags: Array<string>, mdl: Dependency<T>): Dependen
         return selector.select(id)
     }
     _select.displayName = 'sel@' + debugName
-    const select = new DepMeta({deps: [DepMeta.get(AbstractSelector)], fn: _select, tags: [debugName, 'sel'].concat(tags)})
-    const getter = new DepMeta({deps: [select], fn: _getter, tags: [debugName, 'get'].concat(tags)})
-    const setter = new DepMeta({deps: [select], fn: _setter, tags: [debugName, 'set'].concat(tags)})
+    const select = new DepMeta({
+        deps: [DepMeta.get(AbstractSelector)],
+        fn: _select,
+        tags: [debugName, 'sel'].concat(tags)
+    })
+    const getter = new DepMeta({
+        deps: [select],
+        fn: _getter,
+        tags: [debugName, 'get'].concat(tags)
+    })
+    const __setter = new DepMeta({
+        deps: [select],
+        fn: _setter,
+        tags: [debugName, 'set'].concat(tags)
+    })
 
     const meta = new DepMeta({
         id,
         fn: _getter,
         deps: [select],
         getter,
-        setter,
+        setter: __setter,
         tags: [debugName, 'model'].concat(tags)
     })
 

@@ -18,9 +18,6 @@ function defaultGetDepId(obj: Object): DepId {
 export default class Selector<S: StateModel> extends AbstractSelector {
     _state: S;
     _pathMap: PathMap;
-
-    depMap: IdsMap;
-
     _getDepId: DepIdGetter;
 
     constructor(state: S, getDepId: ?DepIdGetter) {
