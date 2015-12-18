@@ -29,12 +29,12 @@ export default class DepMeta {
         this.kind = rec.getter ? 'state' : 'func'
 
         this.id = rec.id || createId()
-        this.displayName = rec.displayName || getFunctionName(rec.fn)
+        this.tags = rec.tags || []
+        this.displayName = this.tags.join('@') || getFunctionName(rec.fn)
         this.fn = rec.fn
 
         this.deps = rec.deps || []
         this.depNames = rec.depNames || []
-        this.tags = rec.tags || []
 
         this.getter = rec.getter || null
         this.setter = rec.setter || null
@@ -59,7 +59,6 @@ export default class DepMeta {
 
 type DepMetaRec = {
     id?: DepId;
-    displayName?: string;
     fn: Function;
     deps?: Array<DepMeta>;
     depNames?: ?Array<string>;

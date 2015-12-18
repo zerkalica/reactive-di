@@ -3,6 +3,8 @@
   "plugins": [
       "syntax-flow",
       "espower",
-      "transform-flow-strip-types"
+      "flow-comments",
+      "transform-flow-strip-types",
+      "transform-runtime"
   ]
 }

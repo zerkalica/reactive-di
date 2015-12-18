@@ -22,7 +22,7 @@ export default class ReactiveDi {
     constructor(
         selector: AbstractSelector,
         registeredDeps?: Array<[Dependency, Dependency]>,
-        middlewares?: Array<[Dependency, Array<Dependency>]>
+        middlewares?: Array<[Dependency|Array<string>, Array<Dependency>]>
     ) {
         this._cache = Object.create(null)
         const loader = this._metaLoader = new MetaLoader(
@@ -33,7 +33,11 @@ export default class ReactiveDi {
         this._listeners = []
         this._middlewares = Object.create(null);
         (middlewares || []).forEach(([frm, toDeps]) => {
-            this._middlewares[loader.get(frm).id] = toDeps.map(toDep => loader.get(toDep))
+            if (Array.isArray(frm)) {
+
+            } else {
+                this._middlewares[loader.get(frm).id] = toDeps.map(toDep => loader.get(toDep))
+            }
         })
         this._cache[DepMeta.get(AbstractSelector).id] = {
             value: selector,

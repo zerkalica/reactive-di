@@ -17,6 +17,20 @@ type NormalizedDeps = {
 
 type RawDepMap = {[arg: string]: Dependency};
 
+function proxifyResult<R: Function>(src: R, set: Setter): R {
+    return createProxy(src, [set])
+}
+
+function _getter<T>(cursor: AbstractCursor<T>): T {
+    return cursor.get()
+}
+
+function _setter<T: Object>(cursor: AbstractCursor<T>): Setter<T> {
+    return function __setter(value: T): void {
+        cursor.set(value)
+    }
+}
+
 function normalizeDeps(rDeps: Array<Object>): NormalizedDeps {
     const deps: Array<DepMeta> = [];
     let depNames: ?Array<string> = null;
@@ -39,57 +53,45 @@ function normalizeDeps(rDeps: Array<Object>): NormalizedDeps {
     }
 }
 
-export function klass(...rawDeps: Array<Dependency>): DepDecoratorFn {
+function klass(tags: Array<string>, rawDeps: Array<Dependency>): DepDecoratorFn {
     return function _klass<T>(proto: Dependency<T>): Dependency<T> {
-        function fn(...args: Array<any>): T {
+        const debugName: string = getFunctionName((proto: Function));
+        function createObject(...args: Array<any>): T {
             /* eslint-disable new-cap */
             return new (proto: any)(args[0], args[1], args[2], args[3], args[4], args[5], args[6])
             /* eslint-enable new-cap */
         }
-        fn.displayName = 'klass@' + getFunctionName((proto: Function))
+        createObject.displayName = 'klass@' + debugName
         const meta: DepMeta = new DepMeta({
             ...normalizeDeps(rawDeps),
-            fn,
-            tags: ['class']
+            fn: createObject,
+            tags: [debugName, 'klass'].concat(tags)
         });
         return DepMeta.set(proto, meta)
     }
 }
 
-export function factory(...rawDeps: Array<Dependency>): DepDecoratorFn {
+function factory(tags: Array<string>, rawDeps: Array<Dependency>): DepDecoratorFn {
     return function _factory<T: Function>(fn: T): Dependency<T> {
         const meta = new DepMeta({
             ...normalizeDeps(rawDeps),
             fn,
-            tags: ['factory']
+            tags: ['factory'].concat(tags)
         })
         return DepMeta.set(fn, meta)
     }
 }
 
-export function model<T: StateModel>(mdl: Dependency<T>): Dependency<T> {
+function model<T: StateModel>(tags: Array<string>, mdl: Dependency<T>): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
     const id = createId()
-
     function _select(selector: AbstractSelector): AbstractCursor<T> {
         return selector.select(id)
     }
-    _select.displayName = 'select@' + debugName
-    const select = new DepMeta({deps: [DepMeta.get(AbstractSelector)], fn: _select})
-
-    function _getter(cursor: AbstractCursor<T>): T {
-        return cursor.get()
-    }
-    _getter.displayName = 'getter@' + debugName
-    const getter = new DepMeta({deps: [select], fn: _getter})
-
-    function _setter(cursor: AbstractCursor<T>): Setter<T> {
-        return function __setter(value: T): void {
-            cursor.set(value)
-        }
-    }
-    _setter.displayName = 'setter@' + debugName
-    const setter = new DepMeta({deps: [select], fn: _setter})
+    _select.displayName = 'sel@' + debugName
+    const select = new DepMeta({deps: [DepMeta.get(AbstractSelector)], fn: _select, tags: [debugName, 'sel'].concat(tags)})
+    const getter = new DepMeta({deps: [select], fn: _getter, tags: [debugName, 'get'].concat(tags)})
+    const setter = new DepMeta({deps: [select], fn: _setter, tags: [debugName, 'set'].concat(tags)})
 
     const meta = new DepMeta({
         id,
@@ -97,7 +99,7 @@ export function model<T: StateModel>(mdl: Dependency<T>): Dependency<T> {
         deps: [select],
         getter,
         setter,
-        tags: ['model']
+        tags: [debugName, 'model'].concat(tags)
     })
 
     return DepMeta.set(mdl, meta)
@@ -114,32 +116,61 @@ export function nonReactive<T: StateModel>(dep: Dependency<T>): Function {
     return fn;
 }
 
-export function set<S: StateModel>(
+function setter<S: StateModel>(
+    tags: Array<string>,
     dep: Dependency<S>,
-    ...rawDeps: Array<Dependency>
+    rawDeps: Array<Dependency>
 ): DepDecoratorFn {
-    return function _set<T>(sourceFn: Dependency<T>): Dependency<T> {
+    return function _setter<T>(sourceFn: Dependency<T>): Dependency<T> {
         const debugName: string = getFunctionName((dep: Function));
         const source: DepMeta = new DepMeta({
             ...normalizeDeps(rawDeps),
-            fn: sourceFn
+            fn: sourceFn,
+            tags: [debugName, 'source'].concat(tags)
         });
 
-        const {setter} = DepMeta.get(dep);
-        if (!setter) {
+        const setterMeta = DepMeta.get(dep).setter
+        if (!setterMeta) {
             throw new Error('Not a state dependency: ' + debugName)
         }
-        function proxifyResult<R: Function>(src: R, _setter: Setter): R {
-            return createProxy(src, [_setter])
-        }
-        proxifyResult.displayName = 'setter@' + debugName
 
         const meta: DepMeta = new DepMeta({
-            deps: [source, setter],
+            deps: [source, setterMeta],
             fn: proxifyResult,
-            tags: ['setter']
+            tags: [debugName, 'setter'].concat(tags)
         });
 
         return DepMeta.set(sourceFn, meta)
+    }
+}
+
+type SetterFn<S> = (dep: Dependency<S>, ...rawDeps: Array<Dependency>) => DepDecoratorFn;
+export function createSetter(tags: Array<string> = []): SetterFn {
+    return function _setter<S: StateModel>(
+        dep: Dependency<S>,
+        ...rawDeps: Array<Dependency>
+    ): DepDecoratorFn {
+        return setter(tags, dep, rawDeps)
+    }
+}
+
+type ModelFn<T> = (mdl: Dependency<T>) => DepDecoratorFn;
+export function createModel(tags: Array<string> = []): ModelFn {
+    return function _model<T: StateModel>(mdl: Dependency<T>): Dependency<T> {
+        return model(tags, mdl)
+    }
+}
+
+type FactoryFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn;
+export function createFactory(tags: Array<string> = []): FactoryFn {
+    return function _factory<T>(...rawDeps: Array<Dependency>): DepDecoratorFn {
+        return factory(tags, rawDeps)
+    }
+}
+
+type KlassFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn;
+export function createKlass(tags: Array<string> = []): KlassFn {
+    return function _klass<T>(...rawDeps: Array<Dependency>): DepDecoratorFn {
+        return klass(tags, rawDeps)
     }
 }
