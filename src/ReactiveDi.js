@@ -33,9 +33,7 @@ export default class ReactiveDi {
         this._listeners = []
         this._middlewares = Object.create(null);
         (middlewares || []).forEach(([frm, toDeps]) => {
-            if (Array.isArray(frm)) {
-
-            } else {
+            if (!Array.isArray(frm)) {
                 this._middlewares[loader.get(frm).id] = toDeps.map(toDep => loader.get(toDep))
             }
         })
@@ -46,10 +44,10 @@ export default class ReactiveDi {
     }
 
     _notify(ids: Array<DepId>): void {
-        for (let i = 0; i < ids.length; i++) {
-            const dep = this._cache[ids[i]]
-            if (dep) {
-                dep.reCalculate = true
+        const cache = this._cache
+        for (let i = 0, k = ids.length; i < k; i++) {
+            if (cache[ids[i]]) {
+                cache[ids[i]].reCalculate = true
             }
         }
     }
@@ -145,7 +143,7 @@ export default class ReactiveDi {
         return createProxy(result, resolvedMdls)
     }
 
-    get(dep: Dependency): any {
+    get<T>(dep: Dependency<T>): T {
         return this._get(this._metaLoader.get(dep), {}, [])
     }
 }

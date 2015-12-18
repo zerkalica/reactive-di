@@ -58,7 +58,7 @@
   "devDependencies": {
     "babel-cli": "^6.3.17",
     "babel-core": "^6.3.17",
-    "babel-eslint": "^5.0.0-beta6",
+    "babel-eslint": "^5.0.0-0",
     "babel-plugin-espower": "^2.0.0",
     "babel-plugin-flow-comments": "^6.3.19",
     "babel-plugin-syntax-flow": "^6.3.13",
@@ -68,7 +68,7 @@
     "babel-preset-stage-0": "^6.3.13",
     "eslint": "^1.10.3",
     "eslint-config-airbnb": "2.1.1",
-    "eslint-config-airplus": "^1.0.4",
+    "eslint-config-airplus": "^1.0.6",
     "eslint-plugin-react": "^3.11.3",
     "glob": "^6.0.1",
     "mocha": "^2.3.4",

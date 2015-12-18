@@ -61,10 +61,10 @@ export default function createProxy(
     middlewares: Array<any>
 ): any {
     let result
-    if (source instanceof Function) {
-        result = createFunctionProxy((source: Function), (middlewares: Array<MiddlewareFn>));
-    } else {
+    if (typeof source === 'object') {
         result = createObjectProxy((source: Object), (middlewares: Array<MiddlewareMap>));
+    } else {
+        result = createFunctionProxy((source: Function), (middlewares: Array<MiddlewareFn>));
     }
     return result
 }
