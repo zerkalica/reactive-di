@@ -121,7 +121,7 @@ function setter<S: StateModel>(
     dep: Dependency<S>,
     rawDeps: Array<Dependency>
 ): DepDecoratorFn {
-    return function _setter<T>(sourceFn: Dependency<T>): Dependency<T> {
+    return function __setter<T>(sourceFn: Dependency<T>): Dependency<T> {
         const debugName: string = getFunctionName((dep: Function));
         const source: DepMeta = new DepMeta({
             ...normalizeDeps(rawDeps),
@@ -144,9 +144,9 @@ function setter<S: StateModel>(
     }
 }
 
-type SetterFn<S> = (dep: Dependency<S>, ...rawDeps: Array<Dependency>) => DepDecoratorFn;
+type SetterFn<S> = (dep: Dependency<S>, ...rawDeps: Array<Dependency>) => DepDecoratorFn<S>;
 export function createSetter(tags: Array<string> = []): SetterFn {
-    return function _setter<S: StateModel>(
+    return function __setter<S: StateModel>(
         dep: Dependency<S>,
         ...rawDeps: Array<Dependency>
     ): DepDecoratorFn {
@@ -154,23 +154,23 @@ export function createSetter(tags: Array<string> = []): SetterFn {
     }
 }
 
-type ModelFn<T> = (mdl: Dependency<T>) => DepDecoratorFn;
+type ModelFn<T> = (mdl: Dependency<T>) => DepDecoratorFn<T>;
 export function createModel(tags: Array<string> = []): ModelFn {
     return function _model<T: StateModel>(mdl: Dependency<T>): Dependency<T> {
         return model(tags, mdl)
     }
 }
 
-type FactoryFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn;
+type FactoryFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn<T>;
 export function createFactory(tags: Array<string> = []): FactoryFn {
-    return function _factory<T>(...rawDeps: Array<Dependency>): DepDecoratorFn {
+    return function _factory<T>(...rawDeps: Array<Dependency>): DepDecoratorFn<T> {
         return factory(tags, rawDeps)
     }
 }
 
-type KlassFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn;
+type KlassFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn<T>;
 export function createKlass(tags: Array<string> = []): KlassFn {
-    return function _klass<T>(...rawDeps: Array<Dependency>): DepDecoratorFn {
+    return function _klass<T>(...rawDeps: Array<Dependency>): DepDecoratorFn<T> {
         return klass(tags, rawDeps)
     }
 }
