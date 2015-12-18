@@ -5,8 +5,8 @@ import updateIdsMap from '../updateIdsMap'
 import DepMeta from '../DepMeta'
 import type {DepId, IdsMap} from '../../interfaces'
 
-declare function describe(name: string, cb: () => void): void;
-declare function it(name: string, cb: () => void): void;
+// declare function describe(name: string, cb: () => void): void;
+// declare function it(name: string, cb: () => void): void;
 
 function createMeta(id: DepId, ...deps: Array<DepMeta>): DepMeta {
     return new DepMeta({
