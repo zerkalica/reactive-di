@@ -1,7 +1,6 @@
 /* @flow */
 
 export type DepId = string;
-export type NotifyFn = () => void;
 export type NotifyDepFn = (id: DepId) => void;
 export type NotifyDepsFn = (ids: Array<DepId>) => void;
 export type Setter<T: Object> = (model: T) => void;

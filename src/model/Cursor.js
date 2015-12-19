@@ -27,20 +27,20 @@ export default class Cursor<V: StateModel> extends AbstractCursor<V> {
 
     constructor(path: Array<string>, state: StateModel, setState: SetState<V>) {
         super()
-        this._state = state
-        this._setState = setState
-        this._path = path
         if (!Array.isArray(path)) {
             throw new Error('path is not an array')
         }
-        /* eslint-disable no-new-func */
+        this._state = state
+        this._setState = setState
+        this._path = path
         try {
+            /* eslint-disable no-new-func */
             this._selector = new Function('s', 'return ' + ['s'].concat(this._path).join('.'))
+            /* eslint-enable no-new-func */
         } catch (e) {
-            e.message = 'Cant create selector for path: ' + this._path.join('.') + ', ' + e.message
+            e.message = 'Can\'t create selector for path: ' + this._path.join('.') + ', ' + e.message
             throw e
         }
-        /* eslint-enable no-new-func */
     }
 
     get(): V {

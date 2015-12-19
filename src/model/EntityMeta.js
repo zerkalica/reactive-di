@@ -1,19 +1,15 @@
 /* @flow */
 
-import type {NotifyFn} from '../interfaces'
-
 export type EntityMetaRec = {
     loading?: ?boolean;
     invalid?: ?boolean;
     error?: ?Error;
-    _notify?: ?NotifyFn;
 }
 
 export default class EntityMeta {
     loading: ?boolean;
     invalid: ?boolean;
     error: ?Error;
-    _notify: ?NotifyFn;
 
     constructor(rec: EntityMetaRec = {}) {
         this.error = rec.error || null
@@ -23,7 +19,6 @@ export default class EntityMeta {
         this.invalid = rec.invalid === undefined
             ? (isError || this.loading)
             : rec.invalid
-        this._notify = rec._notify
     }
 
     copy(rec: EntityMetaRec): EntityMeta {
@@ -63,10 +58,6 @@ export function copyProps<C: Entity, R: Object>(obj: C, rec: R): R {
     const $meta = rec.$meta instanceof EntityMeta
         ? rec.$meta
         : obj.$meta.copy(rec.$meta)
-
-    if ($meta._notify) {
-        $meta._notify()
-    }
 
     return {...obj, ...rec, $meta}
 }
