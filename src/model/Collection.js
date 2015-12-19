@@ -7,27 +7,27 @@ type SortFn<T> = (a: T, b: T) => number;
 type FindFn<T> = (element: T, index?: number, arr?: Array<T>, thisArg?: Object) => boolean;
 type SetFn<T> = (element: T) => T;
 
-type DeletedItems<T> = {[id: string]: [T, number]};
+type DeletedItems<T, TId> = {[id: TId]: [T, number]};
 
-type CollectionRec<T: Entity> = {
+type CollectionRec<T: Entity, TId> = {
     items?: Array<T>;
     $meta?: EntityMeta;
-    deleted?: DeletedItems<T>;
+    deleted?: DeletedItems<T, TId>;
 }
 
 /* eslint-disable no-unused-vars */
-type Entity = {
-    id?: ?string;
+type Entity<TId> = {
+    id?: ?TId;
 };
 /* eslint-enable no-unused-vars */
 
-export default class Collection<T: Entity> {
+export default class Collection<T: Entity, TId> {
     items: Array<T>;
     $meta: EntityMeta;
-    deleted: DeletedItems<T>;
+    deleted: DeletedItems<T, TId>;
     length: number;
 
-    constructor<R: Object>(rec: CollectionRec<T>|Array<R> = []) {
+    constructor<R: Object>(rec: CollectionRec<T, TId>|Array<R> = []) {
         if (Array.isArray(rec)) {
             this.items = rec.map(el => this.createItem(el))
             this.$meta = new EntityMeta()
@@ -46,21 +46,21 @@ export default class Collection<T: Entity> {
     }
     /* eslint-enable no-unused-vars */
 
-    _copy(rec: CollectionRec<T>): Collection<T> {
+    _copy(rec: CollectionRec<T, TId>): Collection<T, TId> {
         return new this.constructor(copyProps(this, rec))
     }
 
-    add(element: T): Collection<T> {
+    add(element: T): Collection<T, TId> {
         return this._copy({items: this.items.concat([element])})
     }
 
-    _getDeleted(id: string): {
+    _getDeleted(id: TId): {
         items: Array<T>,
-        deleted: DeletedItems<T>
+        deleted: DeletedItems<T, TId>
     } {
         const oldItems = this.items
         const items: Array<T> = [];
-        const deleted: DeletedItems<T> = {};
+        const deleted: DeletedItems<T, TId> = {};
         for (let i = 0, l = oldItems.length; i < l; i++) {
             const item = oldItems[i]
             if (item.id !== id) {
@@ -73,16 +73,16 @@ export default class Collection<T: Entity> {
         return {items, deleted}
     }
 
-    remove(id: string): Collection<T> {
+    remove(id: TId): Collection<T, TId> {
         const {items} = this._getDeleted(id)
         return this._copy({items})
     }
 
-    softRemove(id: string): Collection<T> {
+    softRemove(id: TId): Collection<T, TId> {
         return this._copy({...this._getDeleted(id)})
     }
 
-    softRestore(id: string): Collection<T> {
+    softRestore(id: TId): Collection<T, TId> {
         if (!this.deleted[id]) {
             throw new Error('Element not exists in collection: ' + id)
         }
@@ -93,7 +93,7 @@ export default class Collection<T: Entity> {
         return this._copy({items})
     }
 
-    set(id: string, setFn: SetFn<T>): Collection<T> {
+    set(id: TId, setFn: SetFn<T>): Collection<T, TId> {
         const oldItems = this.items
         const items: Array<T> = [];
         let isFound: boolean = false;
@@ -117,7 +117,7 @@ export default class Collection<T: Entity> {
         return this.items.find(findFn)
     }
 
-    get(id: string): T {
+    get(id: TId): T {
         const item = this.find(el => el.id === id)
         if (!item) {
             throw new Error('Element not exists in collection: ' + id)
@@ -129,11 +129,11 @@ export default class Collection<T: Entity> {
         return this.items.map(mapFn)
     }
 
-    filter(filterFn: FilterFn<T>): Collection<T> {
+    filter(filterFn: FilterFn<T>): Collection<T, TId> {
         return this._copy({items: this.items.filter(filterFn)})
     }
 
-    sort(sortFn: SortFn<T>): Collection<T> {
+    sort(sortFn: SortFn<T>): Collection<T, TId> {
         return this._copy({items: this.items.sort(sortFn)})
     }
 }

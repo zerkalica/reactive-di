@@ -28,7 +28,7 @@ class TestEl {
     }
 }
 
-class TestColl extends Collection<TestEl> {
+class TestColl extends Collection<TestEl, string> {
     createItem(rec: TestElRec): TestEl {
         return new TestEl(rec)
     }
