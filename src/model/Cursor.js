@@ -1,13 +1,13 @@
 /* @flow */
-import type {ImmutableStateModel} from './interfaces'
+import type {StateModel, SetState} from './interfaces'
 import {AbstractCursor} from '../selectorInterfaces'
 
-function setInPath<V: Object, S: ImmutableStateModel>(
+function setInPath<V: Object, S: StateModel>(
     newModel: V,
     state: S,
     path: Array<string>,
     index: number
-): ImmutableStateModel {
+): StateModel {
     if (index === path.length) {
         return newModel
     }
@@ -19,14 +19,16 @@ function setInPath<V: Object, S: ImmutableStateModel>(
     return state.copy(rec)
 }
 
-export default class Cursor<V: ImmutableStateModel> extends AbstractCursor<V> {
+export default class Cursor<V: StateModel> extends AbstractCursor<V> {
     _path: Array<string>;
-    _state: ImmutableStateModel;
-    _selector: (v: ImmutableStateModel) => any;
+    _state: StateModel;
+    _selector: (v: StateModel) => any;
+    _setState: SetState<V>;
 
-    constructor(path: Array<string>, state: ImmutableStateModel) {
+    constructor(path: Array<string>, state: StateModel, setState: SetState<V>) {
         super()
         this._state = state
+        this._setState = setState
         this._path = path
         /* eslint-disable no-new-func */
         this._selector = new Function('s', 'return ' + ['s'].concat(this._path).join('.'))
@@ -39,5 +41,6 @@ export default class Cursor<V: ImmutableStateModel> extends AbstractCursor<V> {
 
     set(newModel: V): void {
         this._state = setInPath(newModel, this._state, this._path, 0)
+        this._setState(this._state)
     }
 }

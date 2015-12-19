@@ -5,7 +5,7 @@ import Cursor from './Cursor'
 import DepMeta from '../meta/DepMeta'
 import type {DepId, IdsMap, NotifyDepFn} from '../interfaces'
 /* eslint-disable no-unused-vars */
-import type {StateModel, DepIdGetter} from './interfaces'
+import type {StateModel, SetState, DepIdGetter} from './interfaces'
 /* eslint-enable no-unused-vars */
 import {AbstractSelector, AbstractCursor} from '../selectorInterfaces'
 
@@ -15,16 +15,21 @@ function defaultGetDepId(obj: Object): DepId {
     return DepMeta.get(obj.constructor).id
 }
 
-export default class Selector<S: StateModel> extends AbstractSelector {
-    _state: S;
+export default class Selector extends AbstractSelector {
+    _state: StateModel;
     _pathMap: PathMap;
+    _depMap: IdsMap;
     _getDepId: DepIdGetter;
+    _setState: SetState;
 
-    constructor(state: S, getDepId: ?DepIdGetter) {
+    constructor(state: StateModel, getDepId?: DepIdGetter) {
         super()
         this._state = state
         this._pathMap = {}
         this._getDepId = getDepId || defaultGetDepId
+        this._setState = newState => {
+            this._state = newState
+        }
     }
 
     getDepMap(notify: NotifyDepFn): IdsMap {
@@ -38,6 +43,6 @@ export default class Selector<S: StateModel> extends AbstractSelector {
         if (!this._pathMap) {
             throw new Error('Call selector.getDepMap first')
         }
-        return new Cursor(this._pathMap[id], this._state)
+        return new Cursor(this._pathMap[id], this._state, this._setState)
     }
 }

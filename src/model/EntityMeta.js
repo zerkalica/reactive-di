@@ -29,12 +29,8 @@ export default class EntityMeta {
         this.notify = rec.notify
     }
 
-    copy(rec: EntityMetaRec = {}): EntityMeta {
+    copy(rec: EntityMetaRec): EntityMeta {
         return new EntityMeta({...this, ...rec})
-    }
-
-    static get(obj: Object): ?EntityMeta {
-        return obj.$meta
     }
 
     static fromArray<T: Entity>(owners: Array<T>): EntityMeta {
@@ -76,6 +72,10 @@ export function copyProps<C: Entity, R: Object>(obj: C, rec: R): R {
     const $meta = rec.$meta instanceof EntityMeta
         ? rec.$meta
         : obj.$meta.copy(rec.$meta)
+
+    if ($meta.notify) {
+        $meta.notify()
+    }
 
     return {...obj, ...rec, $meta}
 }
