@@ -1,14 +1,22 @@
 [ignore]
 .*/dist/.*
 .*/examples/.*
-.*/node_modules/.*
+.*/node_modules/bab.*
+.*/node_modules/lodash.*
+.*/node_modules/array.*
+.*/node_modules/is-.*
+.*/node_modules/object.*
+.*/node_modules/acorn.*
 
 [include]
 .*/src/.*
 
 [libs]
+.*/decl/mochaFlow.js
 
 [options]
 strip_root=true
-suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
+suppress_comment= \\(.\\|\n\\)*\\$FlowDisable
 esproposal.decorators=ignore
+esproposal.class_instance_fields=ignore
+esproposal.class_static_fields=ignore

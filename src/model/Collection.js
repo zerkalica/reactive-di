@@ -12,16 +12,16 @@ type SetFn<T> = (element: T) => T;
 
 export type CollectionRec<T: Entity> = {
     items?: Array<T>;
-    $meta?: EntityMetaRec;
+    $meta?: EntityMeta;
 }
 
 export default class Collection<T: Entity> {
     items: Array<T>;
     $meta: EntityMeta;
 
-    constructor(items?: ?Array<T>) {
-        this.items = items || []
-        this.$meta = EntityMeta.fromArray(this.items)
+    constructor(rec: CollectionRec<T> = {}) {
+        this.items = rec.items || []
+        this.$meta = rec.$meta || new EntityMeta()
     }
 
     copy(rec: CollectionRec<T>): Collection<T> {
@@ -36,7 +36,7 @@ export default class Collection<T: Entity> {
         if (this.$meta.notify) {
             this.$meta.notify()
         }
-        return new this.constructor(items)
+        return new this.constructor({items, $meta: this.$meta})
     }
 
     toArray(): Array<T> {

@@ -41,7 +41,7 @@ function getPathIds(
     for (let i = 0, j = keys.length; i < j; i++) {
         const key: string = keys[i];
         const prop: StateModel = obj[key];
-        if (prop !== null && typeof prop === 'object') {
+        if (prop !== null && typeof prop === 'object' && prop.$meta) {
             getPathIds(prop, path.concat(key), parents, meta, notify, getDepId)
         }
     }
