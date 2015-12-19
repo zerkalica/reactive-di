@@ -25,7 +25,7 @@ function getPathIds(
     const id = getDepId(obj)
 
     pathMap[id] = path
-    obj.$meta.notify = function _notify() {
+    obj.$meta._notify = function _notify() {
         notify(id)
     }
     // write all parents and self to affect ids map

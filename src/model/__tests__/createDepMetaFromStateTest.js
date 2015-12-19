@@ -10,7 +10,7 @@ function getDepId(obj: Object): DepId {
 }
 
 class Meta {
-    notify: () => void;
+    _notify: () => void;
 }
 
 class A {
@@ -82,8 +82,8 @@ describe('createDepMetaFromStateTest', () => {
         const notify = spy()
         const s = new S()
         createDepMetaFromState(s, notify, getDepId)
-        s.a.$meta.notify()
-        s.b.c.$meta.notify()
+        s.a.$meta._notify()
+        s.b.c.$meta._notify()
         assert(notify.calledTwice)
         assert(notify.firstCall.calledWith('a'))
         assert(notify.secondCall.calledWith('c'))

@@ -10,7 +10,7 @@ type Notify = () => void;
 
 export type StateModelNotify = {
     $meta: {
-        notify: Notify;
+        _notify: Notify;
     }
 };
 

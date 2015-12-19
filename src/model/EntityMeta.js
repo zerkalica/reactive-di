@@ -5,28 +5,25 @@ import type {NotifyFn} from '../interfaces'
 export type EntityMetaRec = {
     loading?: ?boolean;
     invalid?: ?boolean;
-    deleted?: ?boolean;
     error?: ?Error;
-    notify?: ?NotifyFn;
+    _notify?: ?NotifyFn;
 }
 
 export default class EntityMeta {
     loading: ?boolean;
     invalid: ?boolean;
-    deleted: ?boolean;
     error: ?Error;
-    notify: ?NotifyFn;
+    _notify: ?NotifyFn;
 
     constructor(rec: EntityMetaRec = {}) {
         this.error = rec.error || null
 
         const isError = Boolean(this.error)
-        this.deleted = rec.deleted || false
         this.loading = rec.loading === undefined ? isError : rec.loading
         this.invalid = rec.invalid === undefined
-            ? (isError || this.loading || this.deleted)
+            ? (isError || this.loading)
             : rec.invalid
-        this.notify = rec.notify
+        this._notify = rec._notify
     }
 
     copy(rec: EntityMetaRec): EntityMeta {
@@ -36,13 +33,7 @@ export default class EntityMeta {
     static fromArray<T: Entity>(owners: Array<T>): EntityMeta {
         const meta = new EntityMeta();
         for (let i = 0; i < owners.length; i++) {
-            const {notify, loading, invalid, error, deleted} = owners[i].$meta
-            if (notify) {
-                meta.notify = notify
-            }
-            if (deleted) {
-                meta.deleted = deleted
-            }
+            const {loading, invalid, error} = owners[i].$meta
             if (invalid) {
                 meta.invalid = invalid
             }
@@ -73,8 +64,8 @@ export function copyProps<C: Entity, R: Object>(obj: C, rec: R): R {
         ? rec.$meta
         : obj.$meta.copy(rec.$meta)
 
-    if ($meta.notify) {
-        $meta.notify()
+    if ($meta._notify) {
+        $meta._notify()
     }
 
     return {...obj, ...rec, $meta}
