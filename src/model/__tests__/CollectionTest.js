@@ -1,0 +1,167 @@
+/* @flow */
+/* eslint-env mocha */
+import assert from 'power-assert'
+import Collection from '../Collection'
+import EntityMeta, {copyProps} from '../EntityMeta'
+// import {spy} from 'sinon'
+
+type TestElRec = {
+    id?: string;
+    name?: string;
+    w?: number;
+}
+class TestEl {
+    id: ?string;
+    w: number;
+    name: ?string;
+    $meta: EntityMeta;
+
+    constructor(rec: TestElRec = {}) {
+        this.id = rec.id || null
+        this.name = rec.name || null
+        this.$meta = rec.$meta || new EntityMeta()
+        this.w = rec.w || 0
+    }
+
+    copy(rec: TestElRec): TestEl {
+        return new TestEl(copyProps(this, rec))
+    }
+}
+
+class TestColl extends Collection<TestEl> {
+    createItem(rec: TestElRec): TestEl {
+        return new TestEl(rec)
+    }
+}
+
+function createTestColl(): TestColl {
+    return new TestColl([
+        {
+            id: '1',
+            w: 1,
+            name: 'test1'
+        },
+        {
+            id: '2',
+            w: 2,
+            name: 'test2'
+        },
+        {
+            id: '3',
+            w: 3,
+            name: 'test3'
+        }
+    ])
+}
+
+describe('CollectionTest', () => {
+    it('each element should be instance of a collection element', () => {
+        const testColl = createTestColl()
+        assert(testColl.length === 3)
+        assert(testColl.items[0] instanceof TestEl)
+        assert(testColl.items[1] instanceof TestEl)
+        assert(testColl.items[2] instanceof TestEl)
+    })
+
+    it('should find element', () => {
+        const testColl = createTestColl()
+        const item = testColl.find(el => el.id === '3')
+        assert(item instanceof TestEl)
+        assert(item.name === 'test3')
+        assert(testColl.find(el => el.id === '3123') === undefined)
+    })
+
+    it('should get element', () => {
+        const testColl = createTestColl()
+        const item = testColl.get('3')
+        assert(item instanceof TestEl)
+        assert(item.name === 'test3')
+    })
+
+    it('should throws exception, if element not exists in collection', () => {
+        const testColl = createTestColl()
+        assert.throws(() => testColl.get('3333'))
+    })
+
+    it('should add element', () => {
+        const testColl = createTestColl()
+        const newColl = testColl.add(new TestEl({id: '4', name: 'test4'}))
+        assert(newColl instanceof TestColl)
+        assert(newColl.length === 4)
+        assert(testColl.length === 3)
+    })
+
+    it('should remove element', () => {
+        const testColl = createTestColl()
+        const newColl = testColl.remove('3')
+        const item = newColl.find(el => el.id === '3')
+        assert(newColl instanceof TestColl)
+        assert(item === undefined)
+        assert(newColl.length === 2)
+        assert(testColl.length === 3)
+    })
+
+    it('should soft remove element', () => {
+        const testColl = createTestColl()
+        const newColl = testColl.softRemove('3')
+        const item = newColl.find(el => el.id === '3')
+        assert(newColl instanceof TestColl)
+        assert(item === undefined)
+        assert(newColl.length === 2)
+        assert(testColl.length === 3)
+    })
+
+    it('should soft restore element', () => {
+        const testColl = createTestColl()
+        const newColl = testColl.softRemove('3')
+        const newColl2 = newColl.softRestore('3')
+        const item = newColl2.get('3')
+        assert(item instanceof TestEl)
+        assert(newColl.length === 2)
+        assert(newColl2.length === 3)
+    })
+
+
+    it('should throw exception if soft restore element not exists', () => {
+        const testColl = createTestColl()
+        assert.throws(() => testColl.softRestore('332'))
+    })
+
+    it('should set element', () => {
+        const testColl = createTestColl()
+        const newColl = testColl.set('3', el => el.copy({name: 'test4New'}))
+        const item = newColl.get('3')
+        assert(item.name === 'test4New')
+    })
+
+    it('should throw exception of set element not exists', () => {
+        const testColl = createTestColl()
+        assert.throws(() => testColl.set('4', el => el.copy({name: 'test4New'})))
+    })
+
+    it('should map collection', () => {
+        const testColl = createTestColl()
+        const strings = testColl.map(el => el.name)
+        assert.deepEqual(strings, ['test1', 'test2', 'test3'])
+    })
+
+    it('should sort collection', () => {
+        const testColl = createTestColl()
+        const newColl = testColl.sort((a, b) => (a.w > b.w ? -1 : Number(a.w !== b.w)))
+        assert(newColl instanceof TestColl)
+        assert(newColl.length === 3)
+        const items = newColl.map(item => item.id)
+        assert.deepEqual(items, ['3', '2', '1'])
+    })
+
+    it('should iterate collection', () => {
+        const testColl = createTestColl()
+        const items: Array<string> = [];
+        // $FlowDisable
+        for (const item of testColl) {
+            items.push(item.id)
+        }
+
+        assert.deepEqual(items, ['1', '2', '3'])
+    })
+})
