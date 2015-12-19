@@ -19,7 +19,9 @@ export default class MetaLoader {
         this._cache = Object.create(null)
         this._stateIdToIdsMap = Object.create(null);
 
-        const depMap = selector.getDepMap(id => notify(this._stateIdToIdsMap[id] || []));
+        selector.setNotify(id => notify(this._stateIdToIdsMap[id] || []))
+
+        const depMap = selector.getDepMap();
         this._idToStateIdsMap = depMap;
 
         (registeredDeps || []).forEach(([depSrc, depTarget]) => {

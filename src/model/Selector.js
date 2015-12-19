@@ -1,6 +1,6 @@
 /* @flow */
 
-import createDepMetaFromState from './createDepMetaFromState'
+import createDepMetaFromState, {StateDepsMeta} from './createDepMetaFromState'
 import Cursor from './Cursor'
 import DepMeta from '../meta/DepMeta'
 import type {DepId, IdsMap, NotifyDepFn} from '../interfaces'
@@ -9,40 +9,43 @@ import type {StateModel, SetState, DepIdGetter} from './interfaces'
 /* eslint-enable no-unused-vars */
 import {AbstractSelector, AbstractCursor} from '../selectorInterfaces'
 
-type PathMap = {[id: DepId]: Array<string>};
-
 function defaultGetDepId(obj: Object): DepId {
     return DepMeta.get(obj.constructor).id
 }
 
+function noop() {
+}
+
 export default class Selector extends AbstractSelector {
     _state: StateModel;
-    _pathMap: PathMap;
-    _depMap: IdsMap;
     _getDepId: DepIdGetter;
-    _setState: SetState;
+    _notify: NotifyDepFn;
+
+    _depMeta: StateDepsMeta;
 
     constructor(state: StateModel, getDepId?: DepIdGetter) {
         super()
         this._state = state
-        this._pathMap = {}
         this._getDepId = getDepId || defaultGetDepId
-        this._setState = newState => {
-            this._state = newState
-        }
+        this._notify = noop
+        this._depMeta = createDepMetaFromState(this._state, this._getDepId)
     }
 
-    getDepMap(notify: NotifyDepFn): IdsMap {
-        const depsMeta = createDepMetaFromState(this._state, notify, this._getDepId)
-        this._pathMap = depsMeta.pathMap
+    setNotify(notify: NotifyDepFn): AbstractSelector {
+        this._notify = notify
+        return this
+    }
 
-        return depsMeta.depMap
+    getDepMap(): IdsMap {
+        return this._depMeta.depMap
     }
 
     select<T: StateModel>(id: DepId): AbstractCursor<T> {
-        if (!this._pathMap) {
-            throw new Error('Call selector.getDepMap first')
-        }
-        return new Cursor(this._pathMap[id], this._state, this._setState)
+        const setState = newState => {
+            this._state = newState
+            this._notify(id)
+        };
+
+        return new Cursor(this._depMeta.pathMap[id], this._state, setState)
     }
 }

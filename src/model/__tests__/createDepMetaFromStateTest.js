@@ -10,7 +10,6 @@ function getDepId(obj: Object): DepId {
 }
 
 class Meta {
-    _notify: () => void;
 }
 
 class A {
@@ -61,8 +60,7 @@ class S {
 describe('createDepMetaFromStateTest', () => {
     it('should build deps for {a, {b: c}', () => {
         const s = new S()
-        function notify() {}
-        const {depMap, pathMap} = createDepMetaFromState(s, notify, getDepId)
+        const {depMap, pathMap} = createDepMetaFromState(s, getDepId)
 
         assert.deepEqual(pathMap, {
             s: [],
@@ -76,16 +74,5 @@ describe('createDepMetaFromStateTest', () => {
             b: ['s', 'b', 'c'],
             c: ['s', 'b', 'c']
         })
-    })
-
-    it('should call notify with dep id', () => {
-        const notify = spy()
-        const s = new S()
-        createDepMetaFromState(s, notify, getDepId)
-        s.a.$meta._notify()
-        s.b.c.$meta._notify()
-        assert(notify.calledTwice)
-        assert(notify.firstCall.calledWith('a'))
-        assert(notify.secondCall.calledWith('c'))
     })
 })

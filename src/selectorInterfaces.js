@@ -14,8 +14,12 @@ export class AbstractCursor<V> {
 
 export class AbstractSelector {
     /* eslint-disable no-unused-vars */
-    getDepMap(notify: NotifyDepFn): IdsMap {
+    getDepMap(): IdsMap {
         return {}
+    }
+
+    setNotify(notify: NotifyDepFn): AbstractSelector {
+        return this
     }
 
     select<T: Object>(id: DepId): AbstractCursor<T> {

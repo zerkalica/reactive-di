@@ -6,15 +6,11 @@ export type MergeRec = {
     [prop: string]: any;
 }
 
-type Notify = () => void;
-
-export type StateModelNotify = {
-    $meta: {
-        _notify: Notify;
-    }
+export type StateModelMeta = {
+    $meta: {}
 };
 
-export type StateModel<T> = StateModelNotify & {
+export type StateModel<T> = StateModelMeta & {
     [prop: string]: StateModel;
     copy: (arg: MergeRec) => StateModel & T;
 };

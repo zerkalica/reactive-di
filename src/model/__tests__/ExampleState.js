@@ -5,7 +5,6 @@ export function getDepId(obj: Object): string {
 }
 
 class Meta {
-    notify: () => void;
 }
 
 export class A {
