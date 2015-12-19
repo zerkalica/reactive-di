@@ -1,5 +1,5 @@
-/* eslint-env mocha */
 /* @flow */
+/* eslint-env mocha */
 import assert from 'power-assert'
 import createDepMetaFromState from '../createDepMetaFromState'
 import type {DepId} from '../../interfaces'

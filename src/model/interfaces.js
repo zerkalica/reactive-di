@@ -4,16 +4,20 @@ import {DepId} from '../interfaces'
 
 export type MergeRec = {
     [prop: string]: any;
-};
-export type StateModel = {
-    [prop: string]: StateModel;
+}
+
+export type StateModelNotify = {
+    [prop: string]: StateModelNotify;
     $meta: {
         notify: () => void;
-    },
+    }
 }
 
-export type ImmutableStateModel<T> = StateModel & {
-    copy: (arg: MergeRec) => StateModel & T;
+export type ImmutableStateModel<T> = {
+    [prop: string]: ImmutableStateModel<T>;
+    copy: (arg: MergeRec) => ImmutableStateModel<T>;
 }
 
-export type DepIdGetter<T: Object> = (obj: T) => DepId;
+export type StateModel<T> = ImmutableStateModel<T> & StateModelNotify
+
+export type DepIdGetter<T: Object> = (obj: T) => DepId

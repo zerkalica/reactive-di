@@ -1,7 +1,7 @@
 /* @flow */
 
 import type {NotifyDepFn, DepId} from '../interfaces'
-import type {StateModel, DepIdGetter} from './interfaces'
+import type {StateModelNotify, DepIdGetter} from './interfaces'
 
 export class StateDepsMeta {
     depMap: {[id: DepId]: Array<DepId>};
@@ -14,7 +14,7 @@ export class StateDepsMeta {
 }
 
 function getPathIds(
-    obj: StateModel,
+    obj: StateModelNotify,
     path: Array<string>,
     parents: Array<DepId>,
     meta: StateDepsMeta,
@@ -40,7 +40,7 @@ function getPathIds(
     const keys: Array<string> = Object.keys(obj);
     for (let i = 0, j = keys.length; i < j; i++) {
         const key: string = keys[i];
-        const prop: StateModel = obj[key];
+        const prop: StateModelNotify = obj[key];
         if (prop !== null && typeof prop === 'object' && prop.$meta) {
             getPathIds(prop, path.concat(key), parents, meta, notify, getDepId)
         }
@@ -49,7 +49,7 @@ function getPathIds(
 }
 
 export default function createDepMetaFromState(
-    obj: StateModel,
+    obj: StateModelNotify,
     notify: NotifyDepFn,
     getDepId: DepIdGetter
 ): StateDepsMeta {
