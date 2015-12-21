@@ -124,7 +124,6 @@ describe('CollectionTest', () => {
         assert(newColl2.length === 3)
     })
 
-
     it('should throw exception if soft restore element not exists', () => {
         const testColl = createTestColl()
         assert.throws(() => testColl.softRestore('332'))
@@ -134,7 +133,14 @@ describe('CollectionTest', () => {
         const testColl = createTestColl()
         const newColl = testColl.set('3', el => el.copy({name: 'test4New'}))
         const item = newColl.get('3')
+        assert(newColl !== testColl)
         assert(item.name === 'test4New')
+    })
+
+    it('should return same collection instance, if set element with same content', () => {
+        const testColl = createTestColl()
+        const newColl = testColl.set('3', el => el.copy({name: 'test3'}))
+        assert(newColl === testColl)
     })
 
     it('should throw exception of set element not exists', () => {
@@ -148,6 +154,21 @@ describe('CollectionTest', () => {
         assert.deepEqual(strings, ['test1', 'test2', 'test3'])
     })
 
+    it('should filter collection', () => {
+        const testColl = createTestColl()
+        const newColl = testColl.filter(el => el.id !== '2')
+        assert(newColl instanceof TestColl)
+        assert(newColl.length === 2)
+        const items = newColl.map(item => item.id)
+        assert.deepEqual(items, ['1', '3'])
+    })
+
+    it('should return same collection instance, if filter not found collection items', () => {
+        const testColl = createTestColl()
+        const newColl = testColl.filter(el => el.id !== '21212213')
+        assert(newColl === testColl)
+    })
+
     it('should sort collection', () => {
         const testColl = createTestColl()
         const newColl = testColl.sort((a, b) => (a.w > b.w ? -1 : Number(a.w !== b.w)))
@@ -155,6 +176,12 @@ describe('CollectionTest', () => {
         assert(newColl.length === 3)
         const items = newColl.map(item => item.id)
         assert.deepEqual(items, ['3', '2', '1'])
+    })
+
+    it('should return same collection instance, if sort not affect items order', () => {
+        const testColl = createTestColl()
+        const newColl = testColl.sort((a, b) => (a.w > b.w ? 1 : (-Number(a.w !== b.w))))
+        assert(newColl === testColl)
     })
 
     it('should iterate collection', () => {

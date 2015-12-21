@@ -98,20 +98,25 @@ export default class Collection<T: Entity, TId> {
         const oldItems = this.items
         const items: Array<T> = [];
         let isFound: boolean = false;
+        let isChanged: boolean = false;
         for (let i = 0, l = oldItems.length; i < l; i++) {
             const item = oldItems[i]
             if (item.id !== id) {
                 items.push(item)
             } else {
                 isFound = true
-                items.push(setFn(item))
+                const newItem = setFn(item)
+                if (item !== newItem) {
+                    isChanged = true
+                }
+                items.push(newItem)
             }
         }
         if (!isFound) {
             throw new Error('Element not exists in collection: ' + id)
         }
 
-        return this._copy({items})
+        return isChanged ? this._copy({items}) : this
     }
 
     find(findFn: FindFn<T>): T {
@@ -131,11 +136,23 @@ export default class Collection<T: Entity, TId> {
     }
 
     filter(filterFn: FilterFn<T>): Collection<T, TId> {
-        return this._copy({items: this.items.filter(filterFn)})
+        const items = this.items.filter(filterFn)
+        return items.length !== this.length ? this._copy({items}) : this
     }
 
     sort(sortFn: SortFn<T>): Collection<T, TId> {
-        return this._copy({items: this.items.sort(sortFn)})
+        const oldItems = this.items
+        const items = this.items.sort(sortFn)
+
+        let isChanged: boolean = false;
+        for (let i = 0, l = items.length; i < l; i++) {
+            if (items[i].id !== oldItems[i].id) {
+                isChanged = true
+                break
+            }
+        }
+
+        return isChanged ? this._copy({items}) : this
     }
 }
 
