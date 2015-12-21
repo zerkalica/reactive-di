@@ -1,7 +1,8 @@
 /* @flow */
-import type {StateModel, SetState, FromJS} from './interfaces'
-import {AbstractCursor} from '../selectorInterfaces'
+
 import type {FromJS} from '../interfaces'
+import {AbstractCursor} from '../selectorInterfaces'
+import type {StateModel, SetState} from './interfaces'
 
 function setInPath<V: Object, S: StateModel>(
     newModel: V,
