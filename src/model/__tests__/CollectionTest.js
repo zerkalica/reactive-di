@@ -2,13 +2,16 @@
 /* eslint-env mocha */
 import assert from 'power-assert'
 import Collection from '../Collection'
-import EntityMeta, {copyProps} from '../EntityMeta'
+import EntityMeta from '../EntityMeta'
+import merge from '../../utils/merge'
+
 // import {spy} from 'sinon'
 
 type TestElRec = {
     id?: string;
     name?: string;
     w?: number;
+    $meta?: EntityMeta;
 }
 class TestEl {
     id: ?string;
@@ -24,7 +27,7 @@ class TestEl {
     }
 
     copy(rec: TestElRec): TestEl {
-        return new TestEl(copyProps(this, rec))
+        return merge(this, rec)
     }
 }
 

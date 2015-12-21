@@ -1,11 +1,10 @@
 /* @flow */
 
-import EntityMeta, {create, copyProps} from '../../common/EntityMeta'
-import type {EntityMetaRec} from '../../common/EntityMeta'
+import EntityMeta, {create, copyProps} from 'reactive-di/EntityMeta'
 
 export type SelectedUserRec = {
     id?: string;
-    $meta?: EntityMetaRec
+    $meta?: EntityMeta
 }
 
 export default class SelectedUser {
@@ -18,6 +17,6 @@ export default class SelectedUser {
     }
 
     copy(rec: SelectedUserRec): SelectedUser {
-        return new SelectedUser(copyProps(this, rec))
+        return copyProps(this, rec, SelectedUser)
     }
 }

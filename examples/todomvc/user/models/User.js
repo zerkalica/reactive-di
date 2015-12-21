@@ -1,12 +1,11 @@
 /* @flow */
 
-import EntityMeta, {create, copyProps} from '../../common/EntityMeta'
-import type {EntityMetaRec} from '../../common/EntityMeta'
+import {EntityMeta, copyProps} from 'reactive-di'
 
 export type UserRec = {
     id?: ?string;
     name?: ?string;
-    $meta?: EntityMetaRec
+    $meta?: EntityMeta
 }
 
 export default class User {
@@ -17,10 +16,10 @@ export default class User {
     constructor(rec: UserRec = {}) {
         this.id = rec.id || null
         this.name = rec.name || null
-        this.$meta = create(rec.$meta, EntityMeta)
+        this.$meta = rec.$meta || new EntityMeta()
     }
 
     copy(rec: UserRec = {}): User {
-        return new User(copyProps(this, rec))
+        return copyProps(this, rec, User)
     }
 }

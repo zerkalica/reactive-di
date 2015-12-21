@@ -1,7 +1,7 @@
 /* @flow */
 
 import DepMeta from './meta/DepMeta'
-import type {DepId, IdsMap, NotifyDepFn} from './interfaces'
+import type {FromJS, DepId, IdsMap, NotifyDepFn} from './interfaces'
 
 export class AbstractCursor<V> {
     get(): V|any {
@@ -17,6 +17,8 @@ export class AbstractSelector {
     getDepMap(): IdsMap {
         return {}
     }
+
+    fromJS: FromJS;
 
     setNotify(notify: NotifyDepFn): AbstractSelector {
         return this

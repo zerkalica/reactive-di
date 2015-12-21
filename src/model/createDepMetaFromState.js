@@ -1,15 +1,33 @@
 /* @flow */
 
-import type {DepId} from '../interfaces'
+import type {FromJS, DepId} from '../interfaces'
 import type {StateModelMeta, DepIdGetter} from './interfaces'
 
 export class StateDepsMeta {
     depMap: {[id: DepId]: Array<DepId>};
     pathMap: {[id: DepId]: Array<string>};
+    fromJSMap: {[id: DepId]: FromJS};
 
     constructor() {
         this.depMap = {}
         this.pathMap = {}
+        this.fromJSMap = {}
+    }
+}
+
+type PropCreatorMap = {[prop: string]: Function};
+/* eslint-disable no-undef */
+function createFromJS<T: Object>(Proto: Class<T>, propCreators: PropCreatorMap): FromJS<T> {
+/* eslint-enable no-undef */
+    return function fromJS<R: Object>(data: R): T {
+        const keys = Object.keys(data)
+        const props = {}
+        for (let i = 0, l = keys.length; i < l; i++) {
+            const key = keys[i]
+            const value = data[key]
+            props[key] = propCreators[key] ? propCreators[key](value) : value;
+        }
+        return new Proto(props)
     }
 }
 
@@ -18,9 +36,9 @@ function getPathIds(
     path: Array<string>,
     parents: Array<DepId>,
     meta: StateDepsMeta,
-    getDepId: DepIdGetter
-): void {
-    const {depMap, pathMap} = meta
+    getDepId: DepIdGetter,
+): FromJS<StateModelMeta> {
+    const {depMap, pathMap, fromJSMap} = meta
     const id = getDepId(obj)
 
     pathMap[id] = path
@@ -34,14 +52,20 @@ function getPathIds(
 
     parents.push(id)
     const keys: Array<string> = Object.keys(obj);
+    const propCreators: PropCreatorMap = {};
     for (let i = 0, j = keys.length; i < j; i++) {
         const key: string = keys[i];
         const prop: StateModelMeta = obj[key];
         if (prop !== null && typeof prop === 'object' && prop.$meta) {
-            getPathIds(prop, path.concat(key), parents, meta, getDepId)
+            propCreators[key] = getPathIds(prop, path.concat(key), parents, meta, getDepId)
         }
     }
     parents.pop()
+
+    const fromJS = createFromJS(obj.constructor, propCreators)
+    fromJSMap[id] = fromJS
+
+    return fromJS
 }
 
 export default function createDepMetaFromState(

@@ -8,3 +8,4 @@ export type IdsMap = {[id: DepId]: Array<DepId>};
 /* eslint-disable no-undef */
 export type Dependency<T> = Class<T>;
 /* eslint-enable no-undef */
+export type FromJS<T: Object> = (data: Object) => T;

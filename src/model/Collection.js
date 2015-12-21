@@ -1,5 +1,6 @@
 /* @flow */
-import EntityMeta, {copyProps} from './EntityMeta'
+import EntityMeta from './EntityMeta'
+import merge from '../utils/merge'
 
 type MapFn<T, V> = (v: T, index?: number) => V;
 type FilterFn<T> = (v: T, index?: number) => boolean;
@@ -47,7 +48,7 @@ export default class Collection<T: Entity, TId> {
     /* eslint-enable no-unused-vars */
 
     _copy(rec: CollectionRec<T, TId>): Collection<T, TId> {
-        return new this.constructor(copyProps(this, rec))
+        return merge(this, rec)
     }
 
     add(element: T): Collection<T, TId> {

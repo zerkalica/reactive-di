@@ -4,8 +4,7 @@ import Collection from '../../common/Collection'
 import SelectedUser from './SelectedUser'
 import User from './User'
 import UserCollection from './UserCollection'
-import EntityMeta, {create, copyProps} from '../../common/EntityMeta'
-import type {EntityMetaRec} from '../../common/EntityMeta'
+import EntityMeta, {create, copyProps} from 'reactive-di/EntityMeta'
 import type {SelectedUserRec} from './SelectedUser'
 
 export type UserStoreRec = {
@@ -25,6 +24,6 @@ export default class UserStore {
     }
 
     copy(rec: UserStoreRec): UserStore {
-        return new UserStore(copyProps(this, rec))
+        return copyProps(this, rec, UserStore)
     }
 }

@@ -3,7 +3,7 @@
 import createDepMetaFromState, {StateDepsMeta} from './createDepMetaFromState'
 import Cursor from './Cursor'
 import DepMeta from '../meta/DepMeta'
-import type {DepId, IdsMap, NotifyDepFn} from '../interfaces'
+import type {FromJS, DepId, IdsMap, NotifyDepFn} from '../interfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel, SetState, DepIdGetter} from './interfaces'
 /* eslint-enable no-unused-vars */
@@ -46,6 +46,9 @@ export default class Selector extends AbstractSelector {
             this._notify(id)
         };
 
-        return new Cursor(this._depMeta.pathMap[id], this._state, setState)
+        const {pathMap, fromJSMap} = this._depMeta
+        const fromJS: FromJS = fromJSMap[id];
+
+        return new Cursor(pathMap[id], fromJS, this._state, setState)
     }
 }
