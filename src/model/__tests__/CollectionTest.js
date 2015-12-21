@@ -165,7 +165,7 @@ describe('CollectionTest', () => {
 
     it('should return same collection instance, if filter not found collection items', () => {
         const testColl = createTestColl()
-        const newColl = testColl.filter(el => el.id !== '21212213')
+        const newColl = testColl.filter(el => el.id !== 'not-present-id')
         assert(newColl === testColl)
     })
 

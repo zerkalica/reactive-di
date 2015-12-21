@@ -4,7 +4,7 @@ import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
 import DepMeta, {createId} from './meta/DepMeta'
 import {AbstractCursor, AbstractSelector} from './selectorInterfaces'
-import type {Dependency, Setter} from './interfaces'
+import type {Dependency, Setter, OnUpdateHook} from './interfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel} from './model/interfaces'
 /* eslint-enable no-unused-vars */
@@ -12,7 +12,8 @@ type DepDecoratorFn<T> = (target: Dependency<T>) => T;
 
 type NormalizedDeps = {
     deps: Array<DepMeta>,
-    depNames: ?Array<string>
+    depNames: ?Array<string>,
+    onUpdate: ?OnUpdateHook
 };
 
 type RawDepMap = {[arg: string]: Dependency};
@@ -34,6 +35,15 @@ function _setter<T: Object>(cursor: AbstractCursor<T>): Setter<T> {
 function normalizeDeps(rDeps: Array<Object>): NormalizedDeps {
     const deps: Array<DepMeta> = [];
     let depNames: ?Array<string> = null;
+    let onUpdate: ?OnUpdateHook = null;
+
+    if (typeof rDeps[0] === 'function' && !DepMeta.isMeta(rDeps[0])) {
+        onUpdate = rDeps[0]
+        /* eslint-disable no-param-reassign */
+        rDeps = rDeps.slice(0, 1)
+        /* eslint-enable no-param-reassign */
+    }
+
     if (rDeps.length === 1 && typeof rDeps[0] === 'object') {
         const depsMap: RawDepMap = rDeps[0];
         depNames = Object.keys(depsMap)
@@ -49,7 +59,8 @@ function normalizeDeps(rDeps: Array<Object>): NormalizedDeps {
 
     return {
         deps,
-        depNames
+        depNames,
+        onUpdate
     }
 }
 

@@ -9,3 +9,4 @@ export type IdsMap = {[id: DepId]: Array<DepId>};
 export type Dependency<T> = Class<T>;
 /* eslint-enable no-undef */
 export type FromJS<T: Object> = (data: Object) => T;
+export type OnUpdateHook<T: Object> = (prevInstance: ?T, nextInstance: T) => void;

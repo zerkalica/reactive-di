@@ -85,7 +85,8 @@ export default class ReactiveDi {
             displayName,
             deps,
             depNames,
-            fn
+            fn,
+            onUpdate
         } = depMeta
         const cache = getter ? tempCache : this._cache
         let cacheRec = cache[id]
@@ -116,6 +117,7 @@ export default class ReactiveDi {
             let result
             try {
                 result = fn(...defArgs)
+                onUpdate(cacheRec.value, result)
             } catch (e) {
                 e.message = e.message + ', @path: '
                     + debugCtx.concat([displayName]).join('.')

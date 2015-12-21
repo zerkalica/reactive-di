@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {DepId, Dependency} from '../interfaces'
+import type {DepId, Dependency, OnUpdateHook} from '../interfaces'
 import getFunctionName from '../utils/getFunctionName'
 
 const metaSymbol = Symbol('__rdi__meta')
@@ -9,6 +9,9 @@ let id: number = 0;
 
 export function createId(): DepId {
     return '' + (++id)
+}
+
+function dummyOnUpdate(): void {
 }
 
 export default class DepMeta {
@@ -24,6 +27,7 @@ export default class DepMeta {
 
     getter: ?DepMeta;
     setter: ?DepMeta;
+    onUpdate: OnUpdateHook;
 
     constructor(rec: DepMetaRec) {
         this.kind = rec.getter ? 'state' : 'func'
@@ -38,6 +42,11 @@ export default class DepMeta {
 
         this.getter = rec.getter || null
         this.setter = rec.setter || null
+        this.onUpdate = rec.onUpdate || dummyOnUpdate
+    }
+
+    static isMeta<T: Function>(dep: T): boolean {
+        return !!dep[metaSymbol]
     }
 
     static set(dep: Dependency, meta: DepMeta): Dependency {
@@ -65,4 +74,5 @@ type DepMetaRec = {
     tags?: Array<string>;
     getter?: DepMeta;
     setter?: DepMeta;
+    onUpdate?: ?OnUpdateHook;
 }
