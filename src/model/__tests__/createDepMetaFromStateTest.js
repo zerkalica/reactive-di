@@ -1,78 +1,59 @@
 /* @flow */
 /* eslint-env mocha */
+
 import assert from 'power-assert'
+
 import createDepMetaFromState from '../createDepMetaFromState'
-import type {DepId} from '../../interfaces'
-import {spy} from 'sinon'
-
-function getDepId(obj: Object): DepId {
-    return obj.constructor.$id
-}
-
-class Meta {
-}
-
-class A {
-    static $id: string = 'a';
-
-    name: string;
-    $meta: Meta;
-
-    constructor() {
-        this.$meta = new Meta()
-    }
-}
-
-class C {
-    static $id: string = 'c';
-    name: string;
-    $meta: Meta;
-
-    constructor() {
-        this.$meta = new Meta()
-    }
-}
-
-class B {
-    c: C;
-    $meta: Meta;
-    static $id: string = 'b';
-
-    constructor() {
-        this.c = new C()
-        this.$meta = new Meta()
-    }
-}
-
-class S {
-    a: A;
-    b: B;
-
-    static $id: string = 's';
-    $meta: Meta;
-    constructor() {
-        this.a = new A()
-        this.b = new B()
-        this.$meta = new Meta()
-    }
-}
+import {S, B, getDepId} from './ExampleState'
 
 describe('createDepMetaFromStateTest', () => {
-    it('should build deps for {a, {b: c}', () => {
+    it('should build deps for {a, {b: c}}', () => {
         const s = new S()
-        const {depMap, pathMap} = createDepMetaFromState(s, getDepId)
-
-        assert.deepEqual(pathMap, {
-            s: [],
-            a: ['a'],
-            b: ['b'],
-            c: ['b', 'c']
-        })
+        const {depMap} = createDepMetaFromState(s, getDepId)
         assert.deepEqual(depMap, {
             s: ['s', 'a', 'b', 'c'],
             a: ['s', 'a'],
             b: ['s', 'b', 'c'],
             c: ['s', 'b', 'c']
         })
+    })
+
+    it('should build valid pathmap for {a, {b: c}}', () => {
+        const s = new S()
+        const {pathMap} = createDepMetaFromState(s, getDepId)
+        assert.deepEqual(pathMap, {
+            s: [],
+            a: ['a'],
+            b: ['b'],
+            c: ['b', 'c']
+        })
+    })
+
+    it('should build valid fromJSMap for {a, {b: c}}', () => {
+        const s = new S()
+        const {fromJSMap} = createDepMetaFromState(s, getDepId)
+        const s2 = fromJSMap.s({
+            b: {
+                c: {
+                    name: 'testC-changed'
+                }
+            }
+        })
+        assert(s !== s2)
+        assert(s2 instanceof S)
+        assert(s2.b.c.name === 'testC-changed')
+    })
+
+    it('should build valid fromJSMap for {b: c}', () => {
+        const s = new S()
+        const {fromJSMap} = createDepMetaFromState(s, getDepId)
+        const b2 = fromJSMap.b({
+            c: {
+                name: 'testC-changed'
+            }
+        })
+        assert(s.b !== b2)
+        assert(b2 instanceof B)
+        assert(b2.c.name === 'testC-changed')
     })
 })
