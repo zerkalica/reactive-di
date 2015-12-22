@@ -7,7 +7,6 @@ export type MergeRec = {
 }
 
 export type StateModelMeta = {
-    $meta: {}
 };
 
 export type StateModel<T> = StateModelMeta & {

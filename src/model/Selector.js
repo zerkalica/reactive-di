@@ -1,6 +1,5 @@
 /* @flow */
 
-import AbstractMetaDriver from '../meta/drivers/AbstractMetaDriver'
 import Cursor from './Cursor'
 import createDepMetaFromState, {StateDepsMeta} from './createDepMetaFromState'
 import type {FromJS, DepId, IdsMap, NotifyDepFn} from '../interfaces'
