@@ -1,9 +1,10 @@
 /* @flow */
 
 import createProxy from './utils/createProxy'
+import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
 import DepMeta from './meta/DepMeta'
 import MetaLoader from './meta/MetaLoader'
-import {AbstractSelector} from './selectorInterfaces'
+import {AbstractSelector, selectorMeta} from './selectorInterfaces'
 import type {Dependency, DepId} from './interfaces'
 
 type CacheRec = {
@@ -20,12 +21,14 @@ export default class ReactiveDi {
     _middlewares: {[id: DepId]: Array<DepMeta>};
 
     constructor(
+        driver: AbstractMetaDriver,
         selector: AbstractSelector,
         registeredDeps?: Array<[Dependency, Dependency]>,
         middlewares?: Array<[Dependency|Array<string>, Array<Dependency>]>
     ) {
         this._cache = Object.create(null)
         const loader = this._metaLoader = new MetaLoader(
+            driver,
             selector,
             ids => this._notify(ids),
             registeredDeps
@@ -37,7 +40,7 @@ export default class ReactiveDi {
                 this._middlewares[loader.get(frm).id] = toDeps.map(toDep => loader.get(toDep))
             }
         })
-        this._cache[DepMeta.get(AbstractSelector).id] = {
+        this._cache[selectorMeta.id] = {
             value: selector,
             reCalculate: false
         };
@@ -88,6 +91,7 @@ export default class ReactiveDi {
             fn,
             onUpdate
         } = depMeta
+
         const cache = getter ? tempCache : this._cache
         let cacheRec = cache[id]
         if (!cacheRec) {

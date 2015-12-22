@@ -12,7 +12,14 @@ export class AbstractCursor<V> {
     /* eslint-enable no-unused-vars */
 }
 
+function fn() {
+    throw new Error('Implement AbstractSelector')
+}
+
+export const selectorMeta: DepMeta = new DepMeta({fn});
+
 export class AbstractSelector {
+
     /* eslint-disable no-unused-vars */
     getDepMap(): IdsMap {
         return {}
@@ -29,11 +36,3 @@ export class AbstractSelector {
     }
     /* eslint-enable no-unused-vars */
 }
-
-function fn() {
-    throw new Error('Implement AbstractSelector')
-}
-
-DepMeta.set(AbstractSelector, new DepMeta({
-    fn
-}))

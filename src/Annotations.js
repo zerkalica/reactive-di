@@ -2,12 +2,14 @@
 
 import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
+import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
 import DepMeta, {createId} from './meta/DepMeta'
-import {AbstractCursor, AbstractSelector} from './selectorInterfaces'
 import type {Dependency, Setter, OnUpdateHook} from './interfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel} from './model/interfaces'
 /* eslint-enable no-unused-vars */
+import {AbstractCursor, AbstractSelector, selectorMeta} from './selectorInterfaces'
+
 type DepDecoratorFn<T> = (target: Dependency<T>) => T;
 
 type NormalizedDeps = {
@@ -32,12 +34,15 @@ function _setter<T: Object>(cursor: AbstractCursor<T>): Setter<T> {
     }
 }
 
-function normalizeDeps(rDeps: Array<Object>): NormalizedDeps {
+function normalizeDeps(
+    driver: AbstractMetaDriver,
+    rDeps: Array<Object>
+): NormalizedDeps {
     const deps: Array<DepMeta> = [];
     let depNames: ?Array<string> = null;
     let onUpdate: ?OnUpdateHook = null;
 
-    if (typeof rDeps[0] === 'function' && !DepMeta.isMeta(rDeps[0])) {
+    if (typeof rDeps[0] === 'function' && !driver.has(rDeps[0])) {
         onUpdate = rDeps[0]
         /* eslint-disable no-param-reassign */
         rDeps = rDeps.slice(0, 1)
@@ -48,12 +53,12 @@ function normalizeDeps(rDeps: Array<Object>): NormalizedDeps {
         const depsMap: RawDepMap = rDeps[0];
         depNames = Object.keys(depsMap)
         for (let i = 0, j = depNames.length; i < j; i++) {
-            deps.push(DepMeta.get(depsMap[depNames[i]]))
+            deps.push(driver.get(depsMap[depNames[i]]))
         }
     } else {
         const rawDeps: Array<Dependency> = rDeps;
         for (let i = 0, j = rawDeps.length; i < j; i++) {
-            deps.push(DepMeta.get(rawDeps[i]))
+            deps.push(driver.get(rawDeps[i]))
         }
     }
 
@@ -64,7 +69,11 @@ function normalizeDeps(rDeps: Array<Object>): NormalizedDeps {
     }
 }
 
-function klass(tags: Array<string>, rawDeps: Array<Dependency>): DepDecoratorFn {
+function klass(
+    driver: AbstractMetaDriver,
+    tags: Array<string>,
+    rawDeps: Array<Dependency>
+): DepDecoratorFn {
     return function _klass<T>(proto: Dependency<T>): Dependency<T> {
         const debugName: string = getFunctionName((proto: Function));
         function createObject(...args: Array<any>): T {
@@ -74,26 +83,34 @@ function klass(tags: Array<string>, rawDeps: Array<Dependency>): DepDecoratorFn 
         }
         createObject.displayName = 'klass@' + debugName
         const meta: DepMeta = new DepMeta({
-            ...normalizeDeps(rawDeps),
+            ...normalizeDeps(driver, rawDeps),
             fn: createObject,
             tags: [debugName, 'klass'].concat(tags)
         });
-        return DepMeta.set(proto, meta)
+        return driver.set(proto, meta)
     }
 }
 
-function factory(tags: Array<string>, rawDeps: Array<Dependency>): DepDecoratorFn {
+function factory(
+    driver: AbstractMetaDriver,
+    tags: Array<string>,
+    rawDeps: Array<Dependency>
+): DepDecoratorFn {
     return function _factory<T: Function>(fn: T): Dependency<T> {
         const meta = new DepMeta({
-            ...normalizeDeps(rawDeps),
+            ...normalizeDeps(driver, rawDeps),
             fn,
             tags: ['factory'].concat(tags)
         })
-        return DepMeta.set(fn, meta)
+        return driver.set(fn, meta)
     }
 }
 
-function model<T: StateModel>(tags: Array<string>, mdl: Dependency<T>): Dependency<T> {
+function model<T: StateModel>(
+    driver: AbstractMetaDriver,
+    tags: Array<string>,
+    mdl: Dependency<T>
+): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
     const id = createId()
     function _select(selector: AbstractSelector): AbstractCursor<T> {
@@ -101,7 +118,7 @@ function model<T: StateModel>(tags: Array<string>, mdl: Dependency<T>): Dependen
     }
     _select.displayName = 'sel@' + debugName
     const select = new DepMeta({
-        deps: [DepMeta.get(AbstractSelector)],
+        deps: [selectorMeta],
         fn: _select,
         tags: [debugName, 'sel'].concat(tags)
     })
@@ -125,21 +142,25 @@ function model<T: StateModel>(tags: Array<string>, mdl: Dependency<T>): Dependen
         tags: [debugName, 'model'].concat(tags)
     })
 
-    return DepMeta.set(mdl, meta)
+    return driver.set(mdl, meta)
 }
 
-export function nonReactive<T: StateModel>(dep: Dependency<T>): Function {
-    const {displayName, getter} = DepMeta.get(dep)
+export function nonReactive<T: StateModel>(
+    driver: AbstractMetaDriver,
+    dep: Dependency<T>
+): Function {
+    const {displayName, getter} = driver.get(dep)
     function fn() {}
     fn.displayName = 'nonReactiveGetter@' + displayName
     if (!getter) {
         throw new Error('Not a state dependency: ' + displayName)
     }
-    DepMeta.set(fn, getter)
+    driver.set(fn, getter)
     return fn;
 }
 
 function setter<S: StateModel>(
+    driver: AbstractMetaDriver,
     tags: Array<string>,
     dep: Dependency<S>,
     rawDeps: Array<Dependency>
@@ -147,12 +168,12 @@ function setter<S: StateModel>(
     return function __setter<T>(sourceFn: Dependency<T>): Dependency<T> {
         const debugName: string = getFunctionName((dep: Function));
         const source: DepMeta = new DepMeta({
-            ...normalizeDeps(rawDeps),
+            ...normalizeDeps(driver, rawDeps),
             fn: sourceFn,
             tags: [debugName, 'source'].concat(tags)
         });
 
-        const setterMeta = DepMeta.get(dep).setter
+        const setterMeta = driver.get(dep).setter
         if (!setterMeta) {
             throw new Error('Not a state dependency: ' + debugName)
         }
@@ -163,37 +184,42 @@ function setter<S: StateModel>(
             tags: [debugName, 'setter'].concat(tags)
         });
 
-        return DepMeta.set(sourceFn, meta)
+        return driver.set(sourceFn, meta)
     }
 }
 
 type SetterFn<S> = (dep: Dependency<S>, ...rawDeps: Array<Dependency>) => DepDecoratorFn<S>;
-export function createSetter(tags: Array<string> = []): SetterFn {
-    return function __setter<S: StateModel>(
-        dep: Dependency<S>,
-        ...rawDeps: Array<Dependency>
-    ): DepDecoratorFn {
-        return setter(tags, dep, rawDeps)
-    }
-}
-
 type ModelFn<T> = (mdl: Dependency<T>) => DepDecoratorFn<T>;
-export function createModel(tags: Array<string> = []): ModelFn {
-    return function _model<T: StateModel>(mdl: Dependency<T>): Dependency<T> {
-        return model(tags, mdl)
-    }
-}
-
 type FactoryFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn<T>;
-export function createFactory(tags: Array<string> = []): FactoryFn {
-    return function _factory<T>(...rawDeps: Array<Dependency>): DepDecoratorFn<T> {
-        return factory(tags, rawDeps)
-    }
-}
-
 type KlassFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn<T>;
-export function createKlass(tags: Array<string> = []): KlassFn {
-    return function _klass<T>(...rawDeps: Array<Dependency>): DepDecoratorFn<T> {
-        return klass(tags, rawDeps)
+type NonReactiveFn<T> = (dep: Dependency<T>) => Function;
+
+export default class Annotations {
+    setter: SetterFn;
+    model: ModelFn;
+    factory: FactoryFn;
+    klass: KlassFn;
+    nonReactive: NonReactiveFn;
+
+    constructor(driver: AbstractMetaDriver, tags: Array<string> = []) {
+        this.setter = function __setter<S: StateModel>(dep: Dependency<S>, ...rawDeps: Array<Dependency>): DepDecoratorFn {
+            return setter(driver, tags, dep, rawDeps)
+        }
+
+        this.model = function __model<T: StateModel>(mdl: Dependency<T>): Dependency<T> {
+            return model(driver, tags, mdl)
+        }
+
+        this.factory = function __factory<T>(...rawDeps: Array<Dependency>): DepDecoratorFn<T> {
+            return factory(driver, tags, rawDeps)
+        }
+
+        this.klass = function __klass<T>(...rawDeps: Array<Dependency>): DepDecoratorFn<T> {
+            return klass(driver, tags, rawDeps)
+        }
+
+        this.nonReactive = function __nonReactive<T: StateModel>(dep: Dependency<T>): DepDecoratorFn<T> {
+            return nonReactive(driver, dep)
+        }
     }
 }

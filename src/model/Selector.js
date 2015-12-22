@@ -1,34 +1,29 @@
 /* @flow */
 
-import createDepMetaFromState, {StateDepsMeta} from './createDepMetaFromState'
+import AbstractMetaDriver from '../meta/drivers/AbstractMetaDriver'
 import Cursor from './Cursor'
-import DepMeta from '../meta/DepMeta'
+import createDepMetaFromState, {StateDepsMeta} from './createDepMetaFromState'
 import type {FromJS, DepId, IdsMap, NotifyDepFn} from '../interfaces'
+import {AbstractSelector, AbstractCursor} from '../selectorInterfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel, SetState, DepIdGetter} from './interfaces'
 /* eslint-enable no-unused-vars */
-import {AbstractSelector, AbstractCursor} from '../selectorInterfaces'
-
-function defaultGetDepId(obj: Object): DepId {
-    return DepMeta.get(obj.constructor).id
-}
 
 function noop() {
 }
 
 export default class Selector extends AbstractSelector {
     _state: StateModel;
-    _getDepId: DepIdGetter;
     _notify: NotifyDepFn;
 
     _depMeta: StateDepsMeta;
 
-    constructor(state: StateModel, getDepId?: DepIdGetter) {
+    constructor(state: StateModel, getDepId: DepIdGetter) {
         super()
         this._state = state
-        this._getDepId = getDepId || defaultGetDepId
         this._notify = noop
-        this._depMeta = createDepMetaFromState(this._state, this._getDepId)
+
+        this._depMeta = createDepMetaFromState(this._state, getDepId)
     }
 
     setNotify(notify: NotifyDepFn): AbstractSelector {

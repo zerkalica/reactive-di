@@ -1,9 +1,7 @@
 /* @flow */
 
-import type {DepId, Dependency, OnUpdateHook} from '../interfaces'
+import type {DepId, OnUpdateHook} from '../interfaces'
 import getFunctionName from '../utils/getFunctionName'
-
-const metaSymbol = Symbol('__rdi__meta')
 
 let id: number = 0;
 
@@ -43,26 +41,6 @@ export default class DepMeta {
         this.getter = rec.getter || null
         this.setter = rec.setter || null
         this.onUpdate = rec.onUpdate || dummyOnUpdate
-    }
-
-    static isMeta<T: Function>(dep: T): boolean {
-        return !!dep[metaSymbol]
-    }
-
-    static set(dep: Dependency, meta: DepMeta): Dependency {
-        if ((dep: Function)[metaSymbol]) {
-            throw new Error('Annotation already defined for ' + ((dep: Function).displayName || String(dep)))
-        }
-        (dep: Function)[metaSymbol] = meta
-        return dep
-    }
-
-    static get(dep: Dependency): DepMeta {
-        const meta: DepMeta = (dep: Function)[metaSymbol];
-        if (!meta || !(meta instanceof DepMeta)) {
-            throw new TypeError('Not an annotated dependency: ' + ((dep: Function).displayName || String(dep)))
-        }
-        return meta
     }
 }
 

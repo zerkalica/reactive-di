@@ -1,21 +1,19 @@
 /* @flow */
 
+import merge from './utils/merge'
+import Annotations from './Annotations'
 import Collection from './model/Collection'
-import EntityMeta, {copyProps} from './model/EntityMeta'
+import EntityMeta from './model/EntityMeta'
 import ReactiveDi from './ReactiveDi'
 import Selector from './model/Selector'
-import {nonReactive, createSetter, createModel, createFactory, createKlass} from './createAnnotations'
+import SymbolMetaDriver from './meta/drivers/SymbolMetaDriver'
 
 export {
-    nonReactive,
-    createSetter,
-    createModel,
-    createFactory,
-    createKlass,
-
+    merge,
+    Annotations,
     Collection,
     EntityMeta,
-    copyProps,
     ReactiveDi,
-    Selector
+    Selector,
+    SymbolMetaDriver
 }

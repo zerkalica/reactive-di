@@ -2,6 +2,7 @@
 
 import updateIdsMap from './updateIdsMap'
 import DepMeta from './DepMeta'
+import AbstractMetaDriver from './drivers/AbstractMetaDriver'
 import {AbstractSelector} from '../selectorInterfaces'
 import type {Dependency, NotifyDepsFn, IdsMap, DepId} from '../interfaces'
 
@@ -10,14 +11,17 @@ export default class MetaLoader {
     _stateIdToIdsMap: IdsMap;
     _idToStateIdsMap: IdsMap;
     _notify: NotifyDepsFn;
+    _driver: AbstractMetaDriver;
 
     constructor(
+        driver: AbstractMetaDriver,
         selector: AbstractSelector,
         notify: NotifyDepsFn,
         registeredDeps?: Array<[Dependency, Dependency]>
     ) {
         this._cache = Object.create(null)
         this._stateIdToIdsMap = Object.create(null);
+        this._driver = driver
 
         selector.setNotify(id => notify(this._stateIdToIdsMap[id] || []))
 
@@ -25,12 +29,12 @@ export default class MetaLoader {
         this._idToStateIdsMap = depMap;
 
         (registeredDeps || []).forEach(([depSrc, depTarget]) => {
-            this._cache[DepMeta.get(depSrc).id] = DepMeta.get(depTarget)
+            this._cache[driver.get(depSrc).id] = driver.get(depTarget)
         })
     }
 
     get(dep: Dependency): DepMeta {
-        const depMeta = DepMeta.get(dep)
+        const depMeta = this._driver.get(dep)
         return this._cache[depMeta.id] || depMeta
     }
 
