@@ -7,6 +7,7 @@ import {AbstractSelector, AbstractCursor} from '../selectorInterfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel, SetState, DepIdGetter} from './interfaces'
 /* eslint-enable no-unused-vars */
+import EntityMeta from '../promised/EntityMeta'
 
 function noop() {
 }
@@ -17,12 +18,18 @@ export default class Selector extends AbstractSelector {
 
     _depMeta: StateDepsMeta;
 
+    _promisedMap: {[id: DepId]: EntityMeta};
+
     constructor(state: StateModel, getDepId: DepIdGetter) {
         super()
         this._state = state
         this._notify = noop
 
         this._depMeta = createDepMetaFromState(this._state, getDepId)
+        this._promisedMap = {}
+        Object.keys(this._depMeta.depMap).forEach(depId => {
+            this._promisedMap[depId] = new EntityMeta()
+        })
     }
 
     setNotify(notify: NotifyDepFn): AbstractSelector {
@@ -34,14 +41,21 @@ export default class Selector extends AbstractSelector {
         return this._depMeta.depMap
     }
 
-    select<T: StateModel>(id: DepId): AbstractCursor<T> {
-        const setState = newState => {
-            this._state = newState
-            this._notify(id)
-        };
+    getMeta<T: StateModel>(id: DepId): EntityMeta<T> {
+        return this._promisedMap[id]
+    }
 
+    select<T: StateModel>(id: DepId): AbstractCursor<T> {
         const {pathMap, fromJSMap} = this._depMeta
         const fromJS: FromJS = fromJSMap[id];
+        const setState = (newState, rec?: EntityMetaRec) => {
+            this._state = newState
+            this._notify(id)
+            if (rec) {
+                this._promisedMap[id] = this._promisedMap[id].copy(rec)
+            }
+        };
+
 
         return new Cursor(pathMap[id], fromJS, this._state, setState)
     }

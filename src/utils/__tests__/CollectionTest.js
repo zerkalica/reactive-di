@@ -2,8 +2,7 @@
 /* eslint-env mocha */
 import assert from 'power-assert'
 import Collection from '../Collection'
-import EntityMeta from '../EntityMeta'
-import merge from '../../utils/merge'
+import merge from '../merge'
 
 // import {spy} from 'sinon'
 
@@ -11,18 +10,15 @@ type TestElRec = {
     id?: string;
     name?: string;
     w?: number;
-    $meta?: EntityMeta;
 }
 class TestEl {
     id: ?string;
     w: number;
     name: ?string;
-    $meta: EntityMeta;
 
     constructor(rec: TestElRec = {}) {
         this.id = rec.id || null
         this.name = rec.name || null
-        this.$meta = rec.$meta || new EntityMeta()
         this.w = rec.w || 0
     }
 

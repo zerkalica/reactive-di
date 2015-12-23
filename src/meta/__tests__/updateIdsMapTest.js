@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-/* flow */
+/* @flow */
 import assert from 'power-assert'
 import updateIdsMap from '../updateIdsMap'
 import DepMeta from '../DepMeta'

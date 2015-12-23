@@ -1,6 +1,5 @@
 /* @flow */
-import EntityMeta from './EntityMeta'
-import merge from '../utils/merge'
+import merge from './merge'
 
 type MapFn<T, V> = (v: T, index?: number) => V;
 type FilterFn<T> = (v: T, index?: number) => boolean;
@@ -12,7 +11,6 @@ type DeletedItems<T, TId> = {[id: TId]: [T, number]};
 
 type CollectionRec<T: Entity, TId> = {
     items?: Array<T>;
-    $meta?: EntityMeta;
     deleted?: DeletedItems<T, TId>;
 }
 
@@ -24,18 +22,15 @@ type Entity<TId> = {
 
 export default class Collection<T: Entity, TId> {
     items: Array<T>;
-    $meta: EntityMeta;
     deleted: DeletedItems<T, TId>;
     length: number;
 
     constructor<R: Object>(rec: CollectionRec<T, TId>|Array<R> = []) {
         if (Array.isArray(rec)) {
             this.items = rec.map(el => this.createItem(el))
-            this.$meta = new EntityMeta()
             this.deleted = {}
         } else {
             this.items = rec.items || []
-            this.$meta = rec.$meta || new EntityMeta()
             this.deleted = rec.deleted || {}
         }
         this.length = this.items.length
@@ -155,7 +150,6 @@ export default class Collection<T: Entity, TId> {
         return isChanged ? this._copy({items}) : this
     }
 }
-
 
 const obj: {
     [id: any]: Function
