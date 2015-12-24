@@ -6,6 +6,7 @@ import DepMeta from './meta/DepMeta'
 import MetaLoader from './meta/MetaLoader'
 import {AbstractSelector, selectorMeta} from './selectorInterfaces'
 import type {Dependency, DepId} from './interfaces'
+import ServiceSelector from './promised/ServiceSelector'
 
 type CacheRec = {
     value: any;
@@ -41,7 +42,7 @@ export default class ReactiveDi {
             }
         })
         this._cache[selectorMeta.id] = {
-            value: selector,
+            value: new ServiceSelector(selector),
             reCalculate: false
         };
     }

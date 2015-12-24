@@ -3,12 +3,15 @@
 import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
 import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
+import Promised from './promised/Promised'
+import ServiceCursor from './promised/ServiceCursor'
+import ServiceSelector from './promised/ServiceSelector'
 import DepMeta, {createId} from './meta/DepMeta'
 import type {Dependency, Setter, OnUpdateHook} from './interfaces'
-/* eslint-disable no-unused-vars */
 import type {StateModel} from './model/interfaces'
-/* eslint-enable no-unused-vars */
 import {AbstractCursor, AbstractSelector, selectorMeta} from './selectorInterfaces'
+/* eslint-disable no-unused-vars */
+/* eslint-enable no-unused-vars */
 
 type DepDecoratorFn<T> = (target: Dependency<T>) => T;
 
@@ -24,12 +27,12 @@ function proxifyResult<R: Function>(src: R, set: Setter): R {
     return createProxy(src, [set])
 }
 
-function _getter<T>(cursor: AbstractCursor<T>): T {
+function _getter<T>(cursor: ServiceCursor<T>): Promised<T> {
     return cursor.get()
 }
 
-function _setter<T: Object>(cursor: AbstractCursor<T>): Setter<T> {
-    return function __setter(value: T): void {
+function _setter<T: Object>(cursor: ServiceCursor<T>): Setter<T> {
+    return function __setter(value: Promised<T>): void {
         cursor.set(value)
     }
 }
@@ -113,7 +116,7 @@ function model<T: StateModel>(
 ): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
     const id = createId()
-    function _select(selector: AbstractSelector): AbstractCursor<T> {
+    function _select(selector: ServiceSelector): ServiceCursor<T> {
         return selector.select(id)
     }
     _select.displayName = 'sel@' + debugName

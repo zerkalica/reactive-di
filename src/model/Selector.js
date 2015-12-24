@@ -41,21 +41,13 @@ export default class Selector extends AbstractSelector {
         return this._depMeta.depMap
     }
 
-    getMeta<T: StateModel>(id: DepId): EntityMeta<T> {
-        return this._promisedMap[id]
-    }
-
     select<T: StateModel>(id: DepId): AbstractCursor<T> {
         const {pathMap, fromJSMap} = this._depMeta
         const fromJS: FromJS = fromJSMap[id];
-        const setState = (newState, rec?: EntityMetaRec) => {
+        const setState = newState => {
             this._state = newState
             this._notify(id)
-            if (rec) {
-                this._promisedMap[id] = this._promisedMap[id].copy(rec)
-            }
         };
-
 
         return new Cursor(pathMap[id], fromJS, this._state, setState)
     }

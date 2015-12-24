@@ -12,7 +12,7 @@ function LoadUserCollection(users: EntityMeta<UserCollection>) {
         },
         rawUsers?: Array<T>
     ): EntityMeta<UserCollection> {
-        return new EntityMeta({
+        return users.copy({
             ...rec,
             value: rawUsers ? new UserCollection(rawUsers) : users.value
         })
