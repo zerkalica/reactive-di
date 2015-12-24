@@ -7,10 +7,8 @@ import {AbstractSelector, AbstractCursor} from '../selectorInterfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel, SetState, DepIdGetter} from './interfaces'
 /* eslint-enable no-unused-vars */
-import EntityMeta from '../promised/EntityMeta'
 
-function noop() {
-}
+function noop() {}
 
 export default class Selector extends AbstractSelector {
     _state: StateModel;
@@ -18,7 +16,6 @@ export default class Selector extends AbstractSelector {
 
     _depMeta: StateDepsMeta;
 
-    _promisedMap: {[id: DepId]: EntityMeta};
 
     constructor(state: StateModel, getDepId: DepIdGetter) {
         super()
@@ -26,10 +23,6 @@ export default class Selector extends AbstractSelector {
         this._notify = noop
 
         this._depMeta = createDepMetaFromState(this._state, getDepId)
-        this._promisedMap = {}
-        Object.keys(this._depMeta.depMap).forEach(depId => {
-            this._promisedMap[depId] = new EntityMeta()
-        })
     }
 
     setNotify(notify: NotifyDepFn): AbstractSelector {

@@ -1,7 +1,5 @@
 /* @flow */
 
-import merge from '../utils/merge'
-
 export type EntityMetaRec = {
     pending?: boolean;
     rejected?: boolean;
@@ -20,9 +18,5 @@ export default class EntityMeta {
         this.rejected = rec.rejected || false
         this.fulfilled = rec.fulfilled === undefined ? true : rec.fulfilled
         this.reason = rec.reason || null
-    }
-
-    copy(rec: EntityMetaRec): EntityMeta {
-        return merge(this, rec)
     }
 }

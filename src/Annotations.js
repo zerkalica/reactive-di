@@ -4,14 +4,12 @@ import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
 import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
 import Promised from './promised/Promised'
-import ServiceCursor from './promised/ServiceCursor'
-import ServiceSelector from './promised/ServiceSelector'
 import DepMeta, {createId} from './meta/DepMeta'
 import type {Dependency, Setter, OnUpdateHook} from './interfaces'
-import type {StateModel} from './model/interfaces'
-import {AbstractCursor, AbstractSelector, selectorMeta} from './selectorInterfaces'
 /* eslint-disable no-unused-vars */
+import type {StateModel} from './model/interfaces'
 /* eslint-enable no-unused-vars */
+import {AbstractCursor, AbstractSelector, selectorMeta} from './selectorInterfaces'
 
 type DepDecoratorFn<T> = (target: Dependency<T>) => T;
 
@@ -27,11 +25,11 @@ function proxifyResult<R: Function>(src: R, set: Setter): R {
     return createProxy(src, [set])
 }
 
-function _getter<T>(cursor: ServiceCursor<T>): Promised<T> {
+function _getter<T>(cursor: AbstractCursor<Promised<T>>): Promised<T> {
     return cursor.get()
 }
 
-function _setter<T: Object>(cursor: ServiceCursor<T>): Setter<T> {
+function _setter<T>(cursor: AbstractCursor<Promised<T>>): Setter<Promised<T>> {
     return function __setter(value: Promised<T>): void {
         cursor.set(value)
     }
@@ -116,7 +114,7 @@ function model<T: StateModel>(
 ): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
     const id = createId()
-    function _select(selector: ServiceSelector): ServiceCursor<T> {
+    function _select(selector: AbstractSelector): AbstractCursor<Promised<T>> {
         return selector.select(id)
     }
     _select.displayName = 'sel@' + debugName
@@ -124,11 +122,6 @@ function model<T: StateModel>(
         deps: [selectorMeta],
         fn: _select,
         tags: [debugName, 'sel'].concat(tags)
-    })
-    const getter = new DepMeta({
-        deps: [select],
-        fn: _getter,
-        tags: [debugName, 'get'].concat(tags)
     })
     const __setter = new DepMeta({
         deps: [select],
@@ -140,26 +133,11 @@ function model<T: StateModel>(
         id,
         fn: _getter,
         deps: [select],
-        getter,
         setter: __setter,
         tags: [debugName, 'model'].concat(tags)
     })
 
     return driver.set(mdl, meta)
-}
-
-export function nonReactive<T: StateModel>(
-    driver: AbstractMetaDriver,
-    dep: Dependency<T>
-): Function {
-    const {displayName, getter} = driver.get(dep)
-    function fn() {}
-    fn.displayName = 'nonReactiveGetter@' + displayName
-    if (!getter) {
-        throw new Error('Not a state dependency: ' + displayName)
-    }
-    driver.set(fn, getter)
-    return fn;
 }
 
 function setter<S: StateModel>(
@@ -195,14 +173,12 @@ type SetterFn<S> = (dep: Dependency<S>, ...rawDeps: Array<Dependency>) => DepDec
 type ModelFn<T> = (mdl: Dependency<T>) => DepDecoratorFn<T>;
 type FactoryFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn<T>;
 type KlassFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn<T>;
-type NonReactiveFn<T> = (dep: Dependency<T>) => Function;
 
 export default class Annotations {
     setter: SetterFn;
     model: ModelFn;
     factory: FactoryFn;
     klass: KlassFn;
-    nonReactive: NonReactiveFn;
 
     constructor(driver: AbstractMetaDriver, tags: Array<string> = []) {
         this.setter = function __setter<S: StateModel>(dep: Dependency<S>, ...rawDeps: Array<Dependency>): DepDecoratorFn {
@@ -219,10 +195,6 @@ export default class Annotations {
 
         this.klass = function __klass<T>(...rawDeps: Array<Dependency>): DepDecoratorFn<T> {
             return klass(driver, tags, rawDeps)
-        }
-
-        this.nonReactive = function __nonReactive<T: StateModel>(dep: Dependency<T>): DepDecoratorFn<T> {
-            return nonReactive(driver, dep)
         }
     }
 }

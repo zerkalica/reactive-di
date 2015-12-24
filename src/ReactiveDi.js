@@ -28,9 +28,10 @@ export default class ReactiveDi {
         middlewares?: Array<[Dependency|Array<string>, Array<Dependency>]>
     ) {
         this._cache = Object.create(null)
+        const serviceSelector = new ServiceSelector(selector)
         const loader = this._metaLoader = new MetaLoader(
             driver,
-            selector,
+            serviceSelector,
             ids => this._notify(ids),
             registeredDeps
         )
@@ -42,7 +43,7 @@ export default class ReactiveDi {
             }
         })
         this._cache[selectorMeta.id] = {
-            value: new ServiceSelector(selector),
+            value: serviceSelector,
             reCalculate: false
         };
     }
@@ -85,7 +86,7 @@ export default class ReactiveDi {
     ): any {
         const {
             id,
-            getter,
+            isState,
             displayName,
             deps,
             depNames,
@@ -93,7 +94,7 @@ export default class ReactiveDi {
             onUpdate
         } = depMeta
 
-        const cache = getter ? tempCache : this._cache
+        const cache = isState ? tempCache : this._cache
         let cacheRec = cache[id]
         if (!cacheRec) {
             cacheRec = {

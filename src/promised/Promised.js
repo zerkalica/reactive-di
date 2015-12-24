@@ -16,15 +16,14 @@ export default class Promised<T> extends EntityMeta {
         this.value = rec.value
     }
 
-    static all<V>(owners: Array<Promised<V>>): Promised<Array<?V>> {
-        const meta: PromisedRec<Array<?V>> = {
+    static all<V>(owners: Array<Promised<V>>): Promised<Array<V>> {
+        const meta: PromisedRec<Array<V>> = {
             pending: false,
             rejected: false,
             fulfilled: true,
             reason: null,
             value: []
         };
-        const values: Array<?V> = [];
         for (let i = 0; i < owners.length; i++) {
             const {pending, rejected, fulfilled, reason, value} = owners[i]
             if (!fulfilled) {
@@ -39,9 +38,8 @@ export default class Promised<T> extends EntityMeta {
             if (pending) {
                 meta.pending = pending
             }
-            values.push(value)
+            meta.value.push(value)
         }
-        meta.value = values
 
         return new Promised(meta)
     }

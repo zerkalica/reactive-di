@@ -13,7 +13,7 @@ function dummyOnUpdate(): void {
 }
 
 export default class DepMeta {
-    kind: 'func'|'state';
+    isState: boolean;
 
     id: DepId;
     displayName: string;
@@ -22,13 +22,12 @@ export default class DepMeta {
     deps: Array<DepMeta>;
     depNames: ?Array<string>;
     tags: Array<string>;
-
-    getter: ?DepMeta;
-    setter: ?DepMeta;
     onUpdate: OnUpdateHook;
 
+    setter: ?DepMeta;
+
     constructor(rec: DepMetaRec) {
-        this.kind = rec.getter ? 'state' : 'func'
+        this.isState = !!rec.setter
 
         this.id = rec.id || createId()
         this.tags = rec.tags || []
@@ -38,7 +37,6 @@ export default class DepMeta {
         this.deps = rec.deps || []
         this.depNames = rec.depNames || []
 
-        this.getter = rec.getter || null
         this.setter = rec.setter || null
         this.onUpdate = rec.onUpdate || dummyOnUpdate
     }

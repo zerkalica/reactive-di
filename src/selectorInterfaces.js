@@ -6,6 +6,7 @@ import type {FromJS, DepId, IdsMap, NotifyDepFn} from './interfaces'
 export class AbstractCursor<V> {
     get(): V|any {
     }
+    fromJS: FromJS;
     /* eslint-disable no-unused-vars */
     set(newModel: V): void {
     }
@@ -24,8 +25,6 @@ export class AbstractSelector {
     getDepMap(): IdsMap {
         return {}
     }
-
-    fromJS: FromJS;
 
     setNotify(notify: NotifyDepFn): AbstractSelector {
         return this
