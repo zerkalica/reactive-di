@@ -2,26 +2,39 @@
 
 import Cursor from './Cursor'
 import createDepMetaFromState, {StateDepsMeta} from './createDepMetaFromState'
-import type {FromJS, DepId, IdsMap, NotifyDepFn} from '../interfaces'
+import EntityMeta from '../promised/EntityMeta'
+import type {EntityMetaRec} from '../promised/EntityMeta'
+import type {DepId, IdsMap, NotifyDepFn} from '../interfaces'
 import {AbstractSelector, AbstractCursor} from '../selectorInterfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel, SetState, DepIdGetter} from './interfaces'
 /* eslint-enable no-unused-vars */
 
-function noop() {}
+class State<T: Object> {
+    state: T;
+    meta: {[id: DepId]: EntityMeta};
+
+    constructor(state: T) {
+        this.state = state
+        this.meta = {}
+    }
+}
+
+function SetEntityMeta(childMetas: Array<EntityMeta>) {
+    return function setEntityMeta(rec: EntityMetaRec): EntityMeta {
+        return cursor.set(new EntityMeta(childMetas.concat(rec)))
+    }
+}
+setter(meta(User))(SetEntityMeta)
 
 export default class Selector extends AbstractSelector {
     _state: StateModel;
     _notify: NotifyDepFn;
-
     _depMeta: StateDepsMeta;
-
 
     constructor(state: StateModel, getDepId: DepIdGetter) {
         super()
-        this._state = state
-        this._notify = noop
-
+        this._state = new State(state)
         this._depMeta = createDepMetaFromState(this._state, getDepId)
     }
 
@@ -36,12 +49,10 @@ export default class Selector extends AbstractSelector {
 
     select<T: StateModel>(id: DepId): AbstractCursor<T> {
         const {pathMap, fromJSMap} = this._depMeta
-        const fromJS: FromJS = fromJSMap[id];
-        const setState = newState => {
+
+        return new Cursor(pathMap[id], fromJSMap[id], this._state, newState => {
             this._state = newState
             this._notify(id)
-        };
-
-        return new Cursor(pathMap[id], fromJS, this._state, setState)
+        })
     }
 }

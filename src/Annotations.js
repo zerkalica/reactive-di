@@ -3,7 +3,6 @@
 import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
 import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
-import Promised from './promised/Promised'
 import DepMeta, {createId} from './meta/DepMeta'
 import type {Dependency, Setter, OnUpdateHook} from './interfaces'
 /* eslint-disable no-unused-vars */
@@ -25,12 +24,12 @@ function proxifyResult<R: Function>(src: R, set: Setter): R {
     return createProxy(src, [set])
 }
 
-function _getter<T>(cursor: AbstractCursor<Promised<T>>): Promised<T> {
+function _getter<T: Object>(cursor: AbstractCursor<T>): T {
     return cursor.get()
 }
 
-function _setter<T>(cursor: AbstractCursor<Promised<T>>): Setter<Promised<T>> {
-    return function __setter(value: Promised<T>): void {
+function _setter<T: Object>(cursor: AbstractCursor<T>): Setter<T> {
+    return function __setter(value: T): void {
         cursor.set(value)
     }
 }
@@ -114,7 +113,7 @@ function model<T: StateModel>(
 ): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
     const id = createId()
-    function _select(selector: AbstractSelector): AbstractCursor<Promised<T>> {
+    function _select(selector: AbstractSelector): AbstractCursor<T> {
         return selector.select(id)
     }
     _select.displayName = 'sel@' + debugName
@@ -129,10 +128,13 @@ function model<T: StateModel>(
         tags: [debugName, 'set'].concat(tags)
     })
 
+    const promisedId = createId()
+
     const meta = new DepMeta({
         id,
         fn: _getter,
         deps: [select],
+        promisedId,
         setter: __setter,
         tags: [debugName, 'model'].concat(tags)
     })

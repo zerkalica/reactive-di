@@ -6,7 +6,6 @@ import DepMeta from './meta/DepMeta'
 import MetaLoader from './meta/MetaLoader'
 import {AbstractSelector, selectorMeta} from './selectorInterfaces'
 import type {Dependency, DepId} from './interfaces'
-import ServiceSelector from './promised/ServiceSelector'
 
 type CacheRec = {
     value: any;
@@ -15,35 +14,56 @@ type CacheRec = {
 
 type CacheMap = {[id: DepId]: CacheRec};
 
+type MiddlewareMap = {[id: DepId]: Array<DepMeta>};
+
+function normalizeMiddlewares(
+    rawMiddlewares: Array<[Dependency, Array<Dependency>]>,
+    getDepMeta: (dep: Dependency) => DepMeta
+): MiddlewareMap {
+    const middlewares: MiddlewareMap = {};
+    for (let i = 0, l = rawMiddlewares.length; i < l; i++) {
+        const [frm, toDeps] = rawMiddlewares[i]
+        const key = getDepMeta(frm).id
+        let group = middlewares[key]
+        if (!group) {
+            group = []
+            middlewares[key] = group
+        }
+        for (let j = 0, k = toDeps.length; j < k; j++) {
+            group.push(getDepMeta(toDeps[j]))
+        }
+    }
+
+    return middlewares
+}
+
 export default class ReactiveDi {
     _cache: CacheMap;
     _metaLoader: MetaLoader;
     _listeners: Array<Dependency>;
-    _middlewares: {[id: DepId]: Array<DepMeta>};
+    _middlewares: MiddlewareMap;
 
     constructor(
         driver: AbstractMetaDriver,
         selector: AbstractSelector,
-        registeredDeps?: Array<[Dependency, Dependency]>,
-        middlewares?: Array<[Dependency|Array<string>, Array<Dependency>]>
+        aliases?: Array<[Dependency, Dependency]>,
+        middlewares?: Array<[Dependency, Array<Dependency>]>
     ) {
-        this._cache = Object.create(null)
-        const serviceSelector = new ServiceSelector(selector)
-        const loader = this._metaLoader = new MetaLoader(
-            driver,
-            serviceSelector,
-            ids => this._notify(ids),
-            registeredDeps
-        )
         this._listeners = []
-        this._middlewares = Object.create(null);
-        (middlewares || []).forEach(([frm, toDeps]) => {
-            if (!Array.isArray(frm)) {
-                this._middlewares[loader.get(frm).id] = toDeps.map(toDep => loader.get(toDep))
-            }
-        })
+        this._cache = Object.create(null)
+
+        this._metaLoader = new MetaLoader(
+            driver,
+            selector,
+            ids => this._notify(ids),
+            aliases
+        )
+        this._middlewares = normalizeMiddlewares(
+            middlewares || [],
+            dep => this._metaLoader.get(dep)
+        )
         this._cache[selectorMeta.id] = {
-            value: serviceSelector,
+            value: selector,
             reCalculate: false
         };
     }
@@ -74,9 +94,12 @@ export default class ReactiveDi {
         const cache = this._cache[id] || {}
         cache.value = null
         cache.reCalculate = false
-        this._listeners = this._listeners.filter(function _listenersFilter(d) {
+
+        function _listenersFilter(d) {
             return dep !== d
-        })
+        }
+
+        this._listeners = this._listeners.filter(_listenersFilter)
     }
 
     _get(

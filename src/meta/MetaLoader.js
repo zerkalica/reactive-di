@@ -17,7 +17,7 @@ export default class MetaLoader {
         driver: AbstractMetaDriver,
         selector: AbstractSelector,
         notify: NotifyDepsFn,
-        registeredDeps?: Array<[Dependency, Dependency]>
+        aliases?: Array<[Dependency, Dependency]>
     ) {
         this._cache = Object.create(null)
         this._stateIdToIdsMap = Object.create(null);
@@ -28,7 +28,7 @@ export default class MetaLoader {
         const depMap = selector.getDepMap();
         this._idToStateIdsMap = depMap;
 
-        (registeredDeps || []).forEach(([depSrc, depTarget]) => {
+        (aliases || []).forEach(([depSrc, depTarget]) => {
             this._cache[driver.get(depSrc).id] = driver.get(depTarget)
         })
     }

@@ -1,38 +1,19 @@
 /* @flow */
 
-import {model} from '../../annotations'
+import {setter} from 'reactive-di/annotations'
+import type {EntityMetaRec} from 'reactive-di'
+import {Promised} from 'reactive-di'
+import UserCollection 'app/users/model/UserCollection'
 
-function LoadUserCollection(users: EntityMeta<UserCollection>) {
+function LoadUserCollection(users: Promised<UserCollection>) {
     return function loadUserCollection<T>(
-        rec: {
-            pending?: boolean,
-            fulfilled: ?boolean,
-            rejected?: boolean,
-            reason?: Error
-        },
+        rec: EntityMetaRec,
         rawUsers?: Array<T>
-    ): EntityMeta<UserCollection> {
+    ): Promised<UserCollection> {
         return users.copy({
             ...rec,
             value: rawUsers ? new UserCollection(rawUsers) : users.value
         })
     }
 }
-
-
-function createEntityMeta(statePart: DepMeta) {
-    function fn<T>(rec: Meta, value: T): EntityMeta<T> {
-        const rec = map(statePart.id)
-        return new EntityMeta({
-            ...rec,
-            value
-        })
-    }
-
-    return new DepMeta({
-        deps: [statePart],
-        fn
-    })
-}
-
-export default model(UserCollectionMeta)(LoadUserCollection)
+export default setter(UserCollection)(LoadUserCollection)
