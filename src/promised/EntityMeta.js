@@ -1,6 +1,7 @@
 /* @flow */
 
 import merge from '../utils/merge'
+import type {DepId} from '../interfaces'
 
 export type EntityMetaRec = {
     pending?: boolean;
@@ -8,6 +9,7 @@ export type EntityMetaRec = {
     fulfilled?: boolean;
     reason?: ?Error;
 }
+
 
 export default class EntityMeta {
     pending: boolean;
@@ -52,3 +54,5 @@ export default class EntityMeta {
         return isChanged ? meta : this
     }
 }
+
+export type GetEntityMeta = (id: DepId) => EntityMeta;

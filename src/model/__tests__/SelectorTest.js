@@ -33,7 +33,7 @@ describe('SelectorTest', () => {
         const selector = new Selector(s, getDepId)
         selector.setNotify(notify)
         const cursor = selector.select('a')
-        cursor.set(cursor.get().copy({
+        cursor.data.set(cursor.data.get().copy({
             name: 'testA1'
         }))
         assert(cursor instanceof Cursor)

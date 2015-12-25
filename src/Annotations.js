@@ -8,7 +8,7 @@ import type {Dependency, Setter, OnUpdateHook} from './interfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel} from './model/interfaces'
 /* eslint-enable no-unused-vars */
-import {AbstractCursor, AbstractSelector, selectorMeta} from './selectorInterfaces'
+import {Cursors, AbstractSelector, selectorMeta} from './selectorInterfaces'
 
 type DepDecoratorFn<T> = (target: Dependency<T>) => T;
 
@@ -24,27 +24,28 @@ function proxifyResult<R: Function>(src: R, set: Setter): R {
     return createProxy(src, [set])
 }
 
-function _getter<T: Object>(cursor: AbstractCursor<T>): T {
-    return cursor.get()
+function _getter<T: Object>(cursor: Cursors<T>): T {
+    return cursor.data.get()
 }
 
-function _setter<T: Object>(cursor: AbstractCursor<T>): Setter<T> {
+function _setter<T: Object>(cursor: Cursors<T>): Setter<T> {
     return function __setter(value: T): void {
-        cursor.set(value)
+        cursor.data.set(value)
     }
 }
 
-function _asyncSetter<T: Object, P: Promise<T>>(cursor: AbstractCursor<T>): Setter<P> {
+function _asyncSetter<T: Object, P: Promise<T>>(cursor: Cursors<T>): Setter<P> {
     function success(value: T) {
-        cursor.success(value)
+        cursor.data.set(value)
+        cursor.promised.success()
     }
 
     function error(reason: Error) {
-        cursor.error(reason)
+        cursor.promised.error(reason)
     }
 
     return function __asyncSetter(value: P): void {
-        cursor.pending()
+        cursor.promised.pending()
         value.then(success).catch(error)
     }
 }
@@ -128,7 +129,7 @@ function model<T: StateModel>(
 ): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
     const id = createId()
-    function _select(selector: AbstractSelector): AbstractCursor<T> {
+    function _select(selector: AbstractSelector): Cursors<T> {
         return selector.select(id)
     }
     _select.displayName = 'sel@' + debugName
