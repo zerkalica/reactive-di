@@ -20,22 +20,16 @@ class State<T: Object> {
     }
 }
 
-function SetEntityMeta(childMetas: Array<EntityMeta>) {
-    return function setEntityMeta(rec: EntityMetaRec): EntityMeta {
-        return cursor.set(new EntityMeta(childMetas.concat(rec)))
-    }
-}
-setter(meta(User))(SetEntityMeta)
-
 export default class Selector extends AbstractSelector {
-    _state: StateModel;
+    _stateRef: {state: StateModel};
     _notify: NotifyDepFn;
     _depMeta: StateDepsMeta;
 
-    constructor(state: StateModel, getDepId: DepIdGetter) {
+    constructor(rawState: StateModel, getDepId: DepIdGetter) {
         super()
-        this._state = new State(state)
-        this._depMeta = createDepMetaFromState(this._state, getDepId)
+        const state = new State(rawState)
+        this._stateRef = {state}
+        this._depMeta = createDepMetaFromState(state, getDepId)
     }
 
     setNotify(notify: NotifyDepFn): AbstractSelector {
@@ -48,11 +42,13 @@ export default class Selector extends AbstractSelector {
     }
 
     select<T: StateModel>(id: DepId): AbstractCursor<T> {
-        const {pathMap, fromJSMap} = this._depMeta
+        const {_notify, _depMeta} = this
+        const {pathMap, fromJSMap} = _depMeta
 
-        return new Cursor(pathMap[id], fromJSMap[id], this._state, newState => {
-            this._state = newState
-            this._notify(id)
-        })
+        function notify(): void {
+            _notify(id)
+        }
+
+        return new Cursor(pathMap[id], fromJSMap[id], this._stateRef, notify)
     }
 }

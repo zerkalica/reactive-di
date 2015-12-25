@@ -1,36 +1,12 @@
 /* @flow */
 
+import merge from '../utils/merge'
+
 export type EntityMetaRec = {
     pending?: boolean;
     rejected?: boolean;
     fulfilled?: boolean;
     reason?: ?Error;
-}
-
-function combineMeta(owners: Array<EntityMetaRec>): EntityMetaRec {
-    const meta: EntityMetaRec = {
-        pending: false,
-        rejected: false,
-        fulfilled: true,
-        reason: null
-    };
-    for (let i = 0; i < owners.length; i++) {
-        const {pending, rejected, fulfilled, reason} = owners[i]
-        if (!fulfilled) {
-            meta.fulfilled = false
-        }
-        if (rejected) {
-            meta.rejected = rejected
-        }
-        if (reason) {
-            meta.reason = reason
-        }
-        if (pending) {
-            meta.pending = pending
-        }
-    }
-
-    return meta
 }
 
 export default class EntityMeta {
@@ -39,13 +15,40 @@ export default class EntityMeta {
     fulfilled: boolean;
     reason: ?Error;
 
-    constructor(r: EntityMetaRec|Array<EntityMetaRec> = {}) {
-        const rec: EntityMetaRec = Array.isArray(r)
-            ? combineMeta(r)
-            : r
+    constructor(rec: EntityMetaRec = {}) {
         this.pending = rec.pending || false
         this.rejected = rec.rejected || false
         this.fulfilled = rec.fulfilled === undefined ? true : rec.fulfilled
         this.reason = rec.reason || null
+    }
+
+    copy(rec: EntityMetaRec): EntityMeta {
+        return merge(this, rec)
+    }
+
+    combine(childs: Array<EntityMeta>): EntityMeta {
+        const meta: EntityMeta = new EntityMeta();
+        let isChanged: boolean = false;
+        for (let i = 0; i < childs.length; i++) {
+            const {pending, rejected, fulfilled, reason} = childs[i]
+            if (!fulfilled) {
+                isChanged = true
+                meta.fulfilled = false
+            }
+            if (rejected) {
+                isChanged = true
+                meta.rejected = rejected
+            }
+            if (reason) {
+                isChanged = true
+                meta.reason = reason
+            }
+            if (pending) {
+                isChanged = true
+                meta.pending = pending
+            }
+        }
+
+        return isChanged ? meta : this
     }
 }

@@ -25,8 +25,7 @@ export default class DepMeta {
     onUpdate: OnUpdateHook;
 
     setter: ?DepMeta;
-
-    promisedId: ?DepId;
+    asyncSetter: ?DepMeta;
 
     constructor(rec: DepMetaRec) {
         this.isState = !!rec.setter
@@ -40,8 +39,8 @@ export default class DepMeta {
         this.depNames = rec.depNames || []
 
         this.setter = rec.setter || null
+        this.asyncSetter = rec.asyncSetter || null
         this.onUpdate = rec.onUpdate || dummyOnUpdate
-        this.promisedId = rec.promisedId || null
     }
 }
 
@@ -51,7 +50,7 @@ type DepMetaRec = {
     deps?: Array<DepMeta>;
     depNames?: ?Array<string>;
     tags?: Array<string>;
-    promisedId: DepId;
     setter?: DepMeta;
+    asyncSetter?: DepMeta;
     onUpdate?: ?OnUpdateHook;
 }

@@ -16,3 +16,4 @@ export type StateModel<T> = StateModelMeta & {
 
 export type DepIdGetter<T: Object> = (obj: T) => DepId;
 export type SetState<T> = (state: StateModel<T>) => void;
+export type NotifyFn = () => void;

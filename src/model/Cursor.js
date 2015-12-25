@@ -2,7 +2,7 @@
 
 import type {FromJS} from '../interfaces'
 import {AbstractCursor} from '../selectorInterfaces'
-import type {StateModel, SetState} from './interfaces'
+import type {StateModel, NotifyFn} from './interfaces'
 
 function setInPath<V: Object, S: StateModel>(
     newModel: V,
@@ -23,22 +23,21 @@ function setInPath<V: Object, S: StateModel>(
 
 export default class Cursor<V: StateModel> extends AbstractCursor<V> {
     _path: Array<string>;
-    _state: StateModel;
+    _stateRef: {state: StateModel};
     _selector: (v: StateModel) => any;
-    _setState: SetState<V>;
+    _notify: NotifyFn;
 
     fromJS: FromJS<V>;
 
-    constructor(path: Array<string>, fromJS: FromJS<V>, state: StateModel, setState: SetState<V>) {
+    constructor(path: Array<string>, fromJS: FromJS<V>, stateRef: {state: StateModel}, notify: NotifyFn) {
         super()
         if (!Array.isArray(path)) {
             throw new Error('path is not an array')
         }
-        this._state = state
-        this._setState = setState
         this._path = path
         this.fromJS = fromJS;
-
+        this._stateRef = stateRef
+        this._notify = notify
         try {
             /* eslint-disable no-new-func */
             this._selector = new Function('s', 'return ' + ['s'].concat(this._path).join('.'))
@@ -50,13 +49,13 @@ export default class Cursor<V: StateModel> extends AbstractCursor<V> {
     }
 
     get(): V {
-        return this._selector(this._state)
+        return this._selector(this._stateRef.state)
     }
 
     set(newModel: V): void {
         if (newModel !== this.get()) {
-            this._state = setInPath(newModel, this._state, this._path, 0)
-            this._setState(this._state)
+            this._stateRef.state = setInPath(newModel, this._stateRef.state, this._path, 0)
+            this._notify()
         }
     }
 }
