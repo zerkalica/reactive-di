@@ -47,19 +47,19 @@ export default class Selector extends AbstractSelector {
     }
 
     select<T: StateModel>(id: DepId): Cursors<T> {
-        const {_notify, _depMeta} = this
-        const {pathMap, fromJSMap, childMap} = _depMeta
+        const {_stateRef: stateRef, _metaMap: metaMap, _notify: notify, _depMeta: depMeta} = this
+        const {pathMap, fromJSMap, parentMap} = depMeta
 
-        function notify(): void {
-            _notify(id)
+        function notifyId(): void {
+            notify(id)
         }
 
-        const data = new Cursor(pathMap[id], fromJSMap[id], this._stateRef, notify)
+        const data = new Cursor(pathMap[id], fromJSMap[id], stateRef, notifyId)
         const promised = new PromisedCursor(
             id,
-            childMap[id],
-            this._metaMap,
-            notify
+            parentMap[id],
+            metaMap,
+            notifyId
         )
 
         return new Cursors(data, promised)
