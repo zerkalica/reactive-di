@@ -52,10 +52,12 @@ export default class Cursor<V: StateModel> extends AbstractCursor<V> {
         return this._selector(this._stateRef.state)
     }
 
-    set(newModel: V): void {
-        if (newModel !== this.get()) {
+    set(newModel: V): boolean {
+        const isChanged = newModel !== this.get()
+        if (isChanged) {
             this._stateRef.state = setInPath(newModel, this._stateRef.state, this._path, 0)
             this._notify()
         }
+        return isChanged
     }
 }

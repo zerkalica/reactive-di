@@ -4,6 +4,7 @@ import EntityMeta from './EntityMeta'
 import type {DepId} from '../interfaces'
 import type {EntityMetaRec} from './EntityMeta'
 import {AbstractPromisedCursor} from '../selectorInterfaces'
+import Cursor from '../model/Cursor'
 
 type MetaMap = {[id: DepId]: EntityMeta};
 type NotifyFn = () => void;
@@ -14,9 +15,11 @@ export default class PromisedCursor extends AbstractPromisedCursor {
     _parents: Array<DepId>;
     _id: DepId;
     _notify: NotifyFn;
+    _cursor: Cursor;
 
     constructor(
         id: DepId,
+        cursor: Cursor,
         parents: Array<DepId>,
         metaMap: MetaMap,
         notify: NotifyFn
@@ -26,19 +29,24 @@ export default class PromisedCursor extends AbstractPromisedCursor {
         this._parents = parents
         this._id = id
         this._notify = notify
+        this._cursor = cursor
     }
 
-    _setMeta(rec: EntityMetaRec): void {
-        const {_meta, _id, _parents} = this
-        const oldMeta = _meta[_id]
+    _setMeta(rec: EntityMetaRec, needChange: boolean = true): void {
+        const {_meta: meta, _id: id, _parents: parents} = this
+        const oldMeta = meta[id]
         const newMeta = oldMeta.copy(rec)
-        _meta[_id] = newMeta
-        if (oldMeta !== newMeta) {
-            for (let i = 0, l = _parents.length; i < l; i++) {
-                const parentId = _parents[i]
-                _meta[parentId] = _meta[parentId].copy(rec)
+        meta[id] = newMeta
+        const isChanged = oldMeta !== newMeta
+        if (isChanged) {
+            const recs = [rec]
+            for (let i = 0, l = parents.length; i < l; i++) {
+                const parentId = parents[i]
+                meta[parentId] = meta[parentId].combine(recs)
             }
-            this._notify()
+            if (needChange) {
+                this._notify()
+            }
         }
     }
 
@@ -55,13 +63,13 @@ export default class PromisedCursor extends AbstractPromisedCursor {
         })
     }
 
-    success(): void {
+    success<T>(value: T): void {
         this._setMeta({
             pending: false,
             rejected: false,
             fulfilled: true,
             reason: null
-        })
+        }, !this._cursor.set(value))
     }
 
     error(reason: Error): void {

@@ -36,7 +36,6 @@ function _setter<T: Object>(cursor: Cursors<T>): Setter<T> {
 
 function _asyncSetter<T: Object, P: Promise<T>>(cursor: Cursors<T>): Setter<P> {
     function success(value: T) {
-        cursor.data.set(value)
         cursor.promised.success(value)
     }
 

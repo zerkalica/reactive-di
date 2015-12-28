@@ -57,6 +57,7 @@ export default class Selector extends AbstractSelector {
         const data = new Cursor(pathMap[id], fromJSMap[id], stateRef, notifyId)
         const promised = new PromisedCursor(
             id,
+            data,
             parentMap[id],
             metaMap,
             notifyId
