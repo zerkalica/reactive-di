@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {DepId, OnUpdateHook} from '../interfaces'
+import type {DepId, Dependency, OnUpdateHook} from '../interfaces'
 import getFunctionName from '../utils/getFunctionName'
 
 let id: number = 0;
@@ -25,7 +25,7 @@ export default class DepMeta {
     onUpdate: OnUpdateHook;
 
     setter: ?DepMeta;
-    asyncSetter: ?DepMeta;
+    getMeta: ?Dependency;
 
     constructor(rec: DepMetaRec) {
         this.isState = !!rec.setter
@@ -39,7 +39,7 @@ export default class DepMeta {
         this.depNames = rec.depNames || []
 
         this.setter = rec.setter || null
-        this.asyncSetter = rec.asyncSetter || null
+        this.getMeta = rec.getMeta ? rec.getMeta : null;
         this.onUpdate = rec.onUpdate || dummyOnUpdate
     }
 }
@@ -51,6 +51,6 @@ type DepMetaRec = {
     depNames?: ?Array<string>;
     tags?: Array<string>;
     setter?: DepMeta;
-    asyncSetter?: DepMeta;
+    getMeta?: Dependency;
     onUpdate?: ?OnUpdateHook;
 }

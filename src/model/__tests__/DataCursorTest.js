@@ -1,17 +1,17 @@
 /* @flow */
 /* eslint-env mocha */
 import assert from 'power-assert'
-import Cursor from '../Cursor'
+import DataCursor from '../DataCursor'
 import {spy} from 'sinon'
 import {pathMap, S, A} from './ExampleState'
 
-describe('CursorTest', () => {
+describe('DataCursorTest', () => {
     it('should get state part s.a', () => {
         const s = new S()
         const stateRef = {state: s}
         const notify = spy()
         const fromJS = spy()
-        const cursor = new Cursor(pathMap.a, fromJS, stateRef, notify)
+        const cursor = new DataCursor(pathMap.a, fromJS, stateRef, notify)
         const modelA: A = cursor.get();
 
         assert(modelA === s.a)
@@ -22,7 +22,7 @@ describe('CursorTest', () => {
         const stateRef = {state: s}
         const notify = spy()
         const fromJS = spy()
-        const cursor = new Cursor(pathMap.a, fromJS, stateRef, notify)
+        const cursor = new DataCursor(pathMap.a, fromJS, stateRef, notify)
         const modelA: A = cursor.get();
         cursor.set(modelA.copy({
             name: 'testA1'
@@ -39,7 +39,7 @@ describe('CursorTest', () => {
         const stateRef = {state: s}
         const notify = spy()
         const fromJS = spy()
-        const cursor = new Cursor(pathMap.c, fromJS, stateRef, notify)
+        const cursor = new DataCursor(pathMap.c, fromJS, stateRef, notify)
         const modelB: A = cursor.get();
         cursor.set(modelB.copy({
             name: 'testB1'
@@ -57,7 +57,7 @@ describe('CursorTest', () => {
         const stateRef = {state: s}
         const notify = spy()
         const fromJS = spy()
-        const cursor = new Cursor(pathMap.a, fromJS, stateRef, notify)
+        const cursor = new DataCursor(pathMap.a, fromJS, stateRef, notify)
         const modelA: A = cursor.get();
         cursor.set(modelA.copy({
             name: 'testA1'

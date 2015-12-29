@@ -58,7 +58,7 @@ export default class PromisedCursor extends AbstractPromisedCursor {
         })
     }
 
-    success<T>(value: T, needChange: boolean): void {
+    success(needChange: boolean): void {
         this._setMeta({
             pending: false,
             rejected: false,

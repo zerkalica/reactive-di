@@ -21,7 +21,7 @@ function setInPath<V: Object, S: StateModel>(
     return state.copy(rec)
 }
 
-export default class Cursor<V: StateModel> extends AbstractCursor<V> {
+export default class DataCursor<V: StateModel> extends AbstractCursor<V> {
     _path: Array<string>;
     _stateRef: {state: StateModel};
     _selector: (v: StateModel) => any;

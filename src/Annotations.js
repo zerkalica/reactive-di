@@ -8,7 +8,8 @@ import type {Dependency, Setter, OnUpdateHook} from './interfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel} from './model/interfaces'
 /* eslint-enable no-unused-vars */
-import {Cursors, AbstractSelector, selectorMeta} from './selectorInterfaces'
+import {AbstractCursor, AbstractSelector, selectorMeta} from './selectorInterfaces'
+import EntityMeta from './promised/EntityMeta'
 
 type DepDecoratorFn<T> = (target: Dependency<T>) => T;
 
@@ -24,30 +25,13 @@ function proxifyResult<R: Function>(src: R, set: Setter): R {
     return createProxy(src, [set])
 }
 
-function _getter<T: Object>(cursor: Cursors<T>): T {
-    return cursor.data.get()
+function _getter<T: Object>(cursor: AbstractCursor<T>): T {
+    return cursor.get()
 }
 
-function _setter<T: Object>(cursor: Cursors<T>): Setter<T> {
-    return function __setter(value: T): void {
-        cursor.data.set(value)
-    }
-}
-
-function _asyncSetter<T: Object, P: Promise<T>>(cursor: Cursors<T>): Setter<P> {
-    const {promised, data} = cursor
-    function success(value: T) {
-        const needChange = !data.set(value)
-        promised.success(value, needChange)
-    }
-
-    function error(reason: Error) {
-        promised.error(reason)
-    }
-
-    return function __asyncSetter(value: P): void {
-        promised.pending()
-        value.then(success).catch(error)
+function _setter<T: Object>(cursor: AbstractCursor<T>): Setter<T> {
+    return function __setter(value: T|Promise<T>): void {
+        cursor.set(value)
     }
 }
 
@@ -130,7 +114,7 @@ function model<T: StateModel>(
 ): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
     const id = createId()
-    function _select(selector: AbstractSelector): Cursors<T> {
+    function _select(selector: AbstractSelector): AbstractCursor<T> {
         return selector.select(id)
     }
     _select.displayName = 'sel@' + debugName
@@ -145,18 +129,24 @@ function model<T: StateModel>(
         tags: [debugName, 'set'].concat(tags)
     })
 
-    const asyncSetterMeta = new DepMeta({
+    function getMeta(cursor: AbstractCursor<T>): EntityMeta {
+        return cursor.getMeta()
+    }
+
+    const getMetaMeta = new DepMeta({
         deps: [select],
-        fn: _asyncSetter,
-        tags: [debugName, 'asyncSet'].concat(tags)
+        fn: getMeta,
+        tags: [debugName, 'getMeta'].concat(tags)
     })
+
+    driver.set(getMeta, getMetaMeta)
 
     const meta = new DepMeta({
         id,
         fn: _getter,
         deps: [select],
         setter: setterMeta,
-        asyncSetter: asyncSetterMeta,
+        getMeta,
         tags: [debugName, 'model'].concat(tags)
     })
 
@@ -167,8 +157,7 @@ function setter<S: StateModel>(
     driver: AbstractMetaDriver,
     tags: Array<string>,
     dep: Dependency<S>,
-    rawDeps: Array<Dependency>,
-    isAsync: boolean
+    rawDeps: Array<Dependency>
 ): DepDecoratorFn {
     return function __setter<T>(sourceFn: Dependency<T>): Dependency<T> {
         const debugName: string = getFunctionName((dep: Function));
@@ -177,10 +166,9 @@ function setter<S: StateModel>(
             fn: sourceFn,
             tags: [debugName, 'source'].concat(tags)
         });
-        const depMeta = driver.get(dep)
-        const setterMeta = isAsync ? depMeta.asyncSetter : depMeta.setter
+        const {setter: setterMeta} = driver.get(dep)
         if (!setterMeta) {
-            throw new Error('Not a state dependency: ' + debugName)
+            throw new Error('Not a model dep: ' + debugName)
         }
 
         const meta: DepMeta = new DepMeta({
@@ -197,21 +185,26 @@ type SetterFn<S> = (dep: Dependency<S>, ...rawDeps: Array<Dependency>) => DepDec
 type ModelFn<T> = (mdl: Dependency<T>) => DepDecoratorFn<T>;
 type FactoryFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn<T>;
 type KlassFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn<T>;
+type MetaFn<T> = (value: Dependency<T>) => Dependency<T>;
 
 export default class Annotations {
     setter: SetterFn;
-    asyncSetter: SetterFn;
     model: ModelFn;
     factory: FactoryFn;
     klass: KlassFn;
+    meta: MetaFn;
 
     constructor(driver: AbstractMetaDriver, tags: Array<string> = []) {
         this.setter = function __setter<S: StateModel>(dep: Dependency<S>, ...rawDeps: Array<Dependency>): DepDecoratorFn {
             return setter(driver, tags, dep, rawDeps, false)
         }
 
-        this.asyncSetter = function __setter<S: StateModel>(dep: Dependency<S>, ...rawDeps: Array<Dependency>): DepDecoratorFn {
-            return setter(driver, tags, dep, rawDeps, true)
+        this.meta = function __meta<S: StateModel>(dep: Dependency<S>): Dependency<S> {
+            const {getMeta, displayName} = driver.get(dep)
+            if (!getMeta) {
+                throw new Error('Not a dep model: ' + displayName)
+            }
+            return getMeta()
         }
 
         this.model = function __model<T: StateModel>(mdl: Dependency<T>): Dependency<T> {

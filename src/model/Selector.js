@@ -1,11 +1,12 @@
 /* @flow */
 
-import Cursor from './Cursor'
+import DataCursor from './DataCursor'
 import PromisedCursor from '../promised/PromisedCursor'
 import createDepMetaFromState, {StateDepsMeta} from './createDepMetaFromState'
 import EntityMeta from '../promised/EntityMeta'
 import type {DepId, IdsMap, NotifyDepFn} from '../interfaces'
-import {Cursors, AbstractSelector} from '../selectorInterfaces'
+import {AbstractSelector} from '../selectorInterfaces'
+import Cursor from '../Cursor'
 /* eslint-disable no-unused-vars */
 import type {StateModel, SetState, DepIdGetter} from './interfaces'
 /* eslint-enable no-unused-vars */
@@ -46,7 +47,7 @@ export default class Selector extends AbstractSelector {
         return this._depMeta.depMap
     }
 
-    select<T: StateModel>(id: DepId): Cursors<T> {
+    select<T: StateModel>(id: DepId): AbstractCursor<T> {
         const {_stateRef: stateRef, _metaMap: metaMap, _notify: notify, _depMeta: depMeta} = this
         const {pathMap, fromJSMap, parentMap} = depMeta
 
@@ -54,7 +55,7 @@ export default class Selector extends AbstractSelector {
             notify(id)
         }
 
-        const data = new Cursor(pathMap[id], fromJSMap[id], stateRef, notifyId)
+        const data = new DataCursor(pathMap[id], fromJSMap[id], stateRef, notifyId)
         const promised = new PromisedCursor(
             id,
             parentMap[id],
@@ -62,6 +63,6 @@ export default class Selector extends AbstractSelector {
             notifyId
         )
 
-        return new Cursors(data, promised)
+        return new Cursor(data, promised)
     }
 }
