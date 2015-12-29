@@ -5,7 +5,7 @@ import PromisedCursor from '../promised/PromisedCursor'
 import createDepMetaFromState, {StateDepsMeta} from './createDepMetaFromState'
 import EntityMeta from '../promised/EntityMeta'
 import type {DepId, IdsMap, NotifyDepFn} from '../interfaces'
-import {AbstractSelector} from '../selectorInterfaces'
+import {AbstractSelector, AbstractCursor} from '../selectorInterfaces'
 import Cursor from '../Cursor'
 /* eslint-disable no-unused-vars */
 import type {StateModel, SetState, DepIdGetter} from './interfaces'

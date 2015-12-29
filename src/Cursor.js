@@ -2,7 +2,7 @@
 import {AbstractCursor, AbstractDataCursor, AbstractPromisedCursor} from './selectorInterfaces'
 import EntityMeta from './promised/EntityMeta'
 
-export class Cursor<T: Object> extends AbstractCursor<T> {
+export default class Cursor<T: Object> extends AbstractCursor<T> {
     _data: AbstractDataCursor<T>;
     _promised: AbstractPromisedCursor;
     _success: (value: T) => void;

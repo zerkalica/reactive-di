@@ -1,7 +1,7 @@
 /* @flow */
 
 import type {FromJS} from '../interfaces'
-import {AbstractCursor} from '../selectorInterfaces'
+import {AbstractDataCursor} from '../selectorInterfaces'
 import type {StateModel, NotifyFn} from './interfaces'
 
 function setInPath<V: Object, S: StateModel>(
@@ -21,7 +21,7 @@ function setInPath<V: Object, S: StateModel>(
     return state.copy(rec)
 }
 
-export default class DataCursor<V: StateModel> extends AbstractCursor<V> {
+export default class DataCursor<V: StateModel> extends AbstractDataCursor<V> {
     _path: Array<string>;
     _stateRef: {state: StateModel};
     _selector: (v: StateModel) => any;
