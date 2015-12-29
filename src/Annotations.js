@@ -35,16 +35,18 @@ function _setter<T: Object>(cursor: Cursors<T>): Setter<T> {
 }
 
 function _asyncSetter<T: Object, P: Promise<T>>(cursor: Cursors<T>): Setter<P> {
+    const {promised, data} = cursor
     function success(value: T) {
-        cursor.promised.success(value)
+        const needChange = !data.set(value)
+        promised.success(value, needChange)
     }
 
     function error(reason: Error) {
-        cursor.promised.error(reason)
+        promised.error(reason)
     }
 
     return function __asyncSetter(value: P): void {
-        cursor.promised.pending()
+        promised.pending()
         value.then(success).catch(error)
     }
 }

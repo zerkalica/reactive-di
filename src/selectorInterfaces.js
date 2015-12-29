@@ -9,7 +9,7 @@ export class AbstractCursor<V> {
     }
     fromJS: FromJS;
     /* eslint-disable no-unused-vars */
-    set(newModel: V): void {
+    set(newModel: V): boolean {
     }
     /* eslint-enable no-unused-vars */
 }

@@ -4,6 +4,7 @@ import EntityMeta from './EntityMeta'
 import type {DepId} from '../interfaces'
 import type {EntityMetaRec} from './EntityMeta'
 import {AbstractPromisedCursor} from '../selectorInterfaces'
+
 type MetaMap = {[id: DepId]: EntityMeta};
 type NotifyFn = () => void;
 
