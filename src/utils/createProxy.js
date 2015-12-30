@@ -43,7 +43,7 @@ function createMethodProxy(
 }
 
 function createObjectProxy(source: Object, middlewares: Array<MiddlewareMap>): Object {
-    const props: {[prop: string]: Function} = {};
+    const props: {[prop: string]: Function} = Object.create(source);
     const methods: Array<string> = Object.getOwnPropertyNames(Object.getPrototypeOf(source));
     for (let i = 0, j = methods.length; i < j; i++) {
         const name = methods[i]
@@ -52,8 +52,7 @@ function createObjectProxy(source: Object, middlewares: Array<MiddlewareMap>): O
             props[name] = createMethodProxy(name, source, middlewares)
         }
     }
-
-    return Object.create(source, props)
+    return props
 }
 
 export default function createProxy(

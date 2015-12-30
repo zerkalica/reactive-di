@@ -10,7 +10,6 @@ export type EntityMetaRec = {
     reason?: ?Error;
 }
 
-
 export default class EntityMeta {
     pending: boolean;
     rejected: boolean;
@@ -29,7 +28,7 @@ export default class EntityMeta {
     }
 
     combine(childs: Array<EntityMetaRec>): EntityMeta {
-        const meta: EntityMeta = new EntityMeta();
+        const meta: EntityMeta = this.copy({});
         let isChanged: boolean = false;
         for (let i = 0; i < childs.length; i++) {
             const {pending, rejected, fulfilled, reason} = childs[i]

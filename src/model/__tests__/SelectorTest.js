@@ -39,4 +39,18 @@ describe('SelectorTest', () => {
         assert(cursor instanceof Cursor)
         assert(notify.calledOnce)
     })
+
+    it('select should not call notify, if cursor.set same data', () => {
+        const s = new S()
+        const notify = spy()
+        const selector = new Selector(s, getDepId)
+        selector.setNotify(notify)
+        const cursor = selector.select('a')
+        const newData = cursor.get().copy({
+            name: 'testA1'
+        })
+        cursor.set(newData)
+        cursor.set(newData)
+        assert(notify.calledOnce)
+    })
 })

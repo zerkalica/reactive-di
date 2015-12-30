@@ -8,8 +8,10 @@ type MetaMap = {[id: DepId]: EntityMeta};
 type NotifyFn = () => void;
 
 export default class PromisedCursor extends AbstractPromisedCursor {
-    _meta: MetaMap;
-    _id: DepId;
+    _cachedMeta: {[id: DepId]: ?EntityMeta};
+    _selfMeta: MetaMap;
+    _childs: Array<PromisedCursor>;
+    id: DepId;
     _parents: Array<DepId>;
     _id: DepId;
     _notify: NotifyFn;
@@ -17,36 +19,48 @@ export default class PromisedCursor extends AbstractPromisedCursor {
     constructor(
         id: DepId,
         parents: Array<DepId>,
+        childs: Array<PromisedCursor>,
         metaMap: MetaMap,
-        notify: NotifyFn
+        notify: NotifyFn,
+        cachedMeta: {[id: DepId]: ?EntityMeta}
     ) {
         super()
-        this._meta = metaMap
+        this._cachedMeta = cachedMeta
+        this._selfMeta = metaMap
         this._parents = parents
-        this._id = id
+        this._childs = childs
+        this.id = id
         this._notify = notify
     }
 
-    _setMeta(rec: EntityMetaRec, needChange: boolean = true): void {
-        const {_meta: meta, _id: id, _parents: parents} = this
-        const oldMeta = meta[id]
-        const newMeta = oldMeta.copy(rec)
-        meta[id] = newMeta
+    _setMeta(rec: EntityMetaRec, needNotify: boolean = true): void {
+        const {_cachedMeta: cachedMeta, _selfMeta: selfMeta, id, _parents: parents} = this
+        const oldMeta: EntityMeta = selfMeta[id];
+        const newMeta: EntityMeta = oldMeta.copy(rec);
         const isChanged = oldMeta !== newMeta
         if (isChanged) {
-            const recs: Array<EntityMetaRec> = [rec];
+            selfMeta[id] = newMeta
+            cachedMeta[id] = null
             for (let i = 0, l = parents.length; i < l; i++) {
-                const parentId = parents[i]
-                meta[parentId] = meta[parentId].combine(recs)
+                cachedMeta[parents[i]] = null
             }
-            if (needChange) {
+            if (needNotify) {
                 this._notify()
             }
         }
     }
 
     get(): EntityMeta {
-        return this._meta[this._id]
+        const {_cachedMeta: cachedMeta, _selfMeta: selfMeta, _childs: childs, id} = this
+        let result = cachedMeta[id]
+        if (!result) {
+            result = selfMeta[id]
+            for (let i = 0, l = childs.length; i < l; i++) {
+                result = result.combine([childs[i].get()])
+            }
+            cachedMeta[id] = result
+        }
+        return result
     }
 
     pending(): void {
@@ -58,13 +72,13 @@ export default class PromisedCursor extends AbstractPromisedCursor {
         })
     }
 
-    success(needChange: boolean = false): void {
+    success(needNotify: boolean = false): void {
         this._setMeta({
             pending: false,
             rejected: false,
             fulfilled: true,
             reason: null
-        }, needChange)
+        }, needNotify)
     }
 
     error(reason: Error): void {

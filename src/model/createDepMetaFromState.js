@@ -10,13 +10,14 @@ export class StateDepsMeta {
     pathMap: {[id: DepId]: Array<string>};
     fromJSMap: {[id: DepId]: FromJS};
     metaMap: {[id: DepId]: EntityMeta};
-
+    childMap: {[id: DepId]: Array<DepId>};
     constructor() {
         this.depMap = {}
         this.parentMap = {}
         this.pathMap = {}
         this.fromJSMap = {}
         this.metaMap = {}
+        this.childMap = {}
     }
 }
 
@@ -43,10 +44,11 @@ function getPathIds(
     meta: StateDepsMeta,
     getDepId: DepIdGetter,
 ): FromJS<StateModelMeta> {
-    const {depMap, pathMap, parentMap, fromJSMap, metaMap} = meta
+    const {depMap, pathMap, parentMap, fromJSMap, metaMap, childMap} = meta
     const id = getDepId(obj)
 
     metaMap[id] = new EntityMeta()
+    childMap[id] = []
 
     pathMap[id] = path
     // write all parents and self to affect ids map
@@ -56,9 +58,14 @@ function getPathIds(
     parentMap[id] = [].concat(parents)
     // write self to all parents affect ids map
     // parents knowns about childs
-    for (let k = 0, l = parents.length; k < l; k++) {
+
+    const l = parents.length - 1
+    for (let k = 0; k <= l; k++) {
         const parentId: DepId = parents[k];
         depMap[parentId].push(id)
+    }
+    if (l >= 0) {
+        childMap[parents[l]].push(id)
     }
 
     parents.push(id)
