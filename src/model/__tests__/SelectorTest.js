@@ -2,7 +2,7 @@
 /* eslint-env mocha */
 import assert from 'power-assert'
 import Selector from '../Selector'
-import Cursor from '../Cursor'
+import Cursor from '../../Cursor'
 import {spy} from 'sinon'
 import {S, getDepId} from './ExampleState'
 
@@ -33,7 +33,7 @@ describe('SelectorTest', () => {
         const selector = new Selector(s, getDepId)
         selector.setNotify(notify)
         const cursor = selector.select('a')
-        cursor.data.set(cursor.data.get().copy({
+        cursor.set(cursor.get().copy({
             name: 'testA1'
         }))
         assert(cursor instanceof Cursor)

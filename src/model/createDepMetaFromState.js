@@ -2,18 +2,21 @@
 
 import type {FromJS, DepId} from '../interfaces'
 import type {StateModelMeta, DepIdGetter} from './interfaces'
+import EntityMeta from '../promised/EntityMeta'
 
 export class StateDepsMeta {
     depMap: {[id: DepId]: Array<DepId>};
     parentMap: {[id: DepId]: Array<DepId>};
     pathMap: {[id: DepId]: Array<string>};
     fromJSMap: {[id: DepId]: FromJS};
+    metaMap: {[id: DepId]: EntityMeta};
 
     constructor() {
         this.depMap = {}
         this.parentMap = {}
         this.pathMap = {}
         this.fromJSMap = {}
+        this.metaMap = {}
     }
 }
 
@@ -40,8 +43,10 @@ function getPathIds(
     meta: StateDepsMeta,
     getDepId: DepIdGetter,
 ): FromJS<StateModelMeta> {
-    const {depMap, pathMap, parentMap, fromJSMap} = meta
+    const {depMap, pathMap, parentMap, fromJSMap, metaMap} = meta
     const id = getDepId(obj)
+
+    metaMap[id] = new EntityMeta()
 
     pathMap[id] = path
     // write all parents and self to affect ids map

@@ -34,7 +34,7 @@ export default class PromisedCursor extends AbstractPromisedCursor {
         meta[id] = newMeta
         const isChanged = oldMeta !== newMeta
         if (isChanged) {
-            const recs = [rec]
+            const recs: Array<EntityMetaRec> = [rec];
             for (let i = 0, l = parents.length; i < l; i++) {
                 const parentId = parents[i]
                 meta[parentId] = meta[parentId].combine(recs)
@@ -58,7 +58,7 @@ export default class PromisedCursor extends AbstractPromisedCursor {
         })
     }
 
-    success(needChange: boolean): void {
+    success(needChange: boolean = false): void {
         this._setMeta({
             pending: false,
             rejected: false,

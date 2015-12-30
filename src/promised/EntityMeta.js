@@ -28,7 +28,7 @@ export default class EntityMeta {
         return merge(this, rec)
     }
 
-    combine(childs: Array<EntityMeta>): EntityMeta {
+    combine(childs: Array<EntityMetaRec>): EntityMeta {
         const meta: EntityMeta = new EntityMeta();
         let isChanged: boolean = false;
         for (let i = 0; i < childs.length; i++) {
