@@ -40,7 +40,7 @@ export default class Selector extends AbstractSelector {
 
     select<T: StateModel>(id: DepId): AbstractCursor<T> {
         const {_stateRef: stateRef, _notify: notify, _depMeta: depMeta} = this
-        const {pathMap, fromJSMap, parentMap, metaMap} = depMeta
+        const {pathMap, fromJSMap, parentMap, metaMap, childMap} = depMeta
 
         function notifyId(): void {
             notify(id)
@@ -50,6 +50,7 @@ export default class Selector extends AbstractSelector {
         const promised = new PromisedCursor(
             id,
             parentMap[id],
+            childMap[id],
             metaMap,
             notifyId
         )
