@@ -7,16 +7,6 @@ import EntityMeta from '../EntityMeta'
 import {spy} from 'sinon'
 
 describe('PromiseCursorTest', () => {
-
-    function createMetaMap(): {[id: string]: EntityMeta} {
-        const metaMap = {
-            a: new EntityMeta(),
-            c: new EntityMeta(),
-            b: new EntityMeta()
-        }
-        return metaMap
-    }
-
     function createCursor(id: string, metaMap: {[id: string]: EntityMeta}): {
         cursor: PromisedCursor,
         notify: () => void,
@@ -38,7 +28,7 @@ describe('PromiseCursorTest', () => {
         return {
             notify,
             metaMap,
-            cursor: new PromisedCursor(id, parents[id], childs[id], metaMap, notify)
+            cursor: new PromisedCursor(childs[id], notify)
         }
     }
 

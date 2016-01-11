@@ -1,11 +1,9 @@
 /* @flow */
 
 import DataCursor from './DataCursor'
-import PromisedCursor from '../promised/PromisedCursor'
-import createDepMetaFromState, {StateDepsMeta} from './createDepMetaFromState'
-import type {DepId, IdsMap, NotifyDepFn} from '../interfaces'
-import {AbstractSelector, AbstractCursor} from '../selectorInterfaces'
-import Cursor from '../Cursor'
+import createDepMetaFromState from './createDepMetaFromState'
+import type {DepId, NotifyDepFn} from '../interfaces'
+import {AbstractSelector, AbstractDataCursor, DepNode, StateNode} from '../selectorInterfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel, SetState, DepIdGetter} from './interfaces'
 /* eslint-enable no-unused-vars */
@@ -21,12 +19,16 @@ class StateRef<T: Object> {
 export default class Selector extends AbstractSelector {
     _stateRef: StateRef;
     _notify: NotifyDepFn;
-    _depMeta: StateDepsMeta;
+    _stateNodeMap: {[id: DepId]: StateNode};
+
+    depNodeMap: {[id: DepId]: DepNode};
 
     constructor(state: StateModel, getDepId: DepIdGetter) {
         super()
+        const {depNodeMap, stateNodeMap} = createDepMetaFromState(state, getDepId)
+        this._stateNodeMap = stateNodeMap
+        this.depNodeMap = depNodeMap
         this._stateRef = new StateRef(state)
-        this._depMeta = createDepMetaFromState(state, getDepId)
     }
 
     setNotify(notify: NotifyDepFn): AbstractSelector {
@@ -34,27 +36,14 @@ export default class Selector extends AbstractSelector {
         return this
     }
 
-    getDepMap(): IdsMap {
-        return this._depMeta.depMap
-    }
-
-    select<T: StateModel>(id: DepId): AbstractCursor<T> {
-        const {_stateRef: stateRef, _notify: notify, _depMeta: depMeta} = this
-        const {pathMap, fromJSMap, parentMap, metaMap, childMap} = depMeta
+    select<T: StateModel>(id: DepId): AbstractDataCursor<T> {
+        const {_stateRef: stateRef, _notify: notify, _stateNodeMap: stateNodeMap} = this
+        const {path, fromJS} = stateNodeMap[id]
 
         function notifyId(): void {
             notify(id)
         }
 
-        const data = new DataCursor(pathMap[id], fromJSMap[id], stateRef, notifyId)
-        const promised = new PromisedCursor(
-            id,
-            parentMap[id],
-            childMap[id],
-            metaMap,
-            notifyId
-        )
-
-        return new Cursor(data, promised)
+        return new DataCursor(path, fromJS, stateRef, notifyId)
     }
 }

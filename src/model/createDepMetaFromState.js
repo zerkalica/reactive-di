@@ -2,22 +2,15 @@
 
 import type {FromJS, DepId} from '../interfaces'
 import type {StateModelMeta, DepIdGetter} from './interfaces'
-import EntityMeta from '../promised/EntityMeta'
+import {DepNode, StateNode} from '../selectorInterfaces'
 
 export class StateDepsMeta {
-    depMap: {[id: DepId]: Array<DepId>};
-    parentMap: {[id: DepId]: Array<DepId>};
-    pathMap: {[id: DepId]: Array<string>};
-    fromJSMap: {[id: DepId]: FromJS};
-    metaMap: {[id: DepId]: EntityMeta};
-    childMap: {[id: DepId]: Array<DepId>};
+    stateNodeMap: {[id: DepId]: StateNode};
+    depNodeMap: {[id: DepId]: DepNode};
+
     constructor() {
-        this.depMap = {}
-        this.parentMap = {}
-        this.pathMap = {}
-        this.fromJSMap = {}
-        this.metaMap = {}
-        this.childMap = {}
+        this.stateNodeMap = Object.create(null)
+        this.depNodeMap = Object.create(null)
     }
 }
 
@@ -42,30 +35,22 @@ function getPathIds(
     path: Array<string>,
     parents: Array<DepId>,
     meta: StateDepsMeta,
-    getDepId: DepIdGetter,
+    getDepId: DepIdGetter
 ): FromJS<StateModelMeta> {
-    const {depMap, pathMap, parentMap, fromJSMap, metaMap, childMap} = meta
+    const {stateNodeMap, depNodeMap} = meta
     const id = getDepId(obj)
 
-    metaMap[id] = new EntityMeta()
-    childMap[id] = []
-
-    pathMap[id] = path
-    // write all parents and self to affect ids map
-    depMap[id] = parents.concat([id])
-
-    // write all child to self, to build EntityMeta deps
-    parentMap[id] = [].concat(parents)
     // write self to all parents affect ids map
     // parents knowns about childs
 
     const l = parents.length - 1
+    const parentId = l >= 0 ? parents[l] : null
     for (let k = 0; k <= l; k++) {
-        const parentId: DepId = parents[k];
-        depMap[parentId].push(id)
+        depNodeMap[parents[k]].relations.push(id)
     }
-    if (l >= 0) {
-        childMap[parents[l]].push(id)
+    depNodeMap[id] = new DepNode(parentId, parents.concat([id]))
+    if (parentId) {
+        depNodeMap[parentId].childs.push(id)
     }
 
     parents.push(id)
@@ -81,7 +66,7 @@ function getPathIds(
     parents.pop()
 
     const fromJS = createFromJS(obj.constructor, propCreators)
-    fromJSMap[id] = fromJS
+    stateNodeMap[id] = new StateNode(path, fromJS)
 
     return fromJS
 }

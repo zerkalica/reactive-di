@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 /* @flow */
 import assert from 'power-assert'
-import updateIdsMap from '../updateIdsMap'
+import IdsMapUpdater from '../IdsMapUpdater'
 import DepMeta from '../DepMeta'
 import type {DepId, IdsMap} from '../../interfaces'
 
@@ -17,11 +17,11 @@ function createMeta(id: DepId, ...deps: Array<DepMeta>): DepMeta {
 }
 
 function updateMap(idToStateIdsMap: IdsMap, ...deps: Array<DepMeta>): IdsMap {
-    const stateIdToIdsMap = {};
+    const idsMapUpdater = new IdsMapUpdater(idToStateIdsMap)
     deps.forEach(dep =>
-        updateIdsMap(dep.id, dep.deps, stateIdToIdsMap, idToStateIdsMap)
+        idsMapUpdater.update(dep.id, dep.deps)
     )
-    return stateIdToIdsMap
+    return idsMapUpdater.stateIdToIdsMap
 }
 
 describe('updateIdsMapTest', () => {
@@ -30,8 +30,8 @@ describe('updateIdsMapTest', () => {
         const b = createMeta('b')
         const c = createMeta('c')
 
-        const idToStateIdsMap: IdsMap = {
-            a: ['a', 'b', 'c'],
+        const idToStateIdsMap = {
+            a: new DepNode(['a', 'b', 'c']),
             b: ['a', 'b'],
             c: ['a', 'c']
         };

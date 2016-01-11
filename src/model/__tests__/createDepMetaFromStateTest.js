@@ -5,34 +5,75 @@ import assert from 'power-assert'
 
 import createDepMetaFromState from '../createDepMetaFromState'
 import {S, B, getDepId} from './ExampleState'
-import EntityMeta from '../../promised/EntityMeta'
+
+const testData = {
+    's': {
+        'parent': null,
+        'childs': [
+            'a',
+            'b'
+        ],
+        'relations': [
+            's',
+            'a',
+            'b',
+            'c'
+        ]
+    },
+    'a': {
+        'parent': 's',
+        'childs': [],
+        'relations': [
+            's',
+            'a'
+        ]
+    },
+    'b': {
+        'parent': 's',
+        'childs': [
+            'c'
+        ],
+        'relations': [
+            's',
+            'b',
+            'c'
+        ]
+    },
+    'c': {
+        'parent': 'b',
+        'childs': [],
+        'relations': [
+            's',
+            'b',
+            'c'
+        ]
+    }
+}
+
 describe('createDepMetaFromStateTest', () => {
     it('should build deps for {a, {b: c}}', () => {
         const s = new S()
-        const {depMap} = createDepMetaFromState(s, getDepId)
-        assert.deepEqual(depMap, {
-            s: ['s', 'a', 'b', 'c'],
-            a: ['s', 'a'],
-            b: ['s', 'b', 'c'],
-            c: ['s', 'b', 'c']
-        })
+        const {depNodeMap} = createDepMetaFromState(s, getDepId)
+        assert.deepEqual(depNodeMap.s.relations, ['s', 'a', 'b', 'c'])
+        assert.deepEqual(depNodeMap.a.relations, ['s', 'a'])
+        assert.deepEqual(depNodeMap.b.relations, ['s', 'b', 'c'])
+        assert.deepEqual(depNodeMap.c.relations, ['s', 'b', 'c'])
     })
 
     it('should build valid pathmap for {a, {b: c}}', () => {
         const s = new S()
-        const {pathMap} = createDepMetaFromState(s, getDepId)
-        assert.deepEqual(pathMap, {
-            s: [],
-            a: ['a'],
-            b: ['b'],
-            c: ['b', 'c']
-        })
+        const {stateNodeMap} = createDepMetaFromState(s, getDepId)
+
+        assert.deepEqual(stateNodeMap.s.path, [])
+        assert.deepEqual(stateNodeMap.a.path, ['a'])
+        assert.deepEqual(stateNodeMap.b.path, ['b'])
+        assert.deepEqual(stateNodeMap.c.path, ['b', 'c'])
     })
 
     it('should build valid fromJSMap for {a, {b: c}}', () => {
         const s = new S()
-        const {fromJSMap} = createDepMetaFromState(s, getDepId)
-        const s2 = fromJSMap.s({
+        const {stateNodeMap} = createDepMetaFromState(s, getDepId)
+        const s2 = stateNodeMap.s.fromJS({
             b: {
                 c: {
                     name: 'testC-changed'
@@ -46,8 +87,8 @@ describe('createDepMetaFromStateTest', () => {
 
     it('should build valid fromJSMap for {b: c}', () => {
         const s = new S()
-        const {fromJSMap} = createDepMetaFromState(s, getDepId)
-        const b2 = fromJSMap.b({
+        const {stateNodeMap} = createDepMetaFromState(s, getDepId)
+        const b2 = stateNodeMap.b.fromJS({
             c: {
                 name: 'testC-changed'
             }
@@ -57,23 +98,21 @@ describe('createDepMetaFromStateTest', () => {
         assert(b2.c.name === 'testC-changed')
     })
 
-    it('should build valid parentMap for {b: c}', () => {
+    it('should build valid childs for state', () => {
         const s = new S()
-        const {parentMap} = createDepMetaFromState(s, getDepId)
-        assert.deepEqual(parentMap, {
-            s: [],
-            a: ['s'],
-            b: ['s'],
-            c: ['s', 'b']
-        })
+        const {depNodeMap} = createDepMetaFromState(s, getDepId)
+        assert.deepEqual(depNodeMap.s.childs, ['a', 'b'])
+        assert.deepEqual(depNodeMap.a.childs, [])
+        assert.deepEqual(depNodeMap.b.childs, ['c'])
+        assert.deepEqual(depNodeMap.c.childs, [])
     })
 
-    it('should build valid metaMap for {b: c}', () => {
+    it('should build valid parents for state', () => {
         const s = new S()
-        const {metaMap} = createDepMetaFromState(s, getDepId)
-        assert(metaMap.s instanceof EntityMeta)
-        assert(metaMap.a instanceof EntityMeta)
-        assert(metaMap.b instanceof EntityMeta)
-        assert(metaMap.c instanceof EntityMeta)
+        const {depNodeMap} = createDepMetaFromState(s, getDepId)
+        assert.equal(depNodeMap.s.parent, null)
+        assert.equal(depNodeMap.a.parent, ['s'])
+        assert.equal(depNodeMap.b.parent, ['s'])
+        assert.equal(depNodeMap.c.parent, ['b'])
     })
 })

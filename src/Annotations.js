@@ -4,12 +4,14 @@ import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
 import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
 import DepMeta, {createId} from './meta/DepMeta'
-import type {Dependency, Setter, OnUpdateHook} from './interfaces'
+import type {DepId, Dependency, Setter, OnUpdateHook} from './interfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel} from './model/interfaces'
 /* eslint-enable no-unused-vars */
-import {AbstractCursor, AbstractSelector, selectorMeta} from './selectorInterfaces'
+import {AbstractDataCursor, AbstractSelector, promisedSelectorMeta, selectorMeta} from './selectorInterfaces'
 import EntityMeta from './promised/EntityMeta'
+import PromisedSelector from './promised/PromisedSelector'
+import PromisedCursor from './promised/PromisedCursor'
 
 type DepDecoratorFn<T> = (target: Dependency<T>) => T;
 
@@ -25,13 +27,31 @@ function proxifyResult<R: Function>(src: R, set: Setter): R {
     return createProxy(src, [set])
 }
 
-function _getter<T: Object>(cursor: AbstractCursor<T>): T {
+function _getter<T: Object>(cursor: AbstractDataCursor<T>): T {
     return cursor.get()
 }
 
-function _setter<T: Object>(cursor: AbstractCursor<T>): Setter<T> {
+function _metaGetter(cursor: PromisedCursor): EntityMeta {
+    return cursor.get()
+}
+
+function _setter<T: Object>(data: AbstractDataCursor<T>, promised: PromisedCursor): Setter<T> {
+    function success(value: T): void {
+        const needNotify = !data.set(value)
+        promised.success(needNotify)
+    }
+
+    function error(reason: Error): void {
+        promised.error(reason)
+    }
+
     return function __setter(value: T|Promise<T>): void {
-        cursor.set(value)
+        if (typeof value.then === 'function') {
+            promised.pending()
+            value.then(success).catch(error)
+        } else if (typeof value === 'object') {
+            success(value)
+        }
     }
 }
 
@@ -70,6 +90,44 @@ function normalizeDeps(
     }
 }
 
+function createPromisedCursorMeta(id: string, debugName: string, tags: Array<string>): DepMeta {
+    function _metaSelect(selector: PromisedSelector): PromisedCursor {
+        return selector.select(id)
+    }
+    _metaSelect.displayName = 'metaSel@' + debugName
+    const selectMeta = new DepMeta({
+        deps: [promisedSelectorMeta],
+        fn: _metaSelect,
+        tags: [debugName, 'metaSel'].concat(tags)
+    });
+
+    return selectMeta
+}
+
+function createMetaGetter(
+    id: DepId|DepMeta,
+    debugName: string,
+    tags: Array<string>,
+    driver: AbstractMetaDriver
+): (c: PromisedCursor) => EntityMeta {
+    const selectMeta: DepMeta = id instanceof DepMeta
+        ? id
+        : createPromisedCursorMeta(id, debugName, tags);
+
+    const getMetaMeta = new DepMeta({
+        deps: [selectMeta],
+        fn: _metaGetter,
+        tags: [debugName, 'getMeta'].concat(tags)
+    })
+
+    function getMeta(cursor: PromisedCursor): EntityMeta {
+        return cursor.get()
+    }
+
+    driver.set(getMeta, getMetaMeta)
+    return getMeta
+}
+
 function klass(
     driver: AbstractMetaDriver,
     tags: Array<string>,
@@ -77,6 +135,7 @@ function klass(
 ): DepDecoratorFn {
     return function _klass<T>(proto: Dependency<T>): Dependency<T> {
         const debugName: string = getFunctionName((proto: Function));
+        const id = createId()
         function createObject(...args: Array<any>): T {
             /* eslint-disable new-cap */
             return new (proto: any)(args[0], args[1], args[2], args[3], args[4], args[5], args[6])
@@ -84,8 +143,10 @@ function klass(
         }
         createObject.displayName = 'klass@' + debugName
         const meta: DepMeta = new DepMeta({
+            id,
             ...normalizeDeps(driver, rawDeps),
             fn: createObject,
+            getMeta: createMetaGetter(id, debugName, tags, driver),
             tags: [debugName, 'klass'].concat(tags)
         });
         return driver.set(proto, meta)
@@ -98,9 +159,13 @@ function factory(
     rawDeps: Array<Dependency>
 ): DepDecoratorFn {
     return function _factory<T: Function>(fn: T): Dependency<T> {
+        const debugName: string = getFunctionName(fn);
+        const id = createId()
         const meta = new DepMeta({
+            id,
             ...normalizeDeps(driver, rawDeps),
             fn,
+            getMeta: createMetaGetter(id, debugName, tags, driver),
             tags: ['factory'].concat(tags)
         })
         return driver.set(fn, meta)
@@ -114,7 +179,7 @@ function model<T: StateModel>(
 ): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
     const id = createId()
-    function _select(selector: AbstractSelector): AbstractCursor<T> {
+    function _select(selector: AbstractSelector): AbstractDataCursor<T> {
         return selector.select(id)
     }
     _select.displayName = 'sel@' + debugName
@@ -123,30 +188,19 @@ function model<T: StateModel>(
         fn: _select,
         tags: [debugName, 'sel'].concat(tags)
     })
+    const promisedCursorMeta = createPromisedCursorMeta(id, debugName, tags)
     const setterMeta = new DepMeta({
-        deps: [select],
+        deps: [select, promisedCursorMeta],
         fn: _setter,
         tags: [debugName, 'set'].concat(tags)
     })
-
-    function getMeta(cursor: AbstractCursor<T>): EntityMeta {
-        return cursor.getMeta()
-    }
-
-    const getMetaMeta = new DepMeta({
-        deps: [select],
-        fn: getMeta,
-        tags: [debugName, 'getMeta'].concat(tags)
-    })
-
-    driver.set(getMeta, getMetaMeta)
 
     const meta = new DepMeta({
         id,
         fn: _getter,
         deps: [select],
         setter: setterMeta,
-        getMeta,
+        getMeta: createMetaGetter(promisedCursorMeta, debugName, tags, driver),
         tags: [debugName, 'model'].concat(tags)
     })
 
@@ -196,7 +250,7 @@ export default class Annotations {
 
     constructor(driver: AbstractMetaDriver, tags: Array<string> = []) {
         this.setter = function __setter<S: StateModel>(dep: Dependency<S>, ...rawDeps: Array<Dependency>): DepDecoratorFn {
-            return setter(driver, tags, dep, rawDeps, false)
+            return setter(driver, tags, dep, rawDeps)
         }
 
         this.meta = function __meta<S: StateModel>(dep: Dependency<S>): Dependency<S> {

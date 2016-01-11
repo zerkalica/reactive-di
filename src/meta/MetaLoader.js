@@ -1,17 +1,20 @@
 /* @flow */
 
-import updateIdsMap from './updateIdsMap'
-import DepMeta from './DepMeta'
 import AbstractMetaDriver from './drivers/AbstractMetaDriver'
+import DepMeta from './DepMeta'
+import IdsMapUpdater from './IdsMapUpdater'
+import PromisedSelector from '../promised/PromisedSelector'
+import type {Dependency, NotifyDepsFn, DepId} from '../interfaces'
 import {AbstractSelector} from '../selectorInterfaces'
-import type {Dependency, NotifyDepsFn, IdsMap, DepId} from '../interfaces'
 
 export default class MetaLoader {
-    _cache: {[id: DepId]: DepMeta};
-    _stateIdToIdsMap: IdsMap;
-    _idToStateIdsMap: IdsMap;
+    _cachedMeta: {[id: DepId]: DepMeta};
     _notify: NotifyDepsFn;
     _driver: AbstractMetaDriver;
+    _idsMapUpdater: IdsMapUpdater;
+
+    selector: AbstractSelector;
+    promiseSelector: PromisedSelector;
 
     constructor(
         driver: AbstractMetaDriver,
@@ -19,28 +22,31 @@ export default class MetaLoader {
         notify: NotifyDepsFn,
         aliases?: Array<[Dependency, Dependency]>
     ) {
-        this._cache = Object.create(null)
-        this._stateIdToIdsMap = Object.create(null);
+        const depNodeMap = selector.depNodeMap
+        this._idsMapUpdater = new IdsMapUpdater(depNodeMap)
+        const stateIdToIdsMap = this._idsMapUpdater.stateIdToIdsMap
+        function notifyIdChange(id: DepId): void {
+            notify(stateIdToIdsMap[id] || [])
+        }
+        this.promiseSelector = new PromisedSelector(depNodeMap, notifyIdChange)
+
+        this._cachedMeta = Object.create(null)
         this._driver = driver
 
-        selector.setNotify(id => notify(this._stateIdToIdsMap[id] || []))
+        this.selector = selector
+        this.selector.setNotify(notifyIdChange)
 
-        const depMap = selector.getDepMap();
-        this._idToStateIdsMap = depMap;
-
-        (aliases || []).forEach(([depSrc, depTarget]) => {
-            this._cache[driver.get(depSrc).id] = driver.get(depTarget)
+        ;(aliases || []).forEach(([depSrc, depTarget]) => {
+            this._cachedMeta[driver.get(depSrc).id] = driver.get(depTarget)
         })
     }
 
     get(dep: Dependency): DepMeta {
         const depMeta = this._driver.get(dep)
-        return this._cache[depMeta.id] || depMeta
+        return this._cachedMeta[depMeta.id] || depMeta
     }
 
     update(id: DepId, deps: Array<DepMeta>): void {
-        if (!this._idToStateIdsMap[id]) {
-            updateIdsMap(id, deps, this._stateIdToIdsMap, this._idToStateIdsMap)
-        }
+        this._idsMapUpdater.update(id, deps)
     }
 }

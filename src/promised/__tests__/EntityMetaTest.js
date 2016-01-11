@@ -2,7 +2,7 @@
 /* @flow */
 
 import assert from 'power-assert'
-import EntityMeta from '../EntityMeta'
+import EntityMeta, {updateMeta} from '../EntityMeta'
 import type {EntityMetaRec} from '../EntityMeta'
 
 describe('EntityMetaTest', () => {
@@ -48,10 +48,13 @@ describe('EntityMetaTest', () => {
             pending: false,
             reason: null
         })
-        const a: EntityMetaRec = {pending: true};
-        const b: EntityMetaRec = {rejected: false};
-        const c: EntityMetaRec = {fulfilled: false};
-        const meta2 = meta1.combine([a, b, c])
+        const a: EntityMeta = new EntityMeta({pending: true, fulfilled: false});
+        const b: EntityMeta = new EntityMeta({rejected: false, fulfilled: false});
+        const c: EntityMeta = new EntityMeta({fulfilled: false});
+        const meta2 = meta1.copy()
+        updateMeta(meta2, a)
+        updateMeta(meta2, b)
+        updateMeta(meta2, c)
 
         assert(meta2.rejected === true)
         assert(meta2.pending === true)

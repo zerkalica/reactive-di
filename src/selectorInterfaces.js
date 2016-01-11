@@ -1,7 +1,7 @@
 /* @flow */
 
 import DepMeta from './meta/DepMeta'
-import type {FromJS, DepId, IdsMap, NotifyDepFn} from './interfaces'
+import type {FromJS, DepId, NotifyDepFn} from './interfaces'
 import EntityMeta from './promised/EntityMeta'
 
 export class AbstractDataCursor<V> {
@@ -30,40 +30,50 @@ export class AbstractPromisedCursor {
     /* eslint-enable no-unused-vars */
 }
 
-export class AbstractCursor<T: Object> {
-    /* eslint-disable no-unused-vars */
-    get(): T|any {
-    }
-
-    set(value: T|Promise<T>): void {
-
-    }
-
-    getMeta(): EntityMeta {
-        return new EntityMeta()
-    }
-    /* eslint-enable no-unused-vars */
-}
-
 function fn() {
     throw new Error('Implement AbstractSelector')
 }
 
 export const selectorMeta: DepMeta = new DepMeta({fn});
+export const promisedSelectorMeta: DepMeta = new DepMeta({fn});
+
+export class DepNode {
+    // Nearest parent
+    parent: ?DepId;
+
+    // Nearest childs
+    childs: Array<DepId>;
+
+    // All parents and childs
+    relations: Array<DepId>;
+
+    constructor(parentId: ?DepId, relations?: Array<DepId>) {
+        this.parent = parentId
+        this.childs = []
+        this.relations = relations || []
+    }
+}
+
+export class StateNode {
+    path: Array<string>;
+    fromJS: FromJS;
+
+    constructor(path: Array<string>, fromJS: FromJS) {
+        this.path = path
+        this.fromJS = fromJS
+    }
+}
 
 export class AbstractSelector {
+    depNodeMap: {[id: DepId]: DepNode};
 
     /* eslint-disable no-unused-vars */
-    getDepMap(): IdsMap {
-        return {}
-    }
-
     setNotify(notify: NotifyDepFn): AbstractSelector {
         return this
     }
 
-    select<T: Object>(id: DepId): AbstractCursor<T> {
-        return new AbstractCursor()
+    select<T: Object>(id: DepId): AbstractDataCursor<T> {
+        return new AbstractDataCursor()
     }
     /* eslint-enable no-unused-vars */
 }

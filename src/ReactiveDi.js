@@ -4,7 +4,8 @@ import createProxy from './utils/createProxy'
 import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
 import DepMeta from './meta/DepMeta'
 import MetaLoader from './meta/MetaLoader'
-import {AbstractSelector, selectorMeta} from './selectorInterfaces'
+import PromiseSelector from './promised/PromisedSelector'
+import {AbstractSelector, promisedSelectorMeta, selectorMeta} from './selectorInterfaces'
 import type {Dependency, DepId} from './interfaces'
 
 type CacheRec = {
@@ -63,9 +64,13 @@ export default class ReactiveDi {
             dep => this._metaLoader.get(dep)
         )
         this._cache[selectorMeta.id] = {
-            value: selector,
+            value: this._metaLoader.selector,
             reCalculate: false
         };
+        this._cache[promisedSelectorMeta.id] = {
+            value: this._metaLoader.promiseSelector,
+            reCalculate: false
+        }
     }
 
     _notify(ids: Array<DepId>): void {
