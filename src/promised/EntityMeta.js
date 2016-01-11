@@ -22,8 +22,35 @@ export default class EntityMeta {
         this.reason = rec.reason || null
     }
 
-    copy(rec: EntityMetaRec = {}): EntityMeta {
+    _copy(rec: EntityMetaRec = {}): EntityMeta {
         return merge(this, rec)
+    }
+
+    setPending(): EntityMeta {
+        return this._copy({
+            pending: true,
+            rejected: false,
+            fulfilled: false,
+            reason: null
+        })
+    }
+
+    success(): EntityMeta {
+        return this._copy({
+            pending: false,
+            rejected: false,
+            fulfilled: true,
+            reason: null
+        })
+    }
+
+    error(reason: Error): EntityMeta {
+        return this._copy({
+            pending: false,
+            rejected: true,
+            fulfilled: false,
+            reason
+        })
     }
 }
 

@@ -3,15 +3,13 @@
 import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
 import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
-import DepMeta, {createId} from './meta/DepMeta'
-import type {DepId, Dependency, Setter, OnUpdateHook} from './interfaces'
+import DepMeta, {createId, getMeta, getCacheRec} from './meta/DepMeta'
+import type {Dependency, OnUpdateHook} from './interfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel} from './model/interfaces'
 /* eslint-enable no-unused-vars */
-import {AbstractDataCursor, AbstractSelector, promisedSelectorMeta, selectorMeta} from './selectorInterfaces'
-import EntityMeta from './promised/EntityMeta'
-import PromisedSelector from './promised/PromisedSelector'
-import PromisedCursor from './promised/PromisedCursor'
+
+import CacheRec from './CacheRec'
 
 type DepDecoratorFn<T> = (target: Dependency<T>) => T;
 
@@ -22,38 +20,6 @@ type NormalizedDeps = {
 };
 
 type RawDepMap = {[arg: string]: Dependency};
-
-function proxifyResult<R: Function>(src: R, set: Setter): R {
-    return createProxy(src, [set])
-}
-
-function _getter<T: Object>(cursor: AbstractDataCursor<T>): T {
-    return cursor.get()
-}
-
-function _metaGetter(cursor: PromisedCursor): EntityMeta {
-    return cursor.get()
-}
-
-function _setter<T: Object>(data: AbstractDataCursor<T>, promised: PromisedCursor): Setter<T> {
-    function success(value: T): void {
-        const needNotify = !data.set(value)
-        promised.success(needNotify)
-    }
-
-    function error(reason: Error): void {
-        promised.error(reason)
-    }
-
-    return function __setter(value: T|Promise<T>): void {
-        if (typeof value.then === 'function') {
-            promised.pending()
-            value.then(success).catch(error)
-        } else if (typeof value === 'object') {
-            success(value)
-        }
-    }
-}
 
 function normalizeDeps(
     driver: AbstractMetaDriver,
@@ -90,44 +56,6 @@ function normalizeDeps(
     }
 }
 
-function createPromisedCursorMeta(id: string, debugName: string, tags: Array<string>): DepMeta {
-    function _metaSelect(selector: PromisedSelector): PromisedCursor {
-        return selector.select(id)
-    }
-    _metaSelect.displayName = 'metaSel@' + debugName
-    const selectMeta = new DepMeta({
-        deps: [promisedSelectorMeta],
-        fn: _metaSelect,
-        tags: [debugName, 'metaSel'].concat(tags)
-    });
-
-    return selectMeta
-}
-
-function createMetaGetter(
-    id: DepId|DepMeta,
-    debugName: string,
-    tags: Array<string>,
-    driver: AbstractMetaDriver
-): (c: PromisedCursor) => EntityMeta {
-    const selectMeta: DepMeta = id instanceof DepMeta
-        ? id
-        : createPromisedCursorMeta(id, debugName, tags);
-
-    const getMetaMeta = new DepMeta({
-        deps: [selectMeta],
-        fn: _metaGetter,
-        tags: [debugName, 'getMeta'].concat(tags)
-    })
-
-    function getMeta(cursor: PromisedCursor): EntityMeta {
-        return cursor.get()
-    }
-
-    driver.set(getMeta, getMetaMeta)
-    return getMeta
-}
-
 function klass(
     driver: AbstractMetaDriver,
     tags: Array<string>,
@@ -146,7 +74,6 @@ function klass(
             id,
             ...normalizeDeps(driver, rawDeps),
             fn: createObject,
-            getMeta: createMetaGetter(id, debugName, tags, driver),
             tags: [debugName, 'klass'].concat(tags)
         });
         return driver.set(proto, meta)
@@ -165,11 +92,14 @@ function factory(
             id,
             ...normalizeDeps(driver, rawDeps),
             fn,
-            getMeta: createMetaGetter(id, debugName, tags, driver),
-            tags: ['factory'].concat(tags)
+            tags: [debugName, 'factory'].concat(tags)
         })
         return driver.set(fn, meta)
     }
+}
+
+function getter<T: Object>(cacheRec: CacheRec): T {
+    return cacheRec.getValue()
 }
 
 function model<T: StateModel>(
@@ -178,33 +108,20 @@ function model<T: StateModel>(
     mdl: Dependency<T>
 ): Dependency<T> {
     const debugName: string = getFunctionName((mdl: Function));
-    const id = createId()
-    function _select(selector: AbstractSelector): AbstractDataCursor<T> {
-        return selector.select(id)
-    }
-    _select.displayName = 'sel@' + debugName
-    const select = new DepMeta({
-        deps: [selectorMeta],
-        fn: _select,
-        tags: [debugName, 'sel'].concat(tags)
-    })
-    const promisedCursorMeta = createPromisedCursorMeta(id, debugName, tags)
-    const setterMeta = new DepMeta({
-        deps: [select, promisedCursorMeta],
-        fn: _setter,
-        tags: [debugName, 'set'].concat(tags)
-    })
-
     const meta = new DepMeta({
-        id,
-        fn: _getter,
-        deps: [select],
-        setter: setterMeta,
-        getMeta: createMetaGetter(promisedCursorMeta, debugName, tags, driver),
         tags: [debugName, 'model'].concat(tags)
     })
 
-    return driver.set(mdl, meta)
+    const modelMeta = meta.copy({
+        fn: getter,
+        deps: [meta.copy({fromCacheRec: getCacheRec})]
+    })
+
+    return driver.set(mdl, modelMeta)
+}
+
+function proxifyResult<R: Function>(src: R, cacheRec: CacheRec): R {
+    return createProxy(src, [cacheRec.setValue])
 }
 
 function setter<S: StateModel>(
@@ -214,24 +131,22 @@ function setter<S: StateModel>(
     rawDeps: Array<Dependency>
 ): DepDecoratorFn {
     return function __setter<T>(sourceFn: Dependency<T>): Dependency<T> {
-        const debugName: string = getFunctionName((dep: Function));
+        const depMeta = driver.get(dep)
+        const debugName = depMeta.displayName
         const source: DepMeta = new DepMeta({
-            ...normalizeDeps(driver, rawDeps),
+            ...normalizeDeps(driver, [dep].concat(rawDeps)),
             fn: sourceFn,
             tags: [debugName, 'source'].concat(tags)
         });
-        const {setter: setterMeta} = driver.get(dep)
-        if (!setterMeta) {
-            throw new Error('Not a model dep: ' + debugName)
-        }
 
-        const meta: DepMeta = new DepMeta({
-            deps: [source, setterMeta],
+
+        const setterMeta: DepMeta = new DepMeta({
+            deps: [source, depMeta.copy({fromCacheRec: getCacheRec})],
             fn: proxifyResult,
             tags: [debugName, 'setter'].concat(tags)
         });
 
-        return driver.set(sourceFn, meta)
+        return driver.set(sourceFn, setterMeta)
     }
 }
 
@@ -253,12 +168,12 @@ export default class Annotations {
             return setter(driver, tags, dep, rawDeps)
         }
 
-        this.meta = function __meta<S: StateModel>(dep: Dependency<S>): Dependency<S> {
-            const {getMeta, displayName} = driver.get(dep)
-            if (!getMeta) {
-                throw new Error('Not a dep model: ' + displayName)
-            }
-            return getMeta()
+        this.meta = function __meta(dep: Dependency): Dependency {
+            const depMeta = driver.get(dep)
+            function _getMeta() {}
+            driver.set(_getMeta, depMeta.copy({fromCacheRec: getMeta}))
+
+            return _getMeta
         }
 
         this.model = function __model<T: StateModel>(mdl: Dependency<T>): Dependency<T> {

@@ -4,16 +4,11 @@ import createProxy from './utils/createProxy'
 import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
 import DepMeta from './meta/DepMeta'
 import MetaLoader from './meta/MetaLoader'
-import PromiseSelector from './promised/PromisedSelector'
-import {AbstractSelector, promisedSelectorMeta, selectorMeta} from './selectorInterfaces'
-import type {Dependency, DepId} from './interfaces'
-
-type CacheRec = {
-    value: any;
-    reCalculate: boolean;
-}
-
-type CacheMap = {[id: DepId]: CacheRec};
+import {AbstractSelector} from './selectorInterfaces'
+import type {Dependency, DepId, IdsMap} from './interfaces'
+import EntityMeta, {updateMeta} from './promised/EntityMeta'
+import CacheRec from './CacheRec'
+import IdsMapUpdater from './meta/IdsMapUpdater'
 
 type MiddlewareMap = {[id: DepId]: Array<DepMeta>};
 
@@ -39,10 +34,10 @@ function normalizeMiddlewares(
 }
 
 export default class ReactiveDi {
-    _cache: CacheMap;
     _metaLoader: MetaLoader;
     _listeners: Array<Dependency>;
     _middlewares: MiddlewareMap;
+    _idsMapUpdater: IdsMapUpdater;
 
     constructor(
         driver: AbstractMetaDriver,
@@ -51,67 +46,40 @@ export default class ReactiveDi {
         middlewares?: Array<[Dependency, Array<Dependency>]>
     ) {
         this._listeners = []
-        this._cache = Object.create(null)
+        this._idsMapUpdater = new IdsMapUpdater(selector)
+        this._metaLoader = new MetaLoader(driver, aliases)
 
-        this._metaLoader = new MetaLoader(
-            driver,
-            selector,
-            ids => this._notify(ids),
-            aliases
-        )
         this._middlewares = normalizeMiddlewares(
             middlewares || [],
             dep => this._metaLoader.get(dep)
         )
-        this._cache[selectorMeta.id] = {
-            value: this._metaLoader.selector,
-            reCalculate: false
-        };
-        this._cache[promisedSelectorMeta.id] = {
-            value: this._metaLoader.promiseSelector,
-            reCalculate: false
-        }
-    }
-
-    _notify(ids: Array<DepId>): void {
-        const cache = this._cache
-        for (let i = 0, k = ids.length; i < k; i++) {
-            if (cache[ids[i]]) {
-                cache[ids[i]].reCalculate = true
-            }
-        }
     }
 
     mount<T>(dep: Dependency<T>): void {
-        const {id, deps} = this._metaLoader.get(dep)
-        this._metaLoader.update(id, deps)
-        this._cache[id] = {
-            value: null,
-            // do not call listener on first state change
-            reCalculate: false
-        }
-        this._listeners.push(dep)
+        const {_idsMapUpdater, _metaLoader, _listeners} = this
+        const {id, deps} = _metaLoader.get(dep)
+        // do not call listener on first state change
+        _idsMapUpdater.reset(id)
+        _listeners.push(dep)
     }
 
     unmount<T>(dep: Dependency<T>): void {
-        const {id} = this._metaLoader.get(dep)
+        const {_idsMapUpdater, _metaLoader, _listeners} = this
+        const {id} = _metaLoader.get(dep)
         // do not call listener on first state change
-        const cache = this._cache[id] || {}
-        cache.value = null
-        cache.reCalculate = false
+        _idsMapUpdater.reset(id)
 
         function _listenersFilter(d) {
             return dep !== d
         }
 
-        this._listeners = this._listeners.filter(_listenersFilter)
+        this._listeners = _listeners.filter(_listenersFilter)
     }
 
     _get(
         depMeta: DepMeta,
-        tempCache: CacheMap,
         debugCtx: Array<string>
-    ): any {
+    ): CacheRec {
         const {
             id,
             isState,
@@ -122,30 +90,25 @@ export default class ReactiveDi {
             onUpdate
         } = depMeta
 
-        const cache = isState ? tempCache : this._cache
-        let cacheRec = cache[id]
-        if (!cacheRec) {
-            cacheRec = {
-                value: null,
-                reCalculate: true
-            }
-            cache[id] = cacheRec
-        }
+        const cacheRec = this._idsMapUpdater.get(id, deps)
 
-        if (cacheRec.reCalculate) {
-            this._metaLoader.update(id, deps)
+        if (cacheRec.reCalculate || isState) {
             const defArgs = depNames ? [{}] : []
+            const newMeta: EntityMeta = cacheRec.createMeta();
+            let isChanged = false
             for (let i = 0, j = deps.length; i < j; i++) {
                 const dep = deps[i]
-                const value = this._get(
+                const depRec = this._get(
                     dep,
-                    tempCache,
                     debugCtx.concat([displayName, '' + i])
                 )
                 if (depNames) {
-                    defArgs[0][depNames[i]] = value
+                    defArgs[0][depNames[i]] = dep.fromCacheRec(depRec)
                 } else {
-                    defArgs.push(value)
+                    defArgs.push(dep.fromCacheRec(depRec))
+                }
+                if (updateMeta(newMeta, depRec.meta)) {
+                    isChanged = true
                 }
             }
             let result
@@ -159,9 +122,12 @@ export default class ReactiveDi {
             }
             cacheRec.reCalculate = false
             cacheRec.value = this._proxify(result, id)
+            if (isChanged) {
+                cacheRec.meta = newMeta
+            }
         }
 
-        return cacheRec.value
+        return cacheRec
     }
 
     _proxify<T: Function>(result: T, id: DepId): T {
@@ -170,16 +136,15 @@ export default class ReactiveDi {
             return result
         }
         const resolvedMdls = []
-        const tmpCache = {}
         const debugCtx = []
         for (let i = 0, j = middlewares.length; i < j; i++) {
-            resolvedMdls.push(this._get(middlewares[i], tmpCache, debugCtx))
+            resolvedMdls.push(this._get(middlewares[i], debugCtx))
         }
 
         return createProxy(result, resolvedMdls)
     }
 
     get<T>(dep: Dependency<T>): T {
-        return this._get(this._metaLoader.get(dep), {}, [])
+        return this._get(this._metaLoader.get(dep), []).value
     }
 }

@@ -48,7 +48,7 @@ function getPathIds(
     for (let k = 0; k <= l; k++) {
         depNodeMap[parents[k]].relations.push(id)
     }
-    depNodeMap[id] = new DepNode(parentId, parents.concat([id]))
+    depNodeMap[id] = new DepNode(parents.concat([]), parents.concat([id]))
     if (parentId) {
         depNodeMap[parentId].childs.push(id)
     }

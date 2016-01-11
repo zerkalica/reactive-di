@@ -38,8 +38,8 @@ export const selectorMeta: DepMeta = new DepMeta({fn});
 export const promisedSelectorMeta: DepMeta = new DepMeta({fn});
 
 export class DepNode {
-    // Nearest parent
-    parent: ?DepId;
+    // All parents
+    parents: Array<DepId>;
 
     // Nearest childs
     childs: Array<DepId>;
@@ -47,8 +47,8 @@ export class DepNode {
     // All parents and childs
     relations: Array<DepId>;
 
-    constructor(parentId: ?DepId, relations?: Array<DepId>) {
-        this.parent = parentId
+    constructor(parents?: Array<DepId>, relations?: Array<DepId>) {
+        this.parents = parents || []
         this.childs = []
         this.relations = relations || []
     }

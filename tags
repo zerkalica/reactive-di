@@ -1,0 +1,111 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+_interopRequireDefault	dist/ReactiveDi.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/annotations.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/index.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/meta/DepMeta.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/meta/MetaLoader.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/meta/__tests__/updateIdsMapTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/meta/updateIdsMap.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/Collection.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/Cursor.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/EntityMeta.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/Selector.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/createDepMetaFromState.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/selectorInterfaces.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/utils/createProxy.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_loop	dist/index.js	/^var _loop = function _loop(_key2) {$/;"	f
+_notify	dist/model/createDepMetaFromState.js	/^    obj.$meta.notify = function _notify() {$/;"	f
+author	package.json	/^  "author": "Stefan Zerkalica <zerkalica@gmail.com>",$/;"	f
+babel-cli	package.json	/^    "babel-cli": "^6.3.17",$/;"	f
+babel-core	package.json	/^    "babel-core": "^6.3.17",$/;"	f
+babel-eslint	package.json	/^    "babel-eslint": "^5.0.0-0",$/;"	f
+babel-plugin-espower	package.json	/^    "babel-plugin-espower": "^2.0.0",$/;"	f
+babel-plugin-flow-comments	package.json	/^    "babel-plugin-flow-comments": "^6.3.19",$/;"	f
+babel-plugin-syntax-flow	package.json	/^    "babel-plugin-syntax-flow": "^6.3.13",$/;"	f
+babel-plugin-transform-flow-strip-types	package.json	/^    "babel-plugin-transform-flow-strip-types": "^6.3.15",$/;"	f
+babel-plugin-transform-runtime	package.json	/^    "babel-plugin-transform-runtime": "^6.3.13",$/;"	f
+babel-preset-es2015	package.json	/^    "babel-preset-es2015": "^6.3.13",$/;"	f
+babel-preset-stage-0	package.json	/^    "babel-preset-stage-0": "^6.3.13",$/;"	f
+build	package.json	/^    "build": "npm run clean && babel src --source-maps --out-dir $npm_package_options_builddir",$/;"	f
+build.dev	package.json	/^    "build.dev": "npm run build -- --watch",$/;"	f
+builddir	package.json	/^    "builddir": "dist"$/;"	f
+check	package.json	/^    "check": "flow check",$/;"	f
+clean	package.json	/^    "clean": "rm -rf $npm_package_options_builddir coverage",$/;"	f
+copyProps	dist/model/EntityMeta.js	/^function copyProps \/*:: <C: Entity, R: Object>*\/(obj \/*: C*\/, rec \/*: R*\/) \/*: R*\/ {$/;"	f
+create	dist/model/EntityMeta.js	/^function create \/*:: <R: Object, T: Object>*\/(rec \/*: ?R*\/,$/;"	f
+createDepMetaFromState	dist/model/createDepMetaFromState.js	/^function createDepMetaFromState(obj \/*: StateModel*\/, notify \/*: NotifyDepFn*\/, getDepId \/*: DepIdGetter*\/) \/*: StateDepsMeta*\/ {$/;"	f
+createFunctionProxy	dist/utils/createProxy.js	/^function createFunctionProxy(source \/*: Function*\/, middlewares \/*: Array<MiddlewareFn>*\/) \/*: Function*\/ {$/;"	f
+createFunctionProxy.functionProxy	dist/utils/createProxy.js	/^    function functionProxy() \/*: any*\/ {$/;"	f
+createId	dist/meta/DepMeta.js	/^function createId() \/*: DepId*\/ {$/;"	f
+createMeta	dist/meta/__tests__/updateIdsMapTest.js	/^function createMeta(id \/*: DepId*\/) \/*: DepMeta*\/ {$/;"	f
+createMethodProxy	dist/utils/createProxy.js	/^function createMethodProxy(name \/*: string*\/, source \/*: Object*\/, middlewares \/*: Array<MiddlewareMap>*\/) \/*: Function*\/ {$/;"	f
+createMethodProxy.methodProxy	dist/utils/createProxy.js	/^    function methodProxy() \/*: any*\/ {$/;"	f
+createObjectProxy	dist/utils/createProxy.js	/^function createObjectProxy(source \/*: Object*\/, middlewares \/*: Array<MiddlewareMap>*\/) \/*: Object*\/ {$/;"	f
+createProxy	dist/utils/createProxy.js	/^function createProxy(source \/*: Function|Object*\/, middlewares \/*: Array<any>*\/) \/*: any*\/ {$/;"	f
+defaultFn	src/meta/DepMeta.js	/^function defaultFn() {}$/;"	f
+defaultGetDepId	dist/model/Selector.js	/^function defaultGetDepId(obj \/*: Object*\/) \/*: DepId*\/ {$/;"	f
+dependencyScanner	dist/meta/updateIdsMap.js	/^function dependencyScanner(id \/*: DepId*\/, parentDeps \/*: Array<DepMeta>*\/, acc \/*: PathMapUpdater*\/) \/*: void*\/ {$/;"	f
+description	package.json	/^  "description": "Reactive dependency injection",$/;"	f
+devDependencies	package.json	/^  "devDependencies": {$/;"	f
+eslint	package.json	/^    "eslint": "^1.10.3",$/;"	f
+eslint-config-airbnb	package.json	/^    "eslint-config-airbnb": "2.1.1",$/;"	f
+eslint-config-airplus	package.json	/^    "eslint-config-airplus": "^1.0.6",$/;"	f
+eslint-plugin-react	package.json	/^    "eslint-plugin-react": "^3.11.3",$/;"	f
+factory	dist/annotations.js	/^function factory() \/*: DepDecoratorFn*\/ {$/;"	f
+files	package.json	/^  "files": [$/;"	f
+fn	dist/selectorInterfaces.js	/^function fn() {$/;"	f
+fn	src/selectorInterfaces.js	/^function fn() {$/;"	f
+getFunctionName	dist/utils/getFunctionName.js	/^function getFunctionName(func \/*: Function*\/) \/*: string*\/ {$/;"	f
+getPathIds	dist/model/createDepMetaFromState.js	/^function getPathIds(obj \/*: StateModel*\/, path \/*: Array<string>*\/, parents \/*: Array<DepId>*\/, meta \/*: StateDepsMeta*\/, notify \/*: NotifyDepFn*\/, getDepId \/*: DepIdGetter*\/) \/*: void*\/ {$/;"	f
+glob	package.json	/^    "glob": "^6.0.1",$/;"	f
+iterator	dist/model/Collection.js	/^obj[_iterator2.default] = function iterator() {$/;"	f
+iterator	src/utils/Collection.js	/^obj[Symbol.iterator] = function iterator() {$/;"	f
+keywords	package.json	/^  "keywords": [$/;"	f
+klass	dist/annotations.js	/^function klass() \/*: DepDecoratorFn*\/ {$/;"	f
+license	package.json	/^  "license": "MIT",$/;"	f
+lint	package.json	/^    "lint": "eslint src",$/;"	f
+main	package.json	/^  "main": "dist\/index.js",$/;"	f
+mocha	package.json	/^    "mocha": "^2.3.4",$/;"	f
+model	dist/annotations.js	/^function model \/*:: <T: StateModel>*\/(mdl \/*: Dependency<T>*\/) \/*: Dependency<T>*\/ {$/;"	f
+model._getter	dist/annotations.js	/^    function _getter(cursor \/*: AbstractCursor<T>*\/) \/*: T*\/ {$/;"	f
+model._select	dist/annotations.js	/^    function _select(selector \/*: AbstractSelector*\/) \/*: AbstractCursor<T>*\/ {$/;"	f
+model._setter	dist/annotations.js	/^    function _setter(cursor \/*: AbstractCursor<T>*\/) \/*: Setter<T>*\/ {$/;"	f
+name	package.json	/^  "name": "reactive-di",$/;"	f
+nonReactive	dist/annotations.js	/^function nonReactive \/*:: <T: StateModel>*\/(dep \/*: Dependency<T>*\/) \/*: Function*\/ {$/;"	f
+nonReactive.fn	dist/annotations.js	/^    function fn() {}$/;"	f
+normalizeDeps	dist/annotations.js	/^function normalizeDeps(rDeps \/*: Array<Object>*\/) \/*: NormalizedDeps*\/ {$/;"	f
+obj	dist/model/Collection.js	/^        }*\/ = Collection.prototype;$/;"	f
+obj	src/utils/Collection.js	/^} = Collection.prototype;$/;"	c
+obj.$meta.notify	dist/model/createDepMetaFromState.js	/^    pathMap[id] = path;$/;"	f
+options	package.json	/^  "options": {$/;"	f
+postinstall	package.json	/^    "postinstall": "test -d conf && conf\/resources\/postinstall.sh $npm_package_name || exit 0",$/;"	f
+postversion	package.json	/^    "postversion": "git push && git push --tags",$/;"	f
+power-assert	package.json	/^    "power-assert": "^1.2.0",$/;"	f
+precommit	package.json	/^    "precommit": "exit 0",$/;"	f
+prepublish	package.json	/^    "prepublish": "conf\/resources\/prepublish.sh",$/;"	f
+prepush	package.json	/^    "prepush": "exit 0 && npm test",$/;"	f
+preversion	package.json	/^    "preversion": "conf\/resources\/checkgit.sh && npm test",$/;"	f
+proxifyResult	dist/annotations.js	/^function proxifyResult \/*:: <R: Function>*\/(src \/*: R*\/, _setter \/*: Setter*\/) \/*: R*\/ {$/;"	f
+publishConfig	package.json	/^  "publishConfig": {$/;"	f
+registry	package.json	/^    "registry": "https:\/\/registry.npmjs.org"$/;"	f
+repository	package.json	/^  "repository": {$/;"	f
+scripts	package.json	/^  "scripts": {$/;"	f
+setInPath	dist/model/Cursor.js	/^function setInPath \/*:: <V: Object, S: StateModel>*\/(newModel \/*: V*\/, state \/*: S*\/, path \/*: Array<string>*\/, index \/*: number*\/) \/*: StateModel*\/ {$/;"	f
+setter	dist/annotations.js	/^function setter \/*:: <S: StateModel>*\/(dep \/*: Dependency<S>*\/) \/*: DepDecoratorFn*\/ {$/;"	f
+sinon	package.json	/^    "sinon": "^1.17.2"$/;"	f
+test	package.json	/^    "test": "npm run lint && npm run check && npm run testonly",$/;"	f
+test.cov	package.json	/^    "test.cov": "babel-istanbul cover --report text --report html node_modules\/mocha\/bin\/_mocha"$/;"	f
+test.dev	package.json	/^    "test.dev": "npm run testonly -- --growl --watch",$/;"	f
+testonly	package.json	/^    "testonly": "mocha",$/;"	f
+type	package.json	/^    "type": "git",$/;"	f
+update	package.json	/^    "update": "ncu -ua && npm install",$/;"	f
+updateIdsMap	dist/meta/updateIdsMap.js	/^function updateIdsMap(id \/*: DepId*\/, deps \/*: Array<DepMeta>*\/, stateIdToIdsMap \/*: IdsMap*\/, idToStateIdsMap \/*: IdsMap*\/) \/*: void*\/ {$/;"	f
+updateMap	dist/meta/__tests__/updateIdsMapTest.js	/^function updateMap(idToStateIdsMap \/*: IdsMap*\/) \/*: IdsMap*\/ {$/;"	f
+url	package.json	/^    "url": "http:\/\/github.com\/zerkalica\/reactive-di.git"$/;"	f
+version	package.json	/^    "version": "npm run build",$/;"	f
+version	package.json	/^  "version": "0.0.1",$/;"	f

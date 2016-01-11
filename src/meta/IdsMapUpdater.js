@@ -2,7 +2,10 @@
 
 import DepMeta from './DepMeta'
 import type {DepId, IdsMap} from '../interfaces'
-import {DepNode} from '../selectorInterfaces'
+import {DepNode, AbstractSelector} from '../selectorInterfaces'
+import CacheRec from '../CacheRec'
+
+type CacheMap = {[id: DepId]: CacheRec};
 
 class PathMapUpdater {
     _pathsSets: {[id: DepId]: Set<DepId>};
@@ -36,11 +39,10 @@ class PathMapUpdater {
 
     begin(id: DepId): void {
         const {_pathsSets: pathsSets, _depPath: depPath, _depNodeMap: depNodeMap} = this
-        const len = depPath.length - 1
-        const parentId = len >= 0 ? depPath[len] : null
-        const node = new DepNode(parentId, [])
+        const node = new DepNode(depPath.concat([]), [])
         depNodeMap[id] = node
         pathsSets[id] = new Set()
+        const parentId = depPath[depPath.length - 1]
         if (parentId) {
             // add nearest child to parent
             depNodeMap[parentId].childs.push(id)
@@ -88,17 +90,49 @@ function dependencyScanner(
 }
 
 export default class IdsMapUpdater {
-    stateIdToIdsMap: IdsMap;
+    _stateIdToIdsMap: IdsMap;
     _depNodeMap: {[id: DepId]: DepNode};
+    _cache: CacheMap;
+    _selector: AbstractSelector;
 
-    constructor(depNodeMap: {[id: DepId]: DepNode}) {
-        this.stateIdToIdsMap = Object.create(null)
-        this._depNodeMap = depNodeMap
+    constructor(selector: AbstractSelector) {
+        this._cache = Object.create(null)
+        this._stateIdToIdsMap = Object.create(null)
+        this._depNodeMap = selector.depNodeMap
+        this._selector = selector
     }
 
-    update(id: DepId, deps: Array<DepMeta>): void {
-        if (!this._depNodeMap[id]) {
-            dependencyScanner(id, deps, new PathMapUpdater(this.stateIdToIdsMap, this._depNodeMap))
+    _notify(id: DepId): void {
+        const {_cache: cache, _stateIdToIdsMap: stateIdToIdsMap} = this
+        const ids = stateIdToIdsMap[id]
+        if (ids) {
+            for (let i = 0, k = ids.length; i < k; i++) {
+                const cacheItem = cache[ids[i]]
+                if (cacheItem) {
+                    cacheItem.reCalculate = true
+                }
+            }
         }
+    }
+
+    reset(id: DepId): void {
+        const cacheRec = this._cache[id]
+        if (cacheRec) {
+            cacheRec.reset()
+        }
+    }
+
+    get(id: DepId, deps: Array<DepMeta>): CacheRec {
+        const {_cache: cache, _stateIdToIdsMap: stateIdToIdsMap, _depNodeMap: depNodeMap, _selector: selector} = this
+        let cacheRec
+        if (!cacheRec) {
+            const isDep = !this._depNodeMap[id]
+            if (isDep) {
+                dependencyScanner(id, deps, new PathMapUpdater(stateIdToIdsMap, depNodeMap))
+            }
+            cacheRec = new CacheRec(isDep ? null : selector.select(id), () => this._notify(id))
+            cache[id] = cacheRec
+        }
+        return cacheRec
     }
 }
