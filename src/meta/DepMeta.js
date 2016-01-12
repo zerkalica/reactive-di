@@ -31,7 +31,7 @@ export default class DepMeta {
         this.displayName = this.tags.join('@') || getFunctionName(this.fn)
 
         this.deps = rec.deps || []
-        this.depNames = rec.depNames || []
+        this.depNames = rec.depNames || null
 
         this.onUpdate = rec.onUpdate || defaultFn
         this.isCacheRec = !!rec.isCacheRec

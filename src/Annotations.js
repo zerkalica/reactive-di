@@ -114,7 +114,6 @@ function model<T: StateModel>(
 
     const modelMeta = meta.copy({
         fn: getter,
-        isState: true,
         deps: [meta.copy({isCacheRec: true})]
     })
 

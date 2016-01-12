@@ -2,7 +2,7 @@
 
 import DataCursor from './DataCursor'
 import StateMapBuilder from './StateMapBuilder'
-import type {CacheRecMap} from '../CacheRec'
+import type {CacheRecMap} from '../cache/CacheRec'
 import type {FromJS} from '../interfaces'
 import type {StateModel, DepIdGetter} from './interfaces'
 

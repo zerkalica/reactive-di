@@ -2,8 +2,8 @@
 
 import type {FromJS} from '../interfaces'
 import type {StateModelMeta, DepIdGetter, CreateCursor} from './interfaces'
-import CacheRec from '../CacheRec'
-import type {CacheRecMap} from '../CacheRec'
+import CacheRec from '../cache/CacheRec'
+import type {CacheRecMap} from '../cache/CacheRec'
 
 type PropCreatorMap = {[prop: string]: Function};
 /* eslint-disable no-undef */
@@ -63,7 +63,9 @@ export default class StateMapBuilder {
         parents.pop()
 
         const fromJS = createFromJS(obj.constructor, propCreators)
-        cacheRec.setCursor(select(path, fromJS))
+        const cursor = select(path, fromJS)
+        cacheRec.setCursor(cursor)
+        cacheRec.value = cursor.get()
 
         return fromJS
     }

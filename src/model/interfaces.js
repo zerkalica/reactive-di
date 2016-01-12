@@ -1,6 +1,6 @@
 /* @flow */
 
-import {DepId, FromJS} from '../interfaces'
+import type {DepId, FromJS} from '../interfaces'
 import {AbstractDataCursor} from '../interfaces'
 
 type MergeRec = {

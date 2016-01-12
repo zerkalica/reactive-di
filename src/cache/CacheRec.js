@@ -31,7 +31,6 @@ export default class CacheRec<T: Object> {
     }
 
     reset(): void {
-        this.value = null
         this.reCalculate = false
     }
 
@@ -57,8 +56,13 @@ export default class CacheRec<T: Object> {
 
     _setValue(value: T|Promise<T>): void {
         if (typeof value.then === 'function') {
-            this._originMeta = this._originMeta.setPending()
+            const newMeta = this._originMeta.setPending()
+            if (this._originMeta === newMeta) {
+                // if previous value is pending - do not handle this value: only first
+                return
+            }
             this._notify()
+            this._originMeta = newMeta
             value.then(this._success).catch(this._error)
         } else if (typeof value === 'object') {
             this._success(value)
@@ -66,14 +70,20 @@ export default class CacheRec<T: Object> {
     }
 
     __success(value: T): void {
-        this._cursor.set(value)
-        this._originMeta = this._originMeta.success()
-        this._notify()
+        const isDataChanged = this._cursor.set(value)
+        const newMeta = this._originMeta.success()
+        if (newMeta !== this._originMeta || isDataChanged) {
+            this._notify()
+        }
+        this._originMeta = newMeta
     }
 
     __error(reason: Error): void {
-        this._originMeta = this._originMeta.error(reason)
-        this._notify()
+        const newMeta = this._originMeta.error(reason)
+        if (newMeta !== this._originMeta) {
+            this._notify()
+        }
+        this._originMeta = newMeta
     }
 }
 
