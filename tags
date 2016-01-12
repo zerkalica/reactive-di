@@ -59,7 +59,6 @@ eslint-plugin-react	package.json	/^    "eslint-plugin-react": "^3.11.3",$/;"	f
 factory	dist/annotations.js	/^function factory() \/*: DepDecoratorFn*\/ {$/;"	f
 files	package.json	/^  "files": [$/;"	f
 fn	dist/selectorInterfaces.js	/^function fn() {$/;"	f
-fn	src/selectorInterfaces.js	/^function fn() {$/;"	f
 getFunctionName	dist/utils/getFunctionName.js	/^function getFunctionName(func \/*: Function*\/) \/*: string*\/ {$/;"	f
 getPathIds	dist/model/createDepMetaFromState.js	/^function getPathIds(obj \/*: StateModel*\/, path \/*: Array<string>*\/, parents \/*: Array<DepId>*\/, meta \/*: StateDepsMeta*\/, notify \/*: NotifyDepFn*\/, getDepId \/*: DepIdGetter*\/) \/*: void*\/ {$/;"	f
 glob	package.json	/^    "glob": "^6.0.1",$/;"	f
@@ -95,6 +94,7 @@ publishConfig	package.json	/^  "publishConfig": {$/;"	f
 registry	package.json	/^    "registry": "https:\/\/registry.npmjs.org"$/;"	f
 repository	package.json	/^  "repository": {$/;"	f
 scripts	package.json	/^  "scripts": {$/;"	f
+select	src/model/createStateMap.js	/^    function select(path: Array<string>, fromJS: FromJS) {$/;"	f
 setInPath	dist/model/Cursor.js	/^function setInPath \/*:: <V: Object, S: StateModel>*\/(newModel \/*: V*\/, state \/*: S*\/, path \/*: Array<string>*\/, index \/*: number*\/) \/*: StateModel*\/ {$/;"	f
 setter	dist/annotations.js	/^function setter \/*:: <S: StateModel>*\/(dep \/*: Dependency<S>*\/) \/*: DepDecoratorFn*\/ {$/;"	f
 sinon	package.json	/^    "sinon": "^1.17.2"$/;"	f

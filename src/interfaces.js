@@ -1,8 +1,6 @@
 /* @flow */
 
 export type DepId = string;
-export type NotifyDepFn = (id: DepId) => void;
-export type NotifyDepsFn = (ids: Array<DepId>) => void;
 export type Setter<T: Object> = (value: T|Promise<T>) => void;
 export type IdsMap = {[id: DepId]: Array<DepId>};
 /* eslint-disable no-undef */
@@ -10,3 +8,13 @@ export type Dependency<T> = Class<T>;
 /* eslint-enable no-undef */
 export type FromJS<T: Object> = (data: Object) => T;
 export type OnUpdateHook<T: Object> = (prevInstance: ?T, nextInstance: T) => void;
+export class AbstractDataCursor<V> {
+    get(): V|any {
+    }
+    fromJS: FromJS;
+    /* eslint-disable no-unused-vars */
+    set(newModel: V): boolean {
+        return true
+    }
+    /* eslint-enable no-unused-vars */
+}

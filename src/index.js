@@ -3,9 +3,9 @@
 import merge from './utils/merge'
 import Annotations from './Annotations'
 import Collection from './utils/Collection'
-import EntityMeta from './promised/EntityMeta'
+import EntityMeta from './meta/EntityMeta'
 import ReactiveDi from './ReactiveDi'
-import Selector from './model/Selector'
+import createStateMap from './model/createStateMap'
 import SymbolMetaDriver from './meta/drivers/SymbolMetaDriver'
 
 export {
@@ -14,6 +14,6 @@ export {
     Collection,
     EntityMeta,
     ReactiveDi,
-    Selector,
+    createStateMap,
     SymbolMetaDriver
 }

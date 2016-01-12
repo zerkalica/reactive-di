@@ -1,8 +1,9 @@
 /* @flow */
 
-import {DepId} from '../interfaces'
+import {DepId, FromJS} from '../interfaces'
+import {AbstractDataCursor} from '../interfaces'
 
-export type MergeRec = {
+type MergeRec = {
     [prop: string]: any;
 }
 
@@ -15,5 +16,4 @@ export type StateModel<T> = StateModelMeta & {
 };
 
 export type DepIdGetter<T: Object> = (obj: T) => DepId;
-export type SetState<T> = (state: StateModel<T>) => void;
-export type NotifyFn = () => void;
+export type CreateCursor = (path: Array<string>, fromJS: FromJS) => AbstractDataCursor;

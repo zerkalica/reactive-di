@@ -1,38 +1,29 @@
 /* @flow */
-import EntityMeta from './promised/EntityMeta'
-import {AbstractDataCursor} from './selectorInterfaces'
+import EntityMeta from './meta/EntityMeta'
+import type {DepId} from './interfaces'
+import {AbstractDataCursor} from './interfaces'
 
 export default class CacheRec<T: Object> {
+    id: DepId;
     value: any;
     reCalculate: boolean;
     meta: EntityMeta;
-    _originMeta: EntityMeta;
 
     setValue: (value: any) => void;
-
-    _success: (value: T) => void;
-    _error: (reason: Error) => void;
-    setPending: () => void;
-
-    _cursor: AbstractDataCursor<T>;
-
-    _notify: () => void;
-
     relations: Array<CacheRec>;
 
-    constructor(
-        cursor: AbstractDataCursor<T>,
-        notify: () => void,
-        value: any = null,
-        reCalculate: boolean = true
-    ) {
-        this._cursor = cursor
-        this._notify = notify
-        this.value = value
-        this.reCalculate = reCalculate
+    _originMeta: EntityMeta;
+    _success: (value: T) => void;
+    _error: (reason: Error) => void;
+    _cursor: AbstractDataCursor<T>;
+
+    constructor(id: DepId, relations?: Array<CacheRec>) {
+        this.id = id
+        this.value = null
+        this.reCalculate = true
         this.meta = new EntityMeta()
         this._originMeta = new EntityMeta()
-        this.relations = []
+        this.relations = relations || []
 
         this.setValue = this._setValue.bind(this)
         this._success = this.__success.bind(this)
@@ -50,6 +41,18 @@ export default class CacheRec<T: Object> {
 
     getValue(): T {
         return this._cursor.get()
+    }
+
+    setCursor(cursor: AbstractDataCursor<T>): void {
+        this._cursor = cursor
+    }
+
+    _notify(): void {
+        this.reCalculate = true
+        const relations = this.relations
+        for (let i = 0, l = relations.length; i < l; i++) {
+            relations[i].reCalculate = true
+        }
     }
 
     _setValue(value: T|Promise<T>): void {
@@ -73,3 +76,5 @@ export default class CacheRec<T: Object> {
         this._notify()
     }
 }
+
+export type CacheRecMap = {[id: DepId]: CacheRec};

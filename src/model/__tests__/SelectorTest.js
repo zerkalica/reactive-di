@@ -2,7 +2,7 @@
 /* eslint-env mocha */
 import assert from 'power-assert'
 import Selector from '../Selector'
-import {AbstractDataCursor} from '../../selectorInterfaces'
+import {AbstractDataCursor} from '../../interfaces'
 import {spy} from 'sinon'
 import {S, getDepId} from './ExampleState'
 

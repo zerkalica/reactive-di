@@ -1,8 +1,8 @@
 /* @flow */
 
 import type {FromJS} from '../interfaces'
-import {AbstractDataCursor} from '../selectorInterfaces'
-import type {StateModel, NotifyFn} from './interfaces'
+import {AbstractDataCursor} from '../interfaces'
+import type {StateModel} from './interfaces'
 
 function setInPath<V: Object, S: StateModel>(
     newModel: V,
@@ -25,11 +25,10 @@ export default class DataCursor<V: StateModel> extends AbstractDataCursor<V> {
     _path: Array<string>;
     _stateRef: {state: StateModel};
     _selector: (v: StateModel) => any;
-    _notify: NotifyFn;
 
     fromJS: FromJS<V>;
 
-    constructor(path: Array<string>, fromJS: FromJS<V>, stateRef: {state: StateModel}, notify: NotifyFn) {
+    constructor(path: Array<string>, fromJS: FromJS<V>, stateRef: {state: StateModel}) {
         super()
         if (!Array.isArray(path)) {
             throw new Error('path is not an array')
@@ -37,7 +36,6 @@ export default class DataCursor<V: StateModel> extends AbstractDataCursor<V> {
         this._path = path
         this.fromJS = fromJS;
         this._stateRef = stateRef
-        this._notify = notify
         try {
             /* eslint-disable no-new-func */
             this._selector = new Function('s', 'return ' + ['s'].concat(this._path).join('.'))
@@ -56,7 +54,6 @@ export default class DataCursor<V: StateModel> extends AbstractDataCursor<V> {
         const isChanged = newModel !== this.get()
         if (isChanged) {
             this._stateRef.state = setInPath(newModel, this._stateRef.state, this._path, 0)
-            this._notify()
         }
         return isChanged
     }

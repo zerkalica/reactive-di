@@ -2,13 +2,12 @@
 
 import createProxy from './utils/createProxy'
 import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
-import DepMeta from './meta/DepMeta'
-import MetaLoader from './meta/MetaLoader'
-import {AbstractSelector} from './selectorInterfaces'
-import type {Dependency, DepId, IdsMap} from './interfaces'
-import EntityMeta, {updateMeta} from './promised/EntityMeta'
+import CacheManager from './meta/CacheManager'
 import CacheRec from './CacheRec'
-import IdsMapUpdater from './meta/IdsMapUpdater'
+import DepMeta from './meta/DepMeta'
+import EntityMeta, {updateMeta} from './meta/EntityMeta'
+import type {CacheRecMap} from './CacheRec'
+import type {Dependency, DepId} from './interfaces'
 
 type MiddlewareMap = {[id: DepId]: Array<DepMeta>};
 
@@ -34,40 +33,52 @@ function normalizeMiddlewares(
 }
 
 export default class ReactiveDi {
-    _metaLoader: MetaLoader;
     _listeners: Array<Dependency>;
     _middlewares: MiddlewareMap;
-    _idsMapUpdater: IdsMapUpdater;
+    _cache: CacheManager;
+
+    _driver: AbstractMetaDriver;
+    _cachedMeta: {[id: DepId]: DepMeta};
 
     constructor(
         driver: AbstractMetaDriver,
-        selector: AbstractSelector,
+        cache: CacheRecMap,
         aliases?: Array<[Dependency, Dependency]>,
         middlewares?: Array<[Dependency, Array<Dependency>]>
     ) {
         this._listeners = []
-        this._idsMapUpdater = new IdsMapUpdater(selector)
-        this._metaLoader = new MetaLoader(driver, aliases)
+        this._cache = new CacheManager(cache)
+        this._driver = driver
+        this._cachedMeta = Object.create(null)
+
+        ;(aliases || []).forEach(([depSrc, depTarget]) => {
+            this._cachedMeta[driver.get(depSrc).id] = driver.get(depTarget)
+        })
 
         this._middlewares = normalizeMiddlewares(
             middlewares || [],
-            dep => this._metaLoader.get(dep)
+            dep => this._getMeta(dep)
         )
     }
 
+    _getMeta(dep: Dependency): DepMeta {
+        const depMeta = this._driver.get(dep)
+        return this._cachedMeta[depMeta.id] || depMeta
+    }
+
     mount<T>(dep: Dependency<T>): void {
-        const {_idsMapUpdater, _metaLoader, _listeners} = this
-        const {id, deps} = _metaLoader.get(dep)
+        const {_cache, _listeners} = this
+        const {id} = this._getMeta(dep)
         // do not call listener on first state change
-        _idsMapUpdater.reset(id)
+        _cache.reset(id)
         _listeners.push(dep)
     }
 
     unmount<T>(dep: Dependency<T>): void {
-        const {_idsMapUpdater, _metaLoader, _listeners} = this
-        const {id} = _metaLoader.get(dep)
+        const {_cache, _listeners} = this
+        const {id} = this._getMeta(dep)
         // do not call listener on first state change
-        _idsMapUpdater.reset(id)
+        _cache.reset(id)
 
         function _listenersFilter(d) {
             return dep !== d
@@ -79,7 +90,6 @@ export default class ReactiveDi {
     _get(depMeta: DepMeta, debugCtx: Array<string>): CacheRec {
         const {
             id,
-            isState,
             displayName,
             deps,
             depNames,
@@ -87,9 +97,9 @@ export default class ReactiveDi {
             onUpdate
         } = depMeta
 
-        const cacheRec = this._idsMapUpdater.get(id, deps, isState)
+        const cacheRec = this._cache.get(id, deps)
 
-        if (cacheRec.reCalculate || isState) {
+        if (cacheRec.reCalculate) {
             const defArgs = depNames ? [{}] : []
             const newMeta: EntityMeta = cacheRec.createMeta();
             let isChanged = false
@@ -141,7 +151,7 @@ export default class ReactiveDi {
         return createProxy(result, resolvedMdls)
     }
 
-    get<T>(dep: Dependency<T>): T {
-        return this._get(this._metaLoader.get(dep), []).value
+    get(dep: Dependency): any {
+        return this._get(this._getMeta(dep), []).value
     }
 }

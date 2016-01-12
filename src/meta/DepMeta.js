@@ -3,7 +3,7 @@
 import type {DepId, OnUpdateHook} from '../interfaces'
 import getFunctionName from '../utils/getFunctionName'
 import CacheRec from '../CacheRec'
-import EntityMeta from '../promised/EntityMeta'
+import EntityMeta from './EntityMeta'
 import merge from '../utils/merge'
 
 let id: number = 0;
@@ -29,7 +29,6 @@ export function getMeta(rec: CacheRec): EntityMeta {
 function defaultFn() {}
 
 export default class DepMeta {
-    isState: boolean;
 
     id: DepId;
     displayName: string;
@@ -42,7 +41,6 @@ export default class DepMeta {
     fromCacheRec: FromCacheRec;
 
     constructor(rec: DepMetaRec) {
-        this.isState = !!rec.isState
         this.id = rec.id || createId()
         this.tags = rec.tags || []
         this.fn = rec.fn || defaultFn
@@ -66,7 +64,6 @@ type DepMetaRec = {
     deps?: Array<DepMeta>;
     depNames?: ?Array<string>;
     tags?: Array<string>;
-    isState?: boolean;
     onUpdate?: OnUpdateHook;
     fromCacheRec?: FromCacheRec
 }
