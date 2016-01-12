@@ -2,7 +2,7 @@
 
 import DepMeta from './DepMeta'
 import type {DepId, IdsMap} from '../interfaces'
-import {DepNode, AbstractSelector} from '../selectorInterfaces'
+import {DepNode, AbstractSelector, AbstractDataCursor} from '../selectorInterfaces'
 import CacheRec from '../CacheRec'
 
 type CacheMap = {[id: DepId]: CacheRec};
@@ -90,28 +90,26 @@ function dependencyScanner(
 }
 
 export default class IdsMapUpdater {
-    _stateIdToIdsMap: IdsMap;
     _depNodeMap: {[id: DepId]: DepNode};
     _cache: CacheMap;
     _selector: AbstractSelector;
+    _notify: (ids: Array<DepId>) => void;
+    _stateIdToIdsMap: IdsMap;
 
     constructor(selector: AbstractSelector) {
         this._cache = Object.create(null)
-        this._stateIdToIdsMap = Object.create(null)
         this._depNodeMap = selector.depNodeMap
         this._selector = selector
+        this._stateIdToIdsMap = Object.create(null)
+
+        this._notify = this.__notify.bind(this)
     }
 
-    _notify(id: DepId): void {
-        const {_cache: cache, _stateIdToIdsMap: stateIdToIdsMap} = this
-        const ids = stateIdToIdsMap[id]
-        if (ids) {
-            for (let i = 0, k = ids.length; i < k; i++) {
-                const cacheItem = cache[ids[i]]
-                if (cacheItem) {
-                    cacheItem.reCalculate = true
-                }
-            }
+    __notify(ids: Array<DepId>): void {
+        const {_cache: cache} = this
+        for (let i = 0, k = ids.length; i < k; i++) {
+            const cacheItem = cache[ids[i]]
+            cacheItem.reCalculate = true
         }
     }
 
@@ -123,15 +121,11 @@ export default class IdsMapUpdater {
     }
 
     get(id: DepId, deps: Array<DepMeta>): CacheRec {
-        const {_cache: cache, _stateIdToIdsMap: stateIdToIdsMap, _depNodeMap: depNodeMap, _selector: selector} = this
-        let cacheRec
+        const {_cache: cache, _stateIdToIdsMap: stateIdToIdsMap} = this
+        let cacheRec = cache[id]
         if (!cacheRec) {
-            const isDep = !this._depNodeMap[id]
-            if (isDep) {
-                dependencyScanner(id, deps, new PathMapUpdater(stateIdToIdsMap, depNodeMap))
-            }
-            cacheRec = new CacheRec(isDep ? null : selector.select(id), () => this._notify(id))
-            cache[id] = cacheRec
+            dependencyScanner(id, deps, new PathMapUpdater(stateIdToIdsMap, this._depNodeMap, this._notify))
+            cacheRec = cache[id]
         }
         return cacheRec
     }

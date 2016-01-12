@@ -76,10 +76,7 @@ export default class ReactiveDi {
         this._listeners = _listeners.filter(_listenersFilter)
     }
 
-    _get(
-        depMeta: DepMeta,
-        debugCtx: Array<string>
-    ): CacheRec {
+    _get(depMeta: DepMeta, debugCtx: Array<string>): CacheRec {
         const {
             id,
             isState,
@@ -90,7 +87,7 @@ export default class ReactiveDi {
             onUpdate
         } = depMeta
 
-        const cacheRec = this._idsMapUpdater.get(id, deps)
+        const cacheRec = this._idsMapUpdater.get(id, deps, isState)
 
         if (cacheRec.reCalculate || isState) {
             const defArgs = depNames ? [{}] : []

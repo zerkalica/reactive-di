@@ -18,18 +18,21 @@ export default class CacheRec<T: Object> {
 
     _notify: () => void;
 
+    relations: Array<CacheRec>;
+
     constructor(
-        cursor: ?AbstractDataCursor<T>,
+        cursor: AbstractDataCursor<T>,
         notify: () => void,
         value: any = null,
         reCalculate: boolean = true
     ) {
-        this._cursor = cursor || new AbstractDataCursor()
+        this._cursor = cursor
         this._notify = notify
         this.value = value
         this.reCalculate = reCalculate
         this.meta = new EntityMeta()
         this._originMeta = new EntityMeta()
+        this.relations = []
 
         this.setValue = this._setValue.bind(this)
         this._success = this.__success.bind(this)

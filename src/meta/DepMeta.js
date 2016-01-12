@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {DepId, Dependency, OnUpdateHook} from '../interfaces'
+import type {DepId, OnUpdateHook} from '../interfaces'
 import getFunctionName from '../utils/getFunctionName'
 import CacheRec from '../CacheRec'
 import EntityMeta from '../promised/EntityMeta'
@@ -39,15 +39,10 @@ export default class DepMeta {
     depNames: ?Array<string>;
     tags: Array<string>;
     onUpdate: OnUpdateHook;
-
-    setter: ?DepMeta;
-    getMeta: ?Dependency;
-
     fromCacheRec: FromCacheRec;
 
     constructor(rec: DepMetaRec) {
-        this.isState = !!rec.setter
-
+        this.isState = !!rec.isState
         this.id = rec.id || createId()
         this.tags = rec.tags || []
         this.fn = rec.fn || defaultFn
@@ -56,8 +51,6 @@ export default class DepMeta {
         this.deps = rec.deps || []
         this.depNames = rec.depNames || []
 
-        this.setter = rec.setter || null
-        this.getMeta = rec.getMeta ? rec.getMeta : null;
         this.onUpdate = rec.onUpdate || defaultFn
         this.fromCacheRec = rec.fromCacheRec || getValue
     }
@@ -73,8 +66,7 @@ type DepMetaRec = {
     deps?: Array<DepMeta>;
     depNames?: ?Array<string>;
     tags?: Array<string>;
-    setter?: DepMeta;
-    getMeta?: Dependency;
+    isState?: boolean;
     onUpdate?: OnUpdateHook;
     fromCacheRec?: FromCacheRec
 }
