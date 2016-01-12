@@ -1,7 +1,7 @@
 /* @flow */
-import EntityMeta from './meta/EntityMeta'
-import type {DepId} from './interfaces'
-import {AbstractDataCursor} from './interfaces'
+import EntityMeta from '../meta/EntityMeta'
+import type {DepId} from '../interfaces'
+import {AbstractDataCursor} from '../interfaces'
 
 export default class CacheRec<T: Object> {
     id: DepId;

@@ -2,11 +2,11 @@
 
 import createProxy from './utils/createProxy'
 import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
-import CacheManager from './meta/CacheManager'
-import CacheRec from './CacheRec'
+import CacheManager from './cache/CacheManager'
+import CacheRec from './cache/CacheRec'
 import DepMeta from './meta/DepMeta'
 import EntityMeta, {updateMeta} from './meta/EntityMeta'
-import type {CacheRecMap} from './CacheRec'
+import type {CacheRecMap} from './cache/CacheRec'
 import type {Dependency, DepId} from './interfaces'
 
 type MiddlewareMap = {[id: DepId]: Array<DepMeta>};
@@ -88,15 +88,7 @@ export default class ReactiveDi {
     }
 
     _get(depMeta: DepMeta, debugCtx: Array<string>): CacheRec {
-        const {
-            id,
-            displayName,
-            deps,
-            depNames,
-            fn,
-            onUpdate
-        } = depMeta
-
+        const {id, displayName, deps, depNames, fn, onUpdate} = depMeta
         const cacheRec = this._cache.get(id, deps)
 
         if (cacheRec.reCalculate) {
@@ -105,14 +97,12 @@ export default class ReactiveDi {
             let isChanged = false
             for (let i = 0, j = deps.length; i < j; i++) {
                 const dep = deps[i]
-                const depRec = this._get(
-                    dep,
-                    debugCtx.concat([displayName, '' + i])
-                )
+                const depRec = this._get(dep, debugCtx.concat([displayName, '' + i]))
+                const value = dep.isCacheRec ? depRec : depRec.value
                 if (depNames) {
-                    defArgs[0][depNames[i]] = dep.fromCacheRec(depRec)
+                    defArgs[0][depNames[i]] = value
                 } else {
-                    defArgs.push(dep.fromCacheRec(depRec))
+                    defArgs.push(value)
                 }
                 if (updateMeta(newMeta, depRec.meta)) {
                     isChanged = true
@@ -123,8 +113,7 @@ export default class ReactiveDi {
                 result = fn(...defArgs)
                 onUpdate(cacheRec.value, result)
             } catch (e) {
-                e.message = e.message + ', @path: '
-                    + debugCtx.concat([displayName]).join('.')
+                e.message = e.message + ', @path: ' + debugCtx.concat([displayName]).join('.')
                 throw e
             }
             cacheRec.reCalculate = false

@@ -3,13 +3,13 @@
 import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
 import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
-import DepMeta, {createId, getMeta, getCacheRec} from './meta/DepMeta'
+import CacheRec from './cache/CacheRec'
+import EntityMeta from './meta/EntityMeta'
+import DepMeta, {createId} from './meta/DepMeta'
 import type {Dependency, OnUpdateHook} from './interfaces'
 /* eslint-disable no-unused-vars */
 import type {StateModel} from './model/interfaces'
 /* eslint-enable no-unused-vars */
-
-import CacheRec from './CacheRec'
 
 type DepDecoratorFn<T> = (target: Dependency<T>) => T;
 
@@ -115,7 +115,7 @@ function model<T: StateModel>(
     const modelMeta = meta.copy({
         fn: getter,
         isState: true,
-        deps: [meta.copy({fromCacheRec: getCacheRec})]
+        deps: [meta.copy({isCacheRec: true})]
     })
 
     return driver.set(mdl, modelMeta)
@@ -142,7 +142,7 @@ function setter<S: StateModel>(
 
 
         const setterMeta: DepMeta = new DepMeta({
-            deps: [source, depMeta.copy({fromCacheRec: getCacheRec})],
+            deps: [source, depMeta.copy({isCacheRec: true})],
             fn: proxifyResult,
             tags: [debugName, 'setter'].concat(tags)
         });
@@ -171,10 +171,13 @@ export default class Annotations {
 
         this.meta = function __meta(dep: Dependency): Dependency {
             const depMeta = driver.get(dep)
-            function _getMeta() {}
-            driver.set(_getMeta, depMeta.copy({fromCacheRec: getMeta}))
+            function getMeta(cacheRec: CacheRec): EntityMeta {
+                return cacheRec.meta
+            }
+            getMeta.displayName = 'getMeta@' + depMeta.displayName
+            driver.set(getMeta, depMeta.copy({isCacheRec: true}))
 
-            return _getMeta
+            return getMeta
         }
 
         this.model = function __model<T: StateModel>(mdl: Dependency<T>): Dependency<T> {

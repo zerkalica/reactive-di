@@ -1,9 +1,9 @@
 /* @flow */
 
-import DepMeta from './DepMeta'
+import DepMeta from '../meta/DepMeta'
 import type {DepId} from '../interfaces'
-import CacheRec from '../CacheRec'
-import type {CacheRecMap} from '../CacheRec'
+import CacheRec from './CacheRec'
+import type {CacheRecMap} from './CacheRec'
 
 class CacheUpdater {
     // set of all dependencies per id
