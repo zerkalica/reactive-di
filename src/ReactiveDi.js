@@ -5,7 +5,7 @@ import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
 import CacheManager from './cache/CacheManager'
 import CacheRec from './cache/CacheRec'
 import DepMeta from './meta/DepMeta'
-import EntityMeta, {updateMeta} from './meta/EntityMeta'
+import EntityMeta, {updateMeta} from './cache/EntityMeta'
 import type {CacheRecMap} from './cache/CacheRec'
 import type {Dependency, DepId} from './interfaces'
 
@@ -80,7 +80,7 @@ export default class ReactiveDi {
         // do not call listener on first state change
         _cache.reset(id)
 
-        function _listenersFilter(d) {
+        function _listenersFilter(d: Dependency): boolean {
             return dep !== d
         }
 
@@ -88,10 +88,9 @@ export default class ReactiveDi {
     }
 
     _get(depMeta: DepMeta, debugCtx: Array<string>): CacheRec {
-        const {id, displayName, deps, depNames, fn, onUpdate} = depMeta
-        const cacheRec = this._cache.get(id, deps)
-
+        const cacheRec = this._cache.get(depMeta)
         if (cacheRec.reCalculate) {
+            const {id, displayName, deps, depNames, fn, onUpdate} = depMeta
             const defArgs = depNames ? [{}] : []
             const newMeta: EntityMeta = cacheRec.createMeta();
             let isChanged = false

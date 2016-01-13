@@ -4,7 +4,7 @@ import createProxy from './utils/createProxy'
 import getFunctionName from './utils/getFunctionName'
 import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
 import CacheRec from './cache/CacheRec'
-import EntityMeta from './meta/EntityMeta'
+import EntityMeta from './cache/EntityMeta'
 import DepMeta, {createId} from './meta/DepMeta'
 import type {Dependency, OnUpdateHook} from './interfaces'
 /* eslint-disable no-unused-vars */

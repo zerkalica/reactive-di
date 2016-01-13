@@ -24,7 +24,7 @@ function updateMap(idToStateIdsMap: IdsMap, ...deps: Array<DepMeta>): IdsMap {
     return idsMapUpdater.stateIdToIdsMap
 }
 
-describe('updateIdsMapTest', () => {
+describe('CacheManagerTest', () => {
     it('should resolve deps B->a, A->b, C->c, state: {a: {b, c}}', () => {
         const a = createMeta('a')
         const b = createMeta('b')

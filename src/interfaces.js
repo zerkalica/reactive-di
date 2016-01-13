@@ -18,3 +18,9 @@ export class AbstractDataCursor<V> {
     }
     /* eslint-enable no-unused-vars */
 }
+export type BaseDep = {
+    id: DepId;
+    deps: Array<BaseDep>;
+    // need to supress flow warning for cast DepMeta to BaseDep in cache/CacheManager#get
+    copy: (v: BaseDep) => BaseDep;
+}

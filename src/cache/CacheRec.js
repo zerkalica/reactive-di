@@ -1,5 +1,5 @@
 /* @flow */
-import EntityMeta from '../meta/EntityMeta'
+import EntityMeta from './EntityMeta'
 import type {DepId} from '../interfaces'
 import {AbstractDataCursor} from '../interfaces'
 

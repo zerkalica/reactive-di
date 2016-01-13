@@ -13,7 +13,6 @@ export function createId(): DepId {
 function defaultFn() {}
 
 export default class DepMeta {
-
     id: DepId;
     displayName: string;
     fn: Function;

@@ -1,8 +1,7 @@
 /* @flow */
 
-import DepMeta from '../meta/DepMeta'
-import type {DepId} from '../interfaces'
 import CacheRec from './CacheRec'
+import type {DepId, BaseDep} from '../interfaces'
 import type {CacheRecMap} from './CacheRec'
 
 class CacheUpdater {
@@ -35,45 +34,35 @@ class CacheUpdater {
         return false
     }
 
-    begin(cacheRec: CacheRec): void {
+    begin(id: DepId): CacheRec {
         const {_cache: cache, _parents: parents, _depSet: depSet} = this
-        const {id} = cacheRec
+        const cacheRec = new CacheRec(id)
         cache[id] = cacheRec
         const pathSet = depSet[id] = new Set()
         parents.push(pathSet)
+
+        return cacheRec
     }
 
     end(cacheRec: CacheRec): void {
         const {_cache: cache, _parents: parents, _depSet: depSet} = this
-        const {id, relations} = cacheRec
-
         function iteratePathSet(relationId) {
-            let relationCacheRec = cache[relationId];
-            if (!relationCacheRec) {
-                relationCacheRec = new CacheRec(relationId)
-                cache[relationId] = relationCacheRec
-            }
+            const relationCacheRec = cache[relationId]
             relationCacheRec.relations.push(cacheRec)
-            relations.push(relationCacheRec)
         }
 
-        depSet[id].forEach(iteratePathSet)
+        depSet[cacheRec.id].forEach(iteratePathSet)
 
         parents.pop()
     }
 }
 
-function updateCacheTraverse(
-    id: DepId,
-    parentDeps: Array<DepMeta>,
-    acc: CacheUpdater
-): void {
-    const cacheRec = new CacheRec(id)
+function updateCacheTraverse(dep: BaseDep, acc: CacheUpdater): void {
+    const {id, deps} = dep
     if (!acc.isAffected(id)) {
-        acc.begin(cacheRec)
-        for (let i = 0, j = parentDeps.length; i < j; i++) {
-            const dep = parentDeps[i];
-            updateCacheTraverse(dep.id, dep.deps, acc)
+        const cacheRec = acc.begin(id)
+        for (let i = 0, j = deps.length; i < j; i++) {
+            updateCacheTraverse(deps[i], acc)
         }
         acc.end(cacheRec)
     }
@@ -93,12 +82,12 @@ export default class CacheManager {
         }
     }
 
-    get(id: DepId, deps: Array<DepMeta>): CacheRec {
+    get(dep: BaseDep): CacheRec {
         const {_cache: cache} = this
-        let cacheRec = cache[id]
+        let cacheRec = cache[dep.id]
         if (!cacheRec) {
-            updateCacheTraverse(id, deps, new CacheUpdater(cache))
-            cacheRec = cache[id]
+            updateCacheTraverse(dep, new CacheUpdater(cache))
+            cacheRec = cache[dep.id]
         }
         return cacheRec
     }

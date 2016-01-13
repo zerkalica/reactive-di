@@ -42,10 +42,10 @@ export default class StateMapBuilder {
     _build(obj: StateModelMeta, parents: Array<CacheRec>, path: Array<string>): FromJS<StateModelMeta> {
         const {_getDepId: getDepId, _cache: cache, _select: select} = this
         const id = getDepId(obj)
-        // write self to all parents affect ids map
         // parents knowns about childs
         const cacheRec = new CacheRec(id, [].concat(parents))
         cache[id] = cacheRec
+        // write self to all parents affect ids map
         for (let k = 0, l = parents.length; k < l; k++) {
             parents[k].relations.push(cacheRec)
         }
