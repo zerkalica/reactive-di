@@ -1,9 +1,9 @@
 /* eslint-env mocha */
 /* @flow */
 import assert from 'power-assert'
-import IdsMapUpdater from '../IdsMapUpdater'
-import DepMeta from '../DepMeta'
-import type {DepId, IdsMap} from '../../interfaces'
+import CacheManager from '../CacheManager'
+import type {DepId, IdsMap, BaseDep} from '../../interfaces'
+import type {CacheRecMap} from '../CacheRec'
 
 // declare function describe(name: string, cb: () => void): void;
 // declare function it(name: string, cb: () => void): void;
@@ -16,12 +16,12 @@ function createMeta(id: DepId, ...deps: Array<DepMeta>): DepMeta {
     })
 }
 
-function updateMap(idToStateIdsMap: IdsMap, ...deps: Array<DepMeta>): IdsMap {
-    const idsMapUpdater = new IdsMapUpdater(idToStateIdsMap)
+function updateMap(idToStateIdsMap: CacheRecMap, ...deps: Array<BaseDep>): CacheManager {
+    const cacheManager = new CacheManager(idToStateIdsMap)
     deps.forEach(dep =>
-        idsMapUpdater.update(dep.id, dep.deps)
+        cacheManager.update(dep.id, dep.deps)
     )
-    return idsMapUpdater.stateIdToIdsMap
+    return cacheManager
 }
 
 describe('CacheManagerTest', () => {

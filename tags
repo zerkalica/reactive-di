@@ -4,22 +4,49 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+A	dist/utils/__tests__/mergeTest.js	/^var A = function A() {$/;"	c
+A	dist/utils/__tests__/mergeTest.js	/^var A = function A() {$/;"	f
+Annotations	dist/Annotations.js	/^var Annotations = function Annotations(driver \/*: AbstractMetaDriver*\/) {$/;"	c
+Annotations	dist/Annotations.js	/^var Annotations = function Annotations(driver \/*: AbstractMetaDriver*\/) {$/;"	f
+Annotations.Annotations.meta.getMeta	dist/Annotations.js	/^        function getMeta(cacheRec \/*: CacheRec*\/) \/*: EntityMeta*\/ {$/;"	f
+Annotations.__factory	dist/Annotations.js	/^    this.factory = function __factory \/*:: <T>*\/() \/*: DepDecoratorFn<T>*\/ {$/;"	f
+Annotations.__klass	dist/Annotations.js	/^    this.klass = function __klass \/*:: <T>*\/() \/*: DepDecoratorFn<T>*\/ {$/;"	f
+Annotations.__meta	dist/Annotations.js	/^    this.meta = function __meta(dep \/*: Dependency*\/) \/*: Dependency*\/ {$/;"	f
+Annotations.__model	dist/Annotations.js	/^    this.model = function __model \/*:: <T: StateModel>*\/(mdl \/*: Dependency<T>*\/) \/*: Dependency<T>*\/ {$/;"	f
+Annotations.__setter	dist/Annotations.js	/^    this.setter = function __setter \/*:: <S: StateModel>*\/(dep \/*: Dependency<S>*\/) \/*: DepDecoratorFn*\/ {$/;"	f
+Annotations.factory	dist/Annotations.js	/^    this.factory = function __factory \/*:: <T>*\/() \/*: DepDecoratorFn<T>*\/ {$/;"	m
+Annotations.klass	dist/Annotations.js	/^    this.klass = function __klass \/*:: <T>*\/() \/*: DepDecoratorFn<T>*\/ {$/;"	m
+Annotations.meta	dist/Annotations.js	/^    this.meta = function __meta(dep \/*: Dependency*\/) \/*: Dependency*\/ {$/;"	m
+Annotations.model	dist/Annotations.js	/^    this.model = function __model \/*:: <T: StateModel>*\/(mdl \/*: Dependency<T>*\/) \/*: Dependency<T>*\/ {$/;"	m
+Annotations.setter	dist/Annotations.js	/^    this.setter = function __setter \/*:: <S: StateModel>*\/(dep \/*: Dependency<S>*\/) \/*: DepDecoratorFn*\/ {$/;"	m
+Meta	dist/model/__tests__/ExampleState.js	/^var Meta = function Meta() {$/;"	f
+_interopRequireDefault	dist/Annotations.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
 _interopRequireDefault	dist/ReactiveDi.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
-_interopRequireDefault	dist/annotations.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/cache/CacheManager.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/cache/CacheRec.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/cache/EntityMeta.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/cache/__tests__/CacheManagerTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/cache/__tests__/EntityMetaTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
 _interopRequireDefault	dist/index.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/interfaces.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
 _interopRequireDefault	dist/meta/DepMeta.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
-_interopRequireDefault	dist/meta/MetaLoader.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
-_interopRequireDefault	dist/meta/__tests__/updateIdsMapTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
-_interopRequireDefault	dist/meta/updateIdsMap.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
-_interopRequireDefault	dist/model/Collection.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
-_interopRequireDefault	dist/model/Cursor.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
-_interopRequireDefault	dist/model/EntityMeta.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
-_interopRequireDefault	dist/model/Selector.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
-_interopRequireDefault	dist/model/createDepMetaFromState.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
-_interopRequireDefault	dist/selectorInterfaces.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/meta/drivers/AbstractMetaDriver.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/meta/drivers/SymbolMetaDriver.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/meta/drivers/__tests__/SymbolMetaDriverTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/DataCursor.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/StateMapBuilder.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/__tests__/DataCursorTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/__tests__/ExampleState.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/__tests__/SelectorTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/__tests__/createDepMetaFromStateTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/model/createStateMap.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/utils/Collection.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/utils/__tests__/CollectionTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/utils/__tests__/CreateProxyTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/utils/__tests__/getFunctionNameTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
+_interopRequireDefault	dist/utils/__tests__/mergeTest.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
 _interopRequireDefault	dist/utils/createProxy.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
-_loop	dist/index.js	/^var _loop = function _loop(_key2) {$/;"	f
-_notify	dist/model/createDepMetaFromState.js	/^    obj.$meta.notify = function _notify() {$/;"	f
+_interopRequireDefault	dist/utils/merge.js	/^function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }$/;"	f
 author	package.json	/^  "author": "Stefan Zerkalica <zerkalica@gmail.com>",$/;"	f
 babel-cli	package.json	/^    "babel-cli": "^6.3.17",$/;"	f
 babel-core	package.json	/^    "babel-core": "^6.3.17",$/;"	f
@@ -36,51 +63,48 @@ build.dev	package.json	/^    "build.dev": "npm run build -- --watch",$/;"	f
 builddir	package.json	/^    "builddir": "dist"$/;"	f
 check	package.json	/^    "check": "flow check",$/;"	f
 clean	package.json	/^    "clean": "rm -rf $npm_package_options_builddir coverage",$/;"	f
-copyProps	dist/model/EntityMeta.js	/^function copyProps \/*:: <C: Entity, R: Object>*\/(obj \/*: C*\/, rec \/*: R*\/) \/*: R*\/ {$/;"	f
-create	dist/model/EntityMeta.js	/^function create \/*:: <R: Object, T: Object>*\/(rec \/*: ?R*\/,$/;"	f
-createDepMetaFromState	dist/model/createDepMetaFromState.js	/^function createDepMetaFromState(obj \/*: StateModel*\/, notify \/*: NotifyDepFn*\/, getDepId \/*: DepIdGetter*\/) \/*: StateDepsMeta*\/ {$/;"	f
+createFromJS	dist/model/StateMapBuilder.js	/^function createFromJS \/*:: <T: Object>*\/(Proto \/*: Class<T>*\/, propCreators \/*: PropCreatorMap*\/) \/*: FromJS<T>*\/ {$/;"	f
 createFunctionProxy	dist/utils/createProxy.js	/^function createFunctionProxy(source \/*: Function*\/, middlewares \/*: Array<MiddlewareFn>*\/) \/*: Function*\/ {$/;"	f
 createFunctionProxy.functionProxy	dist/utils/createProxy.js	/^    function functionProxy() \/*: any*\/ {$/;"	f
 createId	dist/meta/DepMeta.js	/^function createId() \/*: DepId*\/ {$/;"	f
-createMeta	dist/meta/__tests__/updateIdsMapTest.js	/^function createMeta(id \/*: DepId*\/) \/*: DepMeta*\/ {$/;"	f
+createMeta	dist/cache/__tests__/CacheManagerTest.js	/^function createMeta(id \/*: DepId*\/) \/*: DepMeta*\/ {$/;"	f
 createMethodProxy	dist/utils/createProxy.js	/^function createMethodProxy(name \/*: string*\/, source \/*: Object*\/, middlewares \/*: Array<MiddlewareMap>*\/) \/*: Function*\/ {$/;"	f
 createMethodProxy.methodProxy	dist/utils/createProxy.js	/^    function methodProxy() \/*: any*\/ {$/;"	f
 createObjectProxy	dist/utils/createProxy.js	/^function createObjectProxy(source \/*: Object*\/, middlewares \/*: Array<MiddlewareMap>*\/) \/*: Object*\/ {$/;"	f
 createProxy	dist/utils/createProxy.js	/^function createProxy(source \/*: Function|Object*\/, middlewares \/*: Array<any>*\/) \/*: any*\/ {$/;"	f
+createStateMap	dist/model/createStateMap.js	/^function createStateMap(state \/*: StateModel*\/, getDepId \/*: DepIdGetter*\/) \/*: CacheRecMap*\/ {$/;"	f
+createStateMap.select	dist/model/createStateMap.js	/^    function select(path \/*: Array<string>*\/, fromJS \/*: FromJS*\/) {$/;"	f
+createTestColl	dist/utils/__tests__/CollectionTest.js	/^function createTestColl() \/*: TestColl*\/ {$/;"	f
+defaultFn	dist/meta/DepMeta.js	/^function defaultFn() {}$/;"	f
 defaultFn	src/meta/DepMeta.js	/^function defaultFn() {}$/;"	f
-defaultGetDepId	dist/model/Selector.js	/^function defaultGetDepId(obj \/*: Object*\/) \/*: DepId*\/ {$/;"	f
-dependencyScanner	dist/meta/updateIdsMap.js	/^function dependencyScanner(id \/*: DepId*\/, parentDeps \/*: Array<DepMeta>*\/, acc \/*: PathMapUpdater*\/) \/*: void*\/ {$/;"	f
 description	package.json	/^  "description": "Reactive dependency injection",$/;"	f
 devDependencies	package.json	/^  "devDependencies": {$/;"	f
 eslint	package.json	/^    "eslint": "^1.10.3",$/;"	f
 eslint-config-airbnb	package.json	/^    "eslint-config-airbnb": "2.1.1",$/;"	f
 eslint-config-airplus	package.json	/^    "eslint-config-airplus": "^1.0.6",$/;"	f
 eslint-plugin-react	package.json	/^    "eslint-plugin-react": "^3.11.3",$/;"	f
-factory	dist/annotations.js	/^function factory() \/*: DepDecoratorFn*\/ {$/;"	f
+factory	dist/Annotations.js	/^function factory(driver \/*: AbstractMetaDriver*\/, tags \/*: Array<string>*\/, rawDeps \/*: Array<Dependency>*\/) \/*: DepDecoratorFn*\/ {$/;"	f
 files	package.json	/^  "files": [$/;"	f
-fn	dist/selectorInterfaces.js	/^function fn() {$/;"	f
+getDepId	dist/model/__tests__/ExampleState.js	/^function getDepId(obj \/*: Object*\/) \/*: string*\/ {$/;"	f
 getFunctionName	dist/utils/getFunctionName.js	/^function getFunctionName(func \/*: Function*\/) \/*: string*\/ {$/;"	f
-getPathIds	dist/model/createDepMetaFromState.js	/^function getPathIds(obj \/*: StateModel*\/, path \/*: Array<string>*\/, parents \/*: Array<DepId>*\/, meta \/*: StateDepsMeta*\/, notify \/*: NotifyDepFn*\/, getDepId \/*: DepIdGetter*\/) \/*: void*\/ {$/;"	f
+getter	dist/Annotations.js	/^function getter \/*:: <T: Object>*\/(cacheRec \/*: CacheRec*\/) \/*: T*\/ {$/;"	f
 glob	package.json	/^    "glob": "^6.0.1",$/;"	f
-iterator	dist/model/Collection.js	/^obj[_iterator2.default] = function iterator() {$/;"	f
+iterator	dist/utils/Collection.js	/^obj[_iterator2.default] = function iterator() {$/;"	f
 iterator	src/utils/Collection.js	/^obj[Symbol.iterator] = function iterator() {$/;"	f
 keywords	package.json	/^  "keywords": [$/;"	f
-klass	dist/annotations.js	/^function klass() \/*: DepDecoratorFn*\/ {$/;"	f
+klass	dist/Annotations.js	/^function klass(driver \/*: AbstractMetaDriver*\/, tags \/*: Array<string>*\/, rawDeps \/*: Array<Dependency>*\/) \/*: DepDecoratorFn*\/ {$/;"	f
+klass.createObject	dist/Annotations.js	/^        function createObject() \/*: T*\/ {$/;"	f
 license	package.json	/^  "license": "MIT",$/;"	f
 lint	package.json	/^    "lint": "eslint src",$/;"	f
 main	package.json	/^  "main": "dist\/index.js",$/;"	f
+merge	dist/utils/merge.js	/^function merge \/*:: <C: Object, R: Object>*\/(obj \/*: C*\/, rec \/*: R*\/) \/*: C*\/ {$/;"	f
 mocha	package.json	/^    "mocha": "^2.3.4",$/;"	f
-model	dist/annotations.js	/^function model \/*:: <T: StateModel>*\/(mdl \/*: Dependency<T>*\/) \/*: Dependency<T>*\/ {$/;"	f
-model._getter	dist/annotations.js	/^    function _getter(cursor \/*: AbstractCursor<T>*\/) \/*: T*\/ {$/;"	f
-model._select	dist/annotations.js	/^    function _select(selector \/*: AbstractSelector*\/) \/*: AbstractCursor<T>*\/ {$/;"	f
-model._setter	dist/annotations.js	/^    function _setter(cursor \/*: AbstractCursor<T>*\/) \/*: Setter<T>*\/ {$/;"	f
+model	dist/Annotations.js	/^function model \/*:: <T: StateModel>*\/(driver \/*: AbstractMetaDriver*\/, tags \/*: Array<string>*\/, mdl \/*: Dependency<T>*\/) \/*: Dependency<T>*\/ {$/;"	f
 name	package.json	/^  "name": "reactive-di",$/;"	f
-nonReactive	dist/annotations.js	/^function nonReactive \/*:: <T: StateModel>*\/(dep \/*: Dependency<T>*\/) \/*: Function*\/ {$/;"	f
-nonReactive.fn	dist/annotations.js	/^    function fn() {}$/;"	f
-normalizeDeps	dist/annotations.js	/^function normalizeDeps(rDeps \/*: Array<Object>*\/) \/*: NormalizedDeps*\/ {$/;"	f
-obj	dist/model/Collection.js	/^        }*\/ = Collection.prototype;$/;"	f
+normalizeDeps	dist/Annotations.js	/^function normalizeDeps(driver \/*: AbstractMetaDriver*\/, rDeps \/*: Array<Object>*\/) \/*: NormalizedDeps*\/ {$/;"	f
+normalizeMiddlewares	dist/ReactiveDi.js	/^function normalizeMiddlewares(rawMiddlewares \/*: Array<[Dependency, Array<Dependency>]>*\/, getDepMeta \/*: (dep: Dependency) => DepMeta*\/) \/*: MiddlewareMap*\/ {$/;"	f
+obj	dist/utils/Collection.js	/^        }*\/ = Collection.prototype;$/;"	f
 obj	src/utils/Collection.js	/^} = Collection.prototype;$/;"	c
-obj.$meta.notify	dist/model/createDepMetaFromState.js	/^    pathMap[id] = path;$/;"	f
 options	package.json	/^  "options": {$/;"	f
 postinstall	package.json	/^    "postinstall": "test -d conf && conf\/resources\/postinstall.sh $npm_package_name || exit 0",$/;"	f
 postversion	package.json	/^    "postversion": "git push && git push --tags",$/;"	f
@@ -89,14 +113,14 @@ precommit	package.json	/^    "precommit": "exit 0",$/;"	f
 prepublish	package.json	/^    "prepublish": "conf\/resources\/prepublish.sh",$/;"	f
 prepush	package.json	/^    "prepush": "exit 0 && npm test",$/;"	f
 preversion	package.json	/^    "preversion": "conf\/resources\/checkgit.sh && npm test",$/;"	f
-proxifyResult	dist/annotations.js	/^function proxifyResult \/*:: <R: Function>*\/(src \/*: R*\/, _setter \/*: Setter*\/) \/*: R*\/ {$/;"	f
+proxifyResult	dist/Annotations.js	/^function proxifyResult \/*:: <R: Function>*\/(src \/*: R*\/, cacheRec \/*: CacheRec*\/) \/*: R*\/ {$/;"	f
 publishConfig	package.json	/^  "publishConfig": {$/;"	f
 registry	package.json	/^    "registry": "https:\/\/registry.npmjs.org"$/;"	f
 repository	package.json	/^  "repository": {$/;"	f
 scripts	package.json	/^  "scripts": {$/;"	f
 select	src/model/createStateMap.js	/^    function select(path: Array<string>, fromJS: FromJS) {$/;"	f
-setInPath	dist/model/Cursor.js	/^function setInPath \/*:: <V: Object, S: StateModel>*\/(newModel \/*: V*\/, state \/*: S*\/, path \/*: Array<string>*\/, index \/*: number*\/) \/*: StateModel*\/ {$/;"	f
-setter	dist/annotations.js	/^function setter \/*:: <S: StateModel>*\/(dep \/*: Dependency<S>*\/) \/*: DepDecoratorFn*\/ {$/;"	f
+setInPath	dist/model/DataCursor.js	/^function setInPath \/*:: <V: Object, S: StateModel>*\/(newModel \/*: V*\/, state \/*: S*\/, path \/*: Array<string>*\/, index \/*: number*\/) \/*: StateModel*\/ {$/;"	f
+setter	dist/Annotations.js	/^function setter \/*:: <S: StateModel>*\/(driver \/*: AbstractMetaDriver*\/, tags \/*: Array<string>*\/, dep \/*: Dependency<S>*\/, rawDeps \/*: Array<Dependency>*\/) \/*: DepDecoratorFn*\/ {$/;"	f
 sinon	package.json	/^    "sinon": "^1.17.2"$/;"	f
 test	package.json	/^    "test": "npm run lint && npm run check && npm run testonly",$/;"	f
 test.cov	package.json	/^    "test.cov": "babel-istanbul cover --report text --report html node_modules\/mocha\/bin\/_mocha"$/;"	f
@@ -104,8 +128,8 @@ test.dev	package.json	/^    "test.dev": "npm run testonly -- --growl --watch",$/
 testonly	package.json	/^    "testonly": "mocha",$/;"	f
 type	package.json	/^    "type": "git",$/;"	f
 update	package.json	/^    "update": "ncu -ua && npm install",$/;"	f
-updateIdsMap	dist/meta/updateIdsMap.js	/^function updateIdsMap(id \/*: DepId*\/, deps \/*: Array<DepMeta>*\/, stateIdToIdsMap \/*: IdsMap*\/, idToStateIdsMap \/*: IdsMap*\/) \/*: void*\/ {$/;"	f
-updateMap	dist/meta/__tests__/updateIdsMapTest.js	/^function updateMap(idToStateIdsMap \/*: IdsMap*\/) \/*: IdsMap*\/ {$/;"	f
+updateCacheTraverse	dist/cache/CacheManager.js	/^function updateCacheTraverse(dep \/*: BaseDep*\/, acc \/*: CacheUpdater*\/) \/*: void*\/ {$/;"	f
+updateMap	dist/cache/__tests__/CacheManagerTest.js	/^function updateMap(idToStateIdsMap \/*: IdsMap*\/) \/*: IdsMap*\/ {$/;"	f
+updateMeta	dist/cache/EntityMeta.js	/^function updateMeta(meta \/*: EntityMeta*\/, src \/*: EntityMeta*\/) \/*: boolean*\/ {$/;"	f
 url	package.json	/^    "url": "http:\/\/github.com\/zerkalica\/reactive-di.git"$/;"	f
-version	package.json	/^    "version": "npm run build",$/;"	f
 version	package.json	/^  "version": "0.0.1",$/;"	f

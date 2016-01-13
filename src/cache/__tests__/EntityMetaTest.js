@@ -3,7 +3,6 @@
 
 import assert from 'power-assert'
 import EntityMeta, {updateMeta} from '../EntityMeta'
-import type {EntityMetaRec} from '../EntityMeta'
 
 describe('EntityMetaTest', () => {
     it('should create with default props', () => {

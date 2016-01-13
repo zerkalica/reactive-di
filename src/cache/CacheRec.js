@@ -19,11 +19,11 @@ export default class CacheRec<T: Object> {
 
     constructor(id: DepId, relations?: Array<CacheRec>) {
         this.id = id
+        this.relations = relations || []
         this.value = null
         this.reCalculate = true
         this.meta = new EntityMeta()
         this._originMeta = new EntityMeta()
-        this.relations = relations || []
 
         this.setValue = this._setValue.bind(this)
         this._success = this.__success.bind(this)
