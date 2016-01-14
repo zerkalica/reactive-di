@@ -1,16 +1,27 @@
 /* @flow */
 
-import type {DepId, OnUpdateHook} from '../interfaces'
+import type {DepId, OnUpdate, OnMount, OnUnmount} from '../interfaces'
 import getFunctionName from '../utils/getFunctionName'
-import merge from '../utils/merge'
 
-let id: number = 0;
-
-export function createId(): DepId {
-    return '' + (++id)
+export type HooksRec = {
+    onUpdate?: OnUpdate;
+    onMount?: OnMount;
+    onUnmount?: OnUnmount;
 }
 
 function defaultFn() {}
+
+export class Hooks {
+    onUpdate: OnUpdate;
+    onMount: OnMount;
+    onUnmount: OnUnmount;
+
+    constructor(rec: HooksRec = {}) {
+        this.onUpdate = rec.onUpdate || defaultFn
+        this.onMount = rec.onMount || defaultFn
+        this.onUnmount = rec.onUnmount || defaultFn
+    }
+}
 
 export default class DepMeta {
     id: DepId;
@@ -20,33 +31,31 @@ export default class DepMeta {
     deps: Array<DepMeta>;
     depNames: ?Array<string>;
     tags: Array<string>;
-    onUpdate: OnUpdateHook;
+    hooks: Hooks;
     isCacheRec: boolean;
 
     constructor(rec: DepMetaRec) {
-        this.id = rec.id || createId()
+        if (!rec.id) {
+            throw new Error('Id is undefined')
+        }
+        this.hooks = rec.hooks || new Hooks()
+        this.id = rec.id
         this.tags = rec.tags || []
         this.fn = rec.fn || defaultFn
         this.displayName = this.tags.join('@') || getFunctionName(this.fn)
 
         this.deps = rec.deps || []
         this.depNames = rec.depNames || null
-
-        this.onUpdate = rec.onUpdate || defaultFn
         this.isCacheRec = !!rec.isCacheRec
-    }
-
-    copy(rec: DepMetaRec = {}): DepMeta {
-        return merge(this, rec)
     }
 }
 
 type DepMetaRec = {
-    id?: DepId;
+    id: DepId;
+    hooks?: Hooks;
     fn?: Function;
     deps?: Array<DepMeta>;
     depNames?: ?Array<string>;
     tags?: Array<string>;
-    onUpdate?: OnUpdateHook;
-    isCacheRec?: boolean
+    isCacheRec?: boolean;
 }

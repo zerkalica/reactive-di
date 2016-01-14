@@ -82,7 +82,7 @@ export default class CacheManager {
         }
     }
 
-    get(dep: BaseDep): CacheRec {
+    get<T>(dep: BaseDep<T>): CacheRec {
         const {_cache: cache} = this
         let cacheRec = cache[dep.id]
         if (!cacheRec) {

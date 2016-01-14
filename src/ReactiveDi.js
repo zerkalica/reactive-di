@@ -67,36 +67,35 @@ export default class ReactiveDi {
     }
 
     mount<T>(dep: Dependency<T>): void {
-        const {_cache, _listeners} = this
-        const {id} = this._getMeta(dep)
-        // do not call listener on first state change
-        _cache.reset(id)
-        _listeners.push(dep)
+        this._listeners.push(dep)
+        const depMeta = this._getMeta(dep)
+        const cacheRec = this._get(depMeta, [])
+        depMeta.hooks.onMount(cacheRec.value)
     }
 
     unmount<T>(dep: Dependency<T>): void {
-        const {_cache, _listeners} = this
-        const {id} = this._getMeta(dep)
-        // do not call listener on first state change
-        _cache.reset(id)
-
         function _listenersFilter(d: Dependency): boolean {
             return dep !== d
         }
+        const depMeta = this._getMeta(dep)
+        const cacheRec = this._get(depMeta, [])
+        depMeta.hooks.onUnmount(cacheRec.value)
 
-        this._listeners = _listeners.filter(_listenersFilter)
+        this._listeners = this._listeners.filter(_listenersFilter)
     }
 
     _get(depMeta: DepMeta, debugCtx: Array<string>): CacheRec {
+        const {displayName} = depMeta
         const cacheRec = this._cache.get(depMeta)
         if (cacheRec.reCalculate) {
-            const {id, displayName, deps, depNames, fn, onUpdate} = depMeta
+            debugCtx.push(displayName)
+            const {id, deps, depNames, fn, hooks} = depMeta
             const defArgs = depNames ? [{}] : []
             const newMeta: EntityMeta = cacheRec.createMeta();
             let isChanged = false
             for (let i = 0, j = deps.length; i < j; i++) {
                 const dep = deps[i]
-                const depRec = this._get(dep, debugCtx.concat([displayName, '' + i]))
+                const depRec = this._get(dep, debugCtx)
                 const value = dep.isCacheRec ? depRec : depRec.value
                 if (depNames) {
                     defArgs[0][depNames[i]] = value
@@ -110,9 +109,9 @@ export default class ReactiveDi {
             let result
             try {
                 result = fn(...defArgs)
-                onUpdate(cacheRec.value, result)
+                hooks.onUpdate(cacheRec.value, result)
             } catch (e) {
-                e.message = e.message + ', @path: ' + debugCtx.concat([displayName]).join('.')
+                e.message = e.message + ', @path: ' + debugCtx.join('.')
                 throw e
             }
             cacheRec.reCalculate = false
@@ -120,6 +119,7 @@ export default class ReactiveDi {
             if (isChanged) {
                 cacheRec.meta = newMeta
             }
+            debugCtx.pop()
         }
 
         return cacheRec

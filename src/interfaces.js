@@ -7,7 +7,11 @@ export type IdsMap = {[id: DepId]: Array<DepId>};
 export type Dependency<T> = Class<T>;
 /* eslint-enable no-undef */
 export type FromJS<T: Object> = (data: Object) => T;
-export type OnUpdateHook<T: Object> = (prevInstance: ?T, nextInstance: T) => void;
+
+export type OnUpdate<T: Object> = (prevInstance: ?T, nextInstance: T) => void;
+export type OnMount<T: Object> = (instance: ?T) => void;
+export type OnUnmount<T: Object> = (instance: ?T) => void;
+
 export class AbstractDataCursor<V> {
     get(): V|any {
     }
@@ -18,9 +22,7 @@ export class AbstractDataCursor<V> {
     }
     /* eslint-enable no-unused-vars */
 }
-export type BaseDep = {
+export type BaseDep<T> = {
     id: DepId;
-    deps: Array<BaseDep>;
-    // need to supress flow warning for cast DepMeta to BaseDep in cache/CacheManager#get
-    copy: (v: BaseDep) => BaseDep;
+    deps: Array<T>;
 }
