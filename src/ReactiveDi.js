@@ -1,19 +1,17 @@
 /* @flow */
 
 import createProxy from './utils/createProxy'
-import AbstractMetaDriver from './meta/drivers/AbstractMetaDriver'
 import CacheManager from './cache/CacheManager'
 import CacheRec from './cache/CacheRec'
-import DepMeta from './meta/DepMeta'
 import EntityMeta, {updateMeta} from './cache/EntityMeta'
 import type {CacheRecMap} from './cache/CacheRec'
 import type {Dependency, DepId} from './interfaces'
 
-type MiddlewareMap = {[id: DepId]: Array<DepMeta>};
+type MiddlewareMap = {[id: DepId]: Array<CacheRec>};
 
 function normalizeMiddlewares(
     rawMiddlewares: Array<[Dependency, Array<Dependency>]>,
-    getDepMeta: (dep: Dependency) => DepMeta
+    getDepMeta: (dep: Dependency) => CacheRec
 ): MiddlewareMap {
     const middlewares: MiddlewareMap = {};
     for (let i = 0, l = rawMiddlewares.length; i < l; i++) {
@@ -37,8 +35,7 @@ export default class ReactiveDi {
     _middlewares: MiddlewareMap;
     _cache: CacheManager;
 
-    _driver: AbstractMetaDriver;
-    _cachedMeta: {[id: DepId]: DepMeta};
+    _cachedMeta: {[id: DepId]: CacheRec};
 
     constructor(
         driver: AbstractMetaDriver,
@@ -47,8 +44,7 @@ export default class ReactiveDi {
         middlewares?: Array<[Dependency, Array<Dependency>]>
     ) {
         this._listeners = []
-        this._cache = new CacheManager(cache)
-        this._driver = driver
+        this._cache = new CacheManager(cache, driver)
         this._cachedMeta = Object.create(null)
 
         ;(aliases || []).forEach(([depSrc, depTarget]) => {
@@ -61,42 +57,36 @@ export default class ReactiveDi {
         )
     }
 
-    _getMeta(dep: Dependency): DepMeta {
-        const depMeta = this._driver.get(dep)
+    _getMeta(dep: Dependency): CacheRec {
+        const {depMeta} = this._cache.get(dep)
         return this._cachedMeta[depMeta.id] || depMeta
     }
 
     mount<T>(dep: Dependency<T>): void {
         this._listeners.push(dep)
-        const depMeta = this._getMeta(dep)
-        const cacheRec = this._get(depMeta, [])
-        depMeta.hooks.onMount(cacheRec.value)
+        this._cache.get(dep).onMount()
     }
 
     unmount<T>(dep: Dependency<T>): void {
+        this._cache.get(dep).onUnmount()
         function _listenersFilter(d: Dependency): boolean {
             return dep !== d
         }
-        const depMeta = this._getMeta(dep)
-        const cacheRec = this._get(depMeta, [])
-        depMeta.hooks.onUnmount(cacheRec.value)
-
         this._listeners = this._listeners.filter(_listenersFilter)
     }
 
-    _get(depMeta: DepMeta, debugCtx: Array<string>): CacheRec {
-        const {displayName} = depMeta
-        const cacheRec = this._cache.get(depMeta)
+    _get(cacheRec: CacheRec, debugCtx: Array<string>): CacheRec {
         if (cacheRec.reCalculate) {
+            const {id, displayName, depNames, fn} = cacheRec.depMeta
+            const deps = cacheRec.deps
             debugCtx.push(displayName)
-            const {id, deps, depNames, fn, hooks} = depMeta
             const defArgs = depNames ? [{}] : []
-            const newMeta: EntityMeta = cacheRec.createMeta();
+            const newMeta: EntityMeta = cacheRec.getOriginMeta();
             let isChanged = false
             for (let i = 0, j = deps.length; i < j; i++) {
-                const dep = deps[i]
+                const dep: CacheRec = deps[i];
                 const depRec = this._get(dep, debugCtx)
-                const value = dep.isCacheRec ? depRec : depRec.value
+                const value = dep.depMeta.isCacheRec ? depRec : depRec.value
                 if (depNames) {
                     defArgs[0][depNames[i]] = value
                 } else {
@@ -109,13 +99,11 @@ export default class ReactiveDi {
             let result
             try {
                 result = fn(...defArgs)
-                hooks.onUpdate(cacheRec.value, result)
+                cacheRec.setValue(this._proxify(result, id))
             } catch (e) {
                 e.message = e.message + ', @path: ' + debugCtx.join('.')
                 throw e
             }
-            cacheRec.reCalculate = false
-            cacheRec.value = this._proxify(result, id)
             if (isChanged) {
                 cacheRec.meta = newMeta
             }
@@ -133,13 +121,13 @@ export default class ReactiveDi {
         const resolvedMdls = []
         const debugCtx = []
         for (let i = 0, j = middlewares.length; i < j; i++) {
-            resolvedMdls.push(this._get(middlewares[i], debugCtx))
+            resolvedMdls.push(this._get(middlewares[i], debugCtx).value)
         }
 
         return createProxy(result, resolvedMdls)
     }
 
     get(dep: Dependency): any {
-        return this._get(this._getMeta(dep), []).value
+        return this._get(this._cache.get(dep), []).value
     }
 }

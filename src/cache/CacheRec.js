@@ -2,6 +2,8 @@
 import EntityMeta from './EntityMeta'
 import type {DepId} from '../interfaces'
 import {AbstractDataCursor} from '../interfaces'
+import DepMeta from '../meta/DepMeta'
+import Hooks from '../meta/Hooks'
 
 export default class CacheRec<T: Object> {
     id: DepId;
@@ -9,33 +11,57 @@ export default class CacheRec<T: Object> {
     reCalculate: boolean;
     meta: EntityMeta;
 
-    setValue: (value: any) => void;
+    setAsyncValue: (value: any) => void;
     relations: Array<CacheRec>;
+    deps: Array<CacheRec>;
+    depMeta: DepMeta;
 
     _originMeta: EntityMeta;
     _success: (value: T) => void;
     _error: (reason: Error) => void;
     _cursor: AbstractDataCursor<T>;
+    _hooks: Hooks;
 
-    constructor(id: DepId, relations?: Array<CacheRec>) {
-        this.id = id
-        this.relations = relations || []
+    /* eslint-disable */
+    constructor(rec: {
+        id: DepId,
+        relations?: Array<CacheRec>,
+        hooks: ?Hooks,
+        tags: Array<string>
+        /* eslint-enable */
+    }) {
+        this.id = rec.id
+        this.relations = rec.relations || []
         this.value = null
         this.reCalculate = true
         this.meta = new EntityMeta()
         this._originMeta = new EntityMeta()
+        this._hooks = rec.hooks || new Hooks()
+        this.deps = []
 
-        this.setValue = this._setValue.bind(this)
+        this.depMeta = new DepMeta({tags: rec.tags})
+
+        this.setAsyncValue = this._setAsyncValue.bind(this)
         this._success = this.__success.bind(this)
         this._error = this.__error.bind(this)
     }
 
-    reset(): void {
-        this.reCalculate = false
+    getOriginMeta(): EntityMeta {
+        return new EntityMeta(this._originMeta)
     }
 
-    createMeta(): EntityMeta {
-        return new EntityMeta(this._originMeta)
+    setValue(value: T): void {
+        this.reCalculate = false
+        this._hooks.onUpdate(this.value, value)
+        this.value = value
+    }
+
+    onMount(): void {
+        this._hooks.onMount(this.value)
+    }
+
+    onUnmount(): void {
+        this._hooks.onUnmount(this.value)
     }
 
     getValue(): T {
@@ -54,7 +80,7 @@ export default class CacheRec<T: Object> {
         }
     }
 
-    _setValue(value: T|Promise<T>): void {
+    _setAsyncValue(value: T|Promise<T>): void {
         if (typeof value.then === 'function') {
             const newMeta = this._originMeta.setPending()
             if (this._originMeta === newMeta) {

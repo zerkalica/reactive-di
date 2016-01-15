@@ -11,41 +11,6 @@ import type {Dependency, DepId} from './interfaces'
 import type {StateModel} from './model/interfaces'
 /* eslint-enable no-unused-vars */
 
-type DepDecoratorFn<T> = (target: Dependency<T>) => T;
-type RawDeps = Array<Dependency> | {[prop: string]: Dependency};
-
-type IDepType = 'model' | 'meta' | 'setter' | 'class' | 'factory';
-
-type RawDepMetaRec = {
-    kind: IDepType;
-    deps?: RawDeps;
-    hooks?: Hooks;
-    setters: ?Array<Dependency>;
-    tags?: Array<string>;
-}
-
-class RawDepMeta {
-    kind: IDepType;
-    id: ?DepId;
-    deps: RawDeps;
-    tags: Array<string>;
-
-    // only if kind === 'setter'
-    setters: ?Array<Dependency>;
-
-    // only if kind === 'class', 'factory'
-    hooks: Hooks;
-
-    constructor(rec: RawDepMetaRec) {
-        this.id = null
-        this.kind = rec.kind
-        this.tags = rec.tags || []
-        this.deps = rec.deps || []
-        this.hooks = rec.hooks || new Hooks()
-        this.setters = rec.setters || null
-    }
-}
-
 class NormalizedDeps {
     hooks: Hooks;
     deps: Array<DepMeta>;
@@ -94,11 +59,14 @@ function proxifyResult<R: Function>(src: R, cacheRec: CacheRec): R {
     return createProxy(src, [cacheRec.setValue])
 }
 
-type SetterFn<S> = (dep: Dependency<S>, ...rawDeps: Array<Dependency>) => DepDecoratorFn<S>;
-type ModelFn<T> = (mdl: Dependency<T>) => DepDecoratorFn<T>;
-type FactoryFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn<T>;
-type KlassFn<T> = (...rawDeps: Array<Dependency>) => DepDecoratorFn<T>;
+type DepDecoratorFn<T> = (target: Dependency<T>) => T;
+type SetterFn<S, T> = (dep: Dependency<S>, ...rawDeps: Array<Dependency>) => (sourceFn: Dependency<T>) => Dependency<T>;
+type FactoryFn<T: Function> = (...rawDeps: Array<Dependency>) => (fn: T) => Dependency<T>;
+/* eslint-disable no-undef */
+type KlassFn<T> = (...rawDeps: Array<Dependency>) => (proto: Class<T>) => Dependency<T>;
+/* eslint-enable no-undef */
 type MetaFn<T> = (value: Dependency<T>) => Dependency<T>;
+type ModelFn<T> = (mdl: Dependency<T>) => Dependency<T>;
 
 export default class Annotations {
     _driver: AbstractMetaDriver;

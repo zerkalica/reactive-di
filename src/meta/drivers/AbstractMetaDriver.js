@@ -1,6 +1,6 @@
 /* @flow */
 
-import DepMeta from '../DepMeta'
+import RawDepMeta from '../RawDepMeta'
 import type {Dependency} from '../../interfaces'
 
 export default class AbstractMetaDriver {
@@ -9,11 +9,11 @@ export default class AbstractMetaDriver {
         return false
     }
 
-    set(dep: Dependency, meta: DepMeta): Dependency {
+    set(dep: Dependency, meta: RawDepMeta): Dependency {
         return dep
     }
 
-    get(dep: Dependency): DepMeta {
-        return new DepMeta({fn: () => null})
+    get(dep: Dependency): RawDepMeta {
+        return new RawDepMeta({fn: () => null})
     }
 }
