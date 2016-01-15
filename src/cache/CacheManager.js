@@ -6,21 +6,9 @@ import type {CacheRecMap} from './CacheRec'
 import RawDepMeta from '../meta/RawDepMeta'
 import AbstractMetaDriver from '../meta/drivers/AbstractMetaDriver'
 import CacheUpdater from './CacheUpdater'
+import createCacheRecStrategies from './createCacheRecStrategies'
 
 type GetRawDepMeta<T> = (v: T) => RawDepMeta;
-
-function createCacheRecFromDep({
-    id,
-    deps,
-    tags,
-    kind,
-    setters,
-    hooks
-}: RawDepMeta): CacheRec {
-    return new CacheRec({
-        id,
-    })
-}
 
 export default class CacheManager {
     _cache: CacheRecMap;
@@ -38,37 +26,37 @@ export default class CacheManager {
         const rawDepMeta = this._getRawDepMeta(dep)
         let cacheRec = cache[rawDepMeta.id]
         if (!cacheRec) {
-            this._updateCacheTraverse(rawDepMeta, new CacheUpdater(cache))
+            this._updateCacheTraverse(dep, new CacheUpdater(cache))
             cacheRec = cache[rawDepMeta.id]
         }
         return cacheRec
     }
 
-    _updateCacheTraverse(dep: RawDepMeta, acc: CacheUpdater): void {
-        let id = dep.id
+    _updateCacheTraverse(dep: Dependency, acc: CacheUpdater): void {
+        const rawDepMeta = this._getRawDepMeta(dep)
+        let id = rawDepMeta.id
         if (!id) {
             id = this._createId()
-            dep.id = id
+            rawDepMeta.id = id
         }
 
         if (!acc.isAffected(id)) {
-            const cacheRec = createCacheRecFromDep(dep)
-            acc.begin(cacheRec)
-            const deps = dep.deps
-            let depNames = null
+            const cacheRec = createCacheRecStrategies[rawDepMeta.kind](rawDepMeta, dep)
+            const {deps} = rawDepMeta
             if (Array.isArray(deps)) {
+                acc.begin(cacheRec)
                 for (let i = 0, j = deps.length; i < j; i++) {
-                    this._updateCacheTraverse(this._getRawDepMeta(deps[i]), acc)
+                    this._updateCacheTraverse(deps[i], acc)
                 }
             } else if (typeof deps === 'object') {
-                depNames = Object.keys(deps)
+                const depNames = Object.keys(deps)
+                cacheRec.depMeta.depNames = depNames
+                acc.begin(cacheRec)
                 for (let i = 0, j = depNames.length; i < j; i++) {
-                    const depName = depNames[i]
-                    this._updateCacheTraverse(this._getRawDepMeta(deps[depName]), acc)
+                    this._updateCacheTraverse(deps[depNames[i]], acc)
                 }
             }
             acc.end(cacheRec)
-            cacheRec.depMeta.depNames = depNames
         }
     }
 }

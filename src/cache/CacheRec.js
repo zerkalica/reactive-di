@@ -5,6 +5,8 @@ import {AbstractDataCursor} from '../interfaces'
 import DepMeta from '../meta/DepMeta'
 import Hooks from '../meta/Hooks'
 
+type FromCacheRec<T> = (rec: CacheRec) => T;
+
 export default class CacheRec<T: Object> {
     id: DepId;
     value: any;
@@ -15,6 +17,7 @@ export default class CacheRec<T: Object> {
     relations: Array<CacheRec>;
     deps: Array<CacheRec>;
     depMeta: DepMeta;
+    link: CacheRec;
 
     _originMeta: EntityMeta;
     _success: (value: T) => void;
@@ -22,13 +25,15 @@ export default class CacheRec<T: Object> {
     _cursor: AbstractDataCursor<T>;
     _hooks: Hooks;
 
+    fromCacheRec: FromCacheRec;
+
     /* eslint-disable */
     constructor(rec: {
         id: DepId,
-        relations?: Array<CacheRec>,
-        hooks: ?Hooks,
-        tags: Array<string>
-        /* eslint-enable */
+        hooks?: ?Hooks,
+        fn: Function,
+        tags: Array<string>,
+        fromCacheRec: FromCacheRec
     }) {
         this.id = rec.id
         this.relations = rec.relations || []
@@ -38,8 +43,7 @@ export default class CacheRec<T: Object> {
         this._originMeta = new EntityMeta()
         this._hooks = rec.hooks || new Hooks()
         this.deps = []
-
-        this.depMeta = new DepMeta({tags: rec.tags})
+        this.fromCacheRec = rec.fromCacheRec
 
         this.setAsyncValue = this._setAsyncValue.bind(this)
         this._success = this.__success.bind(this)

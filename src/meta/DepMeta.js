@@ -1,8 +1,17 @@
 /* @flow */
 
 import getFunctionName from '../utils/getFunctionName'
+import RawDepMeta from './RawDepMeta'
 
 function defaultFn() {}
+
+function getter<T: Object>(cacheRec: CacheRec): T {
+    return cacheRec.getValue()
+}
+
+function proxifyResult<R: Function>(src: R, cacheRec: CacheRec): R {
+    return createProxy(src, [cacheRec.setValue])
+}
 
 export default class DepMeta {
     displayName: string;
@@ -19,6 +28,25 @@ export default class DepMeta {
 
         this.depNames = rec.depNames || null
         this.isCacheRec = !!rec.isCacheRec
+    }
+
+    id: DepId;
+    deps: RawDeps;
+    tags: Array<string>;
+
+    kind: IDepType;
+
+    // only if kind === 'setter'
+    setters: ?Array<Dependency>;
+
+    // only if kind === 'class', 'factory'
+    hooks: ?Hooks;
+
+    static fromRaw({tags, id, kind, setters, hooks}: RawDepMeta, depNames: ?Array<string>): DepMeta {
+        return new DepMeta({
+            tags,
+            hooks
+        })
     }
 }
 

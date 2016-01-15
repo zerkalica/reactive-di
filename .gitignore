@@ -30,6 +30,7 @@ node_modules
 flow
 build
 dist
+tags
 .tags*
 *.map
 /*.js

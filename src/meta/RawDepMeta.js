@@ -4,9 +4,10 @@ import type {DepId, Dependency} from '../interfaces'
 import Hooks from './Hooks'
 
 export type RawDeps = Array<Dependency> | {[prop: string]: Dependency};
-export type IDepType = 'model' | 'meta' | 'setter' | 'class' | 'factory';
+export type IDepType = 'model' | 'meta' | 'setter' | 'klass' | 'factory';
 export type RawDepMetaRec = {
     kind: IDepType;
+    target: Dependency;
     deps?: RawDeps;
     hooks?: Hooks;
     setters?: Array<Dependency>;

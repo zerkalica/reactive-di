@@ -77,16 +77,15 @@ export default class ReactiveDi {
 
     _get(cacheRec: CacheRec, debugCtx: Array<string>): CacheRec {
         if (cacheRec.reCalculate) {
-            const {id, displayName, depNames, fn} = cacheRec.depMeta
+            const {id, displayName, depNames, fn, fromCacheRec} = cacheRec
             const deps = cacheRec.deps
             debugCtx.push(displayName)
             const defArgs = depNames ? [{}] : []
             const newMeta: EntityMeta = cacheRec.getOriginMeta();
             let isChanged = false
             for (let i = 0, j = deps.length; i < j; i++) {
-                const dep: CacheRec = deps[i];
-                const depRec = this._get(dep, debugCtx)
-                const value = dep.depMeta.isCacheRec ? depRec : depRec.value
+                const depRec = this._get(deps[i], debugCtx)
+                const value = depRec.kind === 'meta' ? depRec.meta : depRec.value
                 if (depNames) {
                     defArgs[0][depNames[i]] = value
                 } else {
@@ -96,16 +95,35 @@ export default class ReactiveDi {
                     isChanged = true
                 }
             }
+            if (isChanged) {
+                cacheRec.meta = newMeta
+            }
+
             let result
             try {
-                result = fn(...defArgs)
-                cacheRec.setValue(this._proxify(result, id))
+                switch (kind) {
+                case 'model':
+                    result = cacheRec.getValue()
+                    break
+                case 'meta':
+                    result = defArgs[0].meta
+                    break
+                case 'factory':
+                    result = this._proxify(fn(...defArgs), id)
+                    break
+                case 'klass':
+                    result = this._proxify(fn(...defArgs), id)
+                    break
+                case 'setter':
+                    result = defArgs[0].setValue
+                    break
+                default:
+                    throw new Error('Unknown kind: ' + kind)
+                }
+                cacheRec.setValue(result)
             } catch (e) {
                 e.message = e.message + ', @path: ' + debugCtx.join('.')
                 throw e
-            }
-            if (isChanged) {
-                cacheRec.meta = newMeta
             }
             debugCtx.pop()
         }
