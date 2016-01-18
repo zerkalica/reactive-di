@@ -27,11 +27,13 @@ export default class RawDepMeta {
     // only if kind === 'class', 'factory'
     hooks: ?Hooks;
 
+    isCacheRec: boolean;
+
     constructor(rec: RawDepMetaRec) {
         this.kind = rec.kind
         this.tags = rec.tags || []
         this.deps = rec.deps || []
-        this.hooks = rec.hooks || null
+    this.hooks = rec.hooks || null
         this.setters = rec.setters || []
     }
 }

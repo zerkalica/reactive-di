@@ -1,13 +1,15 @@
 /* @flow */
+import {fastCall, fastCallMethod} from './fastCall'
 
-type MiddlewareFn = (result: any, ...args: Array<any>) => void;
-type MiddlewareMap = {[method: string]: MiddlewareFn};
+export type MiddlewareFn = (result: any, ...args: Array<any>) => void;
+export type MiddlewareMap = {[method: string]: MiddlewareFn};
 
-function createFunctionProxy(source: Function, middlewares: Array<MiddlewareFn>): Function {
+export function createFunctionProxy<T: Function>(source: Function, middlewares: Array<MiddlewareFn>): T {
     function functionProxy(...args: Array<any>): any {
-        let res = source(args[0], args[1], args[2], args[3], args[4], args[5])
+        let res = fastCall(source, args)
+        const newArgs = [res].concat(args)
         for (let i = 0, j = middlewares.length; i < j; i++) {
-            const mdlRes = middlewares[i](res, args[0], args[1], args[2], args[3], args[4], args[5])
+            const mdlRes = fastCall(middlewares[i], newArgs)
             if (mdlRes !== undefined) {
                 res = mdlRes
             }
@@ -16,7 +18,7 @@ function createFunctionProxy(source: Function, middlewares: Array<MiddlewareFn>)
     }
     functionProxy.displayName = 'proxy@' + (source.displayName || source.name)
 
-    return functionProxy
+    return ((functionProxy: any): T)
 }
 
 function createMethodProxy(
@@ -25,11 +27,12 @@ function createMethodProxy(
     middlewares: Array<MiddlewareMap>
 ): Function {
     function methodProxy(...args: Array<any>): any {
-        let res = source[name].call(source, args[0], args[1], args[2], args[3], args[4], args[5])
+        let res = fastCallMethod(source, source[name], args)
+        const newArgs = [res].concat(args)
         for (let it = 0, jt = middlewares.length; it < jt; it++) {
             const obj = middlewares[it]
             if (obj[name]) {
-                const mdlRes = obj[name].call(obj, res, args[0], args[1], args[2], args[3], args[4], args[5])
+                const mdlRes = fastCallMethod(obj, obj[name], newArgs)
                 if (mdlRes !== undefined) {
                     res = mdlRes
                 }
@@ -42,8 +45,8 @@ function createMethodProxy(
     return methodProxy
 }
 
-function createObjectProxy(source: Object, middlewares: Array<MiddlewareMap>): Object {
-    const props: {[prop: string]: Function} = Object.create(source);
+export function createObjectProxy<T: Object>(source: T, middlewares: Array<MiddlewareMap>): T {
+    const props: Object = Object.create(source);
     const methods: Array<string> = Object.getOwnPropertyNames(Object.getPrototypeOf(source));
     for (let i = 0, j = methods.length; i < j; i++) {
         const name = methods[i]
@@ -52,18 +55,5 @@ function createObjectProxy(source: Object, middlewares: Array<MiddlewareMap>): O
             props[name] = createMethodProxy(name, source, middlewares)
         }
     }
-    return props
-}
-
-export default function createProxy(
-    source: Function|Object,
-    middlewares: Array<any>
-): any {
-    let result
-    if (typeof source === 'object') {
-        result = createObjectProxy((source: Object), (middlewares: Array<MiddlewareMap>));
-    } else {
-        result = createFunctionProxy((source: Function), (middlewares: Array<MiddlewareFn>));
-    }
-    return result
+    return ((props: any): T)
 }

@@ -33,29 +33,6 @@ function proxifyResult<R: Function>(src: R, cacheRec: CacheRec): R {
 const createCacheRecStrategies: ICacheRecCreateStrategies = {
     /* eslint-disable */
     klass<T>({id, tags, hooks}: RawDepMeta, target: Class<T>): CacheRec {
-        function createObject(...args: Array<any>): T {
-            /* eslint-disable new-cap */
-            switch (args.length) {
-                case 0:
-                    return new (target: any)
-                case 1:
-                    return new (target: any)(args[0])
-                case 2:
-                    return new (target: any)(args[0], args[1])
-                case 3:
-                    return new (target: any)(args[0], args[1], args[2])
-                case 4:
-                    return new (target: any)(args[0], args[1], args[2], args[3])
-                case 5:
-                    return new (target: any)(args[0], args[1], args[2], args[3], args[4])
-                case 6:
-                    return new (target: any)(args[0], args[1], args[2], args[3], args[4], args[5])
-                default:
-                    return new (target: any)(...args)
-            }
-            /* eslint-enable new-cap */
-        }
-
         return new CacheRec({
             id,
             hooks,

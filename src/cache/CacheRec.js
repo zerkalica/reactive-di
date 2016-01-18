@@ -19,13 +19,15 @@ export default class CacheRec<T: Object> {
     depMeta: DepMeta;
     link: CacheRec;
 
+    middlewares: Array<CacheRec>;
+
+    isCacheRec: boolean;
+
     _originMeta: EntityMeta;
     _success: (value: T) => void;
     _error: (reason: Error) => void;
     _cursor: AbstractDataCursor<T>;
     _hooks: Hooks;
-
-    fromCacheRec: FromCacheRec;
 
     /* eslint-disable */
     constructor(rec: {
@@ -43,7 +45,6 @@ export default class CacheRec<T: Object> {
         this._originMeta = new EntityMeta()
         this._hooks = rec.hooks || new Hooks()
         this.deps = []
-        this.fromCacheRec = rec.fromCacheRec
 
         this.setAsyncValue = this._setAsyncValue.bind(this)
         this._success = this.__success.bind(this)
