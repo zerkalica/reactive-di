@@ -4,9 +4,9 @@ export type DepId = string;
 export type Dependency = Function;
 
 export type Hooks<T> = {
-    onUnmount(): void;
-    onMount(): void;
-    onUpdate(currentValue: T, nextValue: T): void;
+    onUnmount: () => void;
+    onMount: () => void;
+    onUpdate: (currentValue: T, nextValue: T) => void;
 }
 
 /* eslint-disable no-undef */
@@ -50,18 +50,15 @@ export type MetaAnnotation = {
     source: Dependency;
 }
 
-export type SetterAnnotation<T> = {
+export type SetterAnnotation = {
     kind: 5; // 'setter';
     id: DepId;
     info: Info;
     model: Dependency;
-
-    hooks: ?Hooks<T>;
-    deps: ?Deps;
-    fn: Function;
+    facet: Dependency;
 }
 
-export type AnyAnnotation = MetaAnnotation | SetterAnnotation | ModelAnnotation | FactoryAnnotation | ClassAnnotation;
+export type AnyAnnotation = MetaAnnotation | ModelAnnotation | SetterAnnotation | FactoryAnnotation | ClassAnnotation;
 
 export type AnnotationDriver<T: Function> = {
     get(v: T): AnyAnnotation;

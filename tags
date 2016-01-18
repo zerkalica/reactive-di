@@ -76,6 +76,7 @@ createStateMap	dist/model/createStateMap.js	/^function createStateMap(state \/*:
 createStateMap.select	dist/model/createStateMap.js	/^    function select(path \/*: Array<string>*\/, fromJS \/*: FromJS*\/) {$/;"	f
 createTestColl	dist/utils/__tests__/CollectionTest.js	/^function createTestColl() \/*: TestColl*\/ {$/;"	f
 defaultFn	dist/meta/DepMeta.js	/^function defaultFn() {}$/;"	f
+defaultFn	src/annotations/annotationImpl.js	/^function defaultFn() {}$/;"	f
 defaultFn	src/meta/Hooks.js	/^function defaultFn() {}$/;"	f
 description	package.json	/^  "description": "Reactive dependency injection",$/;"	f
 devDependencies	package.json	/^  "devDependencies": {$/;"	f

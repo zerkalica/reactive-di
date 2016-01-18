@@ -1,15 +1,16 @@
 /* @flow */
 
 import {
-    createHooks,
-    createClassAnnotation,
-    createFactoryAnnotation,
-    createMetaAnnotation,
-    createModelAnnotation,
-    createSetterAnnotation
-} from './annotationCreators'
+    HooksImpl,
+    ClassAnnotationImpl,
+    FactoryAnnotationImpl,
+    MetaAnnotationImpl,
+    ModelAnnotationImpl,
+    SetterAnnotationImpl
+} from './annotationImpl'
+
 import type {
-    Deps,
+    // Deps,
     Hooks,
     IAnnotations,
     AnnotationDriver,
@@ -19,52 +20,42 @@ import type {
 
 export default function createAnnotations(driver: AnnotationDriver, tags: Array<string> = []): IAnnotations {
     return {
-        klass<T: Object>(...deps: Deps): (target: Class<T>) => T {
+        klass<T: Object>(...deps: Array<any>): (target: Class<T>) => T {
             return function _factory(target: Class<T>): T {
-                return driver.set(target, createClassAnnotation(
+                return driver.set(target, new ClassAnnotationImpl(
                     target,
                     tags,
-                    deps,
-                    null
+                    deps
                 ))
             }
         },
 
-        factory<T: Function>(...deps: Deps): (target: T) => T {
+        factory<T: Function>(...deps: Array<any>): (target: T) => T {
             return function _factory(target: T): T {
-                return driver.set(target, createFactoryAnnotation(
+                return driver.set(target, new FactoryAnnotationImpl(
                     target,
                     tags,
-                    deps,
-                    null
+                    deps
                 ))
             }
         },
 
         meta<T>(source: Class<T>): T {
             function dummyTargetId() {}
-            return driver.set(dummyTargetId, createMetaAnnotation(
+            return driver.set(dummyTargetId, new MetaAnnotationImpl(
                 source,
                 tags
             ))
         },
 
         model<T>(source: Class<T>): T {
-            return driver.set(source, createModelAnnotation(
-                source,
-                tags
-            ))
+            return driver.set(source, new ModelAnnotationImpl(source, tags))
         },
 
-        setter<T: Function, M: Object>(model: Class<M>, ...deps: Deps): (target: T) => T {
+        setter<T: Function, M: Object>(model: Class<M>, ...deps: Array<any>): (target: T) => T {
             return function _setter(target: T): T {
-                return driver.set(target, createSetterAnnotation(
-                    target,
-                    model,
-                    tags,
-                    deps,
-                    null
-                ))
+                const facet = driver.set(function setterFacetId() {}, new FactoryAnnotationImpl(target, tags, deps))
+                return driver.set(target, new SetterAnnotationImpl(model, facet, tags))
             }
         },
 
@@ -79,7 +70,7 @@ export default function createAnnotations(driver: AnnotationDriver, tags: Array<
                 ) {
                     throw new Error('Not an annotation given for hook')
                 }
-                annotation.hooks = createHooks(hooks)
+                annotation.hooks = new HooksImpl(hooks)
                 return target
             }
         }

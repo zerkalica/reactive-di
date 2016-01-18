@@ -12,7 +12,7 @@ export type IEntityMeta = {
 
 export type Cache<T> = {
     isRecalculate: boolean;
-    value: T;
+    value: ?T;
 }
 
 export type Cursor<T> = {
@@ -28,7 +28,8 @@ export type ModelDep<T: Object> = {
     info: Info;
     relations: Array<AnyDep>;
     childs: Array<ModelDep>;
-    cursor: Cursor<T>;
+    set: (value: T|Promise<T>) => void;
+    get: () => T;
 }
 
 export const KIND_CLASS = 2
@@ -56,9 +57,9 @@ export type FactoryDep<T: any> = {
 }
 
 export const KIND_META = 4
-export type MetaDep<T> = {
+export type MetaDep = {
     kind: 4; // 'meta';
-    cache: Cache<T>;
+    cache: Cache<IEntityMeta>;
     info: Info;
     sources: Array<ModelDep>;
 }
@@ -69,7 +70,7 @@ export type SetterDep<T: Function, V> = {
     cache: Cache<V>;
     info: Info;
     facet: FactoryDep<T>;
-    cursor: Cursor<V>;
+    set(v: T|Promise<T>): void;
 }
 
 export type AnyDep = ClassDep | ModelDep | FactoryDep | MetaDep | SetterDep;

@@ -1,7 +1,7 @@
 /* @flow */
 
-import merge from '../utils/merge'
-import type {IEntityMeta} from './nodeInterfaces'
+import merge from '../../utils/merge'
+import type {IEntityMeta} from '../nodeInterfaces'
 
 export type EntityMetaRec = {
     pending?: boolean;
@@ -11,7 +11,7 @@ export type EntityMetaRec = {
 }
 
 // implements IEntityMeta
-export default class EntityMeta {
+export default class EntityMetaImpl {
     pending: boolean;
     rejected: boolean;
     fulfilled: boolean;
@@ -24,11 +24,11 @@ export default class EntityMeta {
         this.reason = rec.reason || null
     }
 
-    _copy(rec: EntityMetaRec = {}): EntityMeta {
+    _copy(rec: EntityMetaRec = {}): EntityMetaImpl {
         return merge(this, rec)
     }
 
-    setPending(): EntityMeta {
+    setPending(): EntityMetaImpl {
         return this._copy({
             pending: true,
             rejected: false,
@@ -37,7 +37,7 @@ export default class EntityMeta {
         })
     }
 
-    success(): EntityMeta {
+    success(): EntityMetaImpl {
         return this._copy({
             pending: false,
             rejected: false,
@@ -46,7 +46,7 @@ export default class EntityMeta {
         })
     }
 
-    error(reason: Error): EntityMeta {
+    error(reason: Error): EntityMetaImpl {
         return this._copy({
             pending: false,
             rejected: true,

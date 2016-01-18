@@ -10,6 +10,14 @@ import type {
     MetaDep
 } from '../nodes/nodeInterfaces'
 
+import {
+    ClassDepImpl,
+    FactoryDepImpl,
+    ModelDepImpl,
+    SetterDepImpl,
+    MetaDepImpl
+} from '../nodes/nodeImpl'
+
 import type {
     DepId,
     Deps,
@@ -24,12 +32,6 @@ import type {
 } from '../annotations/annotationInterfaces'
 
 type Middlewares = {[id: DepId]: Array<Dependency>};
-
-const DefaultHooks = {
-    onUpdate() {},
-    onMount() {},
-    onUnmount() {}
-}
 
 export default class AnnotationResolver {
     _cache: {[id: DepId]: AnyDep};
@@ -97,7 +99,7 @@ export default class AnnotationResolver {
         throw new Error('Dep nodes for data must be resolved in state converter')
     }
 
-    _resolveMiddlewares(mdls: ?Array<Dependency>): ?Array<AnyDep> {
+    _resolveMiddlewares<A: Array<FactoryDep>, B: Array<ClassDep>>(mdls: ?Array<Dependency>): ?A|B {
         let result: ?Array<AnyDep> = null;
         if (mdls && mdls.length) {
             result = [];
@@ -135,66 +137,42 @@ export default class AnnotationResolver {
     resolveClass(annotation: ClassAnnotation): ClassDep {
         const middlewares = this._resolveMiddlewares(this._middlewares[annotation.id])
         const {deps, depNames} = this._getDeps(annotation.deps || [])
-        return {
-            kind: 2,
-            info: annotation.info,
-            cache: {
-                isRecalculate: true,
-                value: null
-            },
-            hooks: annotation.hooks || DefaultHooks,
-            middlewares,
+
+        return new ClassDepImpl(
+            annotation.info,
             deps,
             depNames,
-            proto: annotation.proto
-        }
+            annotation.proto,
+            annotation.hooks,
+            middlewares
+        )
     }
 
     resolveFactory(annotation: FactoryAnnotation): FactoryDep {
         const middlewares = this._resolveMiddlewares(this._middlewares[annotation.id])
         const {deps, depNames} = this._getDeps(annotation.deps || [])
-        return {
-            kind: 3,
-            info: annotation.info,
-            cache: {
-                isRecalculate: true,
-                value: null
-            },
-            hooks: annotation.hooks || DefaultHooks,
-            middlewares,
+
+        return new FactoryDepImpl(
+            annotation.info,
             deps,
             depNames,
-            fn: annotation.fn
-        }
+            annotation.fn,
+            annotation.hooks,
+            middlewares
+        )
     }
 
     resolveMeta(annotation: MetaAnnotation): MetaDep {
         const sourceDep: ModelDep = this._resolve(annotation.source);
         const sources: Array<ModelDep> = sourceDep.childs.concat(sourceDep);
-        return {
-            kind: 4,
-            info: annotation.info,
-            cache: {
-                isRecalculate: true,
-                value: null
-            },
-            sources
-        }
+
+        return new MetaDepImpl(annotation.info, sources)
     }
 
     resolveSetter(annotation: SetterAnnotation): SetterDep {
-        const {id, info, hooks, deps, fn, model} = annotation
-        const facet: FactoryDep = this._resolve({kind: 4, id, info, hooks, deps, fn});
-        const target: ModelDep = this._resolve(model);
-        return {
-            kind: 5,
-            info,
-            cache: {
-                isRecalculate: true,
-                value: null
-            },
-            facet,
-            cursor: target.cursor
-        }
+        const facet: FactoryDep = this._resolve(annotation.facet);
+        const target: ModelDep = this._resolve(annotation.model);
+
+        return new SetterDepImpl(annotation.info, facet, target.set)
     }
 }
