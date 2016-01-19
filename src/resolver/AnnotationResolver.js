@@ -28,20 +28,15 @@ export default class AnnotationResolver {
         this._resolvers = resolvers
     }
 
-    _isAffected(id: DepId): boolean {
-        const dep: AnyDep = this._cache[id];
-        if (dep) {
-            const relations: Array<AnyDep> = dep.relations;
-            const parents: Array<Set<DepId>> = this._parents;
-            for (let i = 0, l = relations.length; i < l; i++) {
-                const relationId = relations[i].id
-                for (let j = 0, k = parents.length; j < k; j++) {
-                    parents[j].add(relationId)
-                }
+    inheritRelations<T: AnyDep>(dep: T): void {
+        const relations: Array<AnyDep> = dep.relations;
+        const parents: Array<Set<DepId>> = this._parents;
+        for (let i = 0, l = relations.length; i < l; i++) {
+            const relationId = relations[i].id
+            for (let j = 0, k = parents.length; j < k; j++) {
+                parents[j].add(relationId)
             }
-            return true
         }
-        return false
     }
 
     begin<T: AnyDep>(dep: T): void {
@@ -62,15 +57,29 @@ export default class AnnotationResolver {
         const {_cache: cache} = this
         const annotation: AnyAnnotation = this._driver.get(annotatedDep);
         let dep: T = cache[annotation.id];
-        if (!dep) {
+        if (dep) {
+            this.inheritRelations(dep)
+        } else {
             let id = annotation.id
             if (!id) {
                 id = createId()
                 annotation.id = id
             }
+            this._resolvers[annotation.kind](annotation, this)
+            dep = cache[id]
+        }
+        return dep
+    }
 
-            if (this._isAffected(id)) {
-                return cache[id]
+    get<T: AnyDep, D: Function>(annotatedDep: D): T {
+        const {_cache: cache} = this
+        const annotation: AnyAnnotation = this._driver.get(annotatedDep);
+        let dep: T = cache[annotation.id];
+        if (!dep) {
+            let id = annotation.id
+            if (!id) {
+                id = createId()
+                annotation.id = id
             }
             this._resolvers[annotation.kind](annotation, this)
             dep = cache[id]
