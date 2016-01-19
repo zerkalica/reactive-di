@@ -9,6 +9,8 @@ export type EntityMeta = {
     reason: ?Error;
 }
 
+export type FromJS<T: Object> = (data: Object) => T;
+
 /* eslint-disable no-use-before-define, no-undef */
 
 export type Cache<T> = {
@@ -16,9 +18,9 @@ export type Cache<T> = {
     value: ?T;
 }
 
-export type Cursor<T> = {
+export type Cursor<T: Object> = {
     get(): T;
-    set(v: T|Promise<T>): void;
+    set(v: T): boolean;
 }
 
 export type ModelDep<T: Object> = {
@@ -29,6 +31,7 @@ export type ModelDep<T: Object> = {
     info: Info;
     relations: Array<AnyDep>;
     childs: Array<ModelDep>;
+    fromJS: FromJS<T>;
     set: (value: T|Promise<T>) => void;
     get: () => T;
 }

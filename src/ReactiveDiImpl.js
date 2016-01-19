@@ -20,7 +20,7 @@ import type {
     Middlewares
 } from './resolver/resolverInterfaces'
 
-import StateMapBuilderImpl from './model/StateMapBuilderImpl'
+import PureStateBuilder from './model/PureStateBuilder'
 
 /* eslint-enable no-unused-vars */
 
@@ -62,12 +62,8 @@ export default class ReactiveDiImpl {
         middlewares: Middlewares,
         state: Object
     ) {
-        const stateRef = {state}
-        function select(path: Array<string>, fromJS: FromJS) {
-            return new ImmutableDataCursor(path, fromJS, stateRef)
-        }
-
-        const stateMap: {[id: DepId]: ModelDep} = (new StateMapBuilderImpl(driver)).build(state);
+        const stateBuilder = new PureStateBuilder(driver, this, state)
+        const stateMap: {[id: DepId]: ModelDep} = stateBuilder.build();
         this._resolver = new AnnotationResolverImpl(driver, resolverTypeMap, middlewares, stateMap)
         this._depProcessor = new DepProcessorImpl(processorTypeMap)
         this._listeners = []
@@ -80,15 +76,15 @@ export default class ReactiveDiImpl {
         }
     }
 
-    mount<D: ClassDep|FactoryDep>(annotatedDep: Dependency): () => void {
-        const dep: D = this._resolver.get(annotatedDep);
+    mount<D: ClassDep|FactoryDep, T, A: Dependency<T>>(annotatedDep: A): () => void {
+        const dep: A = this._resolver.get(annotatedDep);
         const hooks = dep.hooks
         const self = this
 
         this._listeners.push(dep)
 
         hooks.onMount()
-        function listenersFilter(registeredDep: D): boolean {
+        function listenersFilter(registeredDep: A): boolean {
             return dep !== registeredDep
         }
         function unmount() {
@@ -99,7 +95,7 @@ export default class ReactiveDiImpl {
         return unmount
     }
 
-    get(annotatedDep: Dependency): any {
+    get<T, A: Dependency<T>>(annotatedDep: A): T {
         return this._depProcessor.resolve(this._resolver.get(annotatedDep))
     }
 }

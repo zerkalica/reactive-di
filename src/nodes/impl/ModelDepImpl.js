@@ -2,9 +2,8 @@
 
 import CacheImpl from './CacheImpl'
 import EntityMetaImpl from './EntityMetaImpl'
-import {InfoImpl} from '../../annotations/annotationImpl'
 import type {DepId, Info} from '../../annotations/annotationInterfaces'
-import type {ModelDep, Cache, AnyDep, Cursor, Notifier} from '../nodeInterfaces'
+import type {FromJS, ModelDep, Cache, AnyDep, Cursor, Notifier} from '../nodeInterfaces'
 
 export default class ModelDepImpl<T> {
     kind: 'model';
@@ -15,16 +14,23 @@ export default class ModelDepImpl<T> {
     relations: Array<AnyDep>;
     childs: Array<ModelDep>;
     cursor: Cursor<T>;
+    fromJS: FromJS<T>;
 
     set: (value: T|Promise<T>) => void;
     get: () => T;
 
-    constructor(id: DepId, cursor: Cursor<T>, notifier: Notifier, displayName: string, tags: Array<string>) {
+    constructor(
+        id: DepId,
+        info: Info,
+        notifier: Notifier,
+        cursor: Cursor<T>,
+        relations: Array<AnyDep>
+    ) {
         this.kind = 'model'
         this.id = id
         this.meta = new EntityMetaImpl()
-        this.info = new InfoImpl(displayName, tags)
-        const relations = this.relations = []
+        this.info = info
+        this.relations = relations
         this.childs = []
 
         const self = this

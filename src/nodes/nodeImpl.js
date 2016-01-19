@@ -2,7 +2,7 @@
 
 import CacheImpl from './impl/CacheImpl'
 import EntityMetaImpl from './impl/EntityMetaImpl'
-import ModelImpl from './impl/ModelDepImpl'
+import ModelDepImpl from './impl/ModelDepImpl'
 import {HooksImpl} from '../annotations/annotationImpl'
 import type {DepId, Info, Hooks} from '../annotations/annotationInterfaces'
 import type {
@@ -14,7 +14,7 @@ import type {
     EntityMeta
 } from './nodeInterfaces'
 
-export {ModelImpl}
+export {ModelDepImpl}
 
 export class ClassDepImpl<T> {
     kind: 'class';

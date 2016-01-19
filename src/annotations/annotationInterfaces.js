@@ -1,7 +1,11 @@
 /* @flow */
 
 export type DepId = string;
-export type Dependency<T> = Class<T>;
+
+type DepFn<T> = (...x: any) => T;
+/* eslint-disable no-undef */
+export type Dependency<T> = DepFn<T>|Class<T>;
+/* eslint-enable */
 
 export type Hooks<T> = {
     onUnmount: () => void;
@@ -65,10 +69,16 @@ export type AnyAnnotation = MetaAnnotation
     | ClassAnnotation;
 
 /* eslint-disable no-undef */
-export type AnnotationDriver = {
+
+export type AnnotationDriverGetter = {
     get<T, A: AnyAnnotation>(v: Dependency<T>): A;
+};
+
+export type AnnotationDriverSetter = {
     set<T, D: Dependency<T>, A: AnyAnnotation>(v: Class<T>, annotation: A): D;
 };
+
+export type AnnotationDriver = AnnotationDriverGetter & AnnotationDriverSetter;
 
 type Setter<T: Function, M: Object> = (model: Class<M>, ...rawDeps: Deps) => (sourceFn: T) => T;
 type Factory<T: Function> = (...rawDeps: Deps) => (fn: T) => T;
