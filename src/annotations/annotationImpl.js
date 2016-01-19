@@ -24,12 +24,12 @@ function defaultFn() {}
 export class HooksImpl<T> {
     onUnmount: () => void;
     onMount: () => void;
-    onUpdate: (currentValue: T, nextValue: T) => void;
+    onUpdate: (currentValue: ?T, nextValue: T) => void;
 
     constructor(r?: {
         onUnmount?: () => void;
         onMount?: () => void;
-        onUpdate?: (currentValue: T, nextValue: T) => void;
+        onUpdate?: (currentValue: ?T, nextValue: T) => void;
     } = {}) {
         this.onMount = r.onMount || defaultFn
         this.onUnmount = r.onUnmount || defaultFn
@@ -38,13 +38,13 @@ export class HooksImpl<T> {
 }
 
 export class ModelAnnotationImpl {
-    kind: 1;
+    kind: 'model';
     id: DepId;
     info: Info;
     source: Dependency;
 
     constructor(source: Dependency, tags: Array<string>) {
-        this.kind = 1
+        this.kind = 'model'
         this.info = new InfoImpl('model@' + getFunctionName(source), tags)
         this.source = source
     }
@@ -52,7 +52,7 @@ export class ModelAnnotationImpl {
 
 /* eslint-disable no-undef */
 export class ClassAnnotationImpl<T: Object> {
-    kind: 2;
+    kind: 'class';
     id: DepId;
     info: Info;
     hooks: ?Hooks<T>;
@@ -60,7 +60,7 @@ export class ClassAnnotationImpl<T: Object> {
     proto: Class<T>;
 
     constructor(proto: Class<T>, tags: Array<string>, deps: ?Deps, hooks?: ?Hooks) {
-        this.kind = 2
+        this.kind = 'class'
         this.info = new InfoImpl('class@' + getFunctionName(proto), tags)
         this.hooks = hooks || null
         this.deps = deps
@@ -69,7 +69,7 @@ export class ClassAnnotationImpl<T: Object> {
 }
 
 export class FactoryAnnotationImpl<T> {
-    kind: 3; // 'factory';
+    kind: 'factory';
     id: DepId;
     info: Info;
     hooks: ?Hooks<T>;
@@ -77,7 +77,7 @@ export class FactoryAnnotationImpl<T> {
     fn: Function;
 
     constructor(fn: Dependency, tags: Array<string>, deps: ?Deps, hooks?: ?Hooks) {
-        this.kind = 3
+        this.kind = 'factory'
         this.info = new InfoImpl('factory@' + getFunctionName(fn), tags)
         this.hooks = hooks || null
         this.deps = deps
@@ -86,27 +86,27 @@ export class FactoryAnnotationImpl<T> {
 }
 
 export class MetaAnnotationImpl {
-    kind: 4; // 'meta';
+    kind: 'meta';
     id: DepId;
     info: Info;
     source: Dependency;
 
     constructor(source: Dependency, tags: Array<string>) {
-        this.kind = 4
+        this.kind = 'meta'
         this.info = new InfoImpl('meta@' + getFunctionName(source), tags)
         this.source = source
     }
 }
 
 export class SetterAnnotationImpl {
-    kind: 5; // 'setter';
+    kind: 'setter';
     id: DepId;
     info: Info;
     model: Dependency;
 
     facet: Dependency;
     constructor(model: Dependency, facet: Dependency, tags: Array<string>) {
-        this.kind = 5
+        this.kind = 'setter'
         this.info = new InfoImpl('setter@' + getFunctionName(model), tags)
         this.facet = facet
     }

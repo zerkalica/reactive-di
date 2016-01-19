@@ -4,10 +4,12 @@ import CacheImpl from './CacheImpl'
 import EntityMetaImpl from './EntityMetaImpl'
 import {InfoImpl} from '../../annotations/annotationImpl'
 import type {Info} from '../../annotations/annotationInterfaces'
+import type {DepId} from '../../interfaces'
 import type {ModelDep, Cache, AnyDep, Cursor} from '../nodeInterfaces'
 
 export default class ModelDepImpl<T> {
-    kind: 1;
+    kind: 'model';
+    id: DepId;
     meta: EntityMetaImpl;
     cache: Cache<T>;
     info: Info;
@@ -18,8 +20,9 @@ export default class ModelDepImpl<T> {
     set: (value: T|Promise<T>) => void;
     get: () => T;
 
-    constructor(cursor: Cursor<T>, displayName: string, tags: Array<string>) {
-        this.kind = 1
+    constructor(id: DepId, cursor: Cursor<T>, displayName: string, tags: Array<string>) {
+        this.kind = 'model'
+        this.id = id
         this.meta = new EntityMetaImpl()
         this.info = new InfoImpl(displayName, tags)
         const relations = this.relations = []
@@ -28,7 +31,7 @@ export default class ModelDepImpl<T> {
         const self = this
         const cache = new CacheImpl()
 
-        // chrome not optimized for bind syntax: place methods in cosntructor
+        // chrome not optimized for bind syntax: place methods in constructor
         function notify(): void {
             cache.isRecalculate = true
             for (let i = 0, l = relations.length; i < l; i++) {

@@ -7,6 +7,7 @@ export type EntityMetaRec = {
     pending?: boolean;
     rejected?: boolean;
     fulfilled?: boolean;
+    needFetch?: boolean;
     reason?: ?Error;
 }
 
@@ -15,11 +16,13 @@ export default class EntityMetaImpl {
     pending: boolean;
     rejected: boolean;
     fulfilled: boolean;
+    needFetch: boolean;
     reason: ?Error;
 
     constructor(rec: EntityMetaRec = {}) {
         this.pending = rec.pending || false
         this.rejected = rec.rejected || false
+        this.needFetch = rec.needFetch || false
         this.fulfilled = rec.fulfilled === undefined ? true : rec.fulfilled
         this.reason = rec.reason || null
     }
@@ -28,11 +31,18 @@ export default class EntityMetaImpl {
         return merge(this, rec)
     }
 
+    setNeedFetch(): EntityMetaImpl {
+        return this._copy({
+            needFetch: true
+        })
+    }
+
     setPending(): EntityMetaImpl {
         return this._copy({
             pending: true,
             rejected: false,
             fulfilled: false,
+            needFetch: false,
             reason: null
         })
     }
@@ -42,6 +52,7 @@ export default class EntityMetaImpl {
             pending: false,
             rejected: false,
             fulfilled: true,
+            needFetch: false,
             reason: null
         })
     }
@@ -51,6 +62,7 @@ export default class EntityMetaImpl {
             pending: false,
             rejected: true,
             fulfilled: false,
+            needFetch: false,
             reason
         })
     }
@@ -59,6 +71,7 @@ export default class EntityMetaImpl {
 export function updateMeta(meta: IEntityMeta, src: IEntityMeta): boolean {
     const {pending, rejected, fulfilled, reason} = src
     let isChanged = false
+    /* eslint-disable no-param-reassign */
     if (!fulfilled) {
         isChanged = true
         meta.fulfilled = false
@@ -75,6 +88,7 @@ export function updateMeta(meta: IEntityMeta, src: IEntityMeta): boolean {
         isChanged = true
         meta.pending = pending
     }
+    /* eslint-enable no-param-reassign */
 
     return isChanged
 }

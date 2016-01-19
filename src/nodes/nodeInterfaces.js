@@ -1,10 +1,12 @@
 /* @flow */
 import type {Hooks, Info} from '../annotations/annotationInterfaces'
+import type {DepId} from '../interfaces'
 
 export type IEntityMeta = {
     pending: boolean;
     rejected: boolean;
     fulfilled: boolean;
+    needFetch: boolean;
     reason: ?Error;
 }
 
@@ -20,9 +22,9 @@ export type Cursor<T> = {
     set(v: T|Promise<T>): void;
 }
 
-export const KIND_MODEL = 1
 export type ModelDep<T: Object> = {
-    kind: 1; // 'model';
+    kind: 'model';
+    id: DepId;
     meta: IEntityMeta;
     cache: Cache<T>;
     info: Info;
@@ -32,11 +34,12 @@ export type ModelDep<T: Object> = {
     get: () => T;
 }
 
-export const KIND_CLASS = 2
 export type ClassDep<T: Object> = {
-    kind: 2; // 'klass';
+    kind: 'class';
+    id: DepId;
     cache: Cache<T>;
     info: Info;
+    relations: Array<AnyDep>;
     hooks: Hooks<T>;
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
@@ -44,11 +47,12 @@ export type ClassDep<T: Object> = {
     proto: Class<T>;
 }
 
-export const KIND_FACTORY = 3
-export type FactoryDep<T: any> = {
-    kind: 3; // 'factory';
+export type FactoryDep<T> = {
+    kind: 'factory';
+    id: DepId;
     cache: Cache<T>;
     info: Info;
+    relations: Array<AnyDep>;
     hooks: Hooks<T>;
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
@@ -56,23 +60,30 @@ export type FactoryDep<T: any> = {
     fn: Function;
 }
 
-export const KIND_META = 4
 export type MetaDep = {
-    kind: 4; // 'meta';
+    kind: 'meta';
+    id: DepId;
     cache: Cache<IEntityMeta>;
     info: Info;
+    relations: Array<AnyDep>;
     sources: Array<ModelDep>;
 }
 
-export const KIND_SETTER = 5
 export type SetterDep<T: Function, V> = {
-    kind: 5; // 'setter';
+    kind: 'setter';
+    id: DepId;
     cache: Cache<V>;
     info: Info;
+    relations: Array<AnyDep>;
     facet: FactoryDep<T>;
     set(v: T|Promise<T>): void;
 }
 
 export type AnyDep = ClassDep | ModelDep | FactoryDep | MetaDep | SetterDep;
 
-/* eslint-enable no-use-before-define, no-undef */
+export type Processor = {
+    resolve<T: AnyDep, V: any>(rec: T): V;
+}
+
+export type ProcessorType<T: AnyDep> = (rec: T, dep: Processor) => void;
+export type ProcessorTypeMap = {[kind: string]: ProcessorType};

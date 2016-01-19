@@ -6,7 +6,7 @@ export type Dependency = Function;
 export type Hooks<T> = {
     onUnmount: () => void;
     onMount: () => void;
-    onUpdate: (currentValue: T, nextValue: T) => void;
+    onUpdate: (currentValue: ?T, nextValue: T) => void;
 }
 
 /* eslint-disable no-undef */
@@ -19,14 +19,14 @@ export type Info = {
 }
 
 export type ModelAnnotation = {
-    kind: 1; // 'model';
+    kind: 'model';
     id: DepId;
     info: Info;
     source: Dependency;
 }
 
 export type ClassAnnotation<T: Object> = {
-    kind: 2; // 'class';
+    kind: 'class';
     id: DepId;
     info: Info;
     hooks: ?Hooks<T>;
@@ -35,7 +35,7 @@ export type ClassAnnotation<T: Object> = {
 }
 
 export type FactoryAnnotation<T> = {
-    kind: 3; // 'factory';
+    kind: 'factory';
     id: DepId;
     info: Info;
     hooks: ?Hooks<T>;
@@ -44,25 +44,29 @@ export type FactoryAnnotation<T> = {
 }
 
 export type MetaAnnotation = {
-    kind: 4; // 'meta';
+    kind: 'meta';
     id: DepId;
     info: Info;
     source: Dependency;
 }
 
 export type SetterAnnotation = {
-    kind: 5; // 'setter';
+    kind: 'setter';
     id: DepId;
     info: Info;
     model: Dependency;
     facet: Dependency;
 }
 
-export type AnyAnnotation = MetaAnnotation | ModelAnnotation | SetterAnnotation | FactoryAnnotation | ClassAnnotation;
+export type AnyAnnotation = MetaAnnotation
+    | ModelAnnotation
+    | SetterAnnotation
+    | FactoryAnnotation
+    | ClassAnnotation;
 
-export type AnnotationDriver<T: Function> = {
-    get(v: T): AnyAnnotation;
-    set(v: T, annotation: AnyAnnotation): T;
+export type AnnotationDriver = {
+    get<T: Function, A: AnyAnnotation>(v: T): A;
+    set<T: Function, A: AnyAnnotation>(v: T, annotation: A): T;
 };
 
 type Setter<T: Function, M: Object> = (model: Class<M>, ...rawDeps: Deps) => (sourceFn: T) => T;

@@ -1,178 +1,80 @@
 /* @flow */
+
 import createId from '../utils/createId'
-
-import type {
-    AnyDep,
-    ModelDep,
-    SetterDep,
-    FactoryDep,
-    ClassDep,
-    MetaDep
-} from '../nodes/nodeInterfaces'
-
-import {
-    ClassDepImpl,
-    FactoryDepImpl,
-    ModelDepImpl,
-    SetterDepImpl,
-    MetaDepImpl
-} from '../nodes/nodeImpl'
-
 import type {
     DepId,
-    Deps,
     Dependency,
     AnnotationDriver,
-    ModelAnnotation,
-    SetterAnnotation,
-    FactoryAnnotation,
-    ClassAnnotation,
-    MetaAnnotation,
     AnyAnnotation
 } from '../annotations/annotationInterfaces'
+import type {AnyDep} from '../nodes/nodeInterfaces'
+import type {ResolverMap} from './resolverInterfaces'
 
 type Middlewares = {[id: DepId]: Array<Dependency>};
 
 export default class AnnotationResolver {
-    _cache: {[id: DepId]: AnyDep};
+    _cache: {[id: DepId]: any};
     _driver: AnnotationDriver;
     _middlewares: Middlewares;
-    _updater: CacheUpdater;
+    _resolvers: ResolverMap;
+    // array of parents set of all dependencies
+    _parents: Array<Set<DepId>>;
 
-    constructor(driver: AnnotationDriver, middlewares: Middlewares) {
+    constructor(driver: AnnotationDriver, resolvers: ResolverMap, middlewares: Middlewares) {
         this._driver = driver
         this._middlewares = middlewares
         this._cache = Object.create(null)
-        this._updater = new CacheUpdater(cache)
+        this._parents = []
+        this._resolvers = resolvers
     }
 
-    resolve(annotatedDep: Dependency): AnyDep {
+    _isAffected(id: DepId): boolean {
+        const dep: AnyDep = this._cache[id];
+        if (dep) {
+            const relations: Array<AnyDep> = dep.relations;
+            const parents: Array<Set<DepId>> = this._parents;
+            for (let i = 0, l = relations.length; i < l; i++) {
+                const relationId = relations[i].id
+                for (let j = 0, k = parents.length; j < k; j++) {
+                    parents[j].add(relationId)
+                }
+            }
+            return true
+        }
+        return false
+    }
+
+    begin<T: AnyDep>(dep: T): void {
+        this._parents.push(new Set())
+        this._cache[dep.id] = dep
+    }
+
+    end<T: AnyDep>(dep: T): void {
+        const cache = this._cache
+        const depSet: Set<DepId> = this._parents.pop();
+        function iteratePathSet(relationId: DepId): void {
+            cache[relationId].relations.push(dep)
+        }
+        depSet.forEach(iteratePathSet)
+    }
+
+    resolve<T: AnyDep, D: Function>(annotatedDep: D): T {
         const {_cache: cache} = this
         const annotation: AnyAnnotation = this._driver.get(annotatedDep);
-        let dep = cache[annotation.id]
+        let dep: T = cache[annotation.id];
         if (!dep) {
-            this._resolve(annotatedDep)
-            dep = cache[annotation.id]
+            let id = annotation.id
+            if (!id) {
+                id = createId()
+                annotation.id = id
+            }
+
+            if (this._isAffected(id)) {
+                return cache[id]
+            }
+            this._resolvers[annotation.kind](annotation, this)
+            dep = cache[id]
         }
         return dep
-    }
-
-    _resolve<T>(annotatedDep: Dependency): T {
-        const {_cache: cache, _updater: acc} = this
-        const annotation: AnyAnnotation = this._driver.get(annotatedDep);
-        let id = annotation.id
-        if (!id) {
-            id = createId()
-            annotation.id = id
-        }
-
-        if (acc.isAffected(id)) {
-            return cache[id]
-        }
-        acc.begin(id)
-        let dep: AnyDep;
-        switch (annotation.kind) {
-        case 1: // model
-            dep = this.resolveModel(annotation)
-            break
-        case 2: // Class
-            dep = this.resolveClass(annotation)
-            break
-        case 3: // factory
-            dep = this.resolveFactory(annotation)
-            break
-        case 4: // meta
-            dep = this.resolveMeta(annotation)
-            break
-        case 5: // setter
-            dep = this.resolveSetter(annotation)
-            break
-        default:
-            throw new Error('Unkown kind ' + (annotation.kind || 'unknown'))
-        }
-        acc.end(dep)
-
-        return ((dep: any): T)
-    }
-
-    resolveModel(annotation: ModelAnnotation): ModelDep {
-        throw new Error('Dep nodes for data must be resolved in state converter')
-    }
-
-    _resolveMiddlewares<A: Array<FactoryDep>, B: Array<ClassDep>>(mdls: ?Array<Dependency>): ?A|B {
-        let result: ?Array<AnyDep> = null;
-        if (mdls && mdls.length) {
-            result = [];
-            for (let i = 0, l = mdls.length; i < l; i++) {
-                result.push(this._resolve(mdls[i]))
-            }
-        }
-
-        return result
-    }
-
-    _getDeps(depsAnnotations: Deps): {
-        deps: Array<AnyDep>,
-        depNames: ?Array<string>
-    } {
-        let depNames: ?Array<string> = null;
-        const deps: Array<AnyDep> = [];
-        if (Array.isArray(depsAnnotations)) {
-            for (let i = 0, l = depsAnnotations.length; i < l; i++) {
-                deps.push(this._resolve(depsAnnotations[i]))
-            }
-        } else {
-            depNames = Object.keys(depsAnnotations)
-            for (let i = 0, l = depNames.length; i < l; i++) {
-                deps.push(this._resolve(depsAnnotations[depNames[i]]))
-            }
-        }
-
-        return {
-            deps,
-            depNames
-        }
-    }
-
-    resolveClass(annotation: ClassAnnotation): ClassDep {
-        const middlewares = this._resolveMiddlewares(this._middlewares[annotation.id])
-        const {deps, depNames} = this._getDeps(annotation.deps || [])
-
-        return new ClassDepImpl(
-            annotation.info,
-            deps,
-            depNames,
-            annotation.proto,
-            annotation.hooks,
-            middlewares
-        )
-    }
-
-    resolveFactory(annotation: FactoryAnnotation): FactoryDep {
-        const middlewares = this._resolveMiddlewares(this._middlewares[annotation.id])
-        const {deps, depNames} = this._getDeps(annotation.deps || [])
-
-        return new FactoryDepImpl(
-            annotation.info,
-            deps,
-            depNames,
-            annotation.fn,
-            annotation.hooks,
-            middlewares
-        )
-    }
-
-    resolveMeta(annotation: MetaAnnotation): MetaDep {
-        const sourceDep: ModelDep = this._resolve(annotation.source);
-        const sources: Array<ModelDep> = sourceDep.childs.concat(sourceDep);
-
-        return new MetaDepImpl(annotation.info, sources)
-    }
-
-    resolveSetter(annotation: SetterAnnotation): SetterDep {
-        const facet: FactoryDep = this._resolve(annotation.facet);
-        const target: ModelDep = this._resolve(annotation.model);
-
-        return new SetterDepImpl(annotation.info, facet, target.set)
     }
 }

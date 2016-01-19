@@ -8,7 +8,6 @@ import {
     ModelAnnotationImpl,
     SetterAnnotationImpl
 } from './annotationImpl'
-
 import type {
     // Deps,
     Hooks,
@@ -16,12 +15,16 @@ import type {
     AnnotationDriver,
     AnyAnnotation
 } from './annotationInterfaces'
+
 /* eslint-disable no-undef */
 
-export default function createAnnotations(driver: AnnotationDriver, tags: Array<string> = []): IAnnotations {
+export default function createAnnotations(
+    driver: AnnotationDriver,
+    tags: Array<string> = []
+): IAnnotations {
     return {
-        klass<T: Object>(...deps: Array<any>): (target: Class<T>) => T {
-            return function _factory(target: Class<T>): T {
+        klass<T: Function>(...deps: Array<any>): (target: T) => T {
+            return function _factory(target: T): T {
                 return driver.set(target, new ClassAnnotationImpl(
                     target,
                     tags,
@@ -40,7 +43,7 @@ export default function createAnnotations(driver: AnnotationDriver, tags: Array<
             }
         },
 
-        meta<T>(source: Class<T>): T {
+        meta<T: Function>(source: T): Function {
             function dummyTargetId() {}
             return driver.set(dummyTargetId, new MetaAnnotationImpl(
                 source,
@@ -48,13 +51,17 @@ export default function createAnnotations(driver: AnnotationDriver, tags: Array<
             ))
         },
 
-        model<T>(source: Class<T>): T {
+        model<T: Function>(source: T): T {
             return driver.set(source, new ModelAnnotationImpl(source, tags))
         },
 
         setter<T: Function, M: Object>(model: Class<M>, ...deps: Array<any>): (target: T) => T {
             return function _setter(target: T): T {
-                const facet = driver.set(function setterFacetId() {}, new FactoryAnnotationImpl(target, tags, deps))
+                function setterFacetId() {}
+                const facet = driver.set(
+                    setterFacetId,
+                    new FactoryAnnotationImpl(target, tags, deps)
+                )
                 return driver.set(target, new SetterAnnotationImpl(model, facet, tags))
             }
         },

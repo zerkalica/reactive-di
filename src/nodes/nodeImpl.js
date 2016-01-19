@@ -1,90 +1,110 @@
 /* @flow */
 
-import ModelImpl from './impl/ModelDepImpl'
 import CacheImpl from './impl/CacheImpl'
-import type {Info, Hooks} from '../annotations/annotationInterfaces'
+import EntityMetaImpl from './impl/EntityMetaImpl'
+import ModelImpl from './impl/ModelDepImpl'
 import {HooksImpl} from '../annotations/annotationImpl'
-
+import type {Info, Hooks} from '../annotations/annotationInterfaces'
 import type {
     Cache,
     FactoryDep,
     ModelDep,
     ClassDep,
-    AnyDep
+    AnyDep,
+    IEntityMeta
 } from './nodeInterfaces'
+
+import type {DepId} from '../interfaces'
 
 export {ModelImpl}
 
 export class ClassDepImpl<T> {
-    kind: 2; // 'klass';
+    kind: 'class';
+    id: DepId;
     cache: Cache<T>;
     info: Info;
+    relations: Array<AnyDep>;
     hooks: Hooks<T>;
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<ClassDep>;
     proto: Class<T>;
 
-    constructor(info: Info, deps: Array<AnyDep>, depNames: ?Array<string>, proto: Class<T>, hooks: ?Hooks<T>, middlewares: ?Array<ClassDep>) {
-        this.kind = 2
+    constructor(
+        id: DepId,
+        info: Info,
+        proto: Class<T>,
+        hooks: ?Hooks<T>
+    ) {
+        this.kind = 'class'
+        this.id = id
         this.cache = new CacheImpl()
         this.info = info
         this.hooks = hooks || new HooksImpl()
-        this.deps = deps
-        this.depNames = depNames
         this.proto = proto
-        this.middlewares = middlewares
+        this.relations = []
     }
 }
 
 export class FactoryDepImpl<T> {
-    kind: 3; // 'factory';
+    kind: 'factory';
+    id: DepId;
     cache: Cache<T>;
     info: Info;
+    relations: Array<AnyDep>;
     hooks: Hooks<T>;
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<FactoryDep>;
     fn: Function;
 
-    constructor(info: Info, deps: Array<AnyDep>, depNames: ?Array<string>, fn: Function, hooks: ?Hooks<T>, middlewares: ?Array<FactoryDep>) {
-        this.kind = 3
+    constructor(
+        id: DepId,
+        info: Info,
+        fn: Function,
+        hooks: ?Hooks<T>
+    ) {
+        this.kind = 'factory'
+        this.id = id
         this.cache = new CacheImpl()
         this.info = info
         this.hooks = hooks || new HooksImpl()
-        this.deps = deps
-        this.depNames = depNames
         this.fn = fn
-        this.middlewares = middlewares
+        this.relations = []
     }
 }
 
-export class MetaDepImpl<T> {
-    kind: 4; // 'meta';
-    cache: Cache<T>;
+export class MetaDepImpl {
+    kind: 'meta';
+    id: DepId;
+    cache: Cache<IEntityMeta>;
     info: Info;
+    relations: Array<AnyDep>;
     sources: Array<ModelDep>;
 
-    constructor(info: Info, sources: Array<ModelDep>) {
-        this.kind = 4
-        this.cache = new CacheImpl()
+    constructor(id: DepId, info: Info) {
+        this.kind = 'meta'
+        this.id = id
+        this.cache = new CacheImpl(new EntityMetaImpl())
         this.info = info
-        this.sources = sources
+        this.relations = []
     }
 }
 
 export class SetterDepImpl<T, V> {
-    kind: 5; // 'setter';
+    kind: 'setter';
+    id: DepId;
     cache: Cache<V>;
     info: Info;
+    relations: Array<AnyDep>;
     facet: FactoryDep<T>;
     set: (v: T|Promise<T>) => void;
 
-    constructor(info: Info, facet: FactoryDep<T>, set: (v: T|Promise<T>) => void) {
-        this.kind = 5
+    constructor(id: DepId, info: Info) {
+        this.kind = 'setter'
+        this.id = id
         this.cache = new CacheImpl()
         this.info = info
-        this.facet = facet
-        this.set = set
+        this.relations = []
     }
 }
