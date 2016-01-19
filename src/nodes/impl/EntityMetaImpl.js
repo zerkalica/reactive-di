@@ -1,9 +1,9 @@
 /* @flow */
 
 import merge from '../../utils/merge'
-import type {IEntityMeta} from '../nodeInterfaces'
+import type {EntityMeta} from '../nodeInterfaces'
 
-export type EntityMetaRec = {
+type EntityMetaRec = {
     pending?: boolean;
     rejected?: boolean;
     fulfilled?: boolean;
@@ -11,7 +11,7 @@ export type EntityMetaRec = {
     reason?: ?Error;
 }
 
-// implements IEntityMeta
+// implements EntityMeta
 export default class EntityMetaImpl {
     pending: boolean;
     rejected: boolean;
@@ -68,7 +68,7 @@ export default class EntityMetaImpl {
     }
 }
 
-export function updateMeta(meta: IEntityMeta, src: IEntityMeta): boolean {
+export function updateMeta(meta: EntityMeta, src: EntityMeta): boolean {
     const {pending, rejected, fulfilled, reason} = src
     let isChanged = false
     /* eslint-disable no-param-reassign */

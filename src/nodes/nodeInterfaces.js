@@ -1,8 +1,7 @@
 /* @flow */
-import type {Hooks, Info} from '../annotations/annotationInterfaces'
-import type {DepId} from '../interfaces'
+import type {Hooks, Info, DepId} from '../annotations/annotationInterfaces'
 
-export type IEntityMeta = {
+export type EntityMeta = {
     pending: boolean;
     rejected: boolean;
     fulfilled: boolean;
@@ -25,7 +24,7 @@ export type Cursor<T> = {
 export type ModelDep<T: Object> = {
     kind: 'model';
     id: DepId;
-    meta: IEntityMeta;
+    meta: EntityMeta;
     cache: Cache<T>;
     info: Info;
     relations: Array<AnyDep>;
@@ -63,7 +62,7 @@ export type FactoryDep<T> = {
 export type MetaDep = {
     kind: 'meta';
     id: DepId;
-    cache: Cache<IEntityMeta>;
+    cache: Cache<EntityMeta>;
     info: Info;
     relations: Array<AnyDep>;
     sources: Array<ModelDep>;
@@ -81,9 +80,13 @@ export type SetterDep<T: Function, V> = {
 
 export type AnyDep = ClassDep | ModelDep | FactoryDep | MetaDep | SetterDep;
 
-export type Processor = {
+export type Notifier = {
+    notify(): void;
+}
+
+export type DepProcessor = {
     resolve<T: AnyDep, V: any>(rec: T): V;
 }
 
-export type ProcessorType<T: AnyDep> = (rec: T, dep: Processor) => void;
+export type ProcessorType<T: AnyDep> = (rec: T, dep: DepProcessor) => void;
 export type ProcessorTypeMap = {[kind: string]: ProcessorType};

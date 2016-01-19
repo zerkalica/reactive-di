@@ -1,10 +1,11 @@
 /* @flow */
 
 /* eslint-disable no-unused-vars */
-import type {ProcessorTypeMap, AnyDep} from './nodeInterfaces'
+import type {DepProcessor, ProcessorTypeMap, AnyDep} from './nodeInterfaces'
 /* eslint-enable no-unused-vars */
 
-export default class DepProcessor {
+// implements DepProcessor
+export default class DepProcessorImpl {
     _processors: ProcessorTypeMap;
 
     constructor(processors: ProcessorTypeMap) {

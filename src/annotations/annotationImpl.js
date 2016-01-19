@@ -1,8 +1,8 @@
 /* @flow */
 
 import getFunctionName from '../utils/getFunctionName'
-import type {DepId} from '../interfaces'
 import type {
+    DepId,
     Dependency,
     Deps,
     Info,

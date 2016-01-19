@@ -9,7 +9,7 @@ import {
     SetterAnnotationImpl
 } from './annotationImpl'
 import type {
-    // Deps,
+    Deps,
     Hooks,
     IAnnotations,
     AnnotationDriver,
@@ -23,7 +23,7 @@ export default function createAnnotations(
     tags: Array<string> = []
 ): IAnnotations {
     return {
-        klass<T: Function>(...deps: Array<any>): (target: T) => T {
+        klass<T: Function>(...deps: Deps): (target: T) => T {
             return function _factory(target: T): T {
                 return driver.set(target, new ClassAnnotationImpl(
                     target,
@@ -33,7 +33,7 @@ export default function createAnnotations(
             }
         },
 
-        factory<T: Function>(...deps: Array<any>): (target: T) => T {
+        factory<T: Function>(...deps: Deps): (target: T) => T {
             return function _factory(target: T): T {
                 return driver.set(target, new FactoryAnnotationImpl(
                     target,
@@ -55,7 +55,7 @@ export default function createAnnotations(
             return driver.set(source, new ModelAnnotationImpl(source, tags))
         },
 
-        setter<T: Function, M: Object>(model: Class<M>, ...deps: Array<any>): (target: T) => T {
+        setter<T: Function, M: Object>(model: Class<M>, ...deps: Deps): (target: T) => T {
             return function _setter(target: T): T {
                 function setterFacetId() {}
                 const facet = driver.set(
@@ -69,15 +69,12 @@ export default function createAnnotations(
         hooks<T: Function>(hooks: Hooks): (target: T) => T {
             return function _hooks(target: T): T {
                 const annotation: AnyAnnotation = driver.get(target);
-                if (
-                    !annotation
-                    || annotation.kind !== 2
-                    || annotation.kind !== 3
-                    || annotation.kind !== 5
-                ) {
-                    throw new Error('Not an annotation given for hook')
+                if (annotation && (annotation.kind === 'class' || annotation.kind === 'factory')) {
+                    annotation.hooks = new HooksImpl(hooks)
+                } else {
+                    throw new Error('Hook can be applied to class or factory annotation. Given: ' + annotation.kind)
                 }
-                annotation.hooks = new HooksImpl(hooks)
+
                 return target
             }
         }

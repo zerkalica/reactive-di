@@ -1,7 +1,7 @@
 /* @flow */
 
 export type DepId = string;
-export type Dependency = Function;
+export type Dependency<T> = Class<T>;
 
 export type Hooks<T> = {
     onUnmount: () => void;
@@ -9,9 +9,7 @@ export type Hooks<T> = {
     onUpdate: (currentValue: ?T, nextValue: T) => void;
 }
 
-/* eslint-disable no-undef */
-
-export type Deps = Array<Dependency> | {[prop: string]: Dependency};
+export type Deps = Array<Dependency | {[prop: string]: Dependency}>;
 
 export type Info = {
     tags: Array<string>;
@@ -31,7 +29,9 @@ export type ClassAnnotation<T: Object> = {
     info: Info;
     hooks: ?Hooks<T>;
     deps: ?Deps;
+    /* eslint-disable no-undef */
     proto: Class<T>;
+    /* eslint-enable no-undef */
 }
 
 export type FactoryAnnotation<T> = {
@@ -64,9 +64,10 @@ export type AnyAnnotation = MetaAnnotation
     | FactoryAnnotation
     | ClassAnnotation;
 
+/* eslint-disable no-undef */
 export type AnnotationDriver = {
-    get<T: Function, A: AnyAnnotation>(v: T): A;
-    set<T: Function, A: AnyAnnotation>(v: T, annotation: A): T;
+    get<T, A: AnyAnnotation>(v: Dependency<T>): A;
+    set<T, D: Dependency<T>, A: AnyAnnotation>(v: Class<T>, annotation: A): D;
 };
 
 type Setter<T: Function, M: Object> = (model: Class<M>, ...rawDeps: Deps) => (sourceFn: T) => T;
@@ -75,6 +76,7 @@ type HooksAnnotation<T: Function> = (hooks: Hooks) => (target: T) => T;
 type Klass<T> = (...rawDeps: Deps) => (proto: Class<T>) => T;
 type Meta<T> = (value: T) => T;
 type Model<T> = (mdl: Class<T>) => T;
+/* eslint-enable no-undef */
 
 export type IAnnotations = {
     setter: Setter;

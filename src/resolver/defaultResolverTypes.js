@@ -23,12 +23,13 @@ import type {
     ClassDep,
     MetaDep
 } from '../nodes/nodeInterfaces'
-
 import type {AnnotationResolver} from './resolverInterfaces'
 
+/* eslint-disable no-unused-vars */
 export function resolveModel(annotation: ModelAnnotation): void {
     throw new Error('Dep nodes for data must be resolved in state converter')
 }
+/* eslint-enable no-unused-vars */
 
 function resolveMiddlewares<A: FactoryDep|ClassDep>(
     mdls: ?Array<Dependency>,

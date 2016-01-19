@@ -8,8 +8,8 @@ import type {MiddlewareFn, MiddlewareMap} from '../utils/createProxy'
 import {fastCreateObject, fastCall} from '../utils/fastCall'
 import type {
     AnyDep,
-    Processor,
-    IEntityMeta,
+    DepProcessor,
+    EntityMeta,
     ClassDep,
     FactoryDep,
     ModelDep,
@@ -19,7 +19,7 @@ import type {
 
 function getDeps(
     dep: ClassDep|FactoryDep,
-    acc: Processor
+    acc: DepProcessor
 ): Array<AnyDep|{[prop: string]: AnyDep}> {
     const {deps} = dep;
     const depNames: ?Array<string> = dep.depNames;
@@ -40,7 +40,7 @@ function getDeps(
 
 function resolveMiddlewares<A: ClassDep | FactoryDep, B: MiddlewareMap | MiddlewareFn>(
     middlewares: Array<A>,
-    acc: Processor
+    acc: DepProcessor
 ): Array<B> {
     const mdls: Array<B> = [];
     for (let i = 0, j = middlewares.length; i < j; i++) {
@@ -52,7 +52,7 @@ function resolveMiddlewares<A: ClassDep | FactoryDep, B: MiddlewareMap | Middlew
 
 export function resolveFactory<T>(
     factoryDep: FactoryDep<T>,
-    acc: Processor
+    acc: DepProcessor
 ): void {
     const {info, cache} = factoryDep
     const deps = getDeps(factoryDep, acc)
@@ -70,7 +70,7 @@ export function resolveFactory<T>(
 
 export function resolveClass<T: Object>(
     classDep: ClassDep<T>,
-    acc: Processor
+    acc: DepProcessor
 ): void {
     const deps = getDeps(classDep, acc)
     let obj = fastCreateObject(classDep.proto, deps);
@@ -85,7 +85,7 @@ export function resolveClass<T: Object>(
 
 export function resolveMeta(metaDep: MetaDep): void {
     const {sources, cache} = metaDep
-    const newMeta: IEntityMeta = new EntityMetaImpl();
+    const newMeta: EntityMeta = new EntityMetaImpl();
     let isChanged: boolean = false;
     for (let i = 0, l = sources.length; i < l; i++) {
         if (updateMeta(newMeta, sources[i].meta)) {
@@ -108,7 +108,7 @@ export function resolveModel<T: Object>(modelDep: ModelDep<T>): void {
 
 export function resolveSetter<T: Function, M>(
     setterDep: SetterDep<T, M>,
-    acc: Processor
+    acc: DepProcessor
 ): void {
     const {info, cache} = setterDep
     const value = acc.resolve(setterDep.facet)

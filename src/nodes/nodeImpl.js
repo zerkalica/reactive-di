@@ -4,17 +4,15 @@ import CacheImpl from './impl/CacheImpl'
 import EntityMetaImpl from './impl/EntityMetaImpl'
 import ModelImpl from './impl/ModelDepImpl'
 import {HooksImpl} from '../annotations/annotationImpl'
-import type {Info, Hooks} from '../annotations/annotationInterfaces'
+import type {DepId, Info, Hooks} from '../annotations/annotationInterfaces'
 import type {
     Cache,
     FactoryDep,
     ModelDep,
     ClassDep,
     AnyDep,
-    IEntityMeta
+    EntityMeta
 } from './nodeInterfaces'
-
-import type {DepId} from '../interfaces'
 
 export {ModelImpl}
 
@@ -28,12 +26,16 @@ export class ClassDepImpl<T> {
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<ClassDep>;
+    /* eslint-disable no-undef */
     proto: Class<T>;
+    /* eslint-enable no-undef */
 
     constructor(
         id: DepId,
         info: Info,
+        /* eslint-disable no-undef */
         proto: Class<T>,
+        /* eslint-enable no-undef */
         hooks: ?Hooks<T>
     ) {
         this.kind = 'class'
@@ -77,7 +79,7 @@ export class FactoryDepImpl<T> {
 export class MetaDepImpl {
     kind: 'meta';
     id: DepId;
-    cache: Cache<IEntityMeta>;
+    cache: Cache<EntityMeta>;
     info: Info;
     relations: Array<AnyDep>;
     sources: Array<ModelDep>;
