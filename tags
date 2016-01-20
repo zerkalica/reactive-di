@@ -63,7 +63,6 @@ build.dev	package.json	/^    "build.dev": "npm run build -- --watch",$/;"	f
 builddir	package.json	/^    "builddir": "dist"$/;"	f
 check	package.json	/^    "check": "flow check",$/;"	f
 clean	package.json	/^    "clean": "rm -rf $npm_package_options_builddir coverage",$/;"	f
-constructor	src/model/PureDataCursor.js	/^    set: (newModel: V) => boolean;$/;"	f
 createFromJS	dist/model/StateMapBuilder.js	/^function createFromJS \/*:: <T: Object>*\/(Proto \/*: Class<T>*\/, propCreators \/*: PropCreatorMap*\/) \/*: FromJS<T>*\/ {$/;"	f
 createFunctionProxy	dist/utils/createProxy.js	/^function createFunctionProxy(source \/*: Function*\/, middlewares \/*: Array<MiddlewareFn>*\/) \/*: Function*\/ {$/;"	f
 createFunctionProxy.functionProxy	dist/utils/createProxy.js	/^    function functionProxy() \/*: any*\/ {$/;"	f
