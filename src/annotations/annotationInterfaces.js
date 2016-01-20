@@ -2,29 +2,37 @@
 
 export type DepId = string;
 
-type DepFn<T> = (...x: any) => T;
+export type DepFn<T> = (...x: any) => T;
 /* eslint-disable no-undef */
 export type Dependency<T> = DepFn<T>|Class<T>;
 /* eslint-enable */
 
+export type HooksRec<T> = {
+    onUnmount?: () => void;
+    onMount?: () => void;
+    onUpdate?: (currentValue: T, nextValue: T) => void;
+}
+
 export type Hooks<T> = {
     onUnmount: () => void;
     onMount: () => void;
-    onUpdate: (currentValue: ?T, nextValue: T) => void;
+    onUpdate: (currentValue: T, nextValue: T) => void;
 }
 
-export type Deps = Array<Dependency | {[prop: string]: Dependency}>;
+export type Deps<T> = Array<Dependency<T> | {[prop: string]: Dependency<T>}>;
 
 export type Info = {
     tags: Array<string>;
     displayName: string;
 }
 
-export type ModelAnnotation = {
+export type ModelAnnotation<T: Object> = {
     kind: 'model';
     id: DepId;
     info: Info;
-    source: Dependency;
+    /* eslint-disable no-undef */
+    source: Class<T>;
+    /* eslint-enable no-undef */
 }
 
 export type ClassAnnotation<T: Object> = {
@@ -38,28 +46,30 @@ export type ClassAnnotation<T: Object> = {
     /* eslint-enable no-undef */
 }
 
-export type FactoryAnnotation<T> = {
+export type FactoryAnnotation<T: Function> = {
     kind: 'factory';
     id: DepId;
     info: Info;
     hooks: ?Hooks<T>;
     deps: ?Deps;
-    fn: Function;
+    fn: T;
 }
 
-export type MetaAnnotation = {
+export type MetaAnnotation<T> = {
     kind: 'meta';
     id: DepId;
     info: Info;
-    source: Dependency;
+    source: Dependency<T>;
 }
 
-export type SetterAnnotation = {
+export type SetterAnnotation<M, T: Function> = {
     kind: 'setter';
     id: DepId;
     info: Info;
-    model: Dependency;
-    facet: Dependency;
+    /* eslint-disable no-undef */
+    model: Class<M>;
+    /* eslint-enable no-undef */
+    facet: T;
 }
 
 export type AnyAnnotation = MetaAnnotation
@@ -69,32 +79,20 @@ export type AnyAnnotation = MetaAnnotation
     | ClassAnnotation;
 
 /* eslint-disable no-undef */
-
-export type AnnotationDriverGetter = {
-    get<T, A: AnyAnnotation>(v: Dependency<T>): A;
+export type AnnotationDriver = {
+    get<R: any, T: Dependency<R>, A: AnyAnnotation>(dep: T): A;
+    set<R: any, T: Dependency<R>, A: AnyAnnotation>(dep: T, annotation: A): T;
 };
-
-export type AnnotationDriverSetter = {
-    set<T, D: Dependency<T>, A: AnyAnnotation>(v: Class<T>, annotation: A): D;
-};
-
-export type AnnotationDriver = AnnotationDriverGetter & AnnotationDriverSetter;
-
-type Setter<T: Function, M: Object> = (model: Class<M>, ...rawDeps: Deps) => (sourceFn: T) => T;
-type Factory<T: Function> = (...rawDeps: Deps) => (fn: T) => T;
-type HooksAnnotation<T: Function> = (hooks: Hooks) => (target: T) => T;
-type Klass<T> = (...rawDeps: Deps) => (proto: Class<T>) => T;
-type Meta<T> = (value: T) => T;
-type Model<T> = (mdl: Class<T>) => T;
-/* eslint-enable no-undef */
 
 export type IAnnotations = {
-    setter: Setter;
-    factory: Factory;
-    klass: Klass;
-    model: Model;
-    meta: Meta;
-    hooks: HooksAnnotation;
+    /*
+    klass<P: Object, T: Class<P>>(...deps: Deps): (target: T) => T,
+    factory<A, T: DepFn<A>>(...deps: Deps): (target: T) => T,
+    meta<A, T: Dependency<A>, R: Function>(source: T): R,
+    model<P: Object, T: Class<P>>(source: T): T,
+    setter<P: Object, M: Class<P>, A, T: DepFn<A>>(model: M, ...deps: Deps): (target: T) => T,
+    hooks<A, T: Dependency<A>>(hooks: Hooks<T>): (target: T) => T
+    */
 }
 
 /* eslint-enable no-undef */

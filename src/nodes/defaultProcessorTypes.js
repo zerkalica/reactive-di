@@ -17,6 +17,12 @@ import type {
     SetterDep
 } from './nodeInterfaces'
 
+/* eslint-disable no-unused-vars */
+import type {
+    DepFn
+} from '../annotations/annotationInterfaces'
+/* eslint-enable no-unused-vars */
+
 function getDeps(
     dep: ClassDep|FactoryDep,
     acc: DepProcessor
@@ -38,7 +44,7 @@ function getDeps(
     return depNames ? [argsObject] : argsArray
 }
 
-function resolveMiddlewares<A: ClassDep | FactoryDep, B: MiddlewareMap | MiddlewareFn>(
+function resolveMiddlewares<A: ClassDep|FactoryDep, B: MiddlewareMap|MiddlewareFn>(
     middlewares: Array<A>,
     acc: DepProcessor
 ): Array<B> {
@@ -50,7 +56,7 @@ function resolveMiddlewares<A: ClassDep | FactoryDep, B: MiddlewareMap | Middlew
     return mdls
 }
 
-export function resolveFactory<T>(
+export function resolveFactory<T: Function>(
     factoryDep: FactoryDep<T>,
     acc: DepProcessor
 ): void {
@@ -67,6 +73,7 @@ export function resolveFactory<T>(
     cache.isRecalculate = false
     cache.value = result
 }
+resolveFactory.kind = 'factory'
 
 export function resolveClass<T: Object>(
     classDep: ClassDep<T>,
@@ -82,6 +89,7 @@ export function resolveClass<T: Object>(
     cache.isRecalculate = false
     cache.value = obj
 }
+resolveClass.kind = 'class'
 
 export function resolveMeta(metaDep: MetaDep): void {
     const {sources, cache} = metaDep
@@ -99,15 +107,17 @@ export function resolveMeta(metaDep: MetaDep): void {
     }
     cache.isRecalculate = false
 }
+resolveMeta.kind = 'meta'
 
 export function resolveModel<T: Object>(modelDep: ModelDep<T>): void {
     const {cache} = modelDep
     cache.isRecalculate = false
     cache.value = modelDep.get()
 }
+resolveModel.kind = 'model'
 
-export function resolveSetter<T: Function, M>(
-    setterDep: SetterDep<T, M>,
+export function resolveSetter<A, T: DepFn<A>>(
+    setterDep: SetterDep<A, T>,
     acc: DepProcessor
 ): void {
     const {info, cache} = setterDep
@@ -118,3 +128,4 @@ export function resolveSetter<T: Function, M>(
     cache.isRecalculate = false
     cache.value = createFunctionProxy(value, [setterDep.set])
 }
+resolveSetter.kind = 'setter'

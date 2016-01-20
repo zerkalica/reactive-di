@@ -50,15 +50,9 @@ function normalizeMiddlewares(
 */
 
 // implements Notifier
-class Notifier {
-    constructor(depProcessor: DepProcessor) {
-        this._depProcessor = depProcessor
-    }
-}
-
 // implements ReactiveDi
 export default class ReactiveDiImpl {
-    _listeners: Array<AnyDep>;
+    _listeners: Array<ClassDep|FactoryDep>;
     _depProcessor: DepProcessor;
     _resolver: DependencyResolver;
 
@@ -83,14 +77,14 @@ export default class ReactiveDiImpl {
         }
     }
 
-    mount<D: ClassDep|FactoryDep, T, A: Dependency<T>>(annotatedDep: A): () => void {
+    mount<R: any, T: Dependency<R>, D: ClassDep<R>|FactoryDep<T>>(annotatedDep: T): () => void {
         const dep: D = this._resolver.get(annotatedDep);
         const hooks = dep.hooks
         const self = this
 
         hooks.onMount()
         this._listeners.push(dep)
-        function listenersFilter(registeredDep: A): boolean {
+        function listenersFilter(registeredDep: ClassDep|FactoryDep): boolean {
             return dep !== registeredDep
         }
         function unmount() {
@@ -101,7 +95,9 @@ export default class ReactiveDiImpl {
         return unmount
     }
 
-    get<T, A: Dependency<T>>(annotatedDep: A): T {
-        return this._depProcessor.resolve(this._resolver.get(annotatedDep))
+    get<R: any, T: Dependency<R>, D: AnyDep<R, T>>(annotatedDep: T): R {
+        const dep: D = this._resolver.get(annotatedDep);
+
+        return this._depProcessor.resolve(dep)
     }
 }

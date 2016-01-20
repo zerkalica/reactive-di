@@ -9,9 +9,9 @@ function setInPath<V: Object, S: Object>(
     state: S,
     path: Array<string>,
     index: number
-): S {
+): S|V {
     if (index === path.length) {
-        return ((newModel: any): S)
+        return newModel
     }
 
     const rec = {}
@@ -21,6 +21,8 @@ function setInPath<V: Object, S: Object>(
     return state.copy(rec)
 }
 
+type Selector<T: Object, P: Object> = (state: T) => P;
+
 // implements Cursor
 export default class PureDataCursor<S: Object, V: Object> {
     get: () => V;
@@ -28,7 +30,7 @@ export default class PureDataCursor<S: Object, V: Object> {
 
     constructor(path: Array<string>, stateRef: {state: S}) {
         /* eslint-disable no-new-func */
-        const selector: Function = new Function('s', 'return ' + ['s'].concat(path).join('.'));
+        const selector: Selector = new Function('s', 'return ' + ['s'].concat(path).join('.'));
         /* eslint-enable no-new-func */
         this.get = function get(): V {
             return selector(stateRef.state)
@@ -38,7 +40,7 @@ export default class PureDataCursor<S: Object, V: Object> {
             const isChanged = newModel !== selector(state)
             if (isChanged) {
                 /* eslint-disable no-param-reassign */
-                stateRef.state = setInPath(newModel, state, path, 0)
+                stateRef.state = ((setInPath(newModel, state, path, 0): any): S)
             }
 
             return isChanged

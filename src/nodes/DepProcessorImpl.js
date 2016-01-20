@@ -1,8 +1,16 @@
 /* @flow */
 
 /* eslint-disable no-unused-vars */
-import type {DepProcessor, ProcessorTypeMap, AnyDep} from './nodeInterfaces'
-/* eslint-enable no-unused-vars */
+import type {
+    DepProcessor,
+    Cache,
+    EntityMeta,
+    ProcessorTypeMap,
+    AnyDep
+} from './nodeInterfaces'
+import type {
+    Dependency
+} from '../annotations/annotationInterfaces'
 
 // implements DepProcessor
 export default class DepProcessorImpl {
@@ -12,18 +20,19 @@ export default class DepProcessorImpl {
         this._processors = processors
     }
 
-    resolve<T: AnyDep>(dep: T): any {
-        const cache = dep.cache
-        if (!cache.isRecalculate) {
-            return cache.value
-        }
-        try {
-            this._processors[dep.kind](dep, this)
-        } catch (e) {
-            e.message = e.message + ', ' + dep.info.displayName
-            throw e
+    /* eslint-disable no-unused-vars */
+    resolve<A: any, B: Dependency<A>, T: AnyDep<A, B>>(dep: T): A {
+    /* eslint-enable no-unused-vars */
+        const cache: Cache = dep.cache;
+        if (cache.isRecalculate) {
+            try {
+                this._processors[dep.kind](dep, (this: DepProcessor))
+            } catch (e) {
+                e.message = e.message + ', ' + dep.info.displayName
+                throw e
+            }
         }
 
-        return cache.value
+        return ((cache.value): any)
     }
 }

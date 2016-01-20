@@ -52,8 +52,8 @@ export default class StateMapBuilder<State: Object> {
         return this._stateMap
     }
 
-    _getAnnotation(dep: Object): ModelAnnotation {
-        return this._driver.get(dep.constructor)
+    _getAnnotation<T: Object, C: Class<T>>(dep: T): ModelAnnotation {
+        return this._driver.get((dep.constructor: C))
     }
 
     _build<T: Object>(obj: T, parents: Array<ModelDep>, path: Array<string>): FromJS<T> {

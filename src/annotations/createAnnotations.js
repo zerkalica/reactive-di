@@ -10,10 +10,15 @@ import {
 } from './annotationImpl'
 import type {
     Deps,
+    DepFn,
+    Dependency,
     Hooks,
+    HooksRec,
     IAnnotations,
     AnnotationDriver,
-    AnyAnnotation
+    AnyAnnotation,
+    ClassAnnotation,
+    FactoryAnnotation
 } from './annotationInterfaces'
 
 /* eslint-disable no-undef */
@@ -23,7 +28,8 @@ export default function createAnnotations(
     tags: Array<string> = []
 ): IAnnotations {
     return {
-        klass<T: Function>(...deps: Deps): (target: T) => T {
+        /* eslint-disable no-unused-vars */
+        klass<P: Object, T: Class<P>>(...deps: Deps): (target: T) => T {
             return function _factory(target: T): T {
                 return driver.set(target, new ClassAnnotationImpl(
                     target,
@@ -33,7 +39,7 @@ export default function createAnnotations(
             }
         },
 
-        factory<T: Function>(...deps: Deps): (target: T) => T {
+        factory<A, T: DepFn<A>>(...deps: Deps): (target: T) => T {
             return function _factory(target: T): T {
                 return driver.set(target, new FactoryAnnotationImpl(
                     target,
@@ -43,19 +49,19 @@ export default function createAnnotations(
             }
         },
 
-        meta<T: Function>(source: T): Function {
-            function dummyTargetId() {}
-            return driver.set(dummyTargetId, new MetaAnnotationImpl(
+        meta<A: any, T: Dependency<A>>(source: T): () => void {
+            function dummyTargetId(): void {}
+            return driver.set((dummyTargetId: any), new MetaAnnotationImpl(
                 source,
                 tags
             ))
         },
 
-        model<T: Function>(source: T): T {
+        model<P: Object, T: Class<P>>(source: T): T {
             return driver.set(source, new ModelAnnotationImpl(source, tags))
         },
 
-        setter<T: Function, M: Object>(model: Class<M>, ...deps: Deps): (target: T) => T {
+        setter<P: Object, M: Class<P>, A, T: DepFn<A>>(model: M, ...deps: Deps): (target: T) => T {
             return function _setter(target: T): T {
                 function setterFacetId() {}
                 const facet = driver.set(
@@ -66,9 +72,9 @@ export default function createAnnotations(
             }
         },
 
-        hooks<T: Function>(hooks: Hooks): (target: T) => T {
+        hooks<A: any, T: Dependency<A>>(hooks: HooksRec<T>): (target: T) => T {
             return function _hooks(target: T): T {
-                const annotation: AnyAnnotation = driver.get(target);
+                const annotation: ClassAnnotation|FactoryAnnotation<T> = driver.get(target);
                 if (annotation && (annotation.kind === 'class' || annotation.kind === 'factory')) {
                     annotation.hooks = new HooksImpl(hooks)
                 } else {

@@ -1,19 +1,23 @@
 /* @flow */
 /* eslint-disable no-undef, no-unused-vars */
 
-import type {DepId, AnyAnnotation} from '../annotations/annotationInterfaces'
+import type {
+    Dependency,
+    DepId,
+    AnyAnnotation
+} from '../annotations/annotationInterfaces'
 import type {AnyDep} from '../nodes/nodeInterfaces'
 
 export type AnnotationResolver = {
-    begin<T: AnyDep>(dep: T): void;
-    end<T: AnyDep>(dep: T): void;
-    resolve<T: AnyDep, D: Function>(annotatedDep: D): T;
+    begin<A: any, T: Dependency<A>, R: AnyDep<A, T>>(dep: R): void;
+    end<A: any, T: Dependency<A>, R: AnyDep<A, T>>(dep: R): void;
+    resolve<A: any, T: Dependency<A>, R: AnyDep<A, T>>(annotatedDep: T): R;
 }
 
 export type DependencyResolver = {
-    get<T: AnyDep, D: Function>(annotatedDep: D): T;
+    get<A: any, T: Dependency<A>, R: AnyDep<A, T>>(annotatedDep: T): R;
 }
 
 export type ResolverType<A: AnyAnnotation> = (annotation: A, acc: AnnotationResolver) => void;
 export type ResolverTypeMap = {[kind: string]: ResolverType};
-export type Middlewares = {[id: DepId]: Array<Function>};
+export type Middlewares = {[id: DepId]: Array<Dependency>};

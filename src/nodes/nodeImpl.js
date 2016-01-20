@@ -87,7 +87,8 @@ export class MetaDepImpl {
     constructor(id: DepId, info: Info) {
         this.kind = 'meta'
         this.id = id
-        this.cache = new CacheImpl(new EntityMetaImpl())
+        this.cache = new CacheImpl()
+        this.cache.value = new EntityMetaImpl()
         this.info = info
         this.relations = []
     }

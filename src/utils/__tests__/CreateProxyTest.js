@@ -2,7 +2,7 @@
 /* eslint-env mocha */
 
 import assert from 'power-assert'
-import createProxy from '../createProxy'
+import {createObjectProxy, createFunctionProxy} from '../createProxy'
 import {spy} from 'sinon'
 
 describe('createProxyTest', () => {
@@ -13,7 +13,7 @@ describe('createProxyTest', () => {
 
         it('should call function proxy with result and args of origin', () => {
             const middleware = spy()
-            const proxified = createProxy(myFunc, [middleware])
+            const proxified = createFunctionProxy(myFunc, [middleware])
             proxified(1, 2, 'test')
             assert(middleware.calledOnce)
             assert(middleware.firstCall.calledWith('retVal', 1, 2, 'test'))
@@ -21,7 +21,7 @@ describe('createProxyTest', () => {
 
         it('should pass origin return result to proxy', () => {
             const middleware = spy()
-            const proxified = createProxy(myFunc, [middleware])
+            const proxified = createFunctionProxy(myFunc, [middleware])
             const val = proxified(1, 2, 'test')
             assert(val === 'retVal')
         })
@@ -29,7 +29,7 @@ describe('createProxyTest', () => {
         it('should handle multiple middlewares', () => {
             const middleware1 = spy()
             const middleware2 = spy()
-            const proxified = createProxy(myFunc, [middleware1, middleware2])
+            const proxified = createFunctionProxy(myFunc, [middleware1, middleware2])
             proxified(1, 2, 'test')
             assert(middleware1.calledOnce)
             assert(middleware2.calledOnce)
@@ -54,7 +54,7 @@ describe('createProxyTest', () => {
                 a: spy()
             }
             const original = new My()
-            const proxified = createProxy(original, [middleware])
+            const proxified = createObjectProxy(original, [middleware])
 
             assert(proxified instanceof My)
             assert(proxified !== original)
@@ -65,7 +65,7 @@ describe('createProxyTest', () => {
                 a: spy()
             }
             const original = new My()
-            const proxified = createProxy(original, [middleware])
+            const proxified = createObjectProxy(original, [middleware])
             const valA = proxified.a('test')
 
             assert(valA === 'test1')
@@ -77,7 +77,7 @@ describe('createProxyTest', () => {
                 a: spy()
             }
             const original = new My()
-            const proxified = createProxy(original, [middleware])
+            const proxified = createObjectProxy(original, [middleware])
             const valA = proxified.b(123)
             assert(proxified.b !== original.b)
             assert(valA === 124)
@@ -87,7 +87,7 @@ describe('createProxyTest', () => {
             const middleware1 = {a: spy()}
             const middleware2 = {a: spy()}
             const original = new My()
-            const proxified = createProxy(original, [middleware1, middleware2])
+            const proxified = createObjectProxy(original, [middleware1, middleware2])
             proxified.a('test')
             assert(middleware1.a.calledOnce)
             assert(middleware2.a.calledOnce)

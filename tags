@@ -63,6 +63,7 @@ build.dev	package.json	/^    "build.dev": "npm run build -- --watch",$/;"	f
 builddir	package.json	/^    "builddir": "dist"$/;"	f
 check	package.json	/^    "check": "flow check",$/;"	f
 clean	package.json	/^    "clean": "rm -rf $npm_package_options_builddir coverage",$/;"	f
+constructor	src/model/PureDataCursor.js	/^    set: (newModel: V) => boolean;$/;"	f
 createFromJS	dist/model/StateMapBuilder.js	/^function createFromJS \/*:: <T: Object>*\/(Proto \/*: Class<T>*\/, propCreators \/*: PropCreatorMap*\/) \/*: FromJS<T>*\/ {$/;"	f
 createFunctionProxy	dist/utils/createProxy.js	/^function createFunctionProxy(source \/*: Function*\/, middlewares \/*: Array<MiddlewareFn>*\/) \/*: Function*\/ {$/;"	f
 createFunctionProxy.functionProxy	dist/utils/createProxy.js	/^    function functionProxy() \/*: any*\/ {$/;"	f
@@ -76,7 +77,6 @@ createStateMap	dist/model/createStateMap.js	/^function createStateMap(state \/*:
 createStateMap.select	dist/model/createStateMap.js	/^    function select(path \/*: Array<string>*\/, fromJS \/*: FromJS*\/) {$/;"	f
 createTestColl	dist/utils/__tests__/CollectionTest.js	/^function createTestColl() \/*: TestColl*\/ {$/;"	f
 defaultFn	dist/meta/DepMeta.js	/^function defaultFn() {}$/;"	f
-defaultFn	src/annotations/annotationImpl.js	/^function defaultFn() {}$/;"	f
 description	package.json	/^  "description": "Reactive dependency injection",$/;"	f
 devDependencies	package.json	/^  "devDependencies": {$/;"	f
 eslint	package.json	/^    "eslint": "^1.10.3",$/;"	f
@@ -119,8 +119,6 @@ publishConfig	package.json	/^  "publishConfig": {$/;"	f
 registry	package.json	/^    "registry": "https:\/\/registry.npmjs.org"$/;"	f
 repository	package.json	/^  "repository": {$/;"	f
 scripts	package.json	/^  "scripts": {$/;"	f
-select	src/ReactiveDiImpl.js	/^        function select(path: Array<string>, fromJS: FromJS) {$/;"	f
-select	src/model/createStateMap.js	/^    function select(path: Array<string>, fromJS: FromJS) {$/;"	f
 setInPath	dist/model/DataCursor.js	/^function setInPath \/*:: <V: Object, S: StateModel>*\/(newModel \/*: V*\/, state \/*: S*\/, path \/*: Array<string>*\/, index \/*: number*\/) \/*: StateModel*\/ {$/;"	f
 setter	dist/Annotations.js	/^function setter \/*:: <S: StateModel>*\/(driver \/*: AbstractMetaDriver*\/, tags \/*: Array<string>*\/, dep \/*: Dependency<S>*\/, rawDeps \/*: Array<Dependency>*\/) \/*: DepDecoratorFn*\/ {$/;"	f
 sinon	package.json	/^    "sinon": "^1.17.2"$/;"	f

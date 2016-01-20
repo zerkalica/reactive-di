@@ -7,7 +7,9 @@ import type {
     AnnotationDriver,
     AnyAnnotation
 } from '../annotations/annotationInterfaces'
-import type {AnyDep} from '../nodes/nodeInterfaces'
+import type {
+    AnyDep
+} from '../nodes/nodeInterfaces'
 import type {
     ResolverTypeMap,
     DependencyResolver,
@@ -32,12 +34,12 @@ export default class AnnotationResolverImpl {
         this._resolvers = resolvers
     }
 
-    begin<T: AnyDep>(dep: T): void {
+    begin<A: any, T: Dependency<A>, R: AnyDep<A, T>>(dep: R): void {
         this._parents.push(new Set())
         this._cache[dep.id] = dep
     }
 
-    end<T: AnyDep>(dep: T): void {
+    end<A: any, T: Dependency<A>, R: AnyDep<A, T>>(dep: R): void {
         const cache = this._cache
         const depSet: Set<DepId> = this._parents.pop();
         function iteratePathSet(relationId: DepId): void {
@@ -46,7 +48,7 @@ export default class AnnotationResolverImpl {
         depSet.forEach(iteratePathSet)
     }
 
-    _inheritRelations<T: AnyDep>(dep: T): void {
+    _inheritRelations<A: any, T: Dependency<A>, R: AnyDep<A, T>>(dep: R): void {
         const relations: Array<AnyDep> = dep.relations;
         const parents: Array<Set<DepId>> = this._parents;
         for (let i = 0, l = relations.length; i < l; i++) {
@@ -67,10 +69,10 @@ export default class AnnotationResolverImpl {
         return this._cache[id]
     }
 
-    resolve<T: AnyDep, D: Function>(annotatedDep: D): T {
+    resolve<A: any, T: Dependency<A>, R: AnyDep<A, T>>(annotatedDep: T): R {
         const {_cache: cache} = this
         const annotation: AnyAnnotation = this._driver.get(annotatedDep);
-        let dep: T = cache[annotation.id];
+        let dep: R = cache[annotation.id];
         if (dep) {
             this._inheritRelations(dep)
         } else {
@@ -79,12 +81,12 @@ export default class AnnotationResolverImpl {
         return dep
     }
 
-    get<T: AnyDep, D: Function>(annotatedDep: D): T {
+    get<A: any, T: Dependency<A>, R: AnyDep<A, T>>(annotatedDep: T): R {
         const {_cache: cache} = this
         const annotation: AnyAnnotation = this._driver.get(annotatedDep);
-        let dep: T = cache[annotation.id];
+        let dep: R = cache[annotation.id];
         if (!dep) {
-            dep = this._resolve(annotatedDep)
+            dep = this._resolve(annotation)
         }
         return dep
     }

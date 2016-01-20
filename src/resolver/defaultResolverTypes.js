@@ -45,21 +45,22 @@ function resolveMiddlewares<A: FactoryDep|ClassDep>(
 
     return result
 }
-
+type DepMap = {[id: string]: Dependency};
 function getDeps(depsAnnotations: Deps, acc: AnnotationResolver): {
     deps: Array<AnyDep>,
     depNames: ?Array<string>
 } {
     let depNames: ?Array<string> = null;
     const deps: Array<AnyDep> = [];
-    if (Array.isArray(depsAnnotations)) {
-        for (let i = 0, l = depsAnnotations.length; i < l; i++) {
-            deps.push(acc.resolve(depsAnnotations[i]))
-        }
-    } else {
-        depNames = Object.keys(depsAnnotations)
-        for (let i = 0, l = depNames.length; i < l; i++) {
-            deps.push(acc.resolve(depsAnnotations[depNames[i]]))
+    for (let i = 0, l = depsAnnotations.length; i < l; i++) {
+        const annotation: Dependency|DepMap = depsAnnotations[i];
+        if (typeof annotation === 'function') {
+            deps.push(acc.resolve((annotation: Dependency)))
+        } else {
+            depNames = Object.keys(((annotation: any): DepMap))
+            for (let j = 0, k = depNames.length; j < k; j++) {
+                deps.push(acc.resolve(((annotation: any): DepMap)[depNames[j]]))
+            }
         }
     }
 

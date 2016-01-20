@@ -1,21 +1,15 @@
 /* @flow */
 
-import createId from './utils/createId'
-import createStateMap from './model/createStateMap'
 import merge from './utils/merge'
-import Annotations from './Annotations'
+import createAnnotations from './annotations/createAnnotations'
 import Collection from './utils/Collection'
-import EntityMeta from './cache/EntityMeta'
-import ReactiveDi from './ReactiveDi'
-import SymbolMetaDriver from './meta/drivers/SymbolMetaDriver'
+import ReactiveDi from './ReactiveDiImpl'
+import SymbolMetaDriver from './drivers/SymbolMetaDriver'
 
 export {
     merge,
-    createId,
-    Annotations,
+    createAnnotations,
     Collection,
-    EntityMeta,
     ReactiveDi,
-    createStateMap,
     SymbolMetaDriver
 }

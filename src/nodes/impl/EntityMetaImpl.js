@@ -26,47 +26,44 @@ export default class EntityMetaImpl {
         this.fulfilled = rec.fulfilled === undefined ? true : rec.fulfilled
         this.reason = rec.reason || null
     }
-
-    _copy(rec: EntityMetaRec = {}): EntityMetaImpl {
-        return merge(this, rec)
-    }
-
-    setNeedFetch(): EntityMetaImpl {
-        return this._copy({
-            needFetch: true
-        })
-    }
-
-    setPending(): EntityMetaImpl {
-        return this._copy({
-            pending: true,
-            rejected: false,
-            fulfilled: false,
-            needFetch: false,
-            reason: null
-        })
-    }
-
-    success(): EntityMetaImpl {
-        return this._copy({
-            pending: false,
-            rejected: false,
-            fulfilled: true,
-            needFetch: false,
-            reason: null
-        })
-    }
-
-    error(reason: Error): EntityMetaImpl {
-        return this._copy({
-            pending: false,
-            rejected: true,
-            fulfilled: false,
-            needFetch: false,
-            reason
-        })
-    }
 }
+
+export function setNeedFetch(meta: EntityMeta): EntityMeta {
+    return merge(meta, {
+        needFetch: true
+    })
+}
+
+export function setPending(meta: EntityMeta): EntityMeta {
+    return merge(meta, {
+        pending: true,
+        rejected: false,
+        fulfilled: false,
+        needFetch: false,
+        reason: null
+    })
+}
+
+export function setSuccess(meta: EntityMeta): EntityMeta {
+    return merge(meta, {
+        pending: false,
+        rejected: false,
+        fulfilled: true,
+        needFetch: false,
+        reason: null
+    })
+}
+
+export function setError(meta: EntityMeta, reason: Error): EntityMetaImpl {
+    return merge(meta, {
+        pending: false,
+        rejected: true,
+        fulfilled: false,
+        needFetch: false,
+        reason
+    })
+}
+
 
 export function updateMeta(meta: EntityMeta, src: EntityMeta): boolean {
     const {pending, rejected, fulfilled, reason} = src

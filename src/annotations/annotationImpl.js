@@ -3,10 +3,12 @@
 import getFunctionName from '../utils/getFunctionName'
 import type {
     DepId,
+    DepFn,
     Dependency,
     Deps,
     Info,
-    Hooks
+    Hooks,
+    HooksRec
 } from './annotationInterfaces'
 
 export class InfoImpl {
@@ -19,18 +21,15 @@ export class InfoImpl {
     }
 }
 
-function defaultFn() {}
+function defaultFn(): void {}
 
+// implements Hooks
 export class HooksImpl<T> {
     onUnmount: () => void;
     onMount: () => void;
-    onUpdate: (currentValue: ?T, nextValue: T) => void;
+    onUpdate: (currentValue: T, nextValue: T) => void;
 
-    constructor(r?: {
-        onUnmount?: () => void;
-        onMount?: () => void;
-        onUpdate?: (currentValue: ?T, nextValue: T) => void;
-    } = {}) {
+    constructor(r?: HooksRec<T> = {}) {
         this.onMount = r.onMount || defaultFn
         this.onUnmount = r.onUnmount || defaultFn
         this.onUpdate = r.onUpdate || defaultFn

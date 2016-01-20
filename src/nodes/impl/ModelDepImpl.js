@@ -1,14 +1,29 @@
 /* @flow */
 
 import CacheImpl from './CacheImpl'
-import EntityMetaImpl from './EntityMetaImpl'
-import type {DepId, Info} from '../../annotations/annotationInterfaces'
-import type {FromJS, ModelDep, Cache, AnyDep, Cursor, Notifier} from '../nodeInterfaces'
+import EntityMetaImpl, {
+    setPending,
+    setSuccess,
+    setError
+} from './EntityMetaImpl'
+import type {
+    DepId,
+    Info
+} from '../../annotations/annotationInterfaces'
+import type {
+    EntityMeta,
+    FromJS,
+    ModelDep,
+    Cache,
+    AnyDep,
+    Cursor,
+    Notifier
+} from '../nodeInterfaces'
 
-export default class ModelDepImpl<T> {
+export default class ModelDepImpl<T: Object> {
     kind: 'model';
     id: DepId;
-    meta: EntityMetaImpl;
+    meta: EntityMeta;
     cache: Cache<T>;
     info: Info;
     relations: Array<AnyDep>;
@@ -47,7 +62,7 @@ export default class ModelDepImpl<T> {
 
         function success(value: T): void {
             const isDataChanged = cursor.set(value)
-            const newMeta = self.meta.success()
+            const newMeta = setSuccess(self.meta)
             if (newMeta !== self.meta || isDataChanged) {
                 notify()
             }
@@ -55,7 +70,7 @@ export default class ModelDepImpl<T> {
         }
 
         function error(reason: Error): void {
-            const newMeta = self.meta.error(reason)
+            const newMeta = setError(self.meta, reason)
             if (newMeta !== self.meta) {
                 notify()
             }
@@ -68,7 +83,7 @@ export default class ModelDepImpl<T> {
 
         this.set = function set(value: T|Promise<T>): void {
             if (typeof value.then === 'function') {
-                const newMeta = self.meta.setPending()
+                const newMeta = setPending(self.meta)
                 if (self.meta === newMeta) {
                     // if previous value is pending - do not handle this value: only first
                     return
