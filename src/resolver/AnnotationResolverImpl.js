@@ -65,7 +65,7 @@ export default class AnnotationResolverImpl {
             id = createId()
             annotation.id = id
         }
-        this._resolvers[annotation.kind](annotation, this)
+        this._resolvers[annotation.kind](annotation, (this: AnnotationResolver))
         return this._cache[id]
     }
 
