@@ -49,7 +49,14 @@ function normalizeMiddlewares(
 }
 */
 
-// implements Notifier, ReactiveDi
+// implements Notifier
+class Notifier {
+    constructor(depProcessor: DepProcessor) {
+        this._depProcessor = depProcessor
+    }
+}
+
+// implements ReactiveDi
 export default class ReactiveDiImpl {
     _listeners: Array<AnyDep>;
     _depProcessor: DepProcessor;
@@ -62,10 +69,10 @@ export default class ReactiveDiImpl {
         middlewares: Middlewares,
         state: Object
     ) {
-        const stateBuilder = new PureStateBuilder(driver, this, state)
+        this._depProcessor = new DepProcessorImpl(processorTypeMap)
+        const stateBuilder = new PureStateBuilder(driver, (this: Notifier), state)
         const stateMap: {[id: DepId]: ModelDep} = stateBuilder.build();
         this._resolver = new AnnotationResolverImpl(driver, resolverTypeMap, middlewares, stateMap)
-        this._depProcessor = new DepProcessorImpl(processorTypeMap)
         this._listeners = []
     }
 
@@ -77,13 +84,12 @@ export default class ReactiveDiImpl {
     }
 
     mount<D: ClassDep|FactoryDep, T, A: Dependency<T>>(annotatedDep: A): () => void {
-        const dep: A = this._resolver.get(annotatedDep);
+        const dep: D = this._resolver.get(annotatedDep);
         const hooks = dep.hooks
         const self = this
 
-        this._listeners.push(dep)
-
         hooks.onMount()
+        this._listeners.push(dep)
         function listenersFilter(registeredDep: A): boolean {
             return dep !== registeredDep
         }
