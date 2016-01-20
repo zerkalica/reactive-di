@@ -8,10 +8,13 @@ import type {
 } from '../annotations/annotationInterfaces'
 import type {AnyDep} from '../nodes/nodeInterfaces'
 
+export type Middlewares = {[id: DepId]: Array<Dependency>};
+
 export type AnnotationResolver = {
     begin<A: any, T: Dependency<A>, R: AnyDep<A, T>>(dep: R): void;
     end<A: any, T: Dependency<A>, R: AnyDep<A, T>>(dep: R): void;
     resolve<A: any, T: Dependency<A>, R: AnyDep<A, T>>(annotatedDep: T): R;
+    middlewares: Middlewares;
 }
 
 export type DependencyResolver = {
@@ -20,4 +23,3 @@ export type DependencyResolver = {
 
 export type ResolverType<A: AnyAnnotation> = (annotation: A, acc: AnnotationResolver) => void;
 export type ResolverTypeMap = {[kind: string]: ResolverType};
-export type Middlewares = {[id: DepId]: Array<Dependency>};

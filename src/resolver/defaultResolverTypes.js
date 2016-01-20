@@ -26,7 +26,7 @@ import type {
 import type {AnnotationResolver} from './resolverInterfaces'
 
 /* eslint-disable no-unused-vars */
-export function resolveModel(annotation: ModelAnnotation): void {
+function resolveModel(annotation: ModelAnnotation): void {
     throw new Error('Dep nodes for data must be resolved in state converter')
 }
 /* eslint-enable no-unused-vars */
@@ -70,7 +70,7 @@ function getDeps(depsAnnotations: Deps, acc: AnnotationResolver): {
     }
 }
 
-export function resolveClass(annotation: ClassAnnotation, acc: AnnotationResolver): void {
+function resolveClass(annotation: ClassAnnotation, acc: AnnotationResolver): void {
     const dep: ClassDep = new ClassDepImpl(
         annotation.id,
         annotation.info,
@@ -82,11 +82,11 @@ export function resolveClass(annotation: ClassAnnotation, acc: AnnotationResolve
     const {deps, depNames} = getDeps(annotation.deps || [], acc)
     dep.deps = deps
     dep.depNames = depNames
-    dep.middlewares = resolveMiddlewares(this._middlewares[annotation.id], acc)
+    dep.middlewares = resolveMiddlewares(acc.middlewares[annotation.id], acc)
     acc.end(dep)
 }
 
-export function resolveFactory(annotation: FactoryAnnotation, acc: AnnotationResolver): void {
+function resolveFactory(annotation: FactoryAnnotation, acc: AnnotationResolver): void {
     const dep: FactoryDep = new FactoryDepImpl(
         annotation.id,
         annotation.info,
@@ -97,11 +97,11 @@ export function resolveFactory(annotation: FactoryAnnotation, acc: AnnotationRes
     const {deps, depNames} = getDeps(annotation.deps || [], acc)
     dep.deps = deps
     dep.depNames = depNames
-    dep.middlewares = resolveMiddlewares(this._middlewares[annotation.id], acc)
+    dep.middlewares = resolveMiddlewares(acc.middlewares[annotation.id], acc)
     acc.end(dep)
 }
 
-export function resolveMeta(annotation: MetaAnnotation, acc: AnnotationResolver): void {
+function resolveMeta(annotation: MetaAnnotation, acc: AnnotationResolver): void {
     const dep: MetaDep = new MetaDepImpl(
         annotation.id,
         annotation.info
@@ -112,13 +112,23 @@ export function resolveMeta(annotation: MetaAnnotation, acc: AnnotationResolver)
     acc.end(dep)
 }
 
-export function resolveSetter(annotation: SetterAnnotation, acc: AnnotationResolver): void {
+function resolveSetter(annotation: SetterAnnotation, acc: AnnotationResolver): void {
     const dep: SetterDep = new SetterDepImpl(
         annotation.id,
         annotation.info
     );
     acc.begin(dep)
+    // @todo hack: pass setter middlewares to slave facet middlewares
+    acc.middlewares[annotation.facet.id] = acc.middlewares[annotation.id]
     dep.facet = acc.resolve(annotation.facet)
     dep.set = acc.resolve(annotation.model).set
     acc.end(dep)
+}
+
+export default {
+    model: resolveModel,
+    class: resolveClass,
+    factory: resolveFactory,
+    meta: resolveMeta,
+    setter: resolveSetter
 }

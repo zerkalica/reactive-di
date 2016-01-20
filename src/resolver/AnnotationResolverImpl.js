@@ -21,14 +21,15 @@ import type {
 export default class AnnotationResolverImpl {
     _cache: {[id: DepId]: any};
     _driver: AnnotationDriver;
-    _middlewares: Middlewares;
     _resolvers: ResolverTypeMap;
     // array of parents set of all dependencies
     _parents: Array<Set<DepId>>;
 
+    middlewares: Middlewares;
+
     constructor(driver: AnnotationDriver, resolvers: ResolverTypeMap, middlewares: Middlewares) {
         this._driver = driver
-        this._middlewares = middlewares
+        this.middlewares = middlewares
         this._cache = Object.create(null)
         this._parents = []
         this._resolvers = resolvers
