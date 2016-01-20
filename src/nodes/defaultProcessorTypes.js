@@ -72,6 +72,7 @@ function resolveFactory<A, T: DepFn<A>>(
     factoryDep.hooks.onUpdate(cache.value, result)
     cache.isRecalculate = false
     cache.value = result
+    cache.meta = calcMeta(classDep.deps)
 }
 
 function resolveClass<T: Object>(
@@ -87,6 +88,7 @@ function resolveClass<T: Object>(
     classDep.hooks.onUpdate(cache.value, obj)
     cache.isRecalculate = false
     cache.value = obj
+    cache.meta = calcMeta(classDep.deps)
 }
 
 function resolveMeta(metaDep: MetaDep): void {
@@ -110,17 +112,33 @@ function resolveModel<T: Object>(modelDep: ModelDep<T>): void {
     const {cache} = modelDep
     cache.isRecalculate = false
     cache.value = modelDep.get()
+    cache.meta = calcMeta(modelDep.childs, modelDep.meta)
 }
 
 function resolveSetter<A, T: DepFn<A>>(
     setterDep: SetterDep<A, T>,
     acc: DepProcessor
 ): void {
-    const {info, cache} = setterDep
-    const value = acc.resolve(setterDep.facet)
-    if (typeof value !== 'function') {
-        throw new Error('Not a function returned from dep ' + info.displayName)
+    const facet = setterDep.facet
+    const deps: Array<AnyDep> = facet.deps;
+
+    let isFulfilled: boolean = true;
+    for (let i = 0, l = deps.length; i < l; i++) {
+        // todo: what if meta state is error ?
+        if (!deps[i].cache.meta.fulfilled) {
+            isFulfilled = false
+        }
     }
+
+    if (!isFulfilled) {
+        return
+    }
+
+    const value = acc.resolve(facet)
+    if (typeof value !== 'function') {
+        throw new Error('Not a function returned from dep ' + setterDep.info.displayName)
+    }
+    const cache = setterDep.cache
     cache.isRecalculate = false
     cache.value = createFunctionProxy(value, [setterDep.set])
 }

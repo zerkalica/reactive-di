@@ -24,6 +24,7 @@ export type FromJS<T: Object> = (data: Object) => T;
 export type Cache<T> = {
     isRecalculate: boolean;
     value: T;
+    meta: EntityMeta;
 }
 
 export type Cursor<T: Object> = {
