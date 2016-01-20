@@ -56,13 +56,13 @@ function resolveMiddlewares<A: ClassDep|FactoryDep, B: MiddlewareMap|MiddlewareF
     return mdls
 }
 
-function resolveFactory<T: Function>(
-    factoryDep: FactoryDep<T>,
+function resolveFactory<A, T: DepFn<A>>(
+    factoryDep: FactoryDep<A, T>,
     acc: DepProcessor
 ): void {
     const {info, cache} = factoryDep
     const deps = getDeps(factoryDep, acc)
-    let result: T = fastCall(factoryDep.fn, deps);
+    let result: A = fastCall(factoryDep.fn, deps);
     if (factoryDep.middlewares) {
         if (typeof result !== 'function') {
             throw new Error('Not a function returned from dep ' + info.displayName)
@@ -79,7 +79,7 @@ function resolveClass<T: Object>(
     acc: DepProcessor
 ): void {
     const deps = getDeps(classDep, acc)
-    let obj = fastCreateObject(classDep.proto, deps);
+    let obj: T = fastCreateObject(classDep.proto, deps);
     if (classDep.middlewares) {
         obj = createObjectProxy(obj, resolveMiddlewares(classDep.middlewares, acc))
     }
@@ -124,7 +124,6 @@ function resolveSetter<A, T: DepFn<A>>(
     cache.isRecalculate = false
     cache.value = createFunctionProxy(value, [setterDep.set])
 }
-
 
 export default {
     model: resolveModel,

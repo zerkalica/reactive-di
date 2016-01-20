@@ -27,7 +27,7 @@ import type {AnnotationResolver} from './resolverInterfaces'
 
 /* eslint-disable no-unused-vars */
 function resolveModel(annotation: ModelAnnotation): void {
-    throw new Error('Dep nodes for data must be resolved in state converter')
+    throw new Error('Dep nodes for data must be resolved in StateBuilder')
 }
 /* eslint-enable no-unused-vars */
 

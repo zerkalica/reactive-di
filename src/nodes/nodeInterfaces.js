@@ -57,13 +57,13 @@ export type ClassDep<T> = {
     proto: Class<T>;
 }
 
-export type FactoryDep<T: Function> = {
+export type FactoryDep<A, T: DepFn<A>> = {
     kind: 'factory';
     id: DepId;
-    cache: Cache<T>;
+    cache: Cache<A>;
     info: Info;
     relations: Array<AnyDep>;
-    hooks: Hooks<T>;
+    hooks: Hooks<A>;
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<FactoryDep>;
@@ -85,13 +85,13 @@ export type SetterDep<A, T: DepFn<A>> = {
     cache: Cache<A>;
     info: Info;
     relations: Array<AnyDep>;
-    facet: FactoryDep<T>;
+    facet: FactoryDep<A, T>;
     set(v: A|Promise<A>): void;
 }
 
 export type AnyDep<A, T: Dependency<A>> = ClassDep<A>
     | ModelDep<A>
-    | FactoryDep<T>
+    | FactoryDep<A, T>
     | MetaDep
     | SetterDep<A, T>;
 

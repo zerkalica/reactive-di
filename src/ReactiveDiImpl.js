@@ -77,7 +77,7 @@ export default class ReactiveDiImpl {
         }
     }
 
-    mount<R: any, T: Dependency<R>, D: ClassDep<R>|FactoryDep<T>>(annotatedDep: T): () => void {
+    mount<R: any, T: Dependency<R>, D: ClassDep<R>|FactoryDep<R, T>>(annotatedDep: T): () => void {
         const dep: D = this._resolver.get(annotatedDep);
         const hooks = dep.hooks
         const self = this
