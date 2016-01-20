@@ -1,4 +1,5 @@
 /* @flow */
+export type SimpleMap<K, V> = {[id: K]: V};
 
 export type DepId = string;
 
@@ -19,7 +20,7 @@ export type Hooks<T> = {
     onUpdate: (currentValue: T, nextValue: T) => void;
 }
 
-export type Deps<T> = Array<Dependency<T> | {[prop: string]: Dependency<T>}>;
+export type Deps<T> = Array<Dependency<T> | SimpleMap<string, Dependency<T>>>;
 
 export type Info = {
     tags: Array<string>;

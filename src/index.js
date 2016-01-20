@@ -6,7 +6,7 @@ import Collection from './utils/Collection'
 import ReactiveDi from './ReactiveDiImpl'
 import SymbolMetaDriver from './drivers/SymbolMetaDriver'
 
-export {
+export default {
     merge,
     createAnnotations,
     Collection,

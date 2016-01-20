@@ -56,7 +56,7 @@ function resolveMiddlewares<A: ClassDep|FactoryDep, B: MiddlewareMap|MiddlewareF
     return mdls
 }
 
-export function resolveFactory<T: Function>(
+function resolveFactory<T: Function>(
     factoryDep: FactoryDep<T>,
     acc: DepProcessor
 ): void {
@@ -73,9 +73,8 @@ export function resolveFactory<T: Function>(
     cache.isRecalculate = false
     cache.value = result
 }
-resolveFactory.kind = 'factory'
 
-export function resolveClass<T: Object>(
+function resolveClass<T: Object>(
     classDep: ClassDep<T>,
     acc: DepProcessor
 ): void {
@@ -89,9 +88,8 @@ export function resolveClass<T: Object>(
     cache.isRecalculate = false
     cache.value = obj
 }
-resolveClass.kind = 'class'
 
-export function resolveMeta(metaDep: MetaDep): void {
+function resolveMeta(metaDep: MetaDep): void {
     const {sources, cache} = metaDep
     const newMeta: EntityMeta = new EntityMetaImpl();
     let isChanged: boolean = false;
@@ -107,16 +105,14 @@ export function resolveMeta(metaDep: MetaDep): void {
     }
     cache.isRecalculate = false
 }
-resolveMeta.kind = 'meta'
 
-export function resolveModel<T: Object>(modelDep: ModelDep<T>): void {
+function resolveModel<T: Object>(modelDep: ModelDep<T>): void {
     const {cache} = modelDep
     cache.isRecalculate = false
     cache.value = modelDep.get()
 }
-resolveModel.kind = 'model'
 
-export function resolveSetter<A, T: DepFn<A>>(
+function resolveSetter<A, T: DepFn<A>>(
     setterDep: SetterDep<A, T>,
     acc: DepProcessor
 ): void {
@@ -128,4 +124,12 @@ export function resolveSetter<A, T: DepFn<A>>(
     cache.isRecalculate = false
     cache.value = createFunctionProxy(value, [setterDep.set])
 }
-resolveSetter.kind = 'setter'
+
+
+export default {
+    model: resolveModel,
+    meta: resolveMeta,
+    class: resolveClass,
+    factory: resolveFactory,
+    setter: resolveSetter
+}
