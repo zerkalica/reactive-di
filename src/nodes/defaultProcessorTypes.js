@@ -120,6 +120,20 @@ function resolveSetter<A, T: DepFn<A>>(
     acc: DepProcessor
 ): void {
     const facet = setterDep.facet
+    const value = acc.resolve(facet)
+    if (typeof value !== 'function') {
+        throw new Error('Not a function returned from dep ' + setterDep.info.displayName)
+    }
+    const cache = setterDep.cache
+    cache.isRecalculate = false
+    cache.value = createFunctionProxy(value, [setterDep.set])
+}
+
+function resolveLoader<A, T: DepFn<A>>(
+    setterDep: LoaderDep<A, T>,
+    acc: DepProcessor
+): void {
+    const facet = setterDep.facet
     const deps: Array<AnyDep> = facet.deps;
 
     let isFulfilled: boolean = true;
@@ -135,12 +149,11 @@ function resolveSetter<A, T: DepFn<A>>(
     }
 
     const value = acc.resolve(facet)
-    if (typeof value !== 'function') {
-        throw new Error('Not a function returned from dep ' + setterDep.info.displayName)
-    }
+    setterDep.set(value)
+
     const cache = setterDep.cache
     cache.isRecalculate = false
-    cache.value = createFunctionProxy(value, [setterDep.set])
+    cache.value = setterDep.get(value)
 }
 
 export default {
@@ -148,5 +161,6 @@ export default {
     meta: resolveMeta,
     class: resolveClass,
     factory: resolveFactory,
-    setter: resolveSetter
+    setter: resolveSetter,
+    loader: resolveLoader
 }
