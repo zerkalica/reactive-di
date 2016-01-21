@@ -82,7 +82,7 @@ export class MetaDepImpl {
     cache: Cache<EntityMeta>;
     info: Info;
     relations: Array<AnyDep>;
-    sources: Array<ModelDep>;
+    source: AnyDep;
 
     constructor(id: DepId, info: Info) {
         this.kind = 'meta'

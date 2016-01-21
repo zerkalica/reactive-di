@@ -27,12 +27,14 @@ export type Info = {
     displayName: string;
 }
 
-export type ModelAnnotation<T: Object> = {
+export type ModelAnnotation<T: Object, L: Function> = {
     kind: 'model';
     id: DepId;
     info: Info;
     /* eslint-disable no-undef */
     source: Class<T>;
+    loader: ?L;
+    childs: Array<Dependency>;
     /* eslint-enable no-undef */
 }
 

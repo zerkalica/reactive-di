@@ -8,18 +8,60 @@ import EntityMetaImpl, {
 } from './EntityMetaImpl'
 import type {
     DepId,
+    DepFn,
     Info
 } from '../../annotations/annotationInterfaces'
 import type {
     EntityMeta,
     FromJS,
+    ModelState,
+    Updater,
     ModelDep,
+    FactoryDep,
     Cache,
     AnyDep,
     Cursor,
     Notifier
 } from '../nodeInterfaces'
 
+import type {Subscription} from '../../observableInterfaces'
+
+// implements ModelState
+class ModelStateImpl<T> {
+    pending: () => void;
+    success: (value: T) => boolean;
+    error: (error: Error) => void;
+
+    constructor(
+        pending: () => void,
+        success: (value: T) => boolean,
+        error: (error: Error) => void
+    ) {
+        this.pending = pending
+        this.success = success
+        this.error = error
+    }
+}
+
+const fakeSubscription: Subscription = {
+    unsubscribe(): void {}
+}
+
+// implements Updater
+class UpdaterImpl {
+    isDirty: boolean;
+    loader: FactoryDep<void, DepFn<void>>;
+    subscription: Subscription;
+
+    constructor(loader: FactoryDep<void, DepFn<void>>) {
+        this.loader = loader
+        this.isDirty = true
+        this.subscription = fakeSubscription
+    }
+}
+
+
+// implements ModelDep
 export default class ModelDepImpl<T: Object> {
     kind: 'model';
     id: DepId;
@@ -28,10 +70,9 @@ export default class ModelDepImpl<T: Object> {
     info: Info;
     relations: Array<AnyDep>;
     childs: Array<ModelDep>;
-    cursor: Cursor<T>;
     fromJS: FromJS<T>;
-
-    set: (value: T|Promise<T>) => void;
+    state: ModelState<T>;
+    updater: ?Updater;
     get: () => T;
 
     constructor(
@@ -39,7 +80,8 @@ export default class ModelDepImpl<T: Object> {
         info: Info,
         notifier: Notifier,
         cursor: Cursor<T>,
-        relations: Array<AnyDep>
+        relations: Array<AnyDep>,
+        loader: ?FactoryDep<void, DepFn<void>>
     ) {
         this.kind = 'model'
         this.id = id
@@ -49,7 +91,8 @@ export default class ModelDepImpl<T: Object> {
         this.childs = []
 
         const self = this
-        const cache = new CacheImpl()
+        const cache = this.cache = new CacheImpl()
+        this.updater = loader ? new UpdaterImpl(loader) : null
 
         // chrome not optimized for bind syntax: place methods in constructor
         function notify(): void {
@@ -58,6 +101,20 @@ export default class ModelDepImpl<T: Object> {
                 relations[i].cache.isRecalculate = true
             }
             notifier.notify()
+        }
+
+        function get(): T {
+            return cursor.get()
+        }
+
+        function pending(): void {
+            const newMeta = setPending(self.meta)
+            if (self.meta === newMeta) {
+                // if previous value is pending - do not handle this value: only first
+                return
+            }
+            notify()
+            self.meta = newMeta
         }
 
         function success(value: T): void {
@@ -77,23 +134,8 @@ export default class ModelDepImpl<T: Object> {
             self.meta = newMeta
         }
 
-        this.get = function get(): T {
-            return cursor.get()
-        }
+        this.get = get
 
-        this.set = function set(value: T|Promise<T>): void {
-            if (typeof value.then === 'function') {
-                const newMeta = setPending(self.meta)
-                if (self.meta === newMeta) {
-                    // if previous value is pending - do not handle this value: only first
-                    return
-                }
-                notify()
-                self.meta = newMeta;
-                ((value: any): Promise<T>).then(success).catch(error);
-            } else {
-                success(((value: any): T))
-            }
-        }
+        this.state = new ModelStateImpl(pending, success, error)
     }
 }

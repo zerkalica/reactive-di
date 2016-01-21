@@ -9,11 +9,12 @@ import type {
     DepFn
 } from '../annotations/annotationInterfaces'
 
+import type {Subscription, Observable} from '../observableInterfaces'
+
 export type EntityMeta = {
     pending: boolean;
     rejected: boolean;
     fulfilled: boolean;
-    needFetch: boolean;
     reason: ?Error;
 }
 
@@ -29,20 +30,35 @@ export type Cache<T> = {
 
 export type Cursor<T: Object> = {
     get(): T;
-    set(v: T): boolean;
+    set(value: T): boolean;
+}
+
+export type ModelState<T> = {
+    pending(): void;
+    success(value: T): boolean;
+    error(error: Error): void;
+}
+
+export type Updater = {
+    isDirty: boolean;
+    loader: FactoryDep<void, DepFn<void>>;
+    subscription: Subscription;
 }
 
 export type ModelDep<T> = {
     kind: 'model';
     id: DepId;
-    meta: EntityMeta;
     cache: Cache<T>;
     info: Info;
+
+    meta: EntityMeta;
     relations: Array<AnyDep>;
     childs: Array<ModelDep>;
+
+    state: ModelState<T>;
+    updater: ?Updater;
     fromJS: FromJS<T>;
-    set: (value: T|Promise<T>) => void;
-    get: () => T;
+    get(): T;
 }
 
 export type ClassDep<T> = {
@@ -71,13 +87,26 @@ export type FactoryDep<A, T: DepFn<A>> = {
     fn: T;
 }
 
+export type LoaderDep<A: Observable, T: DepFn<A>> = {
+    kind: 'loader';
+    id: DepId;
+    cache: Cache<A>;
+    info: Info;
+    relations: Array<AnyDep>;
+    hooks: Hooks<A>;
+    deps: Array<AnyDep>;
+    depNames: ?Array<string>;
+    middlewares: ?Array<FactoryDep>;
+    fn: T;
+}
+
 export type MetaDep = {
     kind: 'meta';
     id: DepId;
     cache: Cache<EntityMeta>;
     info: Info;
     relations: Array<AnyDep>;
-    sources: Array<ModelDep>;
+    source: AnyDep;
 }
 
 export type SetterDep<A, T: DepFn<A>> = {
@@ -93,6 +122,7 @@ export type SetterDep<A, T: DepFn<A>> = {
 export type AnyDep<A, T: Dependency<A>> = ClassDep<A>
     | ModelDep<A>
     | FactoryDep<A, T>
+    | LoaderDep<A, T>
     | MetaDep
     | SetterDep<A, T>;
 

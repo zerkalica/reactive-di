@@ -41,11 +41,15 @@ export class ModelAnnotationImpl {
     id: DepId;
     info: Info;
     source: Dependency;
+    loader: ?Dependency;
+    childs: Array<Dependency>;
 
-    constructor(source: Dependency, tags: Array<string>) {
+    constructor(source: Dependency, loader?: ?Dependency, tags: Array<string>) {
         this.kind = 'model'
+        this.loader = loader || null
         this.info = new InfoImpl('model@' + getFunctionName(source), tags)
         this.source = source
+        this.childs = []
     }
 }
 

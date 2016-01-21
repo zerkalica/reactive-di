@@ -53,7 +53,7 @@ export default class AnnotationResolverImpl {
         const relations: Array<AnyDep> = dep.relations;
         const parents: Array<Set<DepId>> = this._parents;
         for (let i = 0, l = relations.length; i < l; i++) {
-            const relationId = relations[i].id
+        const relationId: DepId = relations[i].id;
             for (let j = 0, k = parents.length; j < k; j++) {
                 parents[j].add(relationId)
             }

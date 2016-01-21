@@ -2,7 +2,9 @@
 
 import type {
     Deps,
+    Info,
     Dependency,
+    AnyAnnotation,
     ModelAnnotation,
     SetterAnnotation,
     FactoryAnnotation,
@@ -26,7 +28,7 @@ import type {
 import type {AnnotationResolver} from './resolverInterfaces'
 
 /* eslint-disable no-unused-vars */
-function resolveModel(annotation: ModelAnnotation): void {
+function resolveModel(annotation: ModelAnnotation, acc: AnnotationResolver): void {
     throw new Error('Dep nodes for data must be resolved in StateBuilder')
 }
 /* eslint-enable no-unused-vars */
@@ -45,6 +47,13 @@ function resolveMiddlewares<A: FactoryDep|ClassDep>(
 
     return result
 }
+
+function throwLoaderError(info: Info): void {
+    throw new Error('Loader can\'t be used as dependency of class or factory, this works async in separate "thread": '
+        + info.displayName
+    )
+}
+
 type DepMap = {[id: string]: Dependency};
 function getDeps(depsAnnotations: Deps, acc: AnnotationResolver): {
     deps: Array<AnyDep>,
@@ -55,11 +64,19 @@ function getDeps(depsAnnotations: Deps, acc: AnnotationResolver): {
     for (let i = 0, l = depsAnnotations.length; i < l; i++) {
         const annotation: Dependency|DepMap = depsAnnotations[i];
         if (typeof annotation === 'function') {
-            deps.push(acc.resolve((annotation: Dependency)))
+            const dep: AnyDep = acc.resolve((annotation: Dependency));
+            if (dep.kind === 'loader') {
+                throwLoaderError(dep.info)
+            }
+            deps.push(dep)
         } else {
             depNames = Object.keys(((annotation: any): DepMap))
             for (let j = 0, k = depNames.length; j < k; j++) {
-                deps.push(acc.resolve(((annotation: any): DepMap)[depNames[j]]))
+                const dep: AnyDep = acc.resolve(((annotation: any): DepMap)[depNames[j]]);
+                deps.push(dep)
+                if (dep.kind === 'loader') {
+                    throwLoaderError(dep.info)
+                }
             }
         }
     }
@@ -107,8 +124,7 @@ function resolveMeta(annotation: MetaAnnotation, acc: AnnotationResolver): void 
         annotation.info
     );
     acc.begin(dep)
-    const sourceDep: ModelDep = acc.resolve(annotation.source);
-    dep.sources = sourceDep.childs.concat(sourceDep);
+    dep.source = acc.resolve(annotation.source);
     acc.end(dep)
 }
 

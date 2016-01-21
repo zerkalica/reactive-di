@@ -57,8 +57,10 @@ export default function createAnnotations(
             ))
         },
 
-        model<P: Object, T: Class<P>>(source: T): T {
-            return driver.set(source, new ModelAnnotationImpl(source, tags))
+        model<P: Object, T: Class<P>, A, L: DepFn<A>>(loader?: L): (target: T) => T {
+            return function _model(source: T): T {
+                return driver.set(source, new ModelAnnotationImpl(source, loader, tags))
+            }
         },
 
         setter<P: Object, M: Class<P>, A, T: DepFn<A>>(model: M, ...deps: Deps): (target: T) => T {
