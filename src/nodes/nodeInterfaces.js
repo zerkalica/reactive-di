@@ -1,15 +1,16 @@
 /* @flow */
 
 /* eslint-disable no-unused-vars */
+
 import type {
-    SimpleMap,
     Hooks,
     Info,
     Dependency,
     DepId,
-    DepFn
+    DepFn,
+    Loader
 } from '../annotations/annotationInterfaces'
-
+import type {FromJS, SimpleMap} from '../modelInterfaces'
 import type {Subscription, Observable} from '../observableInterfaces'
 
 export type EntityMeta<E> = {
@@ -21,18 +22,13 @@ export type EntityMeta<E> = {
 
 /* eslint-disable no-use-before-define, no-undef */
 
-export type Cursor<V> = {
-    get(): V;
-    set(value: V): boolean;
-}
-
-export type ModelState<V, E> = {
+export type ModelState<V: Object, E> = {
     pending(): void;
     success(value: V): void;
     error(error: E): void;
 }
 
-export type Updater<V, E> = {
+export type Updater<V: Object, E> = {
     meta: EntityMeta<E>;
     isDirty: boolean;
     observable: ?Observable<V, E>;
@@ -40,7 +36,7 @@ export type Updater<V, E> = {
     subscription: Subscription;
 }
 
-export type DepBase<V, E> = {
+export type DepBase<V: any, E> = {
     isRecalculate: boolean;
     value: V;
     info: Info;
@@ -48,7 +44,7 @@ export type DepBase<V, E> = {
     meta: EntityMeta<E>;
 }
 
-export type ModelDep<V, E> = {
+export type ModelDep<V: Object, E> = {
     kind: 'model';
     id: DepId;
     base: DepBase<V, E>;
@@ -60,7 +56,7 @@ export type ModelDep<V, E> = {
     get(): V;
 }
 
-export type ClassDep<V, E> = {
+export type ClassDep<V: Object, E> = {
     kind: 'class';
     id: DepId;
     base: DepBase<V, E>;
@@ -72,7 +68,7 @@ export type ClassDep<V, E> = {
     proto: Class<V>;
 }
 
-export type FactoryDep<V, E> = {
+export type FactoryDep<V: any, E> = {
     kind: 'factory';
     id: DepId;
     base: DepBase<V, E>;
@@ -84,27 +80,27 @@ export type FactoryDep<V, E> = {
     fn: DepFn<V>;
 }
 
-export type LoaderDep<V, E> = {
+export type LoaderDep<V: Object, E> = {
     kind: 'loader';
     id: DepId;
-    base: DepBase<Observable<V, E>, E>;
+    base: DepBase<V, E>;
 
-    hooks: Hooks<Observable<V, E>>;
+    hooks: Hooks<V>;
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<FactoryDep>;
-    fn: DepFn<Observable<V, E>>;
+    fn: DepFn<V>;
 }
 
-export type MetaDep<E> = {
+export type MetaDep<V: EntityMeta, E> = {
     kind: 'meta';
     id: DepId;
-    base: DepBase<EntityMeta<E>, E>;
+    base: DepBase<V, E>;
 
     source: AnyDep;
 }
 
-export type SetterDep<V, E> = {
+export type SetterDep<V: Object, E> = {
     kind: 'setter';
     id: DepId;
     base: DepBase<V, E>;
@@ -118,14 +114,29 @@ export type SetterDep<V, E> = {
     set(v: V|Promise<V>): void;
 }
 
-export type AnyDep<V, E> =
+export type SubscribableDep<V: any, E> =
+    ClassDep<V, E>
+    | FactoryDep<V, E>
+    | SetterDep<V, E>
+    | LoaderDep<V, E>;
+
+export type MiddlewarableDep<V: any, E> =
+    ClassDep<V, E>
+    | FactoryDep<V, E>
+    | SetterDep<V, E>
+    | LoaderDep<V, E>;
+
+export type AnyDep<V: any, E> =
     ClassDep<V, E>
     | ModelDep<V, E>
     | FactoryDep<V, E>
     | LoaderDep<V, E>
-    | MetaDep<E>
+    | MetaDep<V, E>
     | SetterDep<V, E>;
 
+export type DepSubscriber = {
+    subscribe(dep: SubscribableDep): Subscription;
+}
 export type Notifier = {
     notify(): void;
 }

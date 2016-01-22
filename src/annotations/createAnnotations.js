@@ -16,9 +16,10 @@ import type {
     Dependency,
     Hooks,
     HooksRec,
-    IAnnotations,
+    Annotations,
     AnnotationDriver,
     AnyAnnotation,
+    ModelAnnotation,
     ClassAnnotation,
     FactoryAnnotation
 } from './annotationInterfaces'
@@ -28,15 +29,15 @@ import type {
 export default function createAnnotations(
     driver: AnnotationDriver,
     tags: Array<string> = []
-): IAnnotations {
+): Annotations {
     return {
         /* eslint-disable no-unused-vars */
         klass(...deps: Deps): <P: Object>(target: Class<P>) => Class<P> {
             return function _klass<P: Object>(target: Class<P>): Class<P> {
                 return driver.set(target, new ClassAnnotationImpl(
                     target,
-                    tags,
-                    deps
+                    deps,
+                    tags
                 ))
             }
         },
@@ -45,8 +46,8 @@ export default function createAnnotations(
             return function _factory<T: DepFn>(target: T): T {
                 return driver.set(target, new FactoryAnnotationImpl(
                     target,
-                    tags,
-                    deps
+                    deps,
+                    tags
                 ))
             }
         },
@@ -55,8 +56,8 @@ export default function createAnnotations(
             return function _loader<L: Loader>(target: L): L {
                 return driver.set(target, new LoaderAnnotationImpl(
                     target,
-                    tags,
-                    deps
+                    deps,
+                    tags
                 ))
             }
         },
@@ -71,7 +72,11 @@ export default function createAnnotations(
 
         model(loader?: Loader): <P: Object, T: Class<P>>(target: T) => T {
             return function _model<P: Object, T: Class<P>>(source: T): T {
-                return driver.set(source, new ModelAnnotationImpl(source, loader, tags))
+                return driver.set(source, new ModelAnnotationImpl(
+                    source,
+                    loader,
+                    tags
+                ))
             }
         },
 

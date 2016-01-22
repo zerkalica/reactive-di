@@ -12,9 +12,12 @@ import type {
     ClassAnnotation,
     MetaAnnotation
 } from '../annotations/annotationInterfaces'
+import type {Cursor} from '../modelInterfaces'
 import {
     ClassDepImpl,
     LoaderDepImpl,
+    ModelDepImpl,
+    UpdaterImpl,
     FactoryDepImpl,
     SetterDepImpl,
     MetaDepImpl
@@ -29,27 +32,6 @@ import type {
     MetaDep
 } from '../nodes/nodeInterfaces'
 import type {AnnotationResolver} from './resolverInterfaces'
-
-/* eslint-disable no-unused-vars */
-function resolveModel(annotation: ModelAnnotation, acc: AnnotationResolver): void {
-    throw new Error('Dep nodes for data must be resolved in StateBuilder')
-}
-/* eslint-enable no-unused-vars */
-
-function resolveMiddlewares<A: FactoryDep|ClassDep>(
-    mdls: ?Array<Dependency>,
-    acc: AnnotationResolver
-): ?Array<A> {
-    let result: ?Array<A> = null;
-    if (mdls && mdls.length) {
-        result = [];
-        for (let i = 0, l = mdls.length; i < l; i++) {
-            result.push(acc.resolve(mdls[i]))
-        }
-    }
-
-    return result
-}
 
 function throwLoaderError(info: Info): void {
     throw new Error('Loader can\'t be used as dependency of class or factory, this works async in separate "thread": '
@@ -90,6 +72,28 @@ function getDeps(depsAnnotations: Deps, acc: AnnotationResolver): {
     }
 }
 
+function resolveModel(annotation: ModelAnnotation, acc: AnnotationResolver): void {
+    const cursor: Cursor = acc.cursorCreator.createCursor(annotation.statePath);
+    const dep: ModelDep = new ModelDepImpl(
+        annotation.id,
+        annotation.info,
+        acc.notifier,
+        cursor,
+        annotation.fromJS
+    )
+
+    acc.begin(dep);
+    const childs: Array<Dependency> = annotation.childs;
+    for (let i = 0, l = childs.length; i < l; i++) {
+        dep.childs.push(acc.resolve(childs[i]))
+    }
+    if (annotation.loader) {
+        dep.updater = new UpdaterImpl(((acc.resolve(annotation.loader): any): LoaderDep))
+    }
+
+    acc.end(dep)
+}
+
 function resolveClass(annotation: ClassAnnotation, acc: AnnotationResolver): void {
     const dep: ClassDep = new ClassDepImpl(
         annotation.id,
@@ -102,7 +106,7 @@ function resolveClass(annotation: ClassAnnotation, acc: AnnotationResolver): voi
     const {deps, depNames} = getDeps(annotation.deps || [], acc)
     dep.deps = deps
     dep.depNames = depNames
-    dep.middlewares = resolveMiddlewares(acc.middlewares[annotation.id], acc)
+    dep.middlewares = acc.resolveMiddlewares(annotation.id, annotation.info.tags)
     acc.end(dep)
 }
 
@@ -117,7 +121,7 @@ function resolveFactory(annotation: FactoryAnnotation, acc: AnnotationResolver):
     const {deps, depNames} = getDeps(annotation.deps || [], acc)
     dep.deps = deps
     dep.depNames = depNames
-    dep.middlewares = resolveMiddlewares(acc.middlewares[annotation.id], acc)
+    dep.middlewares = acc.resolveMiddlewares(annotation.id, annotation.info.tags)
     acc.end(dep)
 }
 
@@ -132,7 +136,7 @@ function resolveLoader(annotation: LoaderAnnotation, acc: AnnotationResolver): v
     const {deps, depNames} = getDeps(annotation.deps || [], acc)
     dep.deps = deps
     dep.depNames = depNames
-    dep.middlewares = resolveMiddlewares(acc.middlewares[annotation.id], acc)
+    dep.middlewares = acc.resolveMiddlewares(annotation.id, annotation.info.tags)
     acc.end(dep)
 }
 
@@ -152,10 +156,16 @@ function resolveSetter(annotation: SetterAnnotation, acc: AnnotationResolver): v
         annotation.info
     );
     acc.begin(dep)
-    // @todo hack: pass setter middlewares to slave facet middlewares
-    acc.middlewares[annotation.facet.id] = acc.middlewares[annotation.id]
-    dep.facet = acc.resolve(annotation.facet)
-    dep.set = acc.resolve(annotation.model).set
+    const {deps, depNames} = getDeps(annotation.deps || [], acc)
+    dep.deps = deps
+    dep.depNames = depNames
+    dep.middlewares = acc.resolveMiddlewares(annotation.id, annotation.info.tags)
+
+    const model: AnyDep = acc.resolve(annotation.model);
+    if (model.kind !== 'model') {
+        throw new Error('Not a model dep: ' + annotation.info.displayName)
+    }
+    dep.set = model.state.success
     acc.end(dep)
 }
 

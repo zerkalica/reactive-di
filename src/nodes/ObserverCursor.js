@@ -6,7 +6,7 @@ import type {ModelState} from './nodeInterfaces'
 function defaultFn(): void {}
 
 // implements Observer
-export default class ObserverCursor<V, E> {
+export default class ObserverCursor<V: Object, E> {
     next: (value: V) => void;
     error: (error: E) => void;
     complete: (value: V) => void;

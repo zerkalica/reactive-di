@@ -9,18 +9,24 @@ import type {
     AnyDep,
     ClassDep,
     FactoryDep,
+    SetterDep,
+    LoaderDep,
     ModelDep,
     Notifier,
     DepProcessor,
-    ProcessorTypeMap
+    ProcessorTypeMap,
+    DepSubscriber,
+    SubscribableDep
 } from './nodes/nodeInterfaces'
 import type {
     DependencyResolver,
-    ResolverTypeMap,
-    Middlewares
+    ResolverTypeMap
 } from './resolver/resolverInterfaces'
 
-import PureStateBuilder from './model/PureStateBuilder'
+import PureCursorCreator from './model/PureCursorCreator'
+
+import type {Subscription} from './observableInterfaces'
+import type {SimpleMap} from './modelInterfaces'
 
 /* eslint-enable no-unused-vars */
 
@@ -49,24 +55,13 @@ function normalizeMiddlewares(
 }
 */
 
-// implements Notifier
-// implements ReactiveDi
-export default class ReactiveDiImpl {
-    _listeners: Array<ClassDep|FactoryDep>;
+// implements Notifier, DepSubscriber
+class NotifierImpl {
+    _listeners: Array<SubscribableDep>;
     _depProcessor: DepProcessor;
-    _resolver: DependencyResolver;
 
-    constructor(
-        driver: AnnotationDriver,
-        resolverTypeMap: ResolverTypeMap,
-        processorTypeMap: ProcessorTypeMap,
-        middlewares: Middlewares,
-        state: Object
-    ) {
-        this._depProcessor = new DepProcessorImpl(processorTypeMap)
-        const stateBuilder = new PureStateBuilder(driver, (this: Notifier), state)
-        const stateMap: {[id: DepId]: ModelDep} = stateBuilder.build();
-        this._resolver = new AnnotationResolverImpl(driver, resolverTypeMap, middlewares, stateMap)
+    constructor(depProcessor: DepProcessor) {
+        this._depProcessor = depProcessor
         this._listeners = []
     }
 
@@ -77,27 +72,55 @@ export default class ReactiveDiImpl {
         }
     }
 
-    mount<R: any, T: Dependency<R>, D: ClassDep<R>|FactoryDep<R, T>>(annotatedDep: T): () => void {
-        const dep: D = this._resolver.get(annotatedDep);
-        const hooks = dep.hooks
+    subscribe(dep: SubscribableDep): Subscription {
         const self = this
-
-        hooks.onMount()
         this._listeners.push(dep)
-        function listenersFilter(registeredDep: ClassDep|FactoryDep): boolean {
+        function listenersFilter(registeredDep: SubscribableDep): boolean {
             return dep !== registeredDep
         }
-        function unmount() {
-            hooks.onUnmount()
+        function unsubscribe() {
+            dep.hooks.onUnmount()
             self._listeners = self._listeners.filter(listenersFilter)
         }
+        dep.hooks.onMount()
 
-        return unmount
+        return {unsubscribe}
+    }
+}
+
+// implements ReactiveDi
+export default class ReactiveDiImpl {
+    _depProcessor: DepProcessor;
+    _resolver: DependencyResolver;
+    _subscriber: DepSubscriber;
+
+    constructor(
+        driver: AnnotationDriver,
+        resolverTypeMap: ResolverTypeMap,
+        processorTypeMap: ProcessorTypeMap,
+        middlewares: SimpleMap<DepId, Array<Dependency>>,
+        state: Object
+    ) {
+        const cursorCreator = new PureCursorCreator(state)
+        this._depProcessor = new DepProcessorImpl(processorTypeMap)
+        const notifier: Notifier = this._subscriber = new NotifierImpl(this._depProcessor);
+
+        this._resolver = new AnnotationResolverImpl(
+            driver,
+            resolverTypeMap,
+            middlewares,
+            cursorCreator,
+            notifier
+        )
     }
 
-    get<R: any, T: Dependency<R>, D: AnyDep<R, T>>(annotatedDep: T): R {
-        const dep: D = this._resolver.get(annotatedDep);
+    subscribe<V: any, E>(annotatedDep: Dependency<V>): Subscription {
+        const dep: SubscribableDep<V, E> = this._resolver.get(annotatedDep);
+        return this._subscriber.subscribe(dep)
+    }
 
+    get<V: any, E>(annotatedDep: Dependency<V>): V {
+        const dep: SubscribableDep<V, E> = this._resolver.get(annotatedDep);
         return this._depProcessor.resolve(dep)
     }
 }

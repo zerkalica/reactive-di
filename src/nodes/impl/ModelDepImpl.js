@@ -1,6 +1,5 @@
 /* @flow */
 
-import CacheImpl from './CacheImpl'
 import DepBaseImpl from './DepBaseImpl'
 import EntityMetaImpl, {
     setPending,
@@ -12,10 +11,10 @@ import type {
     DepFn,
     Info
 } from '../../annotations/annotationInterfaces'
+import type {Cursor, FromJS} from '../../modelInterfaces'
 import type {Observable, Subscription} from '../../observableInterfaces'
 import type {
     EntityMeta,
-    FromJS,
     DepBase,
     ModelState,
     Updater,
@@ -23,7 +22,6 @@ import type {
     LoaderDep,
     FactoryDep,
     AnyDep,
-    Cursor,
     Notifier
 } from '../nodeInterfaces'
 
@@ -49,7 +47,7 @@ const fakeSubscription: Subscription = {
 }
 
 // implements Updater
-class UpdaterImpl<V, E> {
+export class UpdaterImpl<V, E> {
     isDirty: boolean;
     loader: LoaderDep<V, E>;
     observable: ?Observable<V, E>;
@@ -64,9 +62,8 @@ class UpdaterImpl<V, E> {
     }
 }
 
-
 // implements ModelDep
-export default class ModelDepImpl<V, E> {
+export default class ModelDepImpl<V: Object, E> {
     kind: 'model';
     id: DepId;
     base: DepBase<V, E>;
@@ -82,15 +79,14 @@ export default class ModelDepImpl<V, E> {
         info: Info,
         notifier: Notifier,
         cursor: Cursor<V>,
-        relations: Array<AnyDep>,
-        loader: ?LoaderDep<V, E>
+        fromJS: FromJS<V>
     ) {
         this.kind = 'model'
         this.id = id
+        this.fromJS = fromJS
         const base = this.base = new DepBaseImpl(info)
         this.childs = []
-
-        this.updater = loader ? new UpdaterImpl(loader) : null
+        const relations = base.relations
 
         // chrome not optimized for bind syntax: place methods in constructor
         function notify(): void {

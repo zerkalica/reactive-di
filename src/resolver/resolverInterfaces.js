@@ -2,24 +2,33 @@
 /* eslint-disable no-undef, no-unused-vars */
 
 import type {
-    SimpleMap,
     Dependency,
     DepId,
     AnyAnnotation
 } from '../annotations/annotationInterfaces'
-import type {AnyDep} from '../nodes/nodeInterfaces'
-
-export type Middlewares = SimpleMap<DepId, Dependency>;
+import type {
+    SimpleMap,
+    CursorCreator
+} from '../modelInterfaces'
+import type {
+    AnyDep,
+    Notifier,
+    ClassDep,
+    FactoryDep,
+    SubscribableDep
+} from '../nodes/nodeInterfaces'
 
 export type AnnotationResolver = {
-    begin<V, E>(dep: AnyDep<V, E>): void;
-    end<V, E>(dep: AnyDep<V, E>): void;
-    resolve<V>(annotatedDep: Dependency<V>): V;
-    middlewares: Middlewares;
+    begin(dep: AnyDep): void;
+    end(dep: AnyDep): void;
+    resolve<V: any, E>(annotatedDep: Dependency<V>): AnyDep<V, E>;
+    resolveMiddlewares(id: DepId, tags: Array<string>): ?Array<FactoryDep|ClassDep>;
+    cursorCreator: CursorCreator;
+    notifier: Notifier;
 }
 
 export type DependencyResolver = {
-    get<V>(annotatedDep: Dependency<V>): V;
+    get<V: any, E>(annotatedDep: Dependency<V>): SubscribableDep<V, E>;
 }
 
 export type ResolverType<A: AnyAnnotation> = (annotation: A, acc: AnnotationResolver) => void;

@@ -17,7 +17,7 @@ export default class EntityMetaImpl<E> {
     fulfilled: boolean;
     reason: ?E;
 
-    constructor(rec: EntityMetaRec = {}) {
+    constructor(rec: EntityMetaRec<E> = {}) {
         this.pending = rec.pending || false
         this.rejected = rec.rejected || false
         this.fulfilled = rec.fulfilled === undefined ? true : rec.fulfilled
@@ -43,7 +43,7 @@ export function setSuccess(meta: EntityMeta): EntityMeta {
     })
 }
 
-export function setError<E>(meta: EntityMeta, reason: E): EntityMeta<E> {
+export function setError<E>(meta: EntityMeta<E>, reason: E): EntityMeta<E> {
     return merge(meta, {
         pending: false,
         rejected: true,
@@ -52,7 +52,7 @@ export function setError<E>(meta: EntityMeta, reason: E): EntityMeta<E> {
     })
 }
 
-export function updateMeta(meta: EntityMeta, src: EntityMeta): boolean {
+export function updateMeta<E>(meta: EntityMeta<E>, src: EntityMeta<E>): boolean {
     const {pending, rejected, fulfilled, reason} = src
     let isChanged = false
     /* eslint-disable no-param-reassign */

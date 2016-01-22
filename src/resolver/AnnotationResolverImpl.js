@@ -3,53 +3,88 @@
 import createId from '../utils/createId'
 import type {
     DepId,
+    Tag,
     Dependency,
     AnnotationDriver,
     AnyAnnotation
 } from '../annotations/annotationInterfaces'
 import type {
-    AnyDep
+    AnyDep,
+    FactoryDep,
+    ClassDep,
+    Notifier
 } from '../nodes/nodeInterfaces'
 import type {
     ResolverTypeMap,
     DependencyResolver,
-    AnnotationResolver,
-    Middlewares
+    AnnotationResolver
 } from './resolverInterfaces'
+import type {
+    SimpleMap,
+    Cursor,
+    CursorCreator
+} from '../modelInterfaces'
 
 // implements DependencyResolver, AnnotationResolver
 export default class AnnotationResolverImpl {
-    _cache: {[id: DepId]: any};
+    _cache: SimpleMap<DepId, AnyDep>;
     _driver: AnnotationDriver;
     _resolvers: ResolverTypeMap;
     // array of parents set of all dependencies
     _parents: Array<Set<DepId>>;
 
-    middlewares: Middlewares;
+    _middlewares: SimpleMap<DepId|Tag, Array<Dependency>>;
+    cursorCreator: CursorCreator;
+    notifier: Notifier;
 
-    constructor(driver: AnnotationDriver, resolvers: ResolverTypeMap, middlewares: Middlewares) {
+    constructor(
+        driver: AnnotationDriver,
+        resolvers: ResolverTypeMap,
+        middlewares: SimpleMap<DepId|Tag, Array<Dependency>>,
+        cursorCreator: CursorCreator,
+        notifier: Notifier
+    ) {
         this._driver = driver
-        this.middlewares = middlewares
+        this._middlewares = middlewares
         this._cache = Object.create(null)
         this._parents = []
         this._resolvers = resolvers
+
+        this.cursorCreator = cursorCreator
+        this.notifier = notifier
     }
 
-    begin<V, E>(dep: AnyDep<V, E>): void {
+    resolveMiddlewares(id: DepId, tags: Array<Tag>): ?Array<FactoryDep|ClassDep> {
+        const middlewares: SimpleMap<DepId|Tag, Array<Dependency>> = this._middlewares;
+        const result: Array<FactoryDep|ClassDep> = [];
+        const ids: Array<DepId|Tag> = [id].concat(tags);
+        for (let i = 0, l = ids.length; i < l; i++) {
+            const middlewaresByIdOrTag: Array<Dependency> = middlewares[ids[i]]
+            if (middlewaresByIdOrTag) {
+                for (let j = 0, k = middlewaresByIdOrTag.length; j < k; j++) {
+                    result.push(this.resolve(middlewaresByIdOrTag[j]))
+                }
+            }
+        }
+
+        return result.length ? result : null
+    }
+
+    begin(dep: AnyDep): void {
         this._parents.push(new Set())
         this._cache[dep.id] = dep
     }
 
-    end<V, E>(dep: AnyDep<V, E>): void {
+    end(dep: AnyDep): void {
         const cache = this._cache
         const depSet: Set<DepId> = this._parents.pop();
         function iteratePathSet(relationId: DepId): void {
-            cache[relationId].relations.push(dep)
+            cache[relationId].base.relations.push(dep)
         }
         depSet.forEach(iteratePathSet)
     }
 
-    _inheritRelations<V, E>(dep: AnyDep<V, E>): void {
+    _inheritRelations(dep: AnyDep): void {
         const relations: Array<AnyDep> = dep.base.relations;
         const parents: Array<Set<DepId>> = this._parents;
         for (let i = 0, l = relations.length; i < l; i++) {
@@ -60,7 +95,7 @@ export default class AnnotationResolverImpl {
         }
     }
 
-    _resolve<V, E>(annotation: AnyAnnotation): AnyDep<V, E> {
+    _resolve<V: any, E>(annotation: AnyAnnotation): AnyDep<V, E> {
         let id = annotation.id
         if (!id) {
             id = createId()
@@ -70,7 +105,7 @@ export default class AnnotationResolverImpl {
         return this._cache[id]
     }
 
-    resolve<V, E>(annotatedDep: Dependency<V>): AnyDep<V, E> {
+    resolve<V: any, E>(annotatedDep: Dependency<V>): AnyDep<V, E> {
         const {_cache: cache} = this
         const annotation: AnyAnnotation = this._driver.get(annotatedDep);
         let dep: AnyDep<V, E> = cache[annotation.id];
@@ -82,7 +117,7 @@ export default class AnnotationResolverImpl {
         return dep
     }
 
-    get<V, E>(annotatedDep: Dependency<V>): AnyDep<V, E> {
+    get<V: any, E>(annotatedDep: Dependency<V>): AnyDep<V, E> {
         const {_cache: cache} = this
         const annotation: AnyAnnotation = this._driver.get(annotatedDep);
         let dep: AnyDep<V, E> = cache[annotation.id];

@@ -1,18 +1,13 @@
 /* @flow */
 
 import type {Observable} from '../observableInterfaces'
-
-export type SimpleMap<K, V> = {[id: K]: V};
+import type {FromJS, SimpleMap} from '../modelInterfaces'
 
 export type DepId = string;
-
+export type Tag = string;
 export type DepFn<T> = (...x: any) => T;
-
-export type Loader<T, E> = (...x: any) => Observable<T, E>|Promise<T>;
-
+export type Loader<T, E> = (...x: any) => Observable<T, E> | Promise<T>;
 export type Deps<T> = Array<Dependency<T> | SimpleMap<string, Dependency<T>>>;
-
-export type FromJS<T: Object> = (data: Object) => T;
 
 /* eslint-disable no-undef */
 export type Dependency<T> = DepFn<T>|Class<T>;
@@ -96,8 +91,8 @@ export type SetterAnnotation<V, M> = {
 export type AnyAnnotation = MetaAnnotation
     | ModelAnnotation
     | SetterAnnotation
-    | FactoryAnnotation
     | LoaderAnnotation
+    | FactoryAnnotation
     | ClassAnnotation;
 
 /* eslint-disable no-undef */
@@ -106,7 +101,7 @@ export type AnnotationDriver = {
     set<T: Dependency, A: AnyAnnotation>(dep: T, annotation: A): T;
 };
 
-export type IAnnotations = {
+export type Annotations = {
     /*
     klass<P: Object, T: Class<P>>(...deps: Deps): (target: T) => T,
     factory<A, T: DepFn<A>>(...deps: Deps): (target: T) => T,

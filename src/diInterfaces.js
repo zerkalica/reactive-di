@@ -7,7 +7,9 @@ import type {
     FactoryDep
 } from './nodes/nodeInterfaces'
 
+import type {Subscription} from './observableInterfaces'
+
 export type ReactiveDi = {
-    mount<V, E, V: AnyDep<V, E>>(annotatedDep: V): () => void;
-    get<V, E, D: AnyDep<V, E>>(annotatedDep: D): V;
+    subscribe(annotatedDep: Dependency): Subscription;
+    get<A: any, E>(annotatedDep: Dependency<A>): A;
 }

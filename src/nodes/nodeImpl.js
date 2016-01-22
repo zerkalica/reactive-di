@@ -1,12 +1,12 @@
 /* @flow */
 
-import CacheImpl from './impl/CacheImpl'
 import EntityMetaImpl from './impl/EntityMetaImpl'
-import ModelDepImpl from './impl/ModelDepImpl'
+import ModelDepImpl, {UpdaterImpl} from './impl/ModelDepImpl'
 import DepBaseImpl from './impl/DepBaseImpl'
 import {HooksImpl} from '../annotations/annotationImpl'
 import type {
     DepId,
+    Loader,
     DepFn,
     Info,
     Hooks
@@ -14,6 +14,8 @@ import type {
 import type {
     DepBase,
     FactoryDep,
+    LoaderDep,
+    SetterDep,
     ModelDep,
     ClassDep,
     AnyDep,
@@ -22,7 +24,7 @@ import type {
 
 import type {Observable} from '../observableInterfaces'
 
-export {ModelDepImpl}
+export {ModelDepImpl, UpdaterImpl}
 
 // implements ClassDep
 export class ClassDepImpl<V, E> {
@@ -80,6 +82,7 @@ export class FactoryDepImpl<V, E> {
     }
 }
 
+// implements MetaDep
 export class MetaDepImpl<E> {
     kind: 'meta';
     id: DepId;
@@ -95,6 +98,7 @@ export class MetaDepImpl<E> {
     }
 }
 
+// implements SetterDep
 export class SetterDepImpl<V, E> {
     kind: 'setter';
     id: DepId;
@@ -115,7 +119,8 @@ export class SetterDepImpl<V, E> {
     }
 }
 
-export class LoaderDep<V, E> {
+// implements LoaderDep
+export class LoaderDepImpl<V: Object, E> {
     kind: 'loader';
     id: DepId;
     base: DepBase<Observable<V, E>, E>;
@@ -124,13 +129,13 @@ export class LoaderDep<V, E> {
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<FactoryDep>;
-    fn: DepFn<Observable<V, E>>;
+    fn: Loader<V, E>;
 
     constructor(
         id: DepId,
         info: Info,
-        fn: DepFn<V>,
-        hooks: ?Hooks<V>
+        fn: Loader<V, E>,
+        hooks: ?Hooks<Observable<V, E>>
     ) {
         this.kind = 'loader'
         this.id = id

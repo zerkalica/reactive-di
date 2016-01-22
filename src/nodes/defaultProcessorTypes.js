@@ -1,20 +1,24 @@
 /* @flow */
 
-import promiseToObservable from '../utils/promiseToObservable'
-import EntityMetaImpl, {updateMeta} from './impl/EntityMetaImpl'
 /* eslint-disable no-unused-vars */
+
+import merge from '../utils/merge'
+import promiseToObservable from '../utils/promiseToObservable'
+import ObserverCursor from './ObserverCursor'
+import EntityMetaImpl, {updateMeta} from './impl/EntityMetaImpl'
 import type {
     Info,
     DepFn,
-    Loader,
-    SimpleMap
+    Loader
 } from '../annotations/annotationInterfaces'
-/* eslint-enable no-unused-vars */
-import merge from '../utils/merge'
+import type {SimpleMap} from '../modelInterfaces'
+import type {
+    Subscription,
+    Observable,
+    Observer
+} from '../observableInterfaces'
 import {createObjectProxy, createFunctionProxy} from '../utils/createProxy'
-/* eslint-disable no-unused-vars */
 import type {MiddlewareFn, MiddlewareMap} from '../utils/createProxy'
-/* eslint-enable no-unused-vars */
 import {fastCreateObject, fastCall} from '../utils/fastCall'
 import type {
     AnyDep,
@@ -28,11 +32,7 @@ import type {
     MetaDep,
     SetterDep
 } from './nodeInterfaces'
-
-/* eslint-disable no-unused-vars */
-import type {Subscription, Observable, Observer} from '../observableInterfaces'
 /* eslint-enable no-unused-vars */
-import ObserverCursor from './ObserverCursor'
 
 function getDeps(
     dep: ClassDep|FactoryDep,
@@ -91,7 +91,6 @@ function resolveFactory<V, E>(
     factoryDep.hooks.onUpdate(base.value, result)
     base.isRecalculate = false
     base.value = result
-
     base.meta = meta
 }
 
@@ -118,7 +117,7 @@ function resolveMeta(metaDep: MetaDep): void {
     base.value = metaDep.source.base.meta
 }
 
-function resolveLoader<V, E>(
+function resolveLoader<V: any, E>(
     loaderDep: LoaderDep<V, E>,
     acc: DepProcessor
 ): void {
@@ -133,13 +132,13 @@ function resolveLoader<V, E>(
     if (loaderDep.middlewares) {
         fn = createFunctionProxy(fn, resolveMiddlewares(loaderDep.middlewares, acc))
     }
-    const result: Observable<V, E> = promiseToObservable(fastCall(fn, deps));
+    const result: Observable = promiseToObservable(fastCall(fn, deps));
     loaderDep.hooks.onUpdate(base.value, result)
     base.isRecalculate = false
     base.value = result
 }
 
-function resolveModel<V, E>(
+function resolveModel<V: Object, E>(
     modelDep: ModelDep<V, E>,
     acc: DepProcessor
 ): void {
@@ -176,7 +175,7 @@ function resolveModel<V, E>(
     base.value = modelDep.get()
 }
 
-function resolveSetter<V, E>(
+function resolveSetter<V: Object, E>(
     setterDep: SetterDep<V, E>,
     acc: DepProcessor
 ): void {

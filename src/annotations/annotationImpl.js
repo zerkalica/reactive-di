@@ -16,10 +16,11 @@ import type {
     ModelAnnotation,
     SetterAnnotation,
     MetaAnnotation,
-    LoaderAnnotation
+    LoaderAnnotation,
 } from './annotationInterfaces'
 
 import type {Observable} from '../observableInterfaces'
+import type {FromJS} from '../modelInterfaces'
 /* eslint-enable no-unused-vars */
 
 // implements Info
@@ -27,9 +28,9 @@ export class InfoImpl {
     tags: Array<string>;
     displayName: string;
 
-    constructor(displayName: string, tags: Array<string>) {
-        this.displayName = displayName
-        this.tags = tags
+    constructor(kind: string, name: string, tags: Array<string>) {
+        this.displayName = kind + '@' + name
+        this.tags = tags.concat([kind, name])
     }
 }
 
@@ -57,15 +58,17 @@ export class ModelAnnotationImpl<V, E> {
     loader: ?Loader<V, E>;
     childs: Array<Dependency>;
     statePath: Array<string>;
+    fromJS: FromJS<V>;
 
     constructor(source: Class<V>, loader?: ?Loader<V, E>, tags: Array<string>) {
         this.kind = 'model'
+        this.info = new InfoImpl(this.kind, getFunctionName(source), tags)
         this.loader = loader || null
-        this.info = new InfoImpl('model@' + getFunctionName(source), tags)
         this.source = source
         this.childs = []
     }
 }
+
 
 /* eslint-disable no-undef */
 
@@ -78,10 +81,10 @@ export class ClassAnnotationImpl<V> {
     deps: ?Deps;
     proto: Class<V>;
 
-    constructor(proto: Class<V>, tags: Array<string>, deps: ?Deps, hooks?: ?Hooks<V>) {
+    constructor(proto: Class<V>, deps: ?Deps, tags: Array<string>) {
         this.kind = 'class'
-        this.info = new InfoImpl('class@' + getFunctionName(proto), tags)
-        this.hooks = hooks || null
+        this.info = new InfoImpl(this.kind, getFunctionName(proto), tags)
+        this.hooks = null
         this.deps = deps
         this.proto = proto
     }
@@ -96,10 +99,10 @@ export class FactoryAnnotationImpl<V> {
     deps: ?Deps;
     fn: DepFn<V>;
 
-    constructor(fn: DepFn<V>, tags: Array<string>, deps: ?Deps, hooks?: ?Hooks<V>) {
+    constructor(fn: DepFn<V>, deps: ?Deps, tags: Array<string>) {
         this.kind = 'factory'
-        this.info = new InfoImpl('factory@' + getFunctionName(fn), tags)
-        this.hooks = hooks || null
+        this.info = new InfoImpl(this.kind, getFunctionName(fn), tags)
+        this.hooks = null
         this.deps = deps
         this.fn = fn
     }
@@ -114,7 +117,7 @@ export class MetaAnnotationImpl {
 
     constructor(source: Dependency, tags: Array<string>) {
         this.kind = 'meta'
-        this.info = new InfoImpl('meta@' + getFunctionName(source), tags)
+        this.info = new InfoImpl(this.kind, getFunctionName(source), tags)
         this.source = source
     }
 }
@@ -130,7 +133,7 @@ export class SetterAnnotationImpl<V> {
 
     constructor(model: Class<V>, facet: DepFn<V>, deps: ?Deps, tags: Array<string>) {
         this.kind = 'setter'
-        this.info = new InfoImpl('setter@' + getFunctionName(model), tags)
+        this.info = new InfoImpl(this.kind, getFunctionName(model), tags)
         this.facet = facet
         this.deps = deps
     }
@@ -145,10 +148,10 @@ export class LoaderAnnotationImpl<V, E> {
     deps: ?Deps;
     fn: Loader<V, E>;
 
-    constructor(fn: Loader<V, E>, tags: Array<string>, deps: ?Deps, hooks?: ?Hooks<Observable<V, E>>) {
+    constructor(fn: Loader<V, E>, deps: ?Deps, tags: Array<string>) {
         this.kind = 'loader'
-        this.info = new InfoImpl('loader@' + getFunctionName(fn), tags)
-        this.hooks = hooks || null
+        this.info = new InfoImpl(this.kind, getFunctionName(fn), tags)
+        this.hooks = null
         this.deps = deps
         this.fn = fn
     }
