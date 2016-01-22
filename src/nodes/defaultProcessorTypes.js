@@ -138,6 +138,8 @@ function resolveLoader<V: any, E>(
     base.value = result
 }
 
+function updater
+
 function resolveModel<V: Object, E>(
     modelDep: ModelDep<V, E>,
     acc: DepProcessor

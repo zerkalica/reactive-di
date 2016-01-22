@@ -15,8 +15,7 @@ import type {
     Notifier,
     DepProcessor,
     ProcessorTypeMap,
-    DepSubscriber,
-    SubscribableDep
+    DepSubscriber
 } from './nodes/nodeInterfaces'
 import type {
     DependencyResolver,
@@ -30,31 +29,7 @@ import type {SimpleMap} from './modelInterfaces'
 
 /* eslint-enable no-unused-vars */
 
-/*
-type MiddlewareMap = {[id: DepId]: Array<CacheRec>};
-
-function normalizeMiddlewares(
-    rawMiddlewares: Array<[Dependency, Array<Dependency>]>,
-    getDepMeta: (dep: Dependency) => CacheRec
-): MiddlewareMap {
-    const middlewares: MiddlewareMap = {};
-    for (let i = 0, l = rawMiddlewares.length; i < l; i++) {
-        const [frm, toDeps] = rawMiddlewares[i]
-        const key = getDepMeta(frm).id
-        let group = middlewares[key]
-        if (!group) {
-            group = []
-            middlewares[key] = group
-        }
-        for (let j = 0, k = toDeps.length; j < k; j++) {
-            group.push(getDepMeta(toDeps[j]))
-        }
-    }
-
-    return middlewares
-}
-*/
-
+type SubscribableDep = ClassDep|FactoryDep;
 // implements Notifier, DepSubscriber
 class NotifierImpl {
     _listeners: Array<SubscribableDep>;
@@ -78,11 +53,10 @@ class NotifierImpl {
         function listenersFilter(registeredDep: SubscribableDep): boolean {
             return dep !== registeredDep
         }
+        const relations = dep.base.relations
         function unsubscribe() {
-            dep.hooks.onUnmount()
             self._listeners = self._listeners.filter(listenersFilter)
         }
-        dep.hooks.onMount()
 
         return {unsubscribe}
     }
@@ -115,12 +89,12 @@ export default class ReactiveDiImpl {
     }
 
     subscribe<V: any, E>(annotatedDep: Dependency<V>): Subscription {
-        const dep: SubscribableDep<V, E> = this._resolver.get(annotatedDep);
+        const dep: SubscribableDep = ((this._resolver.get(annotatedDep): any): SubscribableDep);
         return this._subscriber.subscribe(dep)
     }
 
     get<V: any, E>(annotatedDep: Dependency<V>): V {
-        const dep: SubscribableDep<V, E> = this._resolver.get(annotatedDep);
+        const dep = this._resolver.get(annotatedDep);
         return this._depProcessor.resolve(dep)
     }
 }

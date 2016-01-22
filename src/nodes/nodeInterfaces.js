@@ -20,12 +20,29 @@ export type EntityMeta<E> = {
     reason: ?E;
 }
 
+export type MetaProvider<E> = {
+    meta: EntityMeta<E>;
+}
 /* eslint-disable no-use-before-define, no-undef */
 
-export type ModelState<V: Object, E> = {
-    pending(): void;
-    success(value: V): void;
-    error(error: E): void;
+export type DepBase<V: any, E> = {
+    id: DepId;
+
+    displayName: string;
+    tags: Array<string>;
+    relations: Array<AnyDep>;
+
+    isRecalculate: boolean;
+    value: V;
+    meta: EntityMeta<E>;
+}
+
+export type ModelDep<V: Object, E> = DepBase<V, E> & {
+    kind: 'model';
+    metaSources: Array<MetaProvider>;
+    fromJS: FromJS<V>;
+    get(): V;
+    set(value: V): boolean;
 }
 
 export type Updater<V: Object, E> = {
@@ -34,26 +51,13 @@ export type Updater<V: Object, E> = {
     observable: ?Observable<V, E>;
     loader: LoaderDep<V, E>;
     subscription: Subscription;
+    refCount: number;
 }
 
-export type DepBase<V: any, E> = {
-    isRecalculate: boolean;
-    value: V;
-    info: Info;
-    relations: Array<AnyDep>;
-    meta: EntityMeta<E>;
-}
-
-export type ModelDep<V: Object, E> = {
-    kind: 'model';
-    id: DepId;
-    base: DepBase<V, E>;
-
-    childs: Array<ModelDep>;
-    state: ModelState<V, E>;
-    updater: ?Updater<V, E>;
-    fromJS: FromJS<V>;
-    get(): V;
+export type AsyncModelDep<V: Object, E> = DepBase<V, E> & {
+    kind: 'asyncmodel';
+    updater: Updater<V, E>;
+    model: ModelDep<V: Object, E>;
 }
 
 export type ClassDep<V: Object, E> = {
@@ -116,9 +120,7 @@ export type SetterDep<V: Object, E> = {
 
 export type SubscribableDep<V: any, E> =
     ClassDep<V, E>
-    | FactoryDep<V, E>
-    | SetterDep<V, E>
-    | LoaderDep<V, E>;
+    | FactoryDep<V, E>;
 
 export type MiddlewarableDep<V: any, E> =
     ClassDep<V, E>

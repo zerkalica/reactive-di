@@ -1,4 +1,4 @@
-/* @flow */
+/* flow */
 
 import createId from '../utils/createId'
 import type {

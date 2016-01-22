@@ -14,8 +14,7 @@ import type {
     AnyDep,
     Notifier,
     ClassDep,
-    FactoryDep,
-    SubscribableDep
+    FactoryDep
 } from '../nodes/nodeInterfaces'
 
 export type AnnotationResolver = {
@@ -28,7 +27,7 @@ export type AnnotationResolver = {
 }
 
 export type DependencyResolver = {
-    get<V: any, E>(annotatedDep: Dependency<V>): SubscribableDep<V, E>;
+    get<V: any, E>(annotatedDep: Dependency<V>): AnyDep<V, E>;
 }
 
 export type ResolverType<A: AnyAnnotation> = (annotation: A, acc: AnnotationResolver) => void;
