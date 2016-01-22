@@ -2,24 +2,25 @@
 /* eslint-disable no-undef, no-unused-vars */
 
 import type {
+    SimpleMap,
     Dependency,
     DepId,
     AnyAnnotation
 } from '../annotations/annotationInterfaces'
 import type {AnyDep} from '../nodes/nodeInterfaces'
 
-export type Middlewares = {[id: DepId]: Array<Dependency>};
+export type Middlewares = SimpleMap<DepId, Dependency>;
 
 export type AnnotationResolver = {
-    begin<A: any, T: Dependency<A>, R: AnyDep<A, T>>(dep: R): void;
-    end<A: any, T: Dependency<A>, R: AnyDep<A, T>>(dep: R): void;
-    resolve<A: any, T: Dependency<A>, R: AnyDep<A, T>>(annotatedDep: T): R;
+    begin<V, E>(dep: AnyDep<V, E>): void;
+    end<V, E>(dep: AnyDep<V, E>): void;
+    resolve<V>(annotatedDep: Dependency<V>): V;
     middlewares: Middlewares;
 }
 
 export type DependencyResolver = {
-    get<A: any, T: Dependency<A>, R: AnyDep<A, T>>(annotatedDep: T): R;
+    get<V>(annotatedDep: Dependency<V>): V;
 }
 
 export type ResolverType<A: AnyAnnotation> = (annotation: A, acc: AnnotationResolver) => void;
-export type ResolverTypeMap = {[kind: string]: ResolverType};
+export type ResolverTypeMap = SimpleMap<string, ResolverType>;

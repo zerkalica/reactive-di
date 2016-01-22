@@ -4,6 +4,7 @@ import createId from '../utils/createId'
 import PureDataCursor from './PureDataCursor'
 import type {
     DepId,
+    SimpleMap,
     AnnotationDriver,
     ModelAnnotation
 } from '../annotations/annotationInterfaces'
@@ -15,7 +16,7 @@ import type {
 } from '../nodes/nodeInterfaces'
 
 type PropCreator<V: Object, N: Object> = (value: V) => N;
-type PropCreatorMap = {[prop: string]: PropCreator};
+type PropCreatorMap = SimpleMap<string, PropCreator>;
 
 /* eslint-disable no-undef */
 function createFromJS<T: Object>(Proto: Class<T>, propCreators: PropCreatorMap): FromJS<T> {
@@ -60,6 +61,16 @@ export default class StateMapBuilder<State: Object> {
         const annotation: ModelAnnotation = this._getAnnotation(obj);
         if (!annotation.id) {
             annotation.id = createId()
+            const keys: Array<string> = Object.keys(obj);
+            const propCreators: PropCreatorMap = {};
+            for (let i = 0, j = keys.length; i < j; i++) {
+                annotation.deps.push(dep.constructor)
+                const key: string = keys[i];
+                const prop: any = obj[key];
+                if (prop !== null && typeof prop === 'object') {
+                    propCreators[key] = this._build(prop, parents, path.concat(key))
+                }
+            }
         }
 
         const cursor = new PureDataCursor(path, this._stateRef)

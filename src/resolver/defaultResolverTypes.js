@@ -5,6 +5,7 @@ import type {
     Info,
     Dependency,
     AnyAnnotation,
+    LoaderAnnotation,
     ModelAnnotation,
     SetterAnnotation,
     FactoryAnnotation,
@@ -13,12 +14,14 @@ import type {
 } from '../annotations/annotationInterfaces'
 import {
     ClassDepImpl,
+    LoaderDepImpl,
     FactoryDepImpl,
     SetterDepImpl,
     MetaDepImpl
 } from '../nodes/nodeImpl'
 import type {
     AnyDep,
+    LoaderDep,
     ModelDep,
     SetterDep,
     FactoryDep,
@@ -66,7 +69,7 @@ function getDeps(depsAnnotations: Deps, acc: AnnotationResolver): {
         if (typeof annotation === 'function') {
             const dep: AnyDep = acc.resolve((annotation: Dependency));
             if (dep.kind === 'loader') {
-                throwLoaderError(dep.info)
+                throwLoaderError(dep.base.info)
             }
             deps.push(dep)
         } else {
@@ -75,7 +78,7 @@ function getDeps(depsAnnotations: Deps, acc: AnnotationResolver): {
                 const dep: AnyDep = acc.resolve(((annotation: any): DepMap)[depNames[j]]);
                 deps.push(dep)
                 if (dep.kind === 'loader') {
-                    throwLoaderError(dep.info)
+                    throwLoaderError(dep.base.info)
                 }
             }
         }
@@ -105,6 +108,21 @@ function resolveClass(annotation: ClassAnnotation, acc: AnnotationResolver): voi
 
 function resolveFactory(annotation: FactoryAnnotation, acc: AnnotationResolver): void {
     const dep: FactoryDep = new FactoryDepImpl(
+        annotation.id,
+        annotation.info,
+        annotation.fn,
+        annotation.hooks
+    );
+    acc.begin(dep)
+    const {deps, depNames} = getDeps(annotation.deps || [], acc)
+    dep.deps = deps
+    dep.depNames = depNames
+    dep.middlewares = resolveMiddlewares(acc.middlewares[annotation.id], acc)
+    acc.end(dep)
+}
+
+function resolveLoader(annotation: LoaderAnnotation, acc: AnnotationResolver): void {
+    const dep: LoaderDep = new LoaderDepImpl(
         annotation.id,
         annotation.info,
         annotation.fn,

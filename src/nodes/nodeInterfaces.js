@@ -2,6 +2,7 @@
 
 /* eslint-disable no-unused-vars */
 import type {
+    SimpleMap,
     Hooks,
     Info,
     Dependency,
@@ -11,128 +12,127 @@ import type {
 
 import type {Subscription, Observable} from '../observableInterfaces'
 
-export type EntityMeta = {
+export type EntityMeta<E> = {
     pending: boolean;
     rejected: boolean;
     fulfilled: boolean;
-    reason: ?Error;
+    reason: ?E;
 }
-
-export type FromJS<T: Object> = (data: Object) => T;
 
 /* eslint-disable no-use-before-define, no-undef */
 
-export type Cache<T> = {
-    isRecalculate: boolean;
-    value: T;
-    meta: EntityMeta;
+export type Cursor<V> = {
+    get(): V;
+    set(value: V): boolean;
 }
 
-export type Cursor<T: Object> = {
-    get(): T;
-    set(value: T): boolean;
-}
-
-export type ModelState<T> = {
+export type ModelState<V, E> = {
     pending(): void;
-    success(value: T): boolean;
-    error(error: Error): void;
+    success(value: V): void;
+    error(error: E): void;
 }
 
-export type Updater = {
+export type Updater<V, E> = {
+    meta: EntityMeta<E>;
     isDirty: boolean;
-    loader: FactoryDep<void, DepFn<void>>;
+    observable: ?Observable<V, E>;
+    loader: LoaderDep<V, E>;
     subscription: Subscription;
 }
 
-export type ModelDep<T> = {
-    kind: 'model';
-    id: DepId;
-    cache: Cache<T>;
+export type DepBase<V, E> = {
+    isRecalculate: boolean;
+    value: V;
     info: Info;
-
-    meta: EntityMeta;
     relations: Array<AnyDep>;
-    childs: Array<ModelDep>;
-
-    state: ModelState<T>;
-    updater: ?Updater;
-    fromJS: FromJS<T>;
-    get(): T;
+    meta: EntityMeta<E>;
 }
 
-export type ClassDep<T> = {
+export type ModelDep<V, E> = {
+    kind: 'model';
+    id: DepId;
+    base: DepBase<V, E>;
+
+    childs: Array<ModelDep>;
+    state: ModelState<V, E>;
+    updater: ?Updater<V, E>;
+    fromJS: FromJS<V>;
+    get(): V;
+}
+
+export type ClassDep<V, E> = {
     kind: 'class';
     id: DepId;
-    cache: Cache<T>;
-    info: Info;
-    relations: Array<AnyDep>;
-    hooks: Hooks<T>;
+    base: DepBase<V, E>;
+
+    hooks: Hooks<V>;
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<ClassDep>;
-    proto: Class<T>;
+    proto: Class<V>;
 }
 
-export type FactoryDep<A, T: DepFn<A>> = {
+export type FactoryDep<V, E> = {
     kind: 'factory';
     id: DepId;
-    cache: Cache<A>;
-    info: Info;
-    relations: Array<AnyDep>;
-    hooks: Hooks<A>;
+    base: DepBase<V, E>;
+
+    hooks: Hooks<V>;
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<FactoryDep>;
-    fn: T;
+    fn: DepFn<V>;
 }
 
-export type LoaderDep<A: Observable, T: DepFn<A>> = {
+export type LoaderDep<V, E> = {
     kind: 'loader';
     id: DepId;
-    cache: Cache<A>;
-    info: Info;
-    relations: Array<AnyDep>;
-    hooks: Hooks<A>;
+    base: DepBase<Observable<V, E>, E>;
+
+    hooks: Hooks<Observable<V, E>>;
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<FactoryDep>;
-    fn: T;
+    fn: DepFn<Observable<V, E>>;
 }
 
-export type MetaDep = {
+export type MetaDep<E> = {
     kind: 'meta';
     id: DepId;
-    cache: Cache<EntityMeta>;
-    info: Info;
-    relations: Array<AnyDep>;
+    base: DepBase<EntityMeta<E>, E>;
+
     source: AnyDep;
 }
 
-export type SetterDep<A, T: DepFn<A>> = {
+export type SetterDep<V, E> = {
     kind: 'setter';
     id: DepId;
-    cache: Cache<A>;
-    info: Info;
-    relations: Array<AnyDep>;
-    facet: FactoryDep<A, T>;
-    set(v: A|Promise<A>): void;
+    base: DepBase<V, E>;
+
+    hooks: Hooks<V>;
+    deps: Array<AnyDep>;
+    depNames: ?Array<string>;
+    middlewares: ?Array<FactoryDep>;
+    fn: DepFn<V>;
+
+    set(v: V|Promise<V>): void;
 }
 
-export type AnyDep<A, T: Dependency<A>> = ClassDep<A>
-    | ModelDep<A>
-    | FactoryDep<A, T>
-    | LoaderDep<A, T>
-    | MetaDep
-    | SetterDep<A, T>;
+export type AnyDep<V, E> =
+    ClassDep<V, E>
+    | ModelDep<V, E>
+    | FactoryDep<V, E>
+    | LoaderDep<V, E>
+    | MetaDep<E>
+    | SetterDep<V, E>;
 
 export type Notifier = {
     notify(): void;
 }
 
 export type DepProcessor = {
-    resolve<A: any, B: Dependency<A>, T: AnyDep<A, B>>(dep: T): A;
+    resolve<V: any, E>(dep: AnyDep<V, E>): V;
 }
 
-export type ProcessorType<A: any, B: Dependency<A>, T: AnyDep<A, B>> = (rec: T, dep: DepProcessor) => void;
-export type ProcessorTypeMap = {[kind: string]: ProcessorType};
+export type ProcessorType<V: any, E> = (rec: AnyDep<V, E>, dep: DepProcessor) => void;
+export type ProcessorTypeMap = SimpleMap<string, ProcessorType>;

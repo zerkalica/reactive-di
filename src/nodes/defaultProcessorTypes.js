@@ -1,10 +1,16 @@
 /* @flow */
 
 import promiseToObservable from '../utils/promiseToObservable'
-import EntityMetaImpl, {updateMeta, recalcMeta} from './impl/EntityMetaImpl'
+import EntityMetaImpl, {updateMeta} from './impl/EntityMetaImpl'
 /* eslint-disable no-unused-vars */
-import type {Info, DepFn} from '../annotations/annotationInterfaces'
+import type {
+    Info,
+    DepFn,
+    Loader,
+    SimpleMap
+} from '../annotations/annotationInterfaces'
 /* eslint-enable no-unused-vars */
+import merge from '../utils/merge'
 import {createObjectProxy, createFunctionProxy} from '../utils/createProxy'
 /* eslint-disable no-unused-vars */
 import type {MiddlewareFn, MiddlewareMap} from '../utils/createProxy'
@@ -15,6 +21,7 @@ import type {
     EntityMeta,
     DepProcessor,
     ClassDep,
+    LoaderDep,
     FactoryDep,
     ModelDep,
     ModelState,
@@ -31,7 +38,7 @@ function getDeps(
     dep: ClassDep|FactoryDep,
     acc: DepProcessor
 ): {
-    deps: Array<AnyDep|{[prop: string]: AnyDep}>,
+    deps: Array<AnyDep|SimpleMap<string, AnyDep>>,
     meta: EntityMeta
 } {
     const {deps} = dep;
@@ -42,7 +49,7 @@ function getDeps(
     for (let i = 0, j = deps.length; i < j; i++) {
         const childDep = deps[i]
         const value = acc.resolve(childDep)
-        updateMeta(meta, childDep.cache.meta)
+        updateMeta(meta, childDep.base.meta)
         if (depNames) {
             argsObject[depNames[i]] = value
         } else {
@@ -68,114 +75,130 @@ function resolveMiddlewares<A: ClassDep|FactoryDep, B: MiddlewareMap|MiddlewareF
     return mdls
 }
 
-function createAsyncNotReadyWarning(info: Info): () => void {
-    return function asyncNotReadyWarning(): void {
-        throw new Error('Dep marked as async, and can\'t be used as dependency: ' + info.displayName)
-    }
-}
-
-function resolveFactory<A, T: DepFn<A>>(
-    factoryDep: FactoryDep<A, T>,
+function resolveFactory<V, E>(
+    factoryDep: FactoryDep<V, E>,
     acc: DepProcessor
 ): void {
-    const {info, cache} = factoryDep
+    const {base} = factoryDep
     const {deps, meta} = getDeps(factoryDep, acc)
-    let result: A = fastCall(factoryDep.fn, deps);
+    let result: V = fastCall(factoryDep.fn, deps);
     if (factoryDep.middlewares) {
         if (typeof result !== 'function') {
-            throw new Error('Not a function returned from dep ' + info.displayName)
+            throw new Error('Not a function returned from dep ' + base.info.displayName)
         }
         result = createFunctionProxy(result, resolveMiddlewares(factoryDep.middlewares, acc))
     }
-    factoryDep.hooks.onUpdate(cache.value, result)
-    cache.isRecalculate = false
-    cache.value = result
+    factoryDep.hooks.onUpdate(base.value, result)
+    base.isRecalculate = false
+    base.value = result
 
-    cache.meta = meta
+    base.meta = meta
 }
 
 
-function resolveClass<T: Object>(
-    classDep: ClassDep<T>,
+function resolveClass<V: Object, E>(
+    classDep: ClassDep<V, E>,
     acc: DepProcessor
 ): void {
     const {deps, meta} = getDeps(classDep, acc)
-    let obj: T = fastCreateObject(classDep.proto, deps);
+    let obj: V = fastCreateObject(classDep.proto, deps);
     if (classDep.middlewares) {
         obj = createObjectProxy(obj, resolveMiddlewares(classDep.middlewares, acc))
     }
-    const {cache} = classDep
-    classDep.hooks.onUpdate(cache.value, obj)
-    cache.isRecalculate = false
-    cache.value = obj
-    cache.meta = meta
+    const {base} = classDep
+    classDep.hooks.onUpdate(base.value, obj)
+    base.isRecalculate = false
+    base.value = obj
+    base.meta = meta
 }
 
 function resolveMeta(metaDep: MetaDep): void {
-    const {cache} = metaDep
-    cache.isRecalculate = false
-    cache.value = metaDep.source.cache.meta
+    const {base} = metaDep
+    base.isRecalculate = false
+    base.value = metaDep.source.base.meta
 }
 
-function resolveLoader<A: Observable, T: DepFn<A>>(
-    loaderDep: LoaderDep<A, T>,
+function resolveLoader<V, E>(
+    loaderDep: LoaderDep<V, E>,
     acc: DepProcessor
 ): void {
-    const {cache} = loaderDep
+    const {base} = loaderDep
     const {deps, meta} = getDeps(loaderDep, acc)
+    base.meta = meta
     if (!meta.fulfilled) {
-        cache.value = null
-        cache.meta = meta
         return
     }
 
-    let fn: (...x: any) => Observable|Promise = loaderDep.fn;
+    let fn: Loader<V, E> = loaderDep.fn;
     if (loaderDep.middlewares) {
         fn = createFunctionProxy(fn, resolveMiddlewares(loaderDep.middlewares, acc))
     }
-    const result: A = promiseToObservable(fastCall(fn, deps));
-    loaderDep.hooks.onUpdate(cache.value, result)
-    cache.isRecalculate = false
-    cache.value = result
-    cache.meta = meta
+    const result: Observable<V, E> = promiseToObservable(fastCall(fn, deps));
+    loaderDep.hooks.onUpdate(base.value, result)
+    base.isRecalculate = false
+    base.value = result
 }
 
-function resolveModel<T: Object>(
-    modelDep: ModelDep<T>,
+function resolveModel<V, E>(
+    modelDep: ModelDep<V, E>,
     acc: DepProcessor
 ): void {
-    const {cache, updater} = modelDep
-
-    cache.meta = recalcMeta(cache.meta, modelDep.childs)
-
-    if (updater && updater.isDirty) {
-        const state: ModelState<T> = modelDep.state;
-        state.pending()
-        const value: ?Observable = acc.resolve(updater.loader);
-        if (value) {
-            const subscription: Subscription = updater.subscription;
-            subscription.unsubscribe()
-            updater.subscription = value.subscribe(new ObserverCursor(state))
-            updater.isDirty = false
+    const {base, updater} = modelDep
+    const newMeta: EntityMeta = new EntityMetaImpl();
+    const childs = modelDep.childs
+    let isChanged: boolean = false;
+    for (let i = 0, l = childs.length; i < l; i++) {
+        if (updateMeta(newMeta, childs[i].base.meta)) {
+            isChanged = true
         }
     }
-    cache.isRecalculate = false
-    cache.value = modelDep.get()
+    if (updater) {
+        if (updateMeta(newMeta, updater.meta)) {
+            isChanged = true
+        }
+        if (updater.isDirty) {
+            const state: ModelState<V, E> = modelDep.state;
+            state.pending()
+            const value: Observable<V, E> = acc.resolve(updater.loader);
+            if (updater.observable !== value) {
+                const subscription: Subscription = updater.subscription;
+                subscription.unsubscribe()
+                updater.subscription = value.subscribe(new ObserverCursor(state))
+                updater.isDirty = false
+                updater.observable = value
+            }
+        }
+    }
+    if (isChanged) {
+        base.meta = newMeta
+    }
+    base.isRecalculate = false
+    base.value = modelDep.get()
 }
 
-function resolveSetter<A: (...x: any) => void, T: DepFn<A>>(
-    setterDep: SetterDep<A, T>,
+function resolveSetter<V, E>(
+    setterDep: SetterDep<V, E>,
     acc: DepProcessor
 ): void {
-    const facet = setterDep.facet
-    const value: (...x: any) => void = acc.resolve(facet);
-    if (typeof value !== 'function') {
-        throw new Error('Not a function returned from dep ' + setterDep.info.displayName)
+    const {base} = setterDep
+    const {deps, meta} = getDeps(setterDep, acc)
+    let result: V = fastCall(setterDep.fn, deps);
+
+    if (typeof result !== 'function') {
+        throw new Error('Not a function returned from dep ' + base.info.displayName)
     }
-    const cache = setterDep.cache
-    cache.isRecalculate = false
-    cache.value = createFunctionProxy(value, [setterDep.set])
-    cache.meta = facet.cache.meta
+    result = createFunctionProxy(
+        result,
+        setterDep.middlewares
+            ? [setterDep.set].concat(
+                resolveMiddlewares(setterDep.middlewares, acc)
+            )
+            : [setterDep.set]
+    )
+    setterDep.hooks.onUpdate(base.value, result)
+    base.isRecalculate = false
+    base.value = result
+    base.meta = meta
 }
 
 export default {

@@ -1,6 +1,7 @@
 /* @flow */
 
 import CacheImpl from './CacheImpl'
+import DepBaseImpl from './DepBaseImpl'
 import EntityMetaImpl, {
     setPending,
     setSuccess,
@@ -11,31 +12,31 @@ import type {
     DepFn,
     Info
 } from '../../annotations/annotationInterfaces'
+import type {Observable, Subscription} from '../../observableInterfaces'
 import type {
     EntityMeta,
     FromJS,
+    DepBase,
     ModelState,
     Updater,
     ModelDep,
+    LoaderDep,
     FactoryDep,
-    Cache,
     AnyDep,
     Cursor,
     Notifier
 } from '../nodeInterfaces'
 
-import type {Subscription} from '../../observableInterfaces'
-
 // implements ModelState
-class ModelStateImpl<T> {
+class ModelStateImpl<V, E> {
     pending: () => void;
-    success: (value: T) => boolean;
-    error: (error: Error) => void;
+    success: (value: V) => void;
+    error: (error: E) => void;
 
     constructor(
         pending: () => void,
-        success: (value: T) => boolean,
-        error: (error: Error) => void
+        success: (value: V) => void,
+        error: (error: E) => void
     ) {
         this.pending = pending
         this.success = success
@@ -48,90 +49,87 @@ const fakeSubscription: Subscription = {
 }
 
 // implements Updater
-class UpdaterImpl {
+class UpdaterImpl<V, E> {
     isDirty: boolean;
-    loader: FactoryDep<void, DepFn<void>>;
+    loader: LoaderDep<V, E>;
+    observable: ?Observable<V, E>;
     subscription: Subscription;
+    meta: EntityMeta<E>;
 
-    constructor(loader: FactoryDep<void, DepFn<void>>) {
+    constructor(loader: LoaderDep<V, E>) {
         this.loader = loader
         this.isDirty = true
         this.subscription = fakeSubscription
+        this.meta = new EntityMetaImpl()
     }
 }
 
 
 // implements ModelDep
-export default class ModelDepImpl<T: Object> {
+export default class ModelDepImpl<V, E> {
     kind: 'model';
     id: DepId;
-    meta: EntityMeta;
-    cache: Cache<T>;
-    info: Info;
-    relations: Array<AnyDep>;
+    base: DepBase<V, E>;
+
     childs: Array<ModelDep>;
-    fromJS: FromJS<T>;
-    state: ModelState<T>;
-    updater: ?Updater;
-    get: () => T;
+    state: ModelState<V, E>;
+    updater: ?Updater<V, E>;
+    fromJS: FromJS<V>;
+    get: () => V;
 
     constructor(
         id: DepId,
         info: Info,
         notifier: Notifier,
-        cursor: Cursor<T>,
+        cursor: Cursor<V>,
         relations: Array<AnyDep>,
-        loader: ?FactoryDep<void, DepFn<void>>
+        loader: ?LoaderDep<V, E>
     ) {
         this.kind = 'model'
         this.id = id
-        this.meta = new EntityMetaImpl()
-        this.info = info
-        this.relations = relations
+        const base = this.base = new DepBaseImpl(info)
         this.childs = []
 
-        const self = this
-        const cache = this.cache = new CacheImpl()
         this.updater = loader ? new UpdaterImpl(loader) : null
 
         // chrome not optimized for bind syntax: place methods in constructor
         function notify(): void {
-            cache.isRecalculate = true
+            base.isRecalculate = true
             for (let i = 0, l = relations.length; i < l; i++) {
-                relations[i].cache.isRecalculate = true
+                relations[i].base.isRecalculate = true
             }
             notifier.notify()
         }
 
-        function get(): T {
+        function get(): V {
             return cursor.get()
         }
 
         function pending(): void {
-            const newMeta = setPending(self.meta)
-            if (self.meta === newMeta) {
+            const newMeta = setPending(base.meta)
+            if (base.meta === newMeta) {
                 // if previous value is pending - do not handle this value: only first
                 return
             }
             notify()
-            self.meta = newMeta
+            base.meta = newMeta
         }
 
-        function success(value: T): void {
+        function success(value: V): void {
             const isDataChanged = cursor.set(value)
-            const newMeta = setSuccess(self.meta)
-            if (newMeta !== self.meta || isDataChanged) {
+            const newMeta = setSuccess(base.meta)
+            if (newMeta !== base.meta || isDataChanged) {
                 notify()
             }
-            self.meta = newMeta
+            base.meta = newMeta
         }
 
-        function error(reason: Error): void {
-            const newMeta = setError(self.meta, reason)
-            if (newMeta !== self.meta) {
+        function error(reason: E): void {
+            const newMeta = setError(base.meta, reason)
+            if (newMeta !== base.meta) {
                 notify()
             }
-            self.meta = newMeta
+            base.meta = newMeta
         }
 
         this.get = get

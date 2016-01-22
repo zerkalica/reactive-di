@@ -3,19 +3,19 @@
 import merge from '../../utils/merge'
 import type {EntityMeta} from '../nodeInterfaces'
 
-type EntityMetaRec = {
+type EntityMetaRec<E> = {
     pending?: boolean;
     rejected?: boolean;
     fulfilled?: boolean;
-    reason?: ?Error;
+    reason?: ?E;
 }
 
 // implements EntityMeta
-export default class EntityMetaImpl {
+export default class EntityMetaImpl<E> {
     pending: boolean;
     rejected: boolean;
     fulfilled: boolean;
-    reason: ?Error;
+    reason: ?E;
 
     constructor(rec: EntityMetaRec = {}) {
         this.pending = rec.pending || false
@@ -43,7 +43,7 @@ export function setSuccess(meta: EntityMeta): EntityMeta {
     })
 }
 
-export function setError(meta: EntityMeta, reason: Error): EntityMetaImpl {
+export function setError<E>(meta: EntityMeta, reason: E): EntityMeta<E> {
     return merge(meta, {
         pending: false,
         rejected: true,
@@ -52,7 +52,7 @@ export function setError(meta: EntityMeta, reason: Error): EntityMetaImpl {
     })
 }
 
-function updateMeta(meta: EntityMeta, src: EntityMeta): boolean {
+export function updateMeta(meta: EntityMeta, src: EntityMeta): boolean {
     const {pending, rejected, fulfilled, reason} = src
     let isChanged = false
     /* eslint-disable no-param-reassign */
@@ -75,20 +75,4 @@ function updateMeta(meta: EntityMeta, src: EntityMeta): boolean {
     /* eslint-enable no-param-reassign */
 
     return isChanged
-}
-
-type MetaContainer = {
-    meta: EntityMeta;
-}
-
-export function recalcMeta(initialMeta: EntityMeta, sources: Array<MetaContainer>, originMeta?: EntityMeta): EntityMeta {
-    const newMeta: EntityMeta = new EntityMetaImpl();
-    for (let i = 0, l = sources.length; i < l; i++) {
-        updateMeta(newMeta, sources[i].meta)
-    }
-    if (originMeta) {
-        updateMeta(newMeta, originMeta)
-    }
-
-    return merge(initialMeta, newMeta)
 }

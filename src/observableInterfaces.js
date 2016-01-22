@@ -1,15 +1,15 @@
 /* @flow */
 
-export type Observer<T, E> = {
-    next(value: T): void;
+export type Observer<V, E> = {
+    next(value: V): void;
     error(errorValue: E): void;
-    complete(completeValue: T): void;
+    complete(completeValue: V): void;
 }
 
 export type Subscription = {
     unsubscribe() : void;
 }
 
-export type Observable = {
-    subscribe(observer : Observer) : Subscription;
+export type Observable<V, E> = {
+    subscribe(observer : Observer<V, E>) : Subscription;
 }

@@ -1,9 +1,19 @@
 /* @flow */
+
+import type {Observable} from '../observableInterfaces'
+
 export type SimpleMap<K, V> = {[id: K]: V};
 
 export type DepId = string;
 
 export type DepFn<T> = (...x: any) => T;
+
+export type Loader<T, E> = (...x: any) => Observable<T, E>|Promise<T>;
+
+export type Deps<T> = Array<Dependency<T> | SimpleMap<string, Dependency<T>>>;
+
+export type FromJS<T: Object> = (data: Object) => T;
+
 /* eslint-disable no-undef */
 export type Dependency<T> = DepFn<T>|Class<T>;
 /* eslint-enable */
@@ -20,71 +30,80 @@ export type Hooks<T> = {
     onUpdate: (currentValue: T, nextValue: T) => void;
 }
 
-export type Deps<T> = Array<Dependency<T> | SimpleMap<string, Dependency<T>>>;
-
 export type Info = {
     tags: Array<string>;
     displayName: string;
 }
 
-export type ModelAnnotation<T: Object, L: Function> = {
+/* eslint-disable no-unused-vars */
+export type ModelAnnotation<V, E> = {
     kind: 'model';
     id: DepId;
     info: Info;
-    /* eslint-disable no-undef */
-    source: Class<T>;
-    loader: ?L;
+    source: Class<V>;
+    loader: ?Loader<V, E>;
     childs: Array<Dependency>;
-    /* eslint-enable no-undef */
+    statePath: Array<string>;
+    fromJS: FromJS<V>;
 }
+/* eslint-enable no-unused-vars */
 
-export type ClassAnnotation<T: Object> = {
+export type ClassAnnotation<V> = {
     kind: 'class';
     id: DepId;
     info: Info;
-    hooks: ?Hooks<T>;
+    hooks: ?Hooks<V>;
     deps: ?Deps;
-    /* eslint-disable no-undef */
-    proto: Class<T>;
-    /* eslint-enable no-undef */
+    proto: Class<V>;
 }
 
-export type FactoryAnnotation<T: Function> = {
+export type FactoryAnnotation<V> = {
     kind: 'factory';
     id: DepId;
     info: Info;
-    hooks: ?Hooks<T>;
+    hooks: ?Hooks<V>;
     deps: ?Deps;
-    fn: T;
+    fn: DepFn<V>;
 }
 
-export type MetaAnnotation<T> = {
+export type LoaderAnnotation<V, E> = {
+    kind: 'loader';
+    id: DepId;
+    info: Info;
+    hooks: ?Hooks<Observable<V, E>>;
+    deps: ?Deps;
+    fn: Loader<V, E>;
+}
+
+export type MetaAnnotation = {
     kind: 'meta';
     id: DepId;
     info: Info;
-    source: Dependency<T>;
+    source: Dependency;
 }
 
-export type SetterAnnotation<M, T: Function> = {
+/* eslint-disable no-unused-vars */
+export type SetterAnnotation<V, M> = {
     kind: 'setter';
     id: DepId;
     info: Info;
-    /* eslint-disable no-undef */
-    model: Class<M>;
-    /* eslint-enable no-undef */
-    facet: T;
+    model: Class<V>;
+    facet: DepFn<V>;
+    deps: ?Deps;
 }
+/* eslint-enable no-unused-vars */
 
 export type AnyAnnotation = MetaAnnotation
     | ModelAnnotation
     | SetterAnnotation
     | FactoryAnnotation
+    | LoaderAnnotation
     | ClassAnnotation;
 
 /* eslint-disable no-undef */
 export type AnnotationDriver = {
-    get<R: any, T: Dependency<R>, A: AnyAnnotation>(dep: T): A;
-    set<R: any, T: Dependency<R>, A: AnyAnnotation>(dep: T, annotation: A): T;
+    get<T: Dependency, A: AnyAnnotation>(dep: T): A;
+    set<T: Dependency, A: AnyAnnotation>(dep: T, annotation: A): T;
 };
 
 export type IAnnotations = {

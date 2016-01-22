@@ -2,6 +2,7 @@
 
 import {
     HooksImpl,
+    LoaderAnnotationImpl,
     ClassAnnotationImpl,
     FactoryAnnotationImpl,
     MetaAnnotationImpl,
@@ -11,6 +12,7 @@ import {
 import type {
     Deps,
     DepFn,
+    Loader,
     Dependency,
     Hooks,
     HooksRec,
@@ -29,8 +31,8 @@ export default function createAnnotations(
 ): IAnnotations {
     return {
         /* eslint-disable no-unused-vars */
-        klass<P: Object, T: Class<P>>(...deps: Deps): (target: T) => T {
-            return function _factory(target: T): T {
+        klass(...deps: Deps): <P: Object>(target: Class<P>) => Class<P> {
+            return function _klass<P: Object>(target: Class<P>): Class<P> {
                 return driver.set(target, new ClassAnnotationImpl(
                     target,
                     tags,
@@ -39,8 +41,8 @@ export default function createAnnotations(
             }
         },
 
-        factory<A, T: DepFn<A>>(...deps: Deps): (target: T) => T {
-            return function _factory(target: T): T {
+        factory(...deps: Deps): <T: DepFn>(target: T) => T {
+            return function _factory<T: DepFn>(target: T): T {
                 return driver.set(target, new FactoryAnnotationImpl(
                     target,
                     tags,
@@ -49,7 +51,17 @@ export default function createAnnotations(
             }
         },
 
-        meta<A: any, T: Dependency<A>>(source: T): () => void {
+        loader(...deps: Deps): <L: Loader>(target: L) => L {
+            return function _loader<L: Loader>(target: L): L {
+                return driver.set(target, new LoaderAnnotationImpl(
+                    target,
+                    tags,
+                    deps
+                ))
+            }
+        },
+
+        meta<T: Dependency>(source: T): () => void {
             function dummyTargetId(): void {}
             return driver.set((dummyTargetId: any), new MetaAnnotationImpl(
                 source,
@@ -57,27 +69,32 @@ export default function createAnnotations(
             ))
         },
 
-        model<P: Object, T: Class<P>, A, L: DepFn<A>>(loader?: L): (target: T) => T {
-            return function _model(source: T): T {
+        model(loader?: Loader): <P: Object, T: Class<P>>(target: T) => T {
+            return function _model<P: Object, T: Class<P>>(source: T): T {
                 return driver.set(source, new ModelAnnotationImpl(source, loader, tags))
             }
         },
 
-        setter<P: Object, M: Class<P>, A, T: DepFn<A>>(model: M, ...deps: Deps): (target: T) => T {
+        setter<P, M: Class<P>, T: DepFn>(model: M, ...deps: Deps): (target: T) => T {
             return function _setter(target: T): T {
-                function setterFacetId() {}
-                const facet = driver.set(
-                    setterFacetId,
-                    new FactoryAnnotationImpl(target, tags, deps)
-                )
-                return driver.set(target, new SetterAnnotationImpl(model, facet, tags))
+                return driver.set(target, new SetterAnnotationImpl(
+                    model,
+                    target,
+                    deps,
+                    tags
+                ))
             }
         },
 
-        hooks<A: any, T: Dependency<A>>(hooks: HooksRec<T>): (target: T) => T {
+        hooks<T: Dependency>(hooks: HooksRec<T>): (target: T) => T {
             return function _hooks(target: T): T {
-                const annotation: ClassAnnotation|FactoryAnnotation<T> = driver.get(target);
-                if (annotation && (annotation.kind === 'class' || annotation.kind === 'factory')) {
+                const annotation: ClassAnnotation|FactoryAnnotation = driver.get(target);
+                if (annotation && (
+                    annotation.kind === 'class'
+                    || annotation.kind === 'factory'
+                    || annotation.kind === 'setter'
+                    || annotation.kind === 'loader'
+                )) {
                     annotation.hooks = new HooksImpl(hooks)
                 } else {
                     throw new Error('Hook can be applied to class or factory annotation. Given: ' + annotation.kind)

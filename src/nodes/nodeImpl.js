@@ -3,10 +3,16 @@
 import CacheImpl from './impl/CacheImpl'
 import EntityMetaImpl from './impl/EntityMetaImpl'
 import ModelDepImpl from './impl/ModelDepImpl'
+import DepBaseImpl from './impl/DepBaseImpl'
 import {HooksImpl} from '../annotations/annotationImpl'
-import type {DepId, Info, Hooks} from '../annotations/annotationInterfaces'
 import type {
-    Cache,
+    DepId,
+    DepFn,
+    Info,
+    Hooks
+} from '../annotations/annotationInterfaces'
+import type {
+    DepBase,
     FactoryDep,
     ModelDep,
     ClassDep,
@@ -14,100 +20,122 @@ import type {
     EntityMeta
 } from './nodeInterfaces'
 
+import type {Observable} from '../observableInterfaces'
+
 export {ModelDepImpl}
 
-export class ClassDepImpl<T> {
+// implements ClassDep
+export class ClassDepImpl<V, E> {
     kind: 'class';
     id: DepId;
-    cache: Cache<T>;
-    info: Info;
-    relations: Array<AnyDep>;
-    hooks: Hooks<T>;
+    base: DepBase<V, E>;
+
+    hooks: Hooks<V>;
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<ClassDep>;
     /* eslint-disable no-undef */
-    proto: Class<T>;
+    proto: Class<V>;
     /* eslint-enable no-undef */
 
     constructor(
         id: DepId,
         info: Info,
         /* eslint-disable no-undef */
-        proto: Class<T>,
+        proto: Class<V>,
         /* eslint-enable no-undef */
-        hooks: ?Hooks<T>
+        hooks: ?Hooks<V>
     ) {
         this.kind = 'class'
         this.id = id
-        this.cache = new CacheImpl()
-        this.info = info
+        this.base = new DepBaseImpl(info)
         this.hooks = hooks || new HooksImpl()
         this.proto = proto
-        this.relations = []
     }
 }
 
-export class FactoryDepImpl<T> {
+// implements FactoryDep
+export class FactoryDepImpl<V, E> {
     kind: 'factory';
     id: DepId;
-    cache: Cache<T>;
-    info: Info;
-    relations: Array<AnyDep>;
-    hooks: Hooks<T>;
+    base: DepBase<V, E>;
+
+    hooks: Hooks<V>;
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<FactoryDep>;
-    fn: Function;
+    fn: DepFn<V>;
 
     constructor(
         id: DepId,
         info: Info,
-        fn: Function,
-        hooks: ?Hooks<T>
+        fn: DepFn<V>,
+        hooks: ?Hooks<V>
     ) {
         this.kind = 'factory'
         this.id = id
-        this.cache = new CacheImpl()
-        this.info = info
+        this.base = new DepBaseImpl(info)
         this.hooks = hooks || new HooksImpl()
         this.fn = fn
-        this.relations = []
     }
 }
 
-export class MetaDepImpl {
+export class MetaDepImpl<E> {
     kind: 'meta';
     id: DepId;
-    cache: Cache<EntityMeta>;
-    info: Info;
-    relations: Array<AnyDep>;
+    base: DepBase<EntityMeta<E>, E>;
+
     source: AnyDep;
 
     constructor(id: DepId, info: Info) {
         this.kind = 'meta'
         this.id = id
-        this.cache = new CacheImpl()
-        this.cache.value = new EntityMetaImpl()
-        this.info = info
-        this.relations = []
+        this.base = new DepBaseImpl(info)
+        this.base.value = new EntityMetaImpl()
     }
 }
 
-export class SetterDepImpl<T, V> {
+export class SetterDepImpl<V, E> {
     kind: 'setter';
     id: DepId;
-    cache: Cache<V>;
-    info: Info;
-    relations: Array<AnyDep>;
-    facet: FactoryDep<T>;
-    set: (v: T|Promise<T>) => void;
+    base: DepBase<V, E>;
+
+    hooks: Hooks<V>;
+    deps: Array<AnyDep>;
+    depNames: ?Array<string>;
+    middlewares: ?Array<FactoryDep>;
+    fn: DepFn<V>;
+
+    set: (v: V|Promise<V>) => void;
 
     constructor(id: DepId, info: Info) {
         this.kind = 'setter'
         this.id = id
-        this.cache = new CacheImpl()
-        this.info = info
-        this.relations = []
+        this.base = new DepBaseImpl(info)
+    }
+}
+
+export class LoaderDep<V, E> {
+    kind: 'loader';
+    id: DepId;
+    base: DepBase<Observable<V, E>, E>;
+
+    hooks: Hooks<Observable<V, E>>;
+    deps: Array<AnyDep>;
+    depNames: ?Array<string>;
+    middlewares: ?Array<FactoryDep>;
+    fn: DepFn<Observable<V, E>>;
+
+    constructor(
+        id: DepId,
+        info: Info,
+        fn: DepFn<V>,
+        hooks: ?Hooks<V>
+    ) {
+        this.kind = 'loader'
+        this.id = id
+        this.base = new DepBaseImpl(info)
+        this.hooks = hooks || new HooksImpl()
+        this.fn = fn
     }
 }

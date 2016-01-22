@@ -8,6 +8,6 @@ import type {
 } from './nodes/nodeInterfaces'
 
 export type ReactiveDi = {
-    mount<R: any, T: Dependency<R>, D: ClassDep<R>|FactoryDep<T>>(annotatedDep: T): () => void;
-    get<R: any, T: Dependency<R>, D: AnyDep<R, T>>(annotatedDep: T): R;
+    mount<V, E, V: AnyDep<V, E>>(annotatedDep: V): () => void;
+    get<V, E, D: AnyDep<V, E>>(annotatedDep: D): V;
 }

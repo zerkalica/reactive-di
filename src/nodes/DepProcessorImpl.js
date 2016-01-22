@@ -3,7 +3,7 @@
 /* eslint-disable no-unused-vars */
 import type {
     DepProcessor,
-    Cache,
+    DepBase,
     EntityMeta,
     ProcessorTypeMap,
     AnyDep
@@ -21,18 +21,18 @@ export default class DepProcessorImpl {
     }
 
     /* eslint-disable no-unused-vars */
-    resolve<A: any, B: Dependency<A>, T: AnyDep<A, B>>(dep: T): A {
+    resolve<V: any, E>(dep: AnyDep<V, E>): V|any {
     /* eslint-enable no-unused-vars */
-        const cache: Cache = dep.cache;
-        if (cache.isRecalculate) {
+        const base = dep.base;
+        if (base.isRecalculate) {
             try {
                 this._processors[dep.kind](dep, (this: DepProcessor))
             } catch (e) {
-                e.message = e.message + ', ' + dep.info.displayName
+                e.message = e.message + ', ' + base.info.displayName
                 throw e
             }
         }
 
-        return ((cache.value): any)
+        return base.value
     }
 }
