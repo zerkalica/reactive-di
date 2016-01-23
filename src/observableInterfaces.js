@@ -1,7 +1,14 @@
 /* @flow */
 
+export type NextValue<V> = {
+    kind: 'data';
+    data: V;
+} | {
+    kind: 'pending';
+}
+
 export type Observer<V, E> = {
-    next(value: V): void;
+    next(value: NextValue<V>): void;
     error(errorValue: E): void;
     complete(completeValue: V): void;
 }

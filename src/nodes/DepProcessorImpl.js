@@ -3,10 +3,9 @@
 /* eslint-disable no-unused-vars */
 import type {
     DepProcessor,
-    DepBase,
+    AnyDep,
     EntityMeta,
-    ProcessorTypeMap,
-    AnyDep
+    ProcessorTypeMap
 } from './nodeInterfaces'
 import type {
     Dependency
@@ -21,10 +20,9 @@ export default class DepProcessorImpl {
     }
 
     /* eslint-disable no-unused-vars */
-    resolve<V: any, E>(dep: AnyDep<V, E>): V {
+    resolve(dep: AnyDep): any {
+        const {base} = dep
     /* eslint-enable no-unused-vars */
-        const base = dep.base;
-        const value: V = base.value;
         if (base.isRecalculate) {
             try {
                 this._processors[dep.kind](dep, (this: DepProcessor))

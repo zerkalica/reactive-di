@@ -1,8 +1,5 @@
 /* @flow */
 
-import EntityMetaImpl from './impl/EntityMetaImpl'
-import ModelDepImpl, {UpdaterImpl} from './impl/ModelDepImpl'
-import DepBaseImpl from './impl/DepBaseImpl'
 import {HooksImpl} from '../annotations/annotationImpl'
 import type {
     DepId,
@@ -12,135 +9,209 @@ import type {
     Hooks
 } from '../annotations/annotationInterfaces'
 import type {
+    Observer,
+    Observable,
+    Subscription
+} from '../observableInterfaces'
+import type {
+    Cacheable,
+    MetaSource,
     DepBase,
-    FactoryDep,
-    LoaderDep,
-    SetterDep,
-    ModelDep,
-    ClassDep,
     AnyDep,
+
+    ModelDep,
+    AsyncModelDep,
+
+    ClassDep,
+    ClassInvoker,
+    FactoryDep,
+    FactoryInvoker,
+
+    PromiseSetter,
+    SetterDep,
+    SetterInvoker,
+    SetterResult,
+
+    LoaderDep,
+    LoaderInvoker,
+    LoaderResult,
+
     EntityMeta
 } from './nodeInterfaces'
 
-import type {Observable} from '../observableInterfaces'
+import type {FromJS, Cursor} from '../modelInterfaces'
+import EntityMetaImpl from './impl/EntityMetaImpl'
 
-export {ModelDepImpl, UpdaterImpl}
-
-// implements ClassDep
-export class ClassDepImpl<V, E> {
-    kind: 'class';
+// implements DepBase
+class DepBaseImpl<V> {
+    isRecalculate: boolean;
+    value: V;
+    relations: Array<Cacheable>;
     id: DepId;
-    base: DepBase<V, E>;
-
-    hooks: Hooks<V>;
-    deps: Array<AnyDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<ClassDep>;
-    /* eslint-disable no-undef */
-    proto: Class<V>;
-    /* eslint-enable no-undef */
+    info: Info;
 
     constructor(
         id: DepId,
         info: Info,
-        /* eslint-disable no-undef */
-        proto: Class<V>,
-        /* eslint-enable no-undef */
-        hooks: ?Hooks<V>
+        value?: V
+    ) {
+        this.id = id
+        this.info = info
+        this.isRecalculate = value === undefined
+        this.relations = []
+        if (value !== undefined) {
+            this.value = value
+        }
+    }
+}
+
+// implements Invoker
+class InvokerImpl<V, T, M> {
+    hooks: Hooks<V>;
+    target: T;
+    deps: Array<AnyDep>;
+    depNames: ?Array<string>;
+    middlewares: ?Array<M>;
+
+    constructor(target: T, hooks: ?Hooks<V>, middlewares: ?Array<M>) {
+        this.deps = []
+        this.target = target
+        this.hooks = hooks || new HooksImpl()
+        this.middlewares = middlewares
+    }
+}
+
+// implements ModelDep
+export default class ModelDepImpl<V: Object> {
+    kind: 'model';
+    base: DepBase<V>;
+    fromJS: FromJS<V>;
+    cursor: Cursor<V>;
+
+    constructor(
+        id: DepId,
+        info: Info,
+        value: V
+    ) {
+        this.kind = 'model'
+        this.base = new DepBaseImpl(id, info, value)
+    }
+}
+
+// implements AsyncModelDep
+export default class AsyncModelDepImpl<V: Object, E> {
+    kind: 'asyncmodel';
+    base: DepBase<V>;
+    meta: EntityMeta<E>;
+    asyncRelations: Array<Cacheable>;
+
+    fromJS: FromJS<V>;
+    cursor: Cursor<V>;
+
+    constructor(
+        id: DepId,
+        info: Info,
+        value: V
+    ) {
+        this.kind = 'asyncmodel'
+        this.base = new DepBaseImpl(id, info, value)
+        this.meta = new EntityMetaImpl()
+        this.asyncRelations = []
+    }
+}
+
+// implements ClassDep
+export class ClassDepImpl<V: Object> {
+    kind: 'class';
+    base: DepBase<V>;
+    invoker: ClassInvoker<V>;
+
+    constructor(
+        id: DepId,
+        info: Info,
+        target: Class<V>
     ) {
         this.kind = 'class'
-        this.id = id
-        this.base = new DepBaseImpl(info)
-        this.hooks = hooks || new HooksImpl()
-        this.proto = proto
+        this.base = new DepBaseImpl(id, info)
+        this.invoker = new InvokerImpl(target)
     }
 }
 
 // implements FactoryDep
-export class FactoryDepImpl<V, E> {
+export class FactoryDepImpl<V: any, E> {
     kind: 'factory';
-    id: DepId;
-    base: DepBase<V, E>;
-
-    hooks: Hooks<V>;
-    deps: Array<AnyDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<FactoryDep>;
-    fn: DepFn<V>;
+    base: DepBase<V>;
+    invoker: FactoryInvoker<V>;
 
     constructor(
         id: DepId,
         info: Info,
-        fn: DepFn<V>,
-        hooks: ?Hooks<V>
+        target: DepFn<V>
     ) {
         this.kind = 'factory'
-        this.id = id
-        this.base = new DepBaseImpl(info)
-        this.hooks = hooks || new HooksImpl()
-        this.fn = fn
+        this.base = new DepBaseImpl(id, info)
+        this.invoker = new InvokerImpl(target)
     }
 }
 
 // implements MetaDep
 export class MetaDepImpl<E> {
     kind: 'meta';
-    id: DepId;
-    base: DepBase<EntityMeta<E>, E>;
+    base: DepBase<EntityMeta<E>>;
+    sources: Array<MetaSource>;
 
-    source: AnyDep;
-
-    constructor(id: DepId, info: Info) {
+    constructor(
+        id: DepId,
+        info: Info
+    ) {
         this.kind = 'meta'
-        this.id = id
-        this.base = new DepBaseImpl(info)
-        this.base.value = new EntityMetaImpl()
+        this.base = new DepBaseImpl(id, info)
+        this.sources = []
     }
 }
 
 // implements SetterDep
-export class SetterDepImpl<V, E> {
+export class SetterDepImpl<V: Object, E> {
     kind: 'setter';
-    id: DepId;
-    base: DepBase<V, E>;
+    base: DepBase<SetterResult<V>>;
+    invoker: SetterInvoker<V>;
 
-    hooks: Hooks<V>;
-    deps: Array<AnyDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<FactoryDep>;
-    fn: DepFn<V>;
+    set: PromiseSetter<V>;
 
-    set: (v: V|Promise<V>) => void;
-
-    constructor(id: DepId, info: Info) {
+    constructor(
+        id: DepId,
+        info: Info,
+        target: DepFn<SetterResult<V>>
+    ) {
         this.kind = 'setter'
-        this.id = id
-        this.base = new DepBaseImpl(info)
+        this.base = new DepBaseImpl(id, info)
+        this.invoker = new InvokerImpl(target)
     }
+}
+
+const defaultSubscription: Subscription = {
+    unsubscribe(): void {}
 }
 
 // implements LoaderDep
 export class LoaderDepImpl<V: Object, E> {
     kind: 'loader';
-    id: DepId;
-    base: DepBase<Observable<V, E>, E>;
+    base: DepBase<LoaderResult<V, E>>;
+    invoker: LoaderInvoker<V, E>;
 
-    hooks: Hooks<Observable<V, E>>;
-    deps: Array<AnyDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<FactoryDep>;
-    fn: Loader<V, E>;
+    modelObserver: Observer<V, E>;
+    lastSubscription: Subscription;
+    refCount: number;
 
     constructor(
         id: DepId,
         info: Info,
-        fn: Loader<V, E>,
-        hooks: ?Hooks<Observable<V, E>>
+        target: DepFn<LoaderResult<V, E>>
     ) {
         this.kind = 'loader'
-        this.id = id
-        this.base = new DepBaseImpl(info)
-        this.hooks = hooks || new HooksImpl()
-        this.fn = fn
+        this.base = new DepBaseImpl(id, info)
+        this.invoker = new InvokerImpl(target)
+        this.lastSubscription = defaultSubscription
+        this.refCount = 0
     }
 }

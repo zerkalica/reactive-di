@@ -30,7 +30,7 @@ class PromiseObservable<T, E: Error> {
         this.subscribe = function subscribe(observer: Observer): Subscription {
             function success(data: T): void {
                 if (isSubscribed) {
-                    observer.next(data)
+                    observer.next({kind: 'data', data})
                 }
             }
             function error(e: E): void {
@@ -46,11 +46,13 @@ class PromiseObservable<T, E: Error> {
     }
 }
 
-export default function promiseToObservable<T>(resolver: Promise<T>|Observable): Observable {
+export default function promiseToObservable<V, E>(
+    resolver: Promise<V>|Observable<V, E>
+): Observable<V, E> {
     if (typeof resolver.subscribe === 'function') {
-        return ((resolver: any): Observable)
+        return ((resolver: any): Observable<V, E>)
     } else if (typeof resolver.then === 'function') {
-        return new PromiseObservable(((resolver: any): Promise<T>))
+        return new PromiseObservable(((resolver: any): Promise<V>))
     } else {
         throw new TypeError('resolver argument is not a Promise or Observable')
     }

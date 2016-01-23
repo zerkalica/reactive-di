@@ -10,8 +10,8 @@ import type {
     DepFn,
     Loader
 } from '../annotations/annotationInterfaces'
-import type {FromJS, SimpleMap} from '../modelInterfaces'
-import type {Subscription, Observable} from '../observableInterfaces'
+import type {FromJS, SimpleMap, Cursor} from '../modelInterfaces'
+import type {Subscription, Observer, Observable} from '../observableInterfaces'
 
 export type EntityMeta<E> = {
     pending: boolean;
@@ -20,132 +20,111 @@ export type EntityMeta<E> = {
     reason: ?E;
 }
 
-export type MetaProvider<E> = {
+export type MetaSource<E> = {
     meta: EntityMeta<E>;
 }
+
 /* eslint-disable no-use-before-define, no-undef */
 
-export type DepBase<V: any, E> = {
-    id: DepId;
+export type Cacheable = {
+    isRecalculate: boolean;
+};
 
-    displayName: string;
-    tags: Array<string>;
-    relations: Array<AnyDep>;
-
+export type DepBase<V> = {
     isRecalculate: boolean;
     value: V;
-    meta: EntityMeta<E>;
+    relations: Array<Cacheable>;
+    id: DepId;
+    info: Info;
 }
 
-export type ModelDep<V: Object, E> = DepBase<V, E> & {
+export type ModelDep<V: Object> = {
     kind: 'model';
-    metaSources: Array<MetaProvider>;
+    base: DepBase<V>;
     fromJS: FromJS<V>;
-    get(): V;
-    set(value: V): boolean;
+    cursor: Cursor<V>;
 }
 
-export type Updater<V: Object, E> = {
+export type AsyncModelDep<V: Object, E> = {
+    kind: 'asyncmodel';
+    base: DepBase<V>;
+
+    fromJS: FromJS<V>;
+    cursor: Cursor<V>;
+
     meta: EntityMeta<E>;
-    isDirty: boolean;
-    observable: ?Observable<V, E>;
-    loader: LoaderDep<V, E>;
-    subscription: Subscription;
+    asyncRelations: Array<Cacheable>;
+}
+
+export type Invoker<V, T, M> = {
+    hooks: Hooks<V>;
+    target: T;
+    deps: Array<AnyDep>;
+    depNames: ?Array<string>;
+    middlewares: ?Array<M>;
+}
+
+export type ClassInvoker<V> = Invoker<V, Class<V>, ClassDep>;
+export type ClassDep<V: Object> = {
+    kind: 'class';
+    base: DepBase<V>;
+    invoker: ClassInvoker<V>;
+}
+
+export type FactoryInvoker<V> = Invoker<V, DepFn<V>, FactoryDep>;
+export type FactoryDep<V: any> = {
+    kind: 'factory';
+    base: DepBase<V>;
+    invoker: FactoryInvoker<V>;
+}
+
+export type MetaDep<E> = {
+    kind: 'meta';
+    base: DepBase<EntityMeta<E>>;
+    sources: Array<MetaSource>;
+}
+
+export type SetterResultValue<V> = Promise<V>|V;
+export type SetterResult<V> = DepFn<SetterResultValue<V>>;
+export type SetterInvoker<V> = Invoker<SetterResult<V>, DepFn<SetterResult<V>>, FactoryDep>;
+export type PromiseSetter<V> = (result: SetterResultValue<V>) => void;
+export type SetterDep<V: Object, E> = {
+    kind: 'setter';
+    base: DepBase<SetterResult<V>>;
+    invoker: SetterInvoker<V>;
+    set: PromiseSetter<V>;
+}
+
+export type LoaderResult<V: Object, E> = Observable<V, E>|Promise<V>;
+export type LoaderInvoker<V, E> = Invoker<LoaderResult<V, E>, DepFn<LoaderResult<V, E>>, FactoryDep>;
+export type LoaderDep<V: Object, E> = {
+    kind: 'loader';
+    base: DepBase<LoaderResult<V, E>>;
+    invoker: LoaderInvoker<V, E>;
+    modelObserver: Observer<V, E>;
+    lastSubscription: Subscription;
     refCount: number;
 }
 
-export type AsyncModelDep<V: Object, E> = DepBase<V, E> & {
-    kind: 'asyncmodel';
-    updater: Updater<V, E>;
-    model: ModelDep<V: Object, E>;
-}
-
-export type ClassDep<V: Object, E> = {
-    kind: 'class';
-    id: DepId;
-    base: DepBase<V, E>;
-
-    hooks: Hooks<V>;
-    deps: Array<AnyDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<ClassDep>;
-    proto: Class<V>;
-}
-
-export type FactoryDep<V: any, E> = {
-    kind: 'factory';
-    id: DepId;
-    base: DepBase<V, E>;
-
-    hooks: Hooks<V>;
-    deps: Array<AnyDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<FactoryDep>;
-    fn: DepFn<V>;
-}
-
-export type LoaderDep<V: Object, E> = {
-    kind: 'loader';
-    id: DepId;
-    base: DepBase<V, E>;
-
-    hooks: Hooks<V>;
-    deps: Array<AnyDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<FactoryDep>;
-    fn: DepFn<V>;
-}
-
-export type MetaDep<V: EntityMeta, E> = {
-    kind: 'meta';
-    id: DepId;
-    base: DepBase<V, E>;
-
-    source: AnyDep;
-}
-
-export type SetterDep<V: Object, E> = {
-    kind: 'setter';
-    id: DepId;
-    base: DepBase<V, E>;
-
-    hooks: Hooks<V>;
-    deps: Array<AnyDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<FactoryDep>;
-    fn: DepFn<V>;
-
-    set(v: V|Promise<V>): void;
-}
-
-export type SubscribableDep<V: any, E> =
-    ClassDep<V, E>
-    | FactoryDep<V, E>;
-
-export type MiddlewarableDep<V: any, E> =
-    ClassDep<V, E>
-    | FactoryDep<V, E>
-    | SetterDep<V, E>
-    | LoaderDep<V, E>;
-
-export type AnyDep<V: any, E> =
-    ClassDep<V, E>
-    | ModelDep<V, E>
-    | FactoryDep<V, E>
-    | LoaderDep<V, E>
-    | MetaDep<V, E>
-    | SetterDep<V, E>;
+export type AnyDep =
+    ModelDep
+    | FactoryDep
+    | ClassDep
+    | MetaDep
+    | SetterDep
+    | LoaderDep;
 
 export type DepSubscriber = {
-    subscribe(dep: SubscribableDep): Subscription;
+    subscribe(dep: AnyDep): Subscription;
 }
+
 export type Notifier = {
     notify(): void;
 }
 
 export type DepProcessor = {
-    resolve<V: any, E>(dep: AnyDep<V, E>): V;
+    resolve(dep: AnyDep): any;
 }
 
-export type ProcessorType<V: any, E> = (rec: AnyDep<V, E>, dep: DepProcessor) => void;
+export type ProcessorType = (rec: AnyDep, dep: DepProcessor) => void;
 export type ProcessorTypeMap = SimpleMap<string, ProcessorType>;
