@@ -48,21 +48,20 @@ export default class UpdaterImpl<V: Object, E> {
 
     constructor(model: AsyncModelDep<V, E>, notifier: Notifier) {
         const {
-            asyncRelations,
             cursor,
             base
         } = model
-        const relations = base.relations
+        const {dataRels, metaRels} = base.relations
         function notifyDataChanges(): void {
-            for (let i = 0, l = relations.length; i < l; i++) {
-                relations[i].isRecalculate = true
+            for (let i = 0, l = dataRels.length; i < l; i++) {
+                dataRels[i].isRecalculate = true
             }
             notifier.notify()
         }
 
         function notifyMetaChanges(): void {
-            for (let i = 0, l = asyncRelations.length; i < l; i++) {
-                asyncRelations[i].isRecalculate = true
+            for (let i = 0, l = metaRels.length; i < l; i++) {
+                metaRels[i].isRecalculate = true
             }
             notifier.notify()
         }

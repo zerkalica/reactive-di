@@ -31,10 +31,14 @@ export type Cacheable = {
     isRecalculate: boolean;
 };
 
+export type Relations = {
+    dataRels: Array<Cacheable>;
+    metaRels: Array<Cacheable>;
+}
 export type DepBase<V> = {
     isRecalculate: boolean;
     value: V;
-    relations: Array<Cacheable>;
+    relations: Relations;
     id: DepId;
     info: Info;
 }
@@ -54,7 +58,6 @@ export type AsyncModelDep<V: Object, E> = {
     cursor: Cursor<V>;
 
     meta: EntityMeta<E>;
-    asyncRelations: Array<Cacheable>;
 }
 
 export type DepArgs<M> = {
@@ -108,6 +111,7 @@ export type LoaderDep<V: Object, E> = {
 
 export type AnyDep =
     ModelDep
+    | AsyncModelDep
     | FactoryDep
     | ClassDep
     | MetaDep

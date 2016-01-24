@@ -18,6 +18,7 @@ import type {
     MetaSource,
     DepBase,
     DepArgs,
+    Relations,
     Invoker,
     AnyDep,
 
@@ -42,11 +43,22 @@ import type {
 import type {FromJS, Cursor} from '../modelInterfaces'
 import EntityMetaImpl from './impl/EntityMetaImpl'
 
+// implements Relations
+class RelationsImpl {
+    dataRels: Array<Cacheable>;
+    metaRels: Array<Cacheable>;
+
+    constructor() {
+        this.dataRels = []
+        this.metaRels = []
+    }
+}
+
 // implements DepBase
 class DepBaseImpl<V> {
     isRecalculate: boolean;
     value: V;
-    relations: Array<Cacheable>;
+    relations: Relations;
     id: DepId;
     info: Info;
 
@@ -58,7 +70,7 @@ class DepBaseImpl<V> {
         this.id = id
         this.info = info
         this.isRecalculate = value === undefined
-        this.relations = []
+        this.relations = new RelationsImpl()
         if (value !== undefined) {
             this.value = value
         }
@@ -107,7 +119,7 @@ class InvokerImpl<V, T, M> {
 }
 
 // implements ModelDep
-export default class ModelDepImpl<V: Object> {
+export class ModelDepImpl<V: Object> {
     kind: 'model';
     base: DepBase<V>;
     fromJS: FromJS<V>;
@@ -116,19 +128,22 @@ export default class ModelDepImpl<V: Object> {
     constructor(
         id: DepId,
         info: Info,
-        value: V
+        value: V,
+        cursor: Cursor<V>,
+        fromJS: FromJS<V>
     ) {
         this.kind = 'model'
         this.base = new DepBaseImpl(id, info, value)
+        this.cursor = cursor
+        this.fromJS = fromJS
     }
 }
 
 // implements AsyncModelDep
-export default class AsyncModelDepImpl<V: Object, E> {
+export class AsyncModelDepImpl<V: Object, E> {
     kind: 'asyncmodel';
     base: DepBase<V>;
     meta: EntityMeta<E>;
-    asyncRelations: Array<Cacheable>;
 
     fromJS: FromJS<V>;
     cursor: Cursor<V>;
@@ -136,12 +151,16 @@ export default class AsyncModelDepImpl<V: Object, E> {
     constructor(
         id: DepId,
         info: Info,
-        value: V
+        value: V,
+        cursor: Cursor<V>,
+        fromJS: FromJS<V>
     ) {
         this.kind = 'asyncmodel'
         this.base = new DepBaseImpl(id, info, value)
+        this.cursor = cursor
+        this.fromJS = fromJS
+
         this.meta = new EntityMetaImpl()
-        this.asyncRelations = []
     }
 }
 
