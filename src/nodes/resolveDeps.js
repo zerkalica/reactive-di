@@ -3,23 +3,20 @@
 import type {
     DepProcessor
     AnyDep,
-    ClassDep,
-    FactoryDep,
-    Invoker
+    DepArgs
 } from './nodeInterfaces'
 
 import type {SimpleMap} from '../modelInterfaces'
 import type {MiddlewareFn, MiddlewareMap} from '../utils/createProxy'
 
 export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(
-    dep: Invoker,
+    dep: DepArgs,
     acc: DepProcessor
 ): {
     deps: Array<AnyDep|SimpleMap<string, AnyDep>>,
     middlewares: ?Array<A>
 } {
-    const {deps, middlewares} = dep
-    const depNames: ?Array<string> = dep.depNames;
+    const {deps, depNames, middlewares} = dep
     const argsArray = []
     const argsObject = {}
     for (let i = 0, j = deps.length; i < j; i++) {

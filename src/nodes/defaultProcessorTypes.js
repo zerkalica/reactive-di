@@ -4,6 +4,7 @@ import type {
     EntityMeta,
     MetaSource,
     DepProcessor,
+
     ModelDep,
     AsyncModelDep,
     ClassDep,
@@ -11,8 +12,10 @@ import type {
     MetaDep,
 
     SetterDep,
+    SetterResult,
+
     LoaderDep,
-    LoaderResult
+    AsyncResult
 } from './nodeInterfaces'
 
 import type {
@@ -52,7 +55,7 @@ export function classDep<V: Object>(
     acc: DepProcessor
 ): void {
     const {base, invoker} = dep
-    const {deps, middlewares} = resolveDeps(invoker, acc)
+    const {deps, middlewares} = resolveDeps(invoker.depArgs, acc)
     let obj: V = fastCreateObject(invoker.target, deps);
     if (middlewares) {
         obj = createObjectProxy(obj, middlewares)
@@ -66,7 +69,7 @@ export function factoryDep<V: Object>(
     acc: DepProcessor
 ): void {
     const {base, invoker} = dep
-    const {deps, middlewares} = resolveDeps(invoker, acc)
+    const {deps, middlewares} = resolveDeps(invoker.depArgs, acc)
     let fn: V = fastCall(invoker.target, deps);
     if (middlewares) {
         if (typeof fn !== 'function') {
@@ -96,8 +99,8 @@ export function resolveSetter<V: Object, E>(
     acc: DepProcessor
 ): void {
     const {base, invoker} = dep
-    const {deps, middlewares} = resolveDeps(invoker, acc)
-    let fn: V = fastCall(invoker.target, deps);
+    const {deps, middlewares} = resolveDeps(invoker.depArgs, acc)
+    let fn: SetterResult<V, E> = fastCall(invoker.target, deps);
     if (typeof fn !== 'function') {
         throw new Error('No callable returns from dep ' + base.info.displayName)
     }
@@ -111,22 +114,13 @@ export function resolveLoader<V: Object, E>(
     acc: DepProcessor
 ): void {
     const {base, invoker} = dep
-    const {deps, middlewares} = resolveDeps(invoker, acc)
-    const observableOrPromise: LoaderResult<V, E> = fastCall(invoker.target, deps);
-    if (
-        typeof observableOrPromise.subscribe !== 'function'
-        || typeof observableOrPromise.then !== 'function'
-    ) {
-        throw new Error('No observable or promise returns from dep ' + base.info.displayName)
-    }
+    const {deps, middlewares} = resolveDeps(invoker.depArgs, acc)
+    const observableOrPromise: AsyncResult<V, E> = fastCall(invoker.target, deps);
     if (base.value === observableOrPromise) {
         base.isRecalculate = false
         return
     }
     base.value = observableOrPromise
-    dep.lastSubscription.unsubscribe()
-    const observable: Observable<V, E> = promiseToObservable(observableOrPromise);
-    dep.lastSubscription = observable.subscribe(dep.modelObserver)
-    dep.modelObserver.next({kind: 'pending'})
+    dep.set(observableOrPromise)
     base.isRecalculate = false
 }

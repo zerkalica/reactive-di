@@ -20,3 +20,7 @@ export type Subscription = {
 export type Observable<V, E> = {
     subscribe(observer : Observer<V, E>) : Subscription;
 }
+
+export type SubscriptionSource = {
+    subscription: Subscription;
+}

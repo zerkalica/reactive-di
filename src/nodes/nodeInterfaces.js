@@ -56,12 +56,16 @@ export type AsyncModelDep<V: Object, E> = {
     asyncRelations: Array<Cacheable>;
 }
 
-export type Invoker<V, T, M> = {
-    hooks: Hooks<V>;
-    target: T;
+export type DepArgs<M> = {
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<M>;
+}
+
+export type Invoker<V, T, M> = {
+    hooks: Hooks<V>;
+    target: T;
+    depArgs: DepArgs<M>;
 }
 
 export type ClassInvoker<V> = Invoker<V, Class<V>, ClassDep>;
@@ -84,26 +88,24 @@ export type MetaDep<E> = {
     sources: Array<MetaSource>;
 }
 
-export type SetterResultValue<V> = Promise<V>|V;
-export type SetterResult<V> = DepFn<SetterResultValue<V>>;
-export type SetterInvoker<V> = Invoker<SetterResult<V>, DepFn<SetterResult<V>>, FactoryDep>;
-export type PromiseSetter<V> = (result: SetterResultValue<V>) => void;
+export type AsyncResult<V, E> = Observable<V, E>|Promise<V>;
+export type AsyncSetter<V, E> = (data: AsyncResult<V, E>) => void;
+
+export type SetterResult<V, E> = DepFn<AsyncResult<V, E>>;
+export type SetterInvoker<V, E> = Invoker<SetterResult<V, E>, DepFn<SetterResult<V, E>>, FactoryDep>;
 export type SetterDep<V: Object, E> = {
     kind: 'setter';
-    base: DepBase<SetterResult<V>>;
-    invoker: SetterInvoker<V>;
-    set: PromiseSetter<V>;
+    base: DepBase<SetterResult<V, E>>;
+    invoker: SetterInvoker<V, E>;
+    set: AsyncSetter<V, E>;
 }
 
-export type LoaderResult<V: Object, E> = Observable<V, E>|Promise<V>;
-export type LoaderInvoker<V, E> = Invoker<LoaderResult<V, E>, DepFn<LoaderResult<V, E>>, FactoryDep>;
+export type LoaderInvoker<V, E> = Invoker<AsyncResult<V, E>, DepFn<AsyncResult<V, E>>, FactoryDep>;
 export type LoaderDep<V: Object, E> = {
     kind: 'loader';
-    base: DepBase<LoaderResult<V, E>>;
+    base: DepBase<AsyncResult<V, E>>;
     invoker: LoaderInvoker<V, E>;
-    modelObserver: Observer<V, E>;
-    lastSubscription: Subscription;
-    refCount: number;
+    set: AsyncSetter<V, E>;
 }
 
 export type AnyDep =

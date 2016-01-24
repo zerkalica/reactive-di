@@ -4,12 +4,8 @@
 import type {
     DepProcessor,
     AnyDep,
-    EntityMeta,
     ProcessorTypeMap
 } from './nodeInterfaces'
-import type {
-    Dependency
-} from '../annotations/annotationInterfaces'
 
 // implements DepProcessor
 export default class DepProcessorImpl {

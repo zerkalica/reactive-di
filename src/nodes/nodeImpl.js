@@ -17,6 +17,8 @@ import type {
     Cacheable,
     MetaSource,
     DepBase,
+    DepArgs,
+    Invoker,
     AnyDep,
 
     ModelDep,
@@ -27,14 +29,14 @@ import type {
     FactoryDep,
     FactoryInvoker,
 
-    PromiseSetter,
+    AsyncSetter,
+    AsyncResult,
     SetterDep,
     SetterInvoker,
     SetterResult,
 
     LoaderDep,
     LoaderInvoker,
-    LoaderResult,
 
     EntityMeta
 } from './nodeInterfaces'
@@ -65,19 +67,29 @@ class DepBaseImpl<V> {
     }
 }
 
-// implements Invoker
-class InvokerImpl<V, T, M> {
-    hooks: Hooks<V>;
-    target: T;
+// implements DepArgs
+class DepArgsImpl<M> {
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<M>;
 
-    constructor(target: T, hooks: ?Hooks<V>, middlewares: ?Array<M>) {
+    constructor() {
         this.deps = []
+        this.middlewares = null
+        this.depNames = null
+    }
+}
+
+// implements Invoker
+class InvokerImpl<V, T, M> {
+    hooks: Hooks<V>;
+    target: T;
+    depArgs: DepArgs<M>;
+
+    constructor(target: T, hooks: ?Hooks<V>, middlewares: ?Array<M>) {
+        this.depArgs = new DepArgsImpl()
         this.target = target
         this.hooks = hooks || new HooksImpl()
-        this.middlewares = middlewares
     }
 }
 
@@ -173,15 +185,14 @@ export class MetaDepImpl<E> {
 // implements SetterDep
 export class SetterDepImpl<V: Object, E> {
     kind: 'setter';
-    base: DepBase<SetterResult<V>>;
-    invoker: SetterInvoker<V>;
-
-    set: PromiseSetter<V>;
+    base: DepBase<SetterResult<V, E>>;
+    invoker: SetterInvoker<V, E>;
+    set: AsyncSetter<V, E>;
 
     constructor(
         id: DepId,
         info: Info,
-        target: DepFn<SetterResult<V>>
+        target: DepFn<SetterResult<V, E>>
     ) {
         this.kind = 'setter'
         this.base = new DepBaseImpl(id, info)
@@ -189,29 +200,20 @@ export class SetterDepImpl<V: Object, E> {
     }
 }
 
-const defaultSubscription: Subscription = {
-    unsubscribe(): void {}
-}
-
 // implements LoaderDep
 export class LoaderDepImpl<V: Object, E> {
     kind: 'loader';
-    base: DepBase<LoaderResult<V, E>>;
+    base: DepBase<AsyncResult<V, E>>;
     invoker: LoaderInvoker<V, E>;
-
-    modelObserver: Observer<V, E>;
-    lastSubscription: Subscription;
-    refCount: number;
+    set: AsyncSetter<V, E>;
 
     constructor(
         id: DepId,
         info: Info,
-        target: DepFn<LoaderResult<V, E>>
+        target: DepFn<AsyncResult<V, E>>
     ) {
         this.kind = 'loader'
         this.base = new DepBaseImpl(id, info)
         this.invoker = new InvokerImpl(target)
-        this.lastSubscription = defaultSubscription
-        this.refCount = 0
     }
 }

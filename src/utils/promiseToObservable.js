@@ -6,8 +6,8 @@ type Cancelable = {
     cancel(): void;
 }
 
-// implements Observable<T, E: Error>
-class PromiseObservable<T, E: Error> {
+// implements Observable<T, E>
+class PromiseObservable<T, E> {
 
     subscribe: (observer: Observer) => Subscription;
 
