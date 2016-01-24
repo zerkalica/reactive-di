@@ -2,9 +2,9 @@
 
 import promiseToObservable from '../utils/promiseToObservable'
 import UpdaterImpl from './UpdaterImpl'
+import type {AsyncResult} from '../annotations/annotationInterfaces'
 import type {
     AsyncModelDep,
-    AsyncResult,
     AsyncSetter
 } from '../nodes/nodeInterfaces'
 import type {

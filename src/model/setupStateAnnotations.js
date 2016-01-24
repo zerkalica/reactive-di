@@ -31,21 +31,22 @@ export default function setupStateAnnotations<T: Object>(
     statePath: Array<string> = []
 ): FromJS<T> {
     const annotation: ModelAnnotation = driver.get(obj.constructor);
-    if (!annotation.statePath) {
-        annotation.statePath = statePath
+    const {info} = annotation
+    if (!info.statePath) {
+        info.statePath = statePath
         const keys: Array<string> = Object.keys(obj);
         const propCreators: PropCreatorMap = {};
         for (let i = 0, j = keys.length; i < j; i++) {
             const key: string = keys[i];
             const prop: any = obj[key];
             if (prop !== null && typeof prop === 'object') {
-                annotation.childs.push(prop.constructor)
+                info.childs.push(prop.constructor)
                 propCreators[key] = setupStateAnnotations(driver, prop, statePath.concat(key))
             }
         }
         const fromJS: FromJS<T> = createFromJS(obj.constructor, propCreators);
-        annotation.fromJS = fromJS
+        info.fromJS = fromJS
     }
 
-    return annotation.fromJS
+    return info.fromJS
 }

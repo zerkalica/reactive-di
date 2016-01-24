@@ -8,7 +8,8 @@ import type {
     Dependency,
     DepId,
     DepFn,
-    Loader
+    AsyncResult,
+    SetterResult
 } from '../annotations/annotationInterfaces'
 import type {FromJS, SimpleMap, Cursor} from '../modelInterfaces'
 import type {Subscription, Observer, Observable} from '../observableInterfaces'
@@ -88,10 +89,7 @@ export type MetaDep<E> = {
     sources: Array<MetaSource>;
 }
 
-export type AsyncResult<V, E> = Observable<V, E>|Promise<V>;
 export type AsyncSetter<V, E> = (data: AsyncResult<V, E>) => void;
-
-export type SetterResult<V, E> = DepFn<AsyncResult<V, E>>;
 export type SetterInvoker<V, E> = Invoker<SetterResult<V, E>, DepFn<SetterResult<V, E>>, FactoryDep>;
 export type SetterDep<V: Object, E> = {
     kind: 'setter';

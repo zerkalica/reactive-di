@@ -1,7 +1,6 @@
 /* @flow */
 
 import {
-    HooksImpl,
     LoaderAnnotationImpl,
     ClassAnnotationImpl,
     FactoryAnnotationImpl,
@@ -9,10 +8,11 @@ import {
     ModelAnnotationImpl,
     SetterAnnotationImpl
 } from './annotationImpl'
+
 import type {
     Deps,
     DepFn,
-    Loader,
+    SetterResult,
     Dependency,
     Hooks,
     HooksRec,
@@ -52,8 +52,8 @@ export default function createAnnotations(
             }
         },
 
-        loader(...deps: Deps): <L: Loader>(target: L) => L {
-            return function _loader<L: Loader>(target: L): L {
+        loader(...deps: Deps): <V: Object, E>(target: SetterResult<V, E>) => SetterResult<V, E> {
+            return function _loader<V: Object, E>(target: SetterResult<V, E>): SetterResult<V, E> {
                 return driver.set(target, new LoaderAnnotationImpl(
                     target,
                     deps,
@@ -62,50 +62,42 @@ export default function createAnnotations(
             }
         },
 
-        meta<T: Dependency>(source: T): () => void {
+        meta<T: Dependency>(target: T): () => void {
             function dummyTargetId(): void {}
             return driver.set((dummyTargetId: any), new MetaAnnotationImpl(
-                source,
+                target,
                 tags
             ))
         },
 
-        model(loader?: Loader): <P: Object, T: Class<P>>(target: T) => T {
-            return function _model<P: Object, T: Class<P>>(source: T): T {
+        model(): <V: Object>(target: Class<V>) => Class<V> {
+            return function _model<V: Object>(source: Class<V>): Class<V> {
                 return driver.set(source, new ModelAnnotationImpl(
                     source,
-                    loader,
                     tags
                 ))
             }
         },
 
-        setter<P, M: Class<P>, T: DepFn>(model: M, ...deps: Deps): (target: T) => T {
-            return function _setter(target: T): T {
+        asyncmodel<V: Object, E>(loader?: ?SetterResult<V, E>): (target: Class<V>) => Class<V> {
+            return function _asyncmodel(target: Class<V>): Class<V> {
+                return driver.set(target, new ModelAnnotationImpl(
+                    target,
+                    tags,
+                    loader
+                ))
+            }
+        },
+
+        setter<V: Object, E>(model: Class<V>, ...deps: Deps)
+            :(target: SetterResult<V, E>|DepFn<V>) => SetterResult<V, E>|DepFn<V> {
+            return function _setter(target: SetterResult<V, E>|DepFn<V>): SetterResult<V, E>|DepFn<V> {
                 return driver.set(target, new SetterAnnotationImpl(
                     model,
                     target,
                     deps,
                     tags
                 ))
-            }
-        },
-
-        hooks<T: Dependency>(hooks: HooksRec<T>): (target: T) => T {
-            return function _hooks(target: T): T {
-                const annotation: ClassAnnotation|FactoryAnnotation = driver.get(target);
-                if (annotation && (
-                    annotation.kind === 'class'
-                    || annotation.kind === 'factory'
-                    || annotation.kind === 'setter'
-                    || annotation.kind === 'loader'
-                )) {
-                    annotation.hooks = new HooksImpl(hooks)
-                } else {
-                    throw new Error('Hook can be applied to class or factory annotation. Given: ' + annotation.kind)
-                }
-
-                return target
             }
         }
         /* eslint-enable no-undef */

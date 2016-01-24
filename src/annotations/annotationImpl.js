@@ -8,11 +8,16 @@ import type {
     Dependency,
     Deps,
     Info,
-    Loader,
+    AsyncResult,
+    SetterResult,
     Hooks,
     HooksRec,
+
+    ModelInfo,
+    AnnotationBase,
     ClassAnnotation,
     FactoryAnnotation,
+    AsyncModelAnnotation,
     ModelAnnotation,
     SetterAnnotation,
     MetaAnnotation,
@@ -23,49 +28,80 @@ import type {Observable} from '../observableInterfaces'
 import type {FromJS} from '../modelInterfaces'
 /* eslint-enable no-unused-vars */
 
+
 // implements Info
-export class InfoImpl {
+class InfoImpl {
     tags: Array<string>;
     displayName: string;
 
-    constructor(kind: string, name: string, tags: Array<string>) {
+    constructor(
+        kind: string,
+        name: string,
+        tags: Array<string>
+    ) {
         this.displayName = kind + '@' + name
         this.tags = tags.concat([kind, name])
     }
 }
 
-function defaultFn(): void {}
+// implements AnnotationBase
+class AnnotationBaseImpl<T: Function> {
+    id: DepId;
+    info: Info;
+    target: T;
 
-// implements Hooks
-export class HooksImpl<T> {
-    onUnmount: () => void;
-    onMount: () => void;
-    onUpdate: (currentValue: T, nextValue: T) => void;
-
-    constructor(r?: HooksRec<T> = {}) {
-        this.onMount = r.onMount || defaultFn
-        this.onUnmount = r.onUnmount || defaultFn
-        this.onUpdate = r.onUpdate || defaultFn
+    constructor(
+        kind: string,
+        tags: Array<string>,
+        target: T
+    ) {
+        const name: string = getFunctionName(target);
+        this.info = new InfoImpl(kind, name, tags)
+        this.target = target
     }
 }
 
-// implements ModelAnnotation
-export class ModelAnnotationImpl<V, E> {
-    kind: 'model';
-    id: DepId;
-    info: Info;
-    source: Class<V>;
-    loader: ?Loader<V, E>;
+// implements ModelInfo
+class ModelInfoImpl<V> {
     childs: Array<Dependency>;
     statePath: Array<string>;
     fromJS: FromJS<V>;
 
-    constructor(source: Class<V>, loader?: ?Loader<V, E>, tags: Array<string>) {
-        this.kind = 'model'
-        this.info = new InfoImpl(this.kind, getFunctionName(source), tags)
-        this.loader = loader || null
-        this.source = source
+    constructor() {
         this.childs = []
+        this.statePath = []
+    }
+}
+
+// implements ModelAnnotation
+export class ModelAnnotationImpl<V: Object> {
+    kind: 'model';
+    base: AnnotationBase<Class<V>>;
+    info: ModelInfo<V>;
+
+    constructor(target: Class<V>, tags: Array<string>) {
+        this.kind = 'model'
+        this.base = new AnnotationBaseImpl(this.kind, tags, target)
+        this.info = new ModelInfoImpl()
+    }
+}
+
+// implements AsyncModelAnnotation
+export class AsyncModelAnnotationImpl<V: Object, E> {
+    kind: 'asyncmodel';
+    base: AnnotationBase<Class<V>>;
+    info: ModelInfo<V>;
+    loader: ?SetterResult<V, E>;
+
+    constructor(
+        target: Class<V>,
+        tags: Array<string>,
+        loader?: ?SetterResult<V, E>
+    ) {
+        this.kind = 'asyncmodel'
+        this.base = new AnnotationBaseImpl(this.kind, tags, target)
+        this.info = new ModelInfoImpl()
+        this.loader = loader || null
     }
 }
 
@@ -73,86 +109,75 @@ export class ModelAnnotationImpl<V, E> {
 /* eslint-disable no-undef */
 
 // implements ClassAnnotation
-export class ClassAnnotationImpl<V> {
+export class ClassAnnotationImpl<V: Object> {
     kind: 'class';
-    id: DepId;
-    info: Info;
-    hooks: ?Hooks<V>;
+    base: AnnotationBase<Class<V>>;
     deps: ?Deps;
-    proto: Class<V>;
 
-    constructor(proto: Class<V>, deps: ?Deps, tags: Array<string>) {
+    constructor(target: Class<V>, deps: ?Deps, tags: Array<string>) {
         this.kind = 'class'
-        this.info = new InfoImpl(this.kind, getFunctionName(proto), tags)
-        this.hooks = null
+        this.base = new AnnotationBaseImpl(this.kind, tags, target)
         this.deps = deps
-        this.proto = proto
     }
 }
 
 // implements FactoryAnnotation
 export class FactoryAnnotationImpl<V> {
     kind: 'factory';
-    id: DepId;
-    info: Info;
-    hooks: ?Hooks<V>;
+    base: AnnotationBase<DepFn<V>>;
     deps: ?Deps;
-    fn: DepFn<V>;
 
-    constructor(fn: DepFn<V>, deps: ?Deps, tags: Array<string>) {
+    constructor(target: DepFn<V>, deps: ?Deps, tags: Array<string>) {
         this.kind = 'factory'
-        this.info = new InfoImpl(this.kind, getFunctionName(fn), tags)
-        this.hooks = null
+        this.base = new AnnotationBaseImpl(this.kind, tags, target)
         this.deps = deps
-        this.fn = fn
     }
 }
 
 // implements MetaAnnotation
-export class MetaAnnotationImpl {
+export class MetaAnnotationImpl<V> {
     kind: 'meta';
-    id: DepId;
-    info: Info;
-    source: Dependency;
+    base: AnnotationBase<Dependency<V>>;
 
-    constructor(source: Dependency, tags: Array<string>) {
+    constructor(target: Dependency, tags: Array<string>) {
         this.kind = 'meta'
-        this.info = new InfoImpl(this.kind, getFunctionName(source), tags)
-        this.source = source
+        this.base = new AnnotationBaseImpl(this.kind, tags, target)
     }
 }
 
 // implements SetterAnnotation
-export class SetterAnnotationImpl<V> {
+export class SetterAnnotationImpl<V: Object, E> {
     kind: 'setter';
-    id: DepId;
-    info: Info;
-    model: Class<V>;
+    base: AnnotationBase<SetterResult<V, E>|DepFn<V>>;
     deps: ?Deps;
-    facet: DepFn<V>;
+    model: Class<V>;
 
-    constructor(model: Class<V>, facet: DepFn<V>, deps: ?Deps, tags: Array<string>) {
+    constructor(
+        model: Class<V>,
+        target: SetterResult<V, E>|DepFn<V>,
+        deps: ?Deps,
+        tags: Array<string>
+    ) {
         this.kind = 'setter'
-        this.info = new InfoImpl(this.kind, getFunctionName(model), tags)
-        this.facet = facet
+        this.base = new AnnotationBaseImpl(this.kind, tags, target)
         this.deps = deps
+        this.model = model
     }
 }
 
 // implements LoaderAnnotation
-export class LoaderAnnotationImpl<V, E> {
+export class LoaderAnnotationImpl<V: Object, E> {
     kind: 'loader';
-    id: DepId;
-    info: Info;
-    hooks: ?Hooks<Observable<V, E>>;
+    base: AnnotationBase<SetterResult<V, E>>;
     deps: ?Deps;
-    fn: Loader<V, E>;
 
-    constructor(fn: Loader<V, E>, deps: ?Deps, tags: Array<string>) {
+    constructor(
+        target: SetterResult<V, E>,
+        deps: ?Deps,
+        tags: Array<string>
+    ) {
         this.kind = 'loader'
-        this.info = new InfoImpl(this.kind, getFunctionName(fn), tags)
-        this.hooks = null
+        this.base = new AnnotationBaseImpl(this.kind, tags, target)
         this.deps = deps
-        this.fn = fn
     }
 }

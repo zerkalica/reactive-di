@@ -10,15 +10,13 @@ import type {
     ClassDep,
     FactoryDep,
     MetaDep,
-
     SetterDep,
-    SetterResult,
-
     LoaderDep,
-    AsyncResult
 } from './nodeInterfaces'
 
 import type {
+    AsyncResult,
+    SetterResult,
     DepFn
 } from '../annotations/annotationInterfaces'
 

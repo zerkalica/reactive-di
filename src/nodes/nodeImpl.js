@@ -1,12 +1,12 @@
 /* @flow */
-
-import {HooksImpl} from '../annotations/annotationImpl'
 import type {
     DepId,
-    Loader,
     DepFn,
     Info,
-    Hooks
+    AsyncResult,
+    SetterResult,
+    Hooks,
+    HooksRec
 } from '../annotations/annotationInterfaces'
 import type {
     Observer,
@@ -30,10 +30,8 @@ import type {
     FactoryInvoker,
 
     AsyncSetter,
-    AsyncResult,
     SetterDep,
     SetterInvoker,
-    SetterResult,
 
     LoaderDep,
     LoaderInvoker,
@@ -77,6 +75,21 @@ class DepArgsImpl<M> {
         this.deps = []
         this.middlewares = null
         this.depNames = null
+    }
+}
+
+function defaultFn(): void {}
+
+// implements Hooks
+class HooksImpl<T> {
+    onUnmount: () => void;
+    onMount: () => void;
+    onUpdate: (currentValue: T, nextValue: T) => void;
+
+    constructor(r?: HooksRec<T> = {}) {
+        this.onMount = r.onMount || defaultFn
+        this.onUnmount = r.onUnmount || defaultFn
+        this.onUpdate = r.onUpdate || defaultFn
     }
 }
 
