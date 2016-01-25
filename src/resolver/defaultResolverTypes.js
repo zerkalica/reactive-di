@@ -2,7 +2,10 @@
 
 import type {
     DepId,
+    Deps,
     Dependency,
+    ClassAnnotation,
+    FactoryAnnotation,
     ModelAnnotation,
     AsyncModelAnnotation,
     MetaAnnotation
@@ -10,10 +13,13 @@ import type {
 
 import type {
     Cacheable,
+    DepArgs,
     DepBase,
     ModelDep,
     AsyncModelDep,
     MetaDep,
+    ClassDep,
+    FactoryDep,
     AnyDep
 } from '../nodes/nodeInterfaces'
 
@@ -25,6 +31,9 @@ import type {
 import type {SimpleMap, FromJS, Cursor} from '../modelInterfaces'
 
 import {
+    MetaDepImpl,
+    ClassDepImpl,
+    FactoryDepImpl,
     ModelDepImpl,
     AsyncModelDepImpl
 } from '../nodes/nodeImpl'
@@ -49,26 +58,6 @@ function endRegular(base: DepBase, acc: CacheBuilderInfo): void {
     depSet.forEach(iteratePathSet)
 }
 
-function endMeta(base: DepBase, acc: CacheBuilderInfo): void {
-    const depSet: Set<DepId> = acc.parents.pop();
-    const {relations} = base
-
-    function iteratePathSet(relationId: DepId): void {
-        const target: AnyDep = acc.cache[relationId];
-        relations.push(relationId)
-        if (target.kind === 'asyncmodel') {
-            target.metaOwners.push((base: Cacheable))
-        }
-    }
-    depSet.forEach(iteratePathSet)
-}
-
-function addRelations(id: DepId, parents: Array<Set<DepId>>): void {
-    for (let i = 0, l = parents.length; i < l; i++) {
-        parents[i].add(id)
-    }
-}
-
 function resolveAnyModel<V: Object, E>(
     annotation: AnyModelAnnotation<V, E>,
     acc: AnnotationResolver,
@@ -85,7 +74,10 @@ function resolveAnyModel<V: Object, E>(
         acc.notifier
     );
     const {builderInfo} = acc
-    addRelations(base.id, builderInfo.parents)
+    const {parents} = builderInfo
+    for (let i = 0, l = parents.length; i < l; i++) {
+        parents[i].add(base.id)
+    }
     begin(base.id, dep, builderInfo)
     const {childs} = info
     for (let i = 0, l = childs.length; i < l; i++) {
@@ -100,4 +92,81 @@ export function resolveModel<V: Object>(annotation: ModelAnnotation<V>, acc: Ann
 
 export function resolveAsyncModel<V: Object, E>(annotation: AsyncModelAnnotation<V, E>, acc: AnnotationResolver): void {
     resolveAnyModel(annotation, acc, AsyncModelDepImpl)
+}
+
+function endMeta(base: DepBase, acc: CacheBuilderInfo): void {
+    const depSet: Set<DepId> = acc.parents.pop();
+    const {relations} = base
+
+    function iteratePathSet(relationId: DepId): void {
+        const target: AnyDep = acc.cache[relationId];
+        relations.push(relationId)
+        if (target.kind === 'asyncmodel') {
+            target.metaOwners.push((base: Cacheable))
+        }
+    }
+    depSet.forEach(iteratePathSet)
+}
+
+export function resolveMeta<E>(annotation: MetaAnnotation<E>, acc: AnnotationResolver): void {
+    const {base} = annotation
+    const dep: MetaDep<E> = new MetaDepImpl(base.id, base.info);
+    begin(base.id, dep, acc.builderInfo)
+    acc.resolve(base.target)
+    endMeta(dep.base, acc.builderInfo)
+}
+
+function resolveMiddlewares(
+    id: DepId,
+    tags: Array<string>,
+    middlewares: SimpleMap<DepId|string, Array<Dependency>>,
+    acc: AnnotationResolver
+): ?Array<AnyDep> {
+    const ids: Array<string> = [id].concat(tags);
+    const middlewareDeps: Array<AnyDep> = [];
+    for (let i = 0, l = ids.length; i < l; i++) {
+        const depMiddlewares: Array<Dependency> = middlewares[ids[i]] || [];
+        for (let j = 0, k = depMiddlewares.length; j < k; j++) {
+            middlewareDeps.push(acc.resolve(depMiddlewares[j]))
+        }
+
+    }
+
+    return middlewareDeps.length ? middlewareDeps : null
+}
+
+function setDepArgs(depArgs: DepArgs, deps: ?Deps, id: DepId, tags: Array<string>, acc: AnnotationResolver): void {
+    if (deps && deps.length) {
+        if (typeof deps[0] === 'object') {
+            const argsObject: SimpleMap<string, Dependency> =  ((deps[0]: any): SimpleMap<string, Dependency>);
+            const depNames: Array<string> = [];
+            for (let key in argsObject) {
+                depArgs.deps.push(acc.resolve(argsObject[key]))
+                depNames.push(key)
+            }
+            depArgs.depNames = depNames
+        } else {
+            for (let i = 0, l = deps.length; i < l; i++) {
+                depArgs.deps.push(acc.resolve((deps: Array<Dependency>)[i]))
+            }
+        }
+    }
+
+    depArgs.middlewares = resolveMiddlewares(id, tags, acc.middlewares, acc)
+}
+
+export function resolveClass<V: Object>(annotation: ClassAnnotation<V>, acc: AnnotationResolver): void {
+    const {base} = annotation
+    const dep: ClassDep<V> = new ClassDepImpl(base.id, base.info, base.target);
+    begin(base.id, dep, acc.builderInfo)
+    setDepArgs(dep.invoker.depArgs, annotation.deps, base.id, base.info.tags, acc)
+    endRegular(dep.base, acc.builderInfo)
+}
+
+export function resolveFactory<V: Object>(annotation: FactoryAnnotation<V>, acc: AnnotationResolver): void {
+    const {base} = annotation
+    const dep: FactoryDep<V> = new FactoryDepImpl(base.id, base.info, base.target);
+    begin(base.id, dep, acc.builderInfo)
+    setDepArgs(dep.invoker.depArgs, annotation.deps, base.id, base.info.tags, acc)
+    endRegular(dep.base, acc.builderInfo)
 }

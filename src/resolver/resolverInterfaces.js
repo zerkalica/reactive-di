@@ -25,6 +25,7 @@ export type CacheBuilderInfo = {
 
 export type AnnotationResolver = {
     builderInfo: CacheBuilderInfo;
+    middlewares: SimpleMap<DepId|string, Array<Dependency>>;
     resolve<V>(dep: Dependency<V>): V;
     createCursor: CursorCreator;
     notifier: Notifier;
