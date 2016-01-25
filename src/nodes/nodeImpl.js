@@ -16,9 +16,9 @@ import type {
 import type {
     Cacheable,
     MetaSource,
+    AsyncUpdater,
     DepBase,
     DepArgs,
-    Relations,
     Invoker,
     AnyDep,
 
@@ -40,25 +40,15 @@ import type {
     EntityMeta
 } from './nodeInterfaces'
 
-import type {FromJS, Cursor} from '../modelInterfaces'
+import type {FromJS, Cursor, Notifier} from '../modelInterfaces'
 import EntityMetaImpl from './impl/EntityMetaImpl'
-
-// implements Relations
-class RelationsImpl {
-    dataRels: Array<Cacheable>;
-    metaRels: Array<Cacheable>;
-
-    constructor() {
-        this.dataRels = []
-        this.metaRels = []
-    }
-}
+import AsyncUpdaterImpl from './impl/AsyncUpdaterImpl'
 
 // implements DepBase
 class DepBaseImpl<V> {
     isRecalculate: boolean;
     value: V;
-    relations: Relations;
+    relations: Array<DepId>;
     id: DepId;
     info: Info;
 
@@ -70,7 +60,7 @@ class DepBaseImpl<V> {
         this.id = id
         this.info = info
         this.isRecalculate = value === undefined
-        this.relations = new RelationsImpl()
+        this.relations = []
         if (value !== undefined) {
             this.value = value
         }
@@ -122,20 +112,37 @@ class InvokerImpl<V, T, M> {
 export class ModelDepImpl<V: Object> {
     kind: 'model';
     base: DepBase<V>;
+
     fromJS: FromJS<V>;
-    cursor: Cursor<V>;
+    dataOwners: Array<Cacheable>;
+    get: () => V;
+
+    set: (value: V) => void;
 
     constructor(
         id: DepId,
         info: Info,
         value: V,
         cursor: Cursor<V>,
-        fromJS: FromJS<V>
+        fromJS: FromJS<V>,
+        notifier: Notifier
     ) {
         this.kind = 'model'
-        this.base = new DepBaseImpl(id, info, value)
-        this.cursor = cursor
+        const base = this.base = new DepBaseImpl(id, info, value)
+
         this.fromJS = fromJS
+        const dataOwners = this.dataOwners = []
+        this.get = cursor.get
+
+        this.set = function set(value: V): void {
+            if (cursor.set(value)) {
+                base.value = value
+                for (let i = 0, l = dataOwners.length; i < l; i++) {
+                    dataOwners[i].isRecalculate = true
+                }
+                notifier.notify()
+            }
+        }
     }
 }
 
@@ -143,24 +150,41 @@ export class ModelDepImpl<V: Object> {
 export class AsyncModelDepImpl<V: Object, E> {
     kind: 'asyncmodel';
     base: DepBase<V>;
-    meta: EntityMeta<E>;
 
     fromJS: FromJS<V>;
-    cursor: Cursor<V>;
+    dataOwners: Array<Cacheable>;
+    get: () => V;
+
+    updater: AsyncUpdater<V, E>;
+    meta: EntityMeta<E>;
+    metaOwners: Array<Cacheable>;
 
     constructor(
         id: DepId,
         info: Info,
         value: V,
         cursor: Cursor<V>,
-        fromJS: FromJS<V>
+        fromJS: FromJS<V>,
+        notifier: Notifier
     ) {
         this.kind = 'asyncmodel'
         this.base = new DepBaseImpl(id, info, value)
-        this.cursor = cursor
+
         this.fromJS = fromJS
+        this.dataOwners = []
+        this.get = cursor.get
 
         this.meta = new EntityMetaImpl()
+        this.metaOwners = []
+
+        this.updater = new AsyncUpdaterImpl(
+            cursor,
+            notifier,
+            this.base,
+            (this: MetaSource<E>),
+            this.dataOwners,
+            this.metaOwners
+        )
     }
 }
 

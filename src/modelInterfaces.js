@@ -10,3 +10,7 @@ export type CursorCreator<V: Object> = (path: Array<string>) => Cursor<V>;
 export type FromJS<T: Object> = (data: Object) => T;
 
 export type SimpleMap<K, V> = {[id: K]: V};
+
+export type Notifier = {
+    notify: () => void;
+}

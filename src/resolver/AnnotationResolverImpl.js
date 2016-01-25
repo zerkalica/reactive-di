@@ -11,9 +11,7 @@ import type {
 import type {
     AnyDep,
     FactoryDep,
-    ClassDep,
-    Notifier,
-    Relations
+    ClassDep
 } from '../nodes/nodeInterfaces'
 import type {
     ResolverTypeMap,
@@ -21,6 +19,7 @@ import type {
     AnnotationResolver
 } from './resolverInterfaces'
 import type {
+    Notifier,
     SimpleMap,
     Cursor,
     CursorCreator

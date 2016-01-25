@@ -1,17 +1,14 @@
 /* @flow */
 
 import type {
-    Updater,
-    Notifier
-} from './resolverInterfaces'
-import type {
+    AsyncUpdater,
+    MetaSource,
+    DepBase,
     EntityMeta,
-    Cacheable,
-    ModelDep,
-    AsyncModelDep
-} from '../nodes/nodeInterfaces'
-import type {Cursor} from '../modelInterfaces'
-import merge from '../utils/merge'
+    Cacheable
+} from '../nodeInterfaces'
+import type {Cursor, Notifier} from '../../modelInterfaces'
+import merge from '../../utils/merge'
 
 function setPending<E>(meta: EntityMeta<E>): EntityMeta<E> {
     return merge(meta, {
@@ -40,28 +37,30 @@ function setError<E>(meta: EntityMeta<E>, reason: E): EntityMeta<E> {
     })
 }
 
-// implements Updater
-export default class UpdaterImpl<V: Object, E> {
+// implements AsyncUpdater
+export default class AsyncUpdaterImpl<V: Object, E> {
     pending: () => void;
     success: (value: V) => void;
     error: (error: E) => void;
 
-    constructor(model: AsyncModelDep<V, E>, notifier: Notifier) {
-        const {
-            cursor,
-            base
-        } = model
-        const {dataRels, metaRels} = base.relations
+    constructor(
+        cursor: Cursor<V>,
+        notifier: Notifier,
+        base: DepBase<V>,
+        model: MetaSource<E>,
+        dataOwners: Array<Cacheable>,
+        metaOwners: Array<Cacheable>
+    ) {
         function notifyDataChanges(): void {
-            for (let i = 0, l = dataRels.length; i < l; i++) {
-                dataRels[i].isRecalculate = true
+            for (let i = 0, l = dataOwners.length; i < l; i++) {
+                dataOwners[i].isRecalculate = true
             }
             notifier.notify()
         }
 
         function notifyMetaChanges(): void {
-            for (let i = 0, l = metaRels.length; i < l; i++) {
-                metaRels[i].isRecalculate = true
+            for (let i = 0, l = metaOwners.length; i < l; i++) {
+                metaOwners[i].isRecalculate = true
             }
             notifier.notify()
         }

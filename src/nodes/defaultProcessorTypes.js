@@ -37,7 +37,7 @@ export function modelDep<V: Object>(
     acc: DepProcessor
 ): void {
     dep.base.isRecalculate = false
-    dep.base.value = dep.cursor.get()
+    dep.base.value = dep.get()
 }
 
 export function asyncModelDep<V: Object, E>(
@@ -45,7 +45,7 @@ export function asyncModelDep<V: Object, E>(
     acc: DepProcessor
 ): void {
     dep.base.isRecalculate = false
-    dep.base.value = dep.cursor.get()
+    dep.base.value = dep.get()
 }
 
 export function classDep<V: Object>(

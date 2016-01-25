@@ -8,29 +8,23 @@ import type {
 
 import type {
     SimpleMap,
+    Notifier,
     CursorCreator
 } from '../modelInterfaces'
 
 import type {
     AnyDep,
     ClassDep,
-    FactoryDep,
-    Relations
+    FactoryDep
 } from '../nodes/nodeInterfaces'
 
-export type Updater<V: Object, E> = {
-    pending: () => void;
-    success: (value: V) => void;
-    error: (error: E) => void;
-}
-
-export type Notifier = {
-    notify: () => void;
+export type CacheBuilderInfo = {
+    parents: Array<Set<DepId>>;
+    cache: SimpleMap<DepId, AnyDep>;
 }
 
 export type AnnotationResolver = {
-    parents: Array<Set<DepId>>;
-    cache: SimpleMap<DepId, AnyDep>;
+    builderInfo: CacheBuilderInfo;
     resolve<V>(dep: Dependency<V>): V;
     createCursor: CursorCreator;
     notifier: Notifier;

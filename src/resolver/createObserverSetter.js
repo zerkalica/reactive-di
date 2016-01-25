@@ -1,31 +1,22 @@
 /* @flow */
 
 import promiseToObservable from '../utils/promiseToObservable'
-import UpdaterImpl from './UpdaterImpl'
 import type {AsyncResult} from '../annotations/annotationInterfaces'
 import type {
-    AsyncModelDep,
-    AsyncSetter
+    AsyncSetter,
+    AsyncUpdater
 } from '../nodes/nodeInterfaces'
 import type {
     Observer,
     Observable,
-    Subscription,
     SubscriptionSource,
     NextValue
 } from '../observableInterfaces'
-import type {Updater, Notifier} from './resolverInterfaces'
-
-const defaultSubscription = {
-    unsubscribe() {}
-}
 
 export default function createObserverSetter<V: Object, E>(
-    model: AsyncModelDep<V, E>,
-    notifier: Notifier,
+    updater: AsyncUpdater<V, E>,
     source: SubscriptionSource
 ): AsyncSetter<V, E> {
-    const updater: Updater<V, E> = new UpdaterImpl(model, notifier);
     function next(value: NextValue<V>): void {
         if (value.kind === 'pending') {
             updater.pending()
@@ -39,7 +30,7 @@ export default function createObserverSetter<V: Object, E>(
             typeof data.subscribe !== 'function'
             || typeof data.then !== 'function'
         ) {
-            throw new Error('No observable or promise returns from model setter: ' + model.base.info.displayName)
+            throw new Error('No observable or promise returns from model setter')
         }
 
         source.subscription.unsubscribe()

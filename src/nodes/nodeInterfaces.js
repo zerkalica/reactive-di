@@ -31,23 +31,29 @@ export type Cacheable = {
     isRecalculate: boolean;
 };
 
-export type Relations = {
-    dataRels: Array<Cacheable>;
-    metaRels: Array<Cacheable>;
-}
 export type DepBase<V> = {
     isRecalculate: boolean;
     value: V;
-    relations: Relations;
+    relations: Array<DepId>;
     id: DepId;
     info: Info;
+}
+
+export type AsyncUpdater<V: Object, E> = {
+    pending: () => void;
+    success: (value: V) => void;
+    error: (error: E) => void;
 }
 
 export type ModelDep<V: Object> = {
     kind: 'model';
     base: DepBase<V>;
+
     fromJS: FromJS<V>;
-    cursor: Cursor<V>;
+    dataOwners: Array<Cacheable>;
+    get: () => V;
+
+    set: (value: V) => void;
 }
 
 export type AsyncModelDep<V: Object, E> = {
@@ -55,9 +61,12 @@ export type AsyncModelDep<V: Object, E> = {
     base: DepBase<V>;
 
     fromJS: FromJS<V>;
-    cursor: Cursor<V>;
+    dataOwners: Array<Cacheable>;
+    get: () => V;
 
+    updater: AsyncUpdater<V, E>;
     meta: EntityMeta<E>;
+    metaOwners: Array<Cacheable>;
 }
 
 export type DepArgs<M> = {
