@@ -251,7 +251,7 @@ export class SetterDepImpl<V: Object, E> {
     constructor(
         id: DepId,
         info: Info,
-        target: DepFn<SetterResult<V, E>>
+        target: DepFn<SetterResult<V, E>|DepFn<V>>
     ) {
         this.kind = 'setter'
         this.base = new DepBaseImpl(id, info)

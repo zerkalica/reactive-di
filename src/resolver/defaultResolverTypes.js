@@ -8,7 +8,8 @@ import type {
     FactoryAnnotation,
     ModelAnnotation,
     AsyncModelAnnotation,
-    MetaAnnotation
+    MetaAnnotation,
+    SetterAnnotation
 } from '../annotations/annotationInterfaces'
 
 import type {
@@ -16,10 +17,13 @@ import type {
     DepArgs,
     DepBase,
     ModelDep,
+    AsyncSetter,
     AsyncModelDep,
     MetaDep,
     ClassDep,
     FactoryDep,
+    SetterDep,
+
     AnyDep
 } from '../nodes/nodeInterfaces'
 
@@ -37,8 +41,12 @@ import {
     ClassDepImpl,
     FactoryDepImpl,
     ModelDepImpl,
-    AsyncModelDepImpl
+    AsyncModelDepImpl,
+    SetterDepImpl,
+    LoaderDepImpl
 } from '../nodes/nodeImpl'
+
+import createObserverSetter from './createObserverSetter'
 
 type AnyModelAnnotation<V, E> = ModelAnnotation<V>|AsyncModelAnnotation<V, E>;
 type AnyModelDep<V, E> = ModelDep<V>|AsyncModelDep<V, E>;
@@ -177,5 +185,21 @@ export function resolveFactory<V: Object>(annotation: FactoryAnnotation<V>, acc:
     const dep: FactoryDep<V> = new FactoryDepImpl(base.id, base.info, base.target);
     begin(base.id, dep, acc.builderInfo)
     dep.invoker.depArgs = getDeps(annotation.deps, base.id, base.info.tags, acc)
+    endRegular(dep.base, acc.builderInfo)
+}
+
+export function resolveSetter<V: Object, E>(annotation: SetterAnnotation<V, E>, acc: AnnotationResolver): void {
+    const {base, model} = annotation
+    const dep: SetterDep<V, E> = new SetterDepImpl(base.id, base.info, base.target);
+    begin(base.id, dep, acc.builderInfo)
+    dep.invoker.depArgs = getDeps(annotation.deps, base.id, base.info.tags, acc)
+
+
+    const modelDep: AsyncModelDep<V, E> = acc.resolve(model);
+
+
+
+    const setter: AsyncSetter<V, E> = createObserverSetter(modelDep.updater, dep);
+    dep.set = setter
     endRegular(dep.base, acc.builderInfo)
 }

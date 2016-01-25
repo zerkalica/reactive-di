@@ -116,6 +116,7 @@ export type LoaderDep<V: Object, E> = {
     base: DepBase<AsyncResult<V, E>>;
     invoker: LoaderInvoker<V, E>;
     set: AsyncSetter<V, E>;
+    get: () => V;
 }
 
 export type AnyDep =
