@@ -31,6 +31,8 @@ import type {
 import type {SimpleMap, FromJS, Cursor} from '../modelInterfaces'
 
 import {
+    DepArgsImpl,
+
     MetaDepImpl,
     ClassDepImpl,
     FactoryDepImpl,
@@ -135,31 +137,38 @@ function resolveMiddlewares(
     return middlewareDeps.length ? middlewareDeps : null
 }
 
-function setDepArgs(depArgs: DepArgs, deps: ?Deps, id: DepId, tags: Array<string>, acc: AnnotationResolver): void {
+function getDeps(
+    deps: ?Deps,
+    id: DepId,
+    tags: Array<string>,
+    acc: AnnotationResolver
+): DepArgs {
+    let depNames: ?Array<string> = null;
+    const resolvedDeps: Array<AnyDep> = [];
     if (deps && deps.length) {
         if (typeof deps[0] === 'object') {
+            depNames = []
             const argsObject: SimpleMap<string, Dependency> =  ((deps[0]: any): SimpleMap<string, Dependency>);
-            const depNames: Array<string> = [];
             for (let key in argsObject) {
-                depArgs.deps.push(acc.resolve(argsObject[key]))
+                resolvedDeps.push(acc.resolve(argsObject[key]))
                 depNames.push(key)
             }
-            depArgs.depNames = depNames
         } else {
             for (let i = 0, l = deps.length; i < l; i++) {
-                depArgs.deps.push(acc.resolve((deps: Array<Dependency>)[i]))
+                resolvedDeps.push(acc.resolve((deps: Array<Dependency>)[i]))
             }
         }
     }
 
-    depArgs.middlewares = resolveMiddlewares(id, tags, acc.middlewares, acc)
+    const middlewares: ?Array<AnyDep> = resolveMiddlewares(id, tags, acc.middlewares, acc);
+    return new DepArgsImpl(resolvedDeps, depNames, middlewares)
 }
 
 export function resolveClass<V: Object>(annotation: ClassAnnotation<V>, acc: AnnotationResolver): void {
     const {base} = annotation
     const dep: ClassDep<V> = new ClassDepImpl(base.id, base.info, base.target);
     begin(base.id, dep, acc.builderInfo)
-    setDepArgs(dep.invoker.depArgs, annotation.deps, base.id, base.info.tags, acc)
+    dep.invoker.depArgs = getDeps(annotation.deps, base.id, base.info.tags, acc)
     endRegular(dep.base, acc.builderInfo)
 }
 
@@ -167,6 +176,6 @@ export function resolveFactory<V: Object>(annotation: FactoryAnnotation<V>, acc:
     const {base} = annotation
     const dep: FactoryDep<V> = new FactoryDepImpl(base.id, base.info, base.target);
     begin(base.id, dep, acc.builderInfo)
-    setDepArgs(dep.invoker.depArgs, annotation.deps, base.id, base.info.tags, acc)
+    dep.invoker.depArgs = getDeps(annotation.deps, base.id, base.info.tags, acc)
     endRegular(dep.base, acc.builderInfo)
 }

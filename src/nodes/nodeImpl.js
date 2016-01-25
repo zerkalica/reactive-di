@@ -68,15 +68,19 @@ class DepBaseImpl<V> {
 }
 
 // implements DepArgs
-class DepArgsImpl<M> {
+export class DepArgsImpl<M> {
     deps: Array<AnyDep>;
     depNames: ?Array<string>;
     middlewares: ?Array<M>;
 
-    constructor() {
-        this.deps = []
-        this.middlewares = null
-        this.depNames = null
+    constructor(
+        deps: Array<AnyDep>,
+        depNames: ?Array<string>,
+        middlewares: ?Array<M>
+    ) {
+        this.deps = deps
+        this.depNames = depNames
+        this.middlewares = middlewares
     }
 }
 
@@ -102,7 +106,6 @@ class InvokerImpl<V, T, M> {
     depArgs: DepArgs<M>;
 
     constructor(target: T, hooks: ?Hooks<V>, middlewares: ?Array<M>) {
-        this.depArgs = new DepArgsImpl()
         this.target = target
         this.hooks = hooks || new HooksImpl()
     }
