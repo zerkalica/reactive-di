@@ -63,13 +63,23 @@ function begin(id: DepId, dep: AnyDep, acc: CacheBuilderInfo): void {
 }
 
 function endRegular(base: DepBase, acc: CacheBuilderInfo): void {
-    const depSet: Set<DepId> = acc.parents.pop();
+    const {parents, cache} = acc
+    const depSet: Set<DepId> = parents.pop();
     const {relations} = base
 
     function iteratePathSet(relationId: DepId): void {
-        const target: AnyModelDep = (acc.cache[relationId]: any);
+        const target: AnyDep = cache[relationId];
         relations.push(relationId)
-        target.dataOwners.push((base: Cacheable))
+        if (target.kind === 'model' || target.kind === 'asyncmodel') {
+            target.dataOwners.push((base: Cacheable))
+        } else if (target.kind === 'meta') {
+            const {sources} = target
+            for(let i = 0, l = sources.length; i < l; i++) {
+                const {metaOwners} = sources[i]
+                metaOwners.push((base: Cacheable))
+                metaOwners.push((target.base: Cacheable))
+            }
+        }
     }
     depSet.forEach(iteratePathSet)
 }
@@ -121,18 +131,13 @@ export function resolveAsyncModel<V: Object, E>(annotation: AsyncModelAnnotation
     }
 }
 
-function endMeta(base: DepBase, sources: Array<MetaSource>, acc: CacheBuilderInfo): void {
+function endMeta(sources: Array<AsyncModelDep>, acc: CacheBuilderInfo): void {
     const depSet: Set<DepId> = acc.parents.pop();
-    const {relations} = base
-
     function iteratePathSet(relationId: DepId): void {
         const target: AnyDep = acc.cache[relationId];
-        relations.push(relationId)
         if (target.kind === 'asyncmodel') {
-            target.metaOwners.push((base: Cacheable))
             sources.push(target)
         }
-
     }
     depSet.forEach(iteratePathSet)
 }
@@ -144,9 +149,8 @@ export function resolveMeta<E>(annotation: MetaAnnotation<E>, acc: AnnotationRes
     const {builderInfo} = acc
     addRelation(base.id, builderInfo.parents)
     begin(base.id, dep, builderInfo)
-    const parents: Array<Set<DepId>> = []
-    resolveHelper(base.target, {...acc, parents});
-    endMeta(dep.base, dep.sources, acc.builderInfo, parents)
+    resolveHelper(base.target, acc);
+    endMeta(dep.sources, acc.builderInfo)
 }
 
 export function resolveClass<V: Object>(annotation: ClassAnnotation<V>, acc: AnnotationResolver): void {

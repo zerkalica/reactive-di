@@ -260,7 +260,7 @@ export class FactoryDepImpl<V: any, E> {
 export class MetaDepImpl<E> {
     kind: 'meta';
     base: DepBase<EntityMeta<E>>;
-    sources: Array<MetaSource>;
+    sources: Array<AsyncModelDep>;
 
     constructor(
         id: DepId,

@@ -104,7 +104,7 @@ export type FactoryDep<V: any> = {
 export type MetaDep<E> = {
     kind: 'meta';
     base: DepBase<EntityMeta<E>>;
-    sources: Array<MetaSource>;
+    sources: Array<AsyncModelDep>;
 }
 
 export type SetterInvoker<V> = Invoker<DepFn<Setter<V>>, FactoryDep>;

@@ -21,7 +21,16 @@ export function resolve(annotatedDep: Dependency, acc: AnnotationResolver): AnyD
     const annotation: AnyAnnotation = acc.driver.get(annotatedDep);
     const {cache} = acc.builderInfo
     let dep: AnyDep = cache[annotation.base.id];
-    if (!dep) {
+    if (dep) {
+        const {relations} = dep.base
+        const {parents} = acc.builderInfo
+        for (let j = 0, k = parents.length; j < k; j++) {
+            const parent: Set<DepId> = parents[j];
+            for (let i = 0, l = relations.length; i < l; i++) {
+                parent.add(relations[i])
+            }
+        }
+    } else {
         const {base} = annotation
         if (!base.id) {
             base.id = createId()
