@@ -4,6 +4,7 @@ import type {
     DepId,
     Deps,
     Dependency,
+    AnyAnnotation,
     ClassAnnotation,
     FactoryAnnotation,
     ModelAnnotation,
@@ -50,6 +51,21 @@ import createObserverSetter from './createObserverSetter'
 
 type AnyModelAnnotation<V, E> = ModelAnnotation<V>|AsyncModelAnnotation<V, E>;
 type AnyModelDep<V, E> = ModelDep<V>|AsyncModelDep<V, E>;
+
+
+function resolve(annotatedDep: Dependency, acc: AnnotationResolver): AnyDep {
+    const annotation: AnyAnnotation = acc.driver.get(annotatedDep);
+    const {cache} = acc.builderInfo
+    let id = annotation.base.id
+    if (!id) {
+        id = annotation.base.id = createId()
+    }
+    let dep: AnyDep = cache[id];
+    if (!dep) {
+        cache[id] = dep = acc.resolvers[annotation.kind](annotation, acc)
+    }
+    return dep
+}
 
 function begin(id: DepId, dep: AnyDep, acc: CacheBuilderInfo): void {
     acc.parents.push(new Set())
@@ -194,10 +210,7 @@ export function resolveSetter<V: Object, E>(annotation: SetterAnnotation<V, E>, 
     begin(base.id, dep, acc.builderInfo)
     dep.invoker.depArgs = getDeps(annotation.deps, base.id, base.info.tags, acc)
 
-
-    const modelDep: AsyncModelDep<V, E> = acc.resolve(model);
-
-
+    const modelDep: AsyncModelDep<V, E> = resolve(model, {...acc, parents: []});
 
     const setter: AsyncSetter<V, E> = createObserverSetter(modelDep.updater, dep);
     dep.set = setter

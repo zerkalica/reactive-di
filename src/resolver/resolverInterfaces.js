@@ -3,7 +3,8 @@
 import type {
     Dependency,
     DepId,
-    AnyAnnotation
+    AnyAnnotation,
+    AnnotationDriver
 } from '../annotations/annotationInterfaces'
 
 import type {
@@ -24,6 +25,8 @@ export type CacheBuilderInfo = {
 }
 
 export type AnnotationResolver = {
+    driver: AnnotationDriver;
+    resolvers: SimpleMap<string, ResolverType>;
     builderInfo: CacheBuilderInfo;
     middlewares: SimpleMap<DepId|string, Array<Dependency>>;
     resolve<V>(dep: Dependency<V>): V;
