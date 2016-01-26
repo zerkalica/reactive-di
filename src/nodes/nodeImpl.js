@@ -4,8 +4,11 @@ import type {
     DepFn,
     Info,
     AsyncResult,
-    SetterResultValue,
+    Loader,
+
     SetterResult,
+    Setter,
+
     Hooks,
     HooksRec
 } from '../annotations/annotationInterfaces'
@@ -163,8 +166,10 @@ export class AsyncModelDepImpl<V: Object, E> {
     meta: EntityMeta<E>;
     metaOwners: Array<Cacheable>;
 
-    set: (value: AsyncResult<V, E>) => void;
     subscription: ?Subscription;
+    set: (value: AsyncResult<V, E>) => void;
+    unmount: () => void;
+
     loader: ?FactoryDep<AsyncResult<V, E>>;
 
     constructor(
@@ -205,14 +210,15 @@ export class AsyncModelDepImpl<V: Object, E> {
             }
             self.subscription = setter(value)
         }
-        this.set = set
-    }
-
-    unmount(): void {
-        if (this.subscription) {
-            this.subscription.unsubscribe()
-            this.subscription = null
+        function unmount(): void {
+            if (self.subscription) {
+                self.subscription.unsubscribe()
+                self.subscription = null
+            }
         }
+
+        this.set = set
+        this.unmount = unmount
     }
 }
 
@@ -267,16 +273,16 @@ export class MetaDepImpl<E> {
 }
 
 // implements SetterDep
-export class SetterDepImpl<V: Object> {
+export class SetterDepImpl<V: Object, E> {
     kind: 'setter';
-    base: DepBase<SetterResult<V>>;
+    base: DepBase<Setter<V>>;
     invoker: SetterInvoker<V>;
-    set: SetterResultValue<V>;
+    set: (value: AsyncResult<V, E>) => void;
 
     constructor(
         id: DepId,
         info: Info,
-        target: DepFn<SetterResult<V>>
+        target: DepFn<Setter<V>>
     ) {
         this.kind = 'setter'
         this.base = new DepBaseImpl(id, info)

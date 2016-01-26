@@ -12,7 +12,10 @@ import {
 import type {
     Deps,
     DepFn,
+    Loader,
+    AsyncResult,
     SetterResult,
+    Setter,
     Dependency,
     Hooks,
     HooksRec,
@@ -52,8 +55,8 @@ export default function createAnnotations(
             }
         },
 
-        loader(...deps: Deps): <V: Object, E>(target: SetterResult<V, E>) => SetterResult<V, E> {
-            return function _loader<V: Object, E>(target: SetterResult<V, E>): SetterResult<V, E> {
+        loader(...deps: Deps): <V: Object, E>(target: Loader<V, E>) => Loader<V, E> {
+            return function _loader<V: Object, E>(target: Loader<V, E>): Loader<V, E> {
                 return driver.set(target, new LoaderAnnotationImpl(
                     target,
                     deps,
@@ -79,7 +82,7 @@ export default function createAnnotations(
             }
         },
 
-        asyncmodel<V: Object, E>(loader?: ?SetterResult<V, E>): (target: Class<V>) => Class<V> {
+        asyncmodel<V: Object, E>(loader?: ?Loader<V, E>): (target: Class<V>) => Class<V> {
             return function _asyncmodel(target: Class<V>): Class<V> {
                 return driver.set(target, new ModelAnnotationImpl(
                     target,
@@ -89,9 +92,8 @@ export default function createAnnotations(
             }
         },
 
-        setter<V: Object, E>(model: Class<V>, ...deps: Deps)
-            :(target: SetterResult<V, E>|DepFn<V>) => SetterResult<V, E>|DepFn<V> {
-            return function _setter(target: SetterResult<V, E>|DepFn<V>): SetterResult<V, E>|DepFn<V> {
+        setter<V: Object, E>(model: Class<V>, ...deps: Deps): (target: DepFn<Setter<V>>) => DepFn<Setter<V>> {
+            return function _setter(target: DepFn<Setter<V>>): DepFn<Setter<V>> {
                 return driver.set(target, new SetterAnnotationImpl(
                     model,
                     target,

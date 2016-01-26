@@ -15,7 +15,7 @@ import type {
 
 import type {
     AsyncResult,
-    SetterResult,
+    Setter,
     DepFn
 } from '../annotations/annotationInterfaces'
 
@@ -102,7 +102,7 @@ export function resolveSetter<V: Object, E>(
 ): void {
     const {base, invoker} = dep
     const {deps, middlewares} = resolveDeps(invoker.depArgs, acc)
-    let fn: SetterResult<V> = fastCall(invoker.target, deps);
+    let fn: Setter<V> = fastCall(invoker.target, deps);
     if (typeof fn !== 'function') {
         throw new Error('No callable returns from dep ' + base.info.displayName)
     }

@@ -8,10 +8,12 @@ export type Tag = string;
 export type DepFn<T> = (...x: any) => T;
 
 export type AsyncResult<V: Object, E> = Observable<V, E> | Promise<V>;
-export type SetterResultValue<V> = Promise<V> | V;
-export type SetterResult<V> = DepFn<SetterResultValue<V>>;
+export type SetterResult<V> = Promise<V> | V;
+export type Setter<V> = DepFn<SetterResult<V>>;
 
-export type Deps<T> = Array<Dependency<T> | SimpleMap<string, Dependency<T>>>;
+export type Loader<V: Object, E> = DepFn<AsyncResult<V, E>>;
+
+export type Deps = Array<Dependency | SimpleMap<string, Dependency>>;
 
 /* eslint-disable no-undef */
 export type Dependency<T> = DepFn<T>|Class<T>;
@@ -57,7 +59,7 @@ export type AsyncModelAnnotation<V: Object, E> = {
     kind: 'asyncmodel';
     base: AnnotationBase<Class<V>>;
     info: ModelInfo<V>;
-    loader: ?SetterResult<V, E>;
+    loader: ?Loader<V, E>;
 }
 
 /* eslint-enable no-unused-vars */
@@ -80,16 +82,16 @@ export type MetaAnnotation<V> = {
 }
 
 /* eslint-disable no-unused-vars */
-export type SetterAnnotation<V: Object, E> = {
+export type SetterAnnotation<V: Object> = {
     kind: 'setter';
-    base: AnnotationBase<SetterResult<V, E>|DepFn<V>>;
+    base: AnnotationBase<DepFn<Setter<V>>>;
     deps: ?Deps;
     model: Class<V>;
 }
 
-export type LoaderAnnotation<V, E> = {
+export type LoaderAnnotation<V: Object, E> = {
     kind: 'loader';
-    base: AnnotationBase<SetterResult<V, E>>;
+    base: AnnotationBase<Loader<V, E>>;
     deps: ?Deps;
 }
 /* eslint-enable no-unused-vars */

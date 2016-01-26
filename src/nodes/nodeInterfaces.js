@@ -8,8 +8,9 @@ import type {
     Dependency,
     DepId,
     DepFn,
+    Loader,
     SetterResult,
-    SetterResultValue,
+    Setter,
     AsyncResult
 } from '../annotations/annotationInterfaces'
 import type {FromJS, SimpleMap, Cursor} from '../modelInterfaces'
@@ -81,20 +82,19 @@ export type DepArgs<M> = {
     middlewares: ?Array<M>;
 }
 
-export type Invoker<V, T, M> = {
-    hooks: Hooks<V>;
-    target: T;
+export type Invoker<V, M> = {
+    target: V;
     depArgs: DepArgs<M>;
 }
 
-export type ClassInvoker<V> = Invoker<V, Class<V>, ClassDep>;
+export type ClassInvoker<V> = Invoker<Class<V>, ClassDep>;
 export type ClassDep<V: Object> = {
     kind: 'class';
     base: DepBase<V>;
     invoker: ClassInvoker<V>;
 }
 
-export type FactoryInvoker<V> = Invoker<V, DepFn<V>, FactoryDep>;
+export type FactoryInvoker<V> = Invoker<DepFn<V>, FactoryDep>;
 export type FactoryDep<V: any> = {
     kind: 'factory';
     base: DepBase<V>;
@@ -107,12 +107,12 @@ export type MetaDep<E> = {
     sources: Array<MetaSource>;
 }
 
-export type SetterInvoker<V> = Invoker<SetterResult<V>, DepFn<SetterResult<V>>, FactoryDep>;
+export type SetterInvoker<V> = Invoker<DepFn<Setter<V>>, FactoryDep>;
 export type SetterDep<V: Object, E> = {
     kind: 'setter';
-    base: DepBase<SetterResult<V>>;
+    base: DepBase<Setter<V>>;
     invoker: SetterInvoker<V>;
-    set: SetterResultValue<V>;
+    set: (value: AsyncResult<V, E>) => void;
 }
 
 export type AnyDep =

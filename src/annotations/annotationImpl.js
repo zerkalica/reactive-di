@@ -3,12 +3,16 @@
 import getFunctionName from '../utils/getFunctionName'
 /* eslint-disable no-unused-vars */
 import type {
+    AsyncResult,
     DepId,
     DepFn,
     Dependency,
     Deps,
     Info,
-    SetterResult,
+
+    Loader,
+    Setter,
+
     Hooks,
     HooksRec,
 
@@ -90,12 +94,12 @@ export class AsyncModelAnnotationImpl<V: Object, E> {
     kind: 'asyncmodel';
     base: AnnotationBase<Class<V>>;
     info: ModelInfo<V>;
-    loader: ?AsyncResult<V, E>;
+    loader: ?Loader<V, E>;
 
     constructor(
         target: Class<V>,
         tags: Array<string>,
-        loader?: ?AsyncResult<V, E>
+        loader?: ?Loader<V, E>
     ) {
         this.kind = 'asyncmodel'
         this.base = new AnnotationBaseImpl(this.kind, tags, target)
@@ -145,15 +149,15 @@ export class MetaAnnotationImpl<V> {
 }
 
 // implements SetterAnnotation
-export class SetterAnnotationImpl<V: Object, E> {
+export class SetterAnnotationImpl<V: Object> {
     kind: 'setter';
-    base: AnnotationBase<SetterResult<V, E>|DepFn<V>>;
+    base: AnnotationBase<DepFn<Setter<V>>>;
     deps: ?Deps;
     model: Class<V>;
 
     constructor(
         model: Class<V>,
-        target: SetterResult<V, E>|DepFn<V>,
+        target: DepFn<Setter<V>>,
         deps: ?Deps,
         tags: Array<string>
     ) {
@@ -167,11 +171,11 @@ export class SetterAnnotationImpl<V: Object, E> {
 // implements LoaderAnnotation
 export class LoaderAnnotationImpl<V: Object, E> {
     kind: 'loader';
-    base: AnnotationBase<SetterResult<V, E>>;
+    base: AnnotationBase<Loader<V, E>>;
     deps: ?Deps;
 
     constructor(
-        target: SetterResult<V, E>,
+        target: Loader<V, E>,
         deps: ?Deps,
         tags: Array<string>
     ) {

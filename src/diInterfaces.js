@@ -1,11 +1,6 @@
 /* @flow */
 
 import type {Dependency} from './annotations/annotationInterfaces'
-import type {
-    AnyDep,
-    ClassDep,
-    FactoryDep
-} from './nodes/nodeInterfaces'
 
 import type {Subscription} from './observableInterfaces'
 

@@ -52,7 +52,7 @@ import {
 } from '../nodes/nodeImpl'
 
 
-import {getDeps, resolve} from './resolverHelpers'
+import {getDeps, resolve, resolveHelper} from './resolverHelpers'
 
 type AnyModelAnnotation<V, E> = ModelAnnotation<V>|AsyncModelAnnotation<V, E>;
 type AnyModelDep<V, E> = ModelDep<V>|AsyncModelDep<V, E>;
@@ -74,55 +74,51 @@ function endRegular(base: DepBase, acc: CacheBuilderInfo): void {
     depSet.forEach(iteratePathSet)
 }
 
-export function resolveModel<V: Object>(annotation: ModelAnnotation<V>, acc: AnnotationResolver): void {
+function addRelation(id: DepId, parents: Array<Set<DepId>>): void {
+    for (let i = 0, l = parents.length; i < l; i++) {
+        parents[i].add(id)
+    }
+}
+
+function resolveAnyModel<V: Object, E>(
+    annotation: AnyModelAnnotation<V, E>,
+    acc: AnnotationResolver,
+    Model: Class<ModelDepImpl<V>>|Class<AsyncModelDepImpl<V, E>>
+): ModelDep<V>|AsyncModelDep<V, E> {
     const {base, info} = annotation
     const cursor: Cursor<V> = acc.createCursor(info.statePath);
-    const dep: ModelDep<V> = new ModelDepImpl(
+    const dep: AnyModelDep<V, E> = new Model(
         base.id,
-        info,
+        base.info,
         cursor.get(),
         cursor,
         info.fromJS,
         acc.notifier
     );
     const {builderInfo} = acc
-    const {parents} = builderInfo
-    for (let i = 0, l = parents.length; i < l; i++) {
-        parents[i].add(base.id)
-    }
+    addRelation(base.id, builderInfo.parents)
     begin(base.id, dep, builderInfo)
     const {childs} = info
     for (let i = 0, l = childs.length; i < l; i++) {
         resolve(childs[i], acc)
     }
     endRegular(dep.base, builderInfo)
+    return dep
+}
+
+export function resolveModel<V: Object>(annotation: ModelAnnotation<V>, acc: AnnotationResolver): void {
+    resolveAnyModel(annotation, acc, ModelDepImpl)
 }
 
 export function resolveAsyncModel<V: Object, E>(annotation: AsyncModelAnnotation<V, E>, acc: AnnotationResolver): void {
-    const {base, info, loader} = annotation
-    const cursor: Cursor<V> = acc.createCursor(info.statePath);
-    const dep: AsyncModelDep<V, E> = new AsyncModelDepImpl(
-        base.id,
-        info,
-        cursor.get(),
-        cursor,
-        info.fromJS,
-        acc.notifier
-    );
-    const {builderInfo} = acc
-    const {parents} = builderInfo
-    for (let i = 0, l = parents.length; i < l; i++) {
-        parents[i].add(base.id)
+    const dep: AsyncModelDep<V, E> = ((resolveAnyModel(
+        annotation,
+        acc,
+        AsyncModelDepImpl
+    ): any): AsyncModelDep<V, E>);
+    if (annotation.loader) {
+        dep.loader = ((resolveHelper(annotation.loader, acc): any): FactoryDep<AsyncResult<V, E>>)
     }
-    begin(base.id, dep, builderInfo)
-    const {childs} = info
-    for (let i = 0, l = childs.length; i < l; i++) {
-        resolve(childs[i], acc)
-    }
-    if (loader) {
-        dep.loader = resolve(loader, acc)
-    }
-    endRegular(dep.base, builderInfo)
 }
 
 function endMeta(base: DepBase, sources: Array<MetaSource>, acc: CacheBuilderInfo): void {
@@ -144,9 +140,13 @@ function endMeta(base: DepBase, sources: Array<MetaSource>, acc: CacheBuilderInf
 export function resolveMeta<E>(annotation: MetaAnnotation<E>, acc: AnnotationResolver): void {
     const {base} = annotation
     const dep: MetaDep<E> = new MetaDepImpl(base.id, base.info);
-    begin(base.id, dep, acc.builderInfo)
-    resolve(base.target, acc);
-    endMeta(dep.base, dep.sources, acc.builderInfo)
+
+    const {builderInfo} = acc
+    addRelation(base.id, builderInfo.parents)
+    begin(base.id, dep, builderInfo)
+    const parents: Array<Set<DepId>> = []
+    resolveHelper(base.target, {...acc, parents});
+    endMeta(dep.base, dep.sources, acc.builderInfo, parents)
 }
 
 export function resolveClass<V: Object>(annotation: ClassAnnotation<V>, acc: AnnotationResolver): void {
@@ -165,18 +165,17 @@ export function resolveFactory<V: Object>(annotation: FactoryAnnotation<V>, acc:
     endRegular(dep.base, acc.builderInfo)
 }
 
-export function resolveSetter<V: Object, E>(annotation: SetterAnnotation<V, E>, acc: AnnotationResolver): void {
-    const {base, model} = annotation
+export function resolveSetter<V: Object, E>(annotation: SetterAnnotation<V>, acc: AnnotationResolver): void {
+    const {base} = annotation
     const dep: SetterDep<V, E> = new SetterDepImpl(base.id, base.info, base.target);
     begin(base.id, dep, acc.builderInfo)
     dep.invoker.depArgs = getDeps(annotation.deps, base.id, base.info.tags, acc)
-
-    const modelDep: AsyncModelDep<V, E> = resolve(model, {...acc, parents: []});
-
-    dep.set = modelDep.set
     endRegular(dep.base, acc.builderInfo)
+
+    const modelDep: AsyncModelDep<V, E> = (resolveHelper(annotation.model, acc): any);
+    dep.set = modelDep.set
 }
 
 export function resolveLoader<V: Object, E>(annotation: LoaderAnnotation<V, E>, acc: AnnotationResolver): void {
-    resolveFactory((annotation: FactoryAnnotation<AsyncResult<V, E>>), acc)
+    resolveFactory(((annotation: any): FactoryAnnotation<AsyncResult<V, E>>), acc)
 }

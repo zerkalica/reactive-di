@@ -20,17 +20,21 @@ import {DepArgsImpl} from '../nodes/nodeImpl'
 export function resolve(annotatedDep: Dependency, acc: AnnotationResolver): AnyDep {
     const annotation: AnyAnnotation = acc.driver.get(annotatedDep);
     const {cache} = acc.builderInfo
-    let id = annotation.base.id
-    if (!id) {
-        id = annotation.base.id = createId()
-    }
-    let dep: AnyDep = cache[id];
+    let dep: AnyDep = cache[annotation.base.id];
     if (!dep) {
+        const {base} = annotation
+        if (!base.id) {
+            base.id = createId()
+        }
         const resolver: ResolverType = acc.resolvers[annotation.kind];
         resolver(annotation, acc)
-        dep = cache[id]
+        dep = cache[base.id]
     }
     return dep
+}
+
+export function resolveHelper(annotatedDep: Dependency, acc: AnnotationResolver): AnyDep {
+    return resolve(annotatedDep, {...acc, parents: []})
 }
 
 function resolveMiddlewares(
@@ -61,16 +65,16 @@ export function getDeps(
     let depNames: ?Array<string> = null;
     const resolvedDeps: Array<AnyDep> = [];
     if (deps && deps.length) {
-        if (typeof deps[0] === 'object') {
+        if (typeof deps[0] === 'object' && deps.length === 1) {
             depNames = []
-            const argsObject: SimpleMap<string, Dependency> =  ((deps[0]: any): SimpleMap<string, Dependency>);
+            const argsObject: SimpleMap<string, Dependency> = ((deps[0]: any): SimpleMap<string, Dependency>);
             for (let key in argsObject) {
                 resolvedDeps.push(resolve(argsObject[key], acc))
                 depNames.push(key)
             }
         } else {
             for (let i = 0, l = deps.length; i < l; i++) {
-                resolvedDeps.push(resolve((deps: Array<Dependency>)[i], acc))
+                resolvedDeps.push(resolve(((deps: any): Array<Dependency>)[i], acc))
             }
         }
     }
