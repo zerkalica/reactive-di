@@ -4,6 +4,7 @@ import type {
     DepFn,
     Info,
     AsyncResult,
+    SetterResultValue,
     SetterResult,
     Hooks,
     HooksRec
@@ -30,12 +31,8 @@ import type {
     FactoryDep,
     FactoryInvoker,
 
-    AsyncSetter,
     SetterDep,
     SetterInvoker,
-
-    LoaderDep,
-    LoaderInvoker,
 
     EntityMeta
 } from './nodeInterfaces'
@@ -43,6 +40,7 @@ import type {
 import type {FromJS, Cursor, Notifier} from '../modelInterfaces'
 import EntityMetaImpl from './impl/EntityMetaImpl'
 import AsyncUpdaterImpl from './impl/AsyncUpdaterImpl'
+import createObserverSetter from './createObserverSetter'
 
 // implements DepBase
 class DepBaseImpl<V> {
@@ -149,6 +147,10 @@ export class ModelDepImpl<V: Object> {
     }
 }
 
+const defaultSubscription: Subscription = {
+    unsubscribe() {}
+}
+
 // implements AsyncModelDep
 export class AsyncModelDepImpl<V: Object, E> {
     kind: 'asyncmodel';
@@ -158,9 +160,12 @@ export class AsyncModelDepImpl<V: Object, E> {
     dataOwners: Array<Cacheable>;
     get: () => V;
 
-    updater: AsyncUpdater<V, E>;
     meta: EntityMeta<E>;
     metaOwners: Array<Cacheable>;
+
+    set: (value: AsyncResult<V, E>) => void;
+    subscription: ?Subscription;
+    loader: ?FactoryDep<AsyncResult<V, E>>;
 
     constructor(
         id: DepId,
@@ -168,10 +173,12 @@ export class AsyncModelDepImpl<V: Object, E> {
         value: V,
         cursor: Cursor<V>,
         fromJS: FromJS<V>,
-        notifier: Notifier
+        notifier: Notifier,
+        loader: ?FactoryDep<AsyncResult<V, E>>
     ) {
         this.kind = 'asyncmodel'
         this.base = new DepBaseImpl(id, info, value)
+        this.base.isRecalculate = true
 
         this.fromJS = fromJS
         this.dataOwners = []
@@ -179,8 +186,9 @@ export class AsyncModelDepImpl<V: Object, E> {
 
         this.meta = new EntityMetaImpl()
         this.metaOwners = []
+        this.loader = loader
 
-        this.updater = new AsyncUpdaterImpl(
+        const updater = new AsyncUpdaterImpl(
             cursor,
             notifier,
             this.base,
@@ -188,6 +196,23 @@ export class AsyncModelDepImpl<V: Object, E> {
             this.dataOwners,
             this.metaOwners
         )
+        this.subscription = defaultSubscription;
+        const setter = createObserverSetter(updater)
+        const self = this
+        function set(value: AsyncResult<V, E>): void {
+            if (self.subscription) {
+                self.subscription.unsubscribe()
+            }
+            self.subscription = setter(value)
+        }
+        this.set = set
+    }
+
+    unmount(): void {
+        if (this.subscription) {
+            this.subscription.unsubscribe()
+            this.subscription = null
+        }
     }
 }
 
@@ -242,36 +267,18 @@ export class MetaDepImpl<E> {
 }
 
 // implements SetterDep
-export class SetterDepImpl<V: Object, E> {
+export class SetterDepImpl<V: Object> {
     kind: 'setter';
-    base: DepBase<SetterResult<V, E>>;
-    invoker: SetterInvoker<V, E>;
-    set: AsyncSetter<V, E>;
+    base: DepBase<SetterResult<V>>;
+    invoker: SetterInvoker<V>;
+    set: SetterResultValue<V>;
 
     constructor(
         id: DepId,
         info: Info,
-        target: DepFn<SetterResult<V, E>|DepFn<V>>
+        target: DepFn<SetterResult<V>>
     ) {
         this.kind = 'setter'
-        this.base = new DepBaseImpl(id, info)
-        this.invoker = new InvokerImpl(target)
-    }
-}
-
-// implements LoaderDep
-export class LoaderDepImpl<V: Object, E> {
-    kind: 'loader';
-    base: DepBase<AsyncResult<V, E>>;
-    invoker: LoaderInvoker<V, E>;
-    set: AsyncSetter<V, E>;
-
-    constructor(
-        id: DepId,
-        info: Info,
-        target: DepFn<AsyncResult<V, E>>
-    ) {
-        this.kind = 'loader'
         this.base = new DepBaseImpl(id, info)
         this.invoker = new InvokerImpl(target)
     }

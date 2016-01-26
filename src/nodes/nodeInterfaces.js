@@ -8,8 +8,9 @@ import type {
     Dependency,
     DepId,
     DepFn,
-    AsyncResult,
-    SetterResult
+    SetterResult,
+    SetterResultValue,
+    AsyncResult
 } from '../annotations/annotationInterfaces'
 import type {FromJS, SimpleMap, Cursor} from '../modelInterfaces'
 import type {Subscription, Observer, Observable} from '../observableInterfaces'
@@ -64,9 +65,14 @@ export type AsyncModelDep<V: Object, E> = {
     dataOwners: Array<Cacheable>;
     get: () => V;
 
-    updater: AsyncUpdater<V, E>;
     meta: EntityMeta<E>;
     metaOwners: Array<Cacheable>;
+
+    subscription: ?Subscription;
+    set: (value: AsyncResult<V, E>) => void;
+    unmount: () => void;
+
+    loader: ?FactoryDep<AsyncResult<V, E>>;
 }
 
 export type DepArgs<M> = {
@@ -101,22 +107,12 @@ export type MetaDep<E> = {
     sources: Array<MetaSource>;
 }
 
-export type AsyncSetter<V, E> = (data: AsyncResult<V, E>) => void;
-export type SetterInvoker<V, E> = Invoker<SetterResult<V, E>, DepFn<SetterResult<V, E>>, FactoryDep>;
+export type SetterInvoker<V> = Invoker<SetterResult<V>, DepFn<SetterResult<V>>, FactoryDep>;
 export type SetterDep<V: Object, E> = {
     kind: 'setter';
-    base: DepBase<SetterResult<V, E>>;
-    invoker: SetterInvoker<V, E>;
-    set: AsyncSetter<V, E>;
-}
-
-export type LoaderInvoker<V, E> = Invoker<AsyncResult<V, E>, DepFn<AsyncResult<V, E>>, FactoryDep>;
-export type LoaderDep<V: Object, E> = {
-    kind: 'loader';
-    base: DepBase<AsyncResult<V, E>>;
-    invoker: LoaderInvoker<V, E>;
-    set: AsyncSetter<V, E>;
-    get: () => V;
+    base: DepBase<SetterResult<V>>;
+    invoker: SetterInvoker<V>;
+    set: SetterResultValue<V>;
 }
 
 export type AnyDep =
@@ -125,8 +121,7 @@ export type AnyDep =
     | FactoryDep
     | ClassDep
     | MetaDep
-    | SetterDep
-    | LoaderDep;
+    | SetterDep;
 
 export type DepSubscriber = {
     subscribe(dep: AnyDep): Subscription;

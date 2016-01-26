@@ -29,7 +29,6 @@ export type AnnotationResolver = {
     resolvers: SimpleMap<string, ResolverType>;
     builderInfo: CacheBuilderInfo;
     middlewares: SimpleMap<DepId|string, Array<Dependency>>;
-    resolve<V>(dep: Dependency<V>): V;
     createCursor: CursorCreator;
     notifier: Notifier;
 }
@@ -38,5 +37,5 @@ export type DependencyResolver = {
     get<V: any, E>(annotatedDep: Dependency<V>): AnyDep<V, E>;
 }
 
-export type ResolverType<A: AnyAnnotation> = (annotation: A, acc: AnnotationResolver) => void;
+export type ResolverType = (annotation: AnyAnnotation, acc: AnnotationResolver) => void;
 export type ResolverTypeMap = SimpleMap<string, ResolverType>;

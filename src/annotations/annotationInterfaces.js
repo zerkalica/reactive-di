@@ -7,8 +7,9 @@ export type DepId = string;
 export type Tag = string;
 export type DepFn<T> = (...x: any) => T;
 
-export type AsyncResult<V, E> = Observable<V, E>|Promise<V>;
-export type SetterResult<V, E> = DepFn<AsyncResult<V, E>>;
+export type AsyncResult<V: Object, E> = Observable<V, E> | Promise<V>;
+export type SetterResultValue<V> = Promise<V> | V;
+export type SetterResult<V> = DepFn<SetterResultValue<V>>;
 
 export type Deps<T> = Array<Dependency<T> | SimpleMap<string, Dependency<T>>>;
 

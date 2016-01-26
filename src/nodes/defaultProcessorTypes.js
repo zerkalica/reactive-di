@@ -10,8 +10,7 @@ import type {
     ClassDep,
     FactoryDep,
     MetaDep,
-    SetterDep,
-    LoaderDep,
+    SetterDep
 } from './nodeInterfaces'
 
 import type {
@@ -44,8 +43,13 @@ export function asyncModelDep<V: Object, E>(
     dep: AsyncModelDep<V, E>,
     acc: DepProcessor
 ): void {
-    dep.base.isRecalculate = false
-    dep.base.value = dep.get()
+    const {base} = dep
+    if (dep.loader && !dep.subscription) {
+        dep.set((acc.resolve(dep.loader): AsyncResult<V, E>))
+    }
+
+    base.isRecalculate = false
+    base.value = dep.get()
 }
 
 export function classDep<V: Object>(
@@ -98,27 +102,11 @@ export function resolveSetter<V: Object, E>(
 ): void {
     const {base, invoker} = dep
     const {deps, middlewares} = resolveDeps(invoker.depArgs, acc)
-    let fn: SetterResult<V, E> = fastCall(invoker.target, deps);
+    let fn: SetterResult<V> = fastCall(invoker.target, deps);
     if (typeof fn !== 'function') {
         throw new Error('No callable returns from dep ' + base.info.displayName)
     }
     fn = createFunctionProxy(fn, [dep.set].concat(middlewares || []))
     base.isRecalculate = false
     base.value = fn
-}
-
-export function resolveLoader<V: Object, E>(
-    dep: LoaderDep<V, E>,
-    acc: DepProcessor
-): void {
-    const {base, invoker} = dep
-    const {deps, middlewares} = resolveDeps(invoker.depArgs, acc)
-    const observableOrPromise: AsyncResult<V, E> = fastCall(invoker.target, deps);
-    if (base.value === observableOrPromise) {
-        base.isRecalculate = false
-        return
-    }
-    base.value = observableOrPromise
-    dep.set(observableOrPromise)
-    base.isRecalculate = false
 }

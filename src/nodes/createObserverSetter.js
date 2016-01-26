@@ -2,21 +2,17 @@
 
 import promiseToObservable from '../utils/promiseToObservable'
 import type {AsyncResult} from '../annotations/annotationInterfaces'
-import type {
-    AsyncSetter,
-    AsyncUpdater
-} from '../nodes/nodeInterfaces'
+import type {AsyncUpdater} from '../nodes/nodeInterfaces'
 import type {
     Observer,
     Observable,
-    SubscriptionSource,
+    Subscription,
     NextValue
 } from '../observableInterfaces'
 
 export default function createObserverSetter<V: Object, E>(
-    updater: AsyncUpdater<V, E>,
-    source: SubscriptionSource
-): AsyncSetter<V, E> {
+    updater: AsyncUpdater<V, E>
+) : (data: AsyncResult<V, E>) => Subscription {
     function next(value: NextValue<V>): void {
         if (value.kind === 'pending') {
             updater.pending()
@@ -25,7 +21,7 @@ export default function createObserverSetter<V: Object, E>(
         }
     }
 
-    return function observerSetter(data: AsyncResult<V, E>): void {
+    return function observerSetter(data: AsyncResult<V, E>): Subscription {
         if (
             typeof data.subscribe !== 'function'
             || typeof data.then !== 'function'
@@ -33,7 +29,6 @@ export default function createObserverSetter<V: Object, E>(
             throw new Error('No observable or promise returns from model setter')
         }
 
-        source.subscription.unsubscribe()
         const observable: Observable<V, E> = promiseToObservable(data);
         const observer: Observer<V, E> = {
             complete: next,
@@ -41,6 +36,7 @@ export default function createObserverSetter<V: Object, E>(
             error: updater.error
         };
         observer.next({kind: 'pending'})
-        source.subscription = observable.subscribe(observer)
+
+        return observable.subscribe(observer)
     }
 }

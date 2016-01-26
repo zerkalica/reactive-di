@@ -8,7 +8,6 @@ import type {
     Dependency,
     Deps,
     Info,
-    AsyncResult,
     SetterResult,
     Hooks,
     HooksRec,
@@ -91,12 +90,12 @@ export class AsyncModelAnnotationImpl<V: Object, E> {
     kind: 'asyncmodel';
     base: AnnotationBase<Class<V>>;
     info: ModelInfo<V>;
-    loader: ?SetterResult<V, E>;
+    loader: ?AsyncResult<V, E>;
 
     constructor(
         target: Class<V>,
         tags: Array<string>,
-        loader?: ?SetterResult<V, E>
+        loader?: ?AsyncResult<V, E>
     ) {
         this.kind = 'asyncmodel'
         this.base = new AnnotationBaseImpl(this.kind, tags, target)
