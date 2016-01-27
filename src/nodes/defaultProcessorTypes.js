@@ -31,15 +31,16 @@ import type {
 
 import type {Cursor} from '../modelInterfaces'
 
-export function modelDep<V: Object>(
+function modelDep<V: Object>(
     dep: ModelDep<V>,
     acc: DepProcessor
 ): void {
-    dep.base.isRecalculate = false
-    dep.base.value = dep.get()
+    const {base} = dep
+    base.isRecalculate = false
+    base.value = dep.get()
 }
 
-export function asyncModelDep<V: Object, E>(
+function asyncModelDep<V: Object, E>(
     dep: AsyncModelDep<V, E>,
     acc: DepProcessor
 ): void {
@@ -52,7 +53,7 @@ export function asyncModelDep<V: Object, E>(
     base.value = dep.get()
 }
 
-export function classDep<V: Object>(
+function classDep<V: Object>(
     dep: ClassDep<V>,
     acc: DepProcessor
 ): void {
@@ -66,7 +67,7 @@ export function classDep<V: Object>(
     base.value = obj
 }
 
-export function factoryDep<V: Object>(
+function factoryDep<V: Object>(
     dep: FactoryDep<V>,
     acc: DepProcessor
 ): void {
@@ -83,7 +84,7 @@ export function factoryDep<V: Object>(
     base.isRecalculate = false
 }
 
-export function resolveMeta<E>(
+function metaDep<E>(
     dep: MetaDep<E>,
     acc: DepProcessor
 ): void {
@@ -96,17 +97,25 @@ export function resolveMeta<E>(
     base.isRecalculate = false
 }
 
-export function resolveSetter<V: Object, E>(
+function setterDep<V: Object, E>(
     dep: SetterDep<V, E>,
     acc: DepProcessor
 ): void {
     const {base, invoker} = dep
     const {deps, middlewares} = resolveDeps(invoker.depArgs, acc)
-    let fn: Setter<V> = fastCall(invoker.target, deps);
+    const fn: Setter<V> = fastCall(invoker.target, deps);
     if (typeof fn !== 'function') {
         throw new Error('No callable returns from dep ' + base.info.displayName)
     }
-    fn = createFunctionProxy(fn, [dep.set].concat(middlewares || []))
     base.isRecalculate = false
-    base.value = fn
+    base.value = createFunctionProxy(fn, [dep.set].concat(middlewares || []))
+}
+
+export default {
+    model: modelDep,
+    asyncmodel: asyncModelDep,
+    class: classDep,
+    factory: factoryDep,
+    meta: metaDep,
+    setter: setterDep
 }

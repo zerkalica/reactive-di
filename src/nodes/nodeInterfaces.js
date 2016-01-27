@@ -39,6 +39,7 @@ export type DepBase<V> = {
     relations: Array<DepId>;
     id: DepId;
     info: Info;
+    subscriptions: Array<Subscription>;
 }
 
 export type AsyncUpdater<V: Object, E> = {
@@ -69,9 +70,8 @@ export type AsyncModelDep<V: Object, E> = {
     meta: EntityMeta<E>;
     metaOwners: Array<Cacheable>;
 
-    subscription: ?Subscription;
     set: (value: AsyncResult<V, E>) => void;
-    unmount: () => void;
+    unsubscribe: () => void;
 
     loader: ?FactoryDep<AsyncResult<V, E>>;
 }

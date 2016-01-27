@@ -12,12 +12,12 @@ type TestElRec = {
     w?: number;
 }
 class TestEl {
-    id: ?string;
+    id: string;
     w: number;
     name: ?string;
 
     constructor(rec: TestElRec = {}) {
-        this.id = rec.id || null
+        this.id = rec.id || 0
         this.name = rec.name || null
         this.w = rec.w || 0
     }
@@ -27,8 +27,8 @@ class TestEl {
     }
 }
 
-class TestColl extends Collection<TestEl, string> {
-    createItem(rec: TestElRec): TestEl {
+class TestColl extends Collection<TestEl> {
+    createItem(rec: Object): TestEl {
         return new TestEl(rec)
     }
 }
@@ -57,9 +57,9 @@ describe('CollectionTest', () => {
     it('each element should be instance of a collection element', () => {
         const testColl = createTestColl()
         assert(testColl.length === 3)
-        assert(testColl.items[0] instanceof TestEl)
-        assert(testColl.items[1] instanceof TestEl)
-        assert(testColl.items[2] instanceof TestEl)
+        assert(testColl._items[0] instanceof TestEl)
+        assert(testColl._items[1] instanceof TestEl)
+        assert(testColl._items[2] instanceof TestEl)
     })
 
     it('should find element', () => {

@@ -51,6 +51,7 @@ import {
     SetterDepImpl
 } from '../nodes/nodeImpl'
 
+import type {Subscription} from '../observableInterfaces'
 
 import {getDeps, resolve, resolveHelper} from './resolverHelpers'
 
@@ -70,15 +71,23 @@ function endRegular(base: DepBase, acc: CacheBuilderInfo): void {
     function iteratePathSet(relationId: DepId): void {
         const target: AnyDep = cache[relationId];
         relations.push(relationId)
-        if (target.kind === 'model' || target.kind === 'asyncmodel') {
-            target.dataOwners.push((base: Cacheable))
-        } else if (target.kind === 'meta') {
-            const {sources} = target
-            for(let i = 0, l = sources.length; i < l; i++) {
-                const {metaOwners} = sources[i]
-                metaOwners.push((base: Cacheable))
-                metaOwners.push((target.base: Cacheable))
-            }
+        switch(target.kind) {
+            case 'model':
+                target.dataOwners.push((base: Cacheable))
+                break
+            case 'asyncmodel':
+                target.dataOwners.push((base: Cacheable))
+                base.subscriptions.push((target: Subscription))
+                break
+            case 'meta':
+                const {sources} = target
+                for(let i = 0, l = sources.length; i < l; i++) {
+                    const {metaOwners} = sources[i]
+                    metaOwners.push((base: Cacheable))
+                }
+                break
+            default:
+                throw new TypeError('Unhandlered dep type: ' + target.kind)
         }
     }
     depSet.forEach(iteratePathSet)
@@ -131,12 +140,13 @@ export function resolveAsyncModel<V: Object, E>(annotation: AsyncModelAnnotation
     }
 }
 
-function endMeta(sources: Array<AsyncModelDep>, acc: CacheBuilderInfo): void {
+function endMeta(cacheable: Cacheable, sources: Array<AsyncModelDep>, acc: CacheBuilderInfo): void {
     const depSet: Set<DepId> = acc.parents.pop();
     function iteratePathSet(relationId: DepId): void {
         const target: AnyDep = acc.cache[relationId];
         if (target.kind === 'asyncmodel') {
             sources.push(target)
+            target.metaOwners.push(cacheable)
         }
     }
     depSet.forEach(iteratePathSet)
@@ -148,9 +158,16 @@ export function resolveMeta<E>(annotation: MetaAnnotation<E>, acc: AnnotationRes
 
     const {builderInfo} = acc
     addRelation(base.id, builderInfo.parents)
-    begin(base.id, dep, builderInfo)
-    resolveHelper(base.target, acc);
-    endMeta(dep.sources, acc.builderInfo)
+    const parents: Array<Set<DepId>> = [];
+
+    const newBuilderInfo: CacheBuilderInfo = {
+        cache: builderInfo.cache,
+        parents
+    };
+
+    begin(base.id, dep, newBuilderInfo)
+    resolve(base.target, acc);
+    endMeta(dep.base, dep.sources, newBuilderInfo)
 }
 
 export function resolveClass<V: Object>(annotation: ClassAnnotation<V>, acc: AnnotationResolver): void {

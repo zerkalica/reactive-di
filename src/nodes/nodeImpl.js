@@ -52,6 +52,7 @@ class DepBaseImpl<V> {
     relations: Array<DepId>;
     id: DepId;
     info: Info;
+    subscriptions: Array<Subscription>;
 
     constructor(
         id: DepId,
@@ -62,6 +63,7 @@ class DepBaseImpl<V> {
         this.info = info
         this.isRecalculate = value === undefined
         this.relations = []
+        this.subscriptions = []
         if (value !== undefined) {
             this.value = value
         }
@@ -166,9 +168,9 @@ export class AsyncModelDepImpl<V: Object, E> {
     meta: EntityMeta<E>;
     metaOwners: Array<Cacheable>;
 
-    subscription: ?Subscription;
+    _subscription: Subscription;
     set: (value: AsyncResult<V, E>) => void;
-    unmount: () => void;
+    unsubscribe: () => void;
 
     loader: ?FactoryDep<AsyncResult<V, E>>;
 
@@ -201,24 +203,19 @@ export class AsyncModelDepImpl<V: Object, E> {
             this.dataOwners,
             this.metaOwners
         )
-        this.subscription = defaultSubscription;
+        this._subscription = defaultSubscription;
         const setter = createObserverSetter(updater)
         const self = this
-        function set(value: AsyncResult<V, E>): void {
-            if (self.subscription) {
-                self.subscription.unsubscribe()
-            }
-            self.subscription = setter(value)
-        }
-        function unmount(): void {
-            if (self.subscription) {
-                self.subscription.unsubscribe()
-                self.subscription = null
-            }
+
+        this.set = function set(value: AsyncResult<V, E>): void {
+            self._subscription.unsubscribe()
+            self._subscription = setter(value)
         }
 
-        this.set = set
-        this.unmount = unmount
+        this.unsubscribe = function unsubscribe(): void {
+            self._subscription.unsubscribe()
+            self._subscription = defaultSubscription
+        }
     }
 }
 
