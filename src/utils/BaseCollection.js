@@ -24,7 +24,8 @@ type CreateItem<V> = (rawItem: Object) => V;
 type ItemRec = {};
 
 export type Collection<Item: CollectionItem> = {
-    createItem(item: ItemRec): Item;
+    length: number;
+    createItem(rec: ItemRec): Item;
     fromArray(items: Array<ItemRec>): Collection<Item>;
     add(item: Item): Collection<Item>;
     remove(id: Id): Collection<Item>;
@@ -40,7 +41,7 @@ export type Collection<Item: CollectionItem> = {
 }
 
 type ItemsMap<Item> = {
-    [id: Id]: Item
+    [id: Id]: Item;
 }
 
 // implements Collection<Item>
@@ -49,6 +50,8 @@ export default class BaseCollection<Item: CollectionItem> {
     _deleted: DeletedItems<Item>;
     _itemsMap: ItemsMap<Item>;
     length: number;
+
+    createItem: (rec: ItemRec) => Item;
 
     constructor(rec?: CollectionRec<Item>|Array<ItemRec> = []) {
         if (Array.isArray(rec)) {
@@ -62,10 +65,6 @@ export default class BaseCollection<Item: CollectionItem> {
             this._itemsMap = rec.itemsMap || {}
         }
         this.length = this._items.length
-    }
-
-    createItem<T: ItemRec>(rec: T): Item {
-        // override
     }
 
     _copy(rec: CollectionRec<Item>): Collection<Item> {

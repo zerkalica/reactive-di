@@ -1,7 +1,7 @@
 /* @flow */
 /* eslint-env mocha */
 import assert from 'power-assert'
-import Collection from '../Collection'
+import BaseCollection from '../BaseCollection'
 import merge from '../merge'
 
 // import {spy} from 'sinon'
@@ -17,7 +17,7 @@ class TestEl {
     name: ?string;
 
     constructor(rec: TestElRec = {}) {
-        this.id = rec.id || 0
+        this.id = rec.id || '0'
         this.name = rec.name || null
         this.w = rec.w || 0
     }
@@ -27,7 +27,7 @@ class TestEl {
     }
 }
 
-class TestColl extends Collection<TestEl> {
+class TestColl extends BaseCollection<TestEl> {
     createItem(rec: Object): TestEl {
         return new TestEl(rec)
     }
@@ -53,7 +53,7 @@ function createTestColl(): TestColl {
     ])
 }
 
-describe('CollectionTest', () => {
+describe('BaseCollectionTest', () => {
     it('each element should be instance of a collection element', () => {
         const testColl = createTestColl()
         assert(testColl.length === 3)
@@ -113,7 +113,7 @@ describe('CollectionTest', () => {
     it('should soft restore element', () => {
         const testColl = createTestColl()
         const newColl = testColl.softRemove('3')
-        const newColl2 = newColl.softRestore('3')
+        const newColl2 = newColl.restore('3')
         const item = newColl2.get('3')
         assert(item instanceof TestEl)
         assert(newColl.length === 2)
@@ -122,26 +122,26 @@ describe('CollectionTest', () => {
 
     it('should throw exception if soft restore element not exists', () => {
         const testColl = createTestColl()
-        assert.throws(() => testColl.softRestore('332'))
+        assert.throws(() => testColl.restore('332'))
     })
 
-    it('should set element', () => {
+    it('should update element', () => {
         const testColl = createTestColl()
-        const newColl = testColl.set('3', el => el.copy({name: 'test4New'}))
+        const newColl = testColl.update('3', el => el.copy({name: 'test4New'}))
         const item = newColl.get('3')
         assert(newColl !== testColl)
         assert(item.name === 'test4New')
     })
 
-    it('should return same collection instance, if set element with same content', () => {
+    it('should return same collection instance, if update element with same content', () => {
         const testColl = createTestColl()
-        const newColl = testColl.set('3', el => el.copy({name: 'test3'}))
+        const newColl = testColl.update('3', el => el.copy({name: 'test3'}))
         assert(newColl === testColl)
     })
 
-    it('should throw exception of set element not exists', () => {
+    it('should throw exception of update element not exists', () => {
         const testColl = createTestColl()
-        assert.throws(() => testColl.set('4', el => el.copy({name: 'test4New'})))
+        assert.throws(() => testColl.update('4', el => el.copy({name: 'test4New'})))
     })
 
     it('should map collection', () => {

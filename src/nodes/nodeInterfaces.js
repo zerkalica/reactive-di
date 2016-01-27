@@ -10,8 +10,7 @@ import type {
     DepFn,
     Loader,
     SetterResult,
-    Setter,
-    AsyncResult
+    Setter
 } from '../annotations/annotationInterfaces'
 import type {FromJS, SimpleMap, Cursor} from '../modelInterfaces'
 import type {Subscription, Observer, Observable} from '../observableInterfaces'
@@ -43,37 +42,24 @@ export type DepBase<V> = {
 }
 
 export type AsyncUpdater<V: Object, E> = {
-    pending: () => void;
-    success: (value: V) => void;
-    error: (error: E) => void;
+    meta: EntityMeta<E>;
+    metaOwners: Array<Cacheable>;
+    subscribe: (value: Observable<V, E>) => void;
+    unsubscribe: () => void;
+    isSubscribed: boolean;
 }
 
-export type ModelDep<V: Object> = {
+export type ModelDep<V: Object, E> = {
     kind: 'model';
     base: DepBase<V>;
 
     fromJS: FromJS<V>;
     dataOwners: Array<Cacheable>;
     get: () => V;
-
     set: (value: V) => void;
-}
 
-export type AsyncModelDep<V: Object, E> = {
-    kind: 'asyncmodel';
-    base: DepBase<V>;
-
-    fromJS: FromJS<V>;
-    dataOwners: Array<Cacheable>;
-    get: () => V;
-
-    meta: EntityMeta<E>;
-    metaOwners: Array<Cacheable>;
-
-    set: (value: AsyncResult<V, E>) => void;
-    unsubscribe: () => void;
-
-    loader: ?FactoryDep<AsyncResult<V, E>>;
+    updater: ?AsyncUpdater<V, E>;
+    loader: ?FactoryDep<Observable<V, E>>;
 }
 
 export type DepArgs<M> = {
@@ -104,7 +90,7 @@ export type FactoryDep<V: any> = {
 export type MetaDep<E> = {
     kind: 'meta';
     base: DepBase<EntityMeta<E>>;
-    sources: Array<AsyncModelDep>;
+    sources: Array<AsyncUpdater>;
 }
 
 export type SetterInvoker<V> = Invoker<DepFn<Setter<V>>, FactoryDep>;
@@ -112,12 +98,11 @@ export type SetterDep<V: Object, E> = {
     kind: 'setter';
     base: DepBase<Setter<V>>;
     invoker: SetterInvoker<V>;
-    set: (value: AsyncResult<V, E>) => void;
+    set: (value: V|Observable<V, E>) => void;
 }
 
 export type AnyDep =
     ModelDep
-    | AsyncModelDep
     | FactoryDep
     | ClassDep
     | MetaDep

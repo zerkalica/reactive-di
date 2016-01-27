@@ -7,11 +7,10 @@ export type DepId = string;
 export type Tag = string;
 export type DepFn<T> = (...x: any) => T;
 
-export type AsyncResult<V: Object, E> = Observable<V, E> | Promise<V>;
 export type SetterResult<V> = Promise<V> | V;
 export type Setter<V> = DepFn<SetterResult<V>>;
 
-export type Loader<V: Object, E> = DepFn<AsyncResult<V, E>>;
+export type Loader<V: Object, E> = DepFn<Observable<V, E>>;
 
 export type Deps = Array<Dependency | SimpleMap<string, Dependency>>;
 

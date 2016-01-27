@@ -8,29 +8,23 @@ type Cancelable = {
 
 // implements Observable<T, E>
 class PromiseObservable<T, E> {
-
     subscribe: (observer: Observer) => Subscription;
 
     constructor(promise: Promise<T>) {
         let isSubscribed: boolean = true;
-        function unsubscribeCancelable(): void {
-            isSubscribed = false;
-            ((promise: any): Cancelable).cancel();
-        }
-
-        function unsubscribeFallback(): void {
+        function unsubscribe(): void {
             // todo: memory leak
             isSubscribed = false
+            if (typeof promise.cancel === 'function') {
+                ((promise: any): Cancelable).cancel();
+            }
         }
-
-        const unsubscribe = typeof promise.cancel === 'function'
-            ? unsubscribeCancelable
-            : unsubscribeFallback;
 
         this.subscribe = function subscribe(observer: Observer): Subscription {
             function success(data: T): void {
                 if (isSubscribed) {
-                    observer.next({kind: 'data', data})
+                    observer.next(data)
+                    observer.complete()
                 }
             }
             function error(e: E): void {

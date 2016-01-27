@@ -3,7 +3,6 @@
 import getFunctionName from '../utils/getFunctionName'
 /* eslint-disable no-unused-vars */
 import type {
-    AsyncResult,
     DepId,
     DepFn,
     Dependency,

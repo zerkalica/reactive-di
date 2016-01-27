@@ -6,7 +6,6 @@ import type {
     DepProcessor,
 
     ModelDep,
-    AsyncModelDep,
     ClassDep,
     FactoryDep,
     MetaDep,
@@ -14,7 +13,6 @@ import type {
 } from './nodeInterfaces'
 
 import type {
-    AsyncResult,
     Setter,
     DepFn
 } from '../annotations/annotationInterfaces'
@@ -31,22 +29,13 @@ import type {
 
 import type {Cursor} from '../modelInterfaces'
 
-function modelDep<V: Object>(
-    dep: ModelDep<V>,
+function modelDep<V: Object, E>(
+    dep: ModelDep<V, E>,
     acc: DepProcessor
 ): void {
-    const {base} = dep
-    base.isRecalculate = false
-    base.value = dep.get()
-}
-
-function asyncModelDep<V: Object, E>(
-    dep: AsyncModelDep<V, E>,
-    acc: DepProcessor
-): void {
-    const {base} = dep
-    if (dep.loader && !dep.subscription) {
-        dep.set((acc.resolve(dep.loader): AsyncResult<V, E>))
+    const {base, updater, loader} = dep
+    if (updater && loader && !updater.isSubscribed) {
+        updater.subscribe((acc.resolve(loader): Observable<V, E>))
     }
 
     base.isRecalculate = false
@@ -113,7 +102,6 @@ function setterDep<V: Object, E>(
 
 export default {
     model: modelDep,
-    asyncmodel: asyncModelDep,
     class: classDep,
     factory: factoryDep,
     meta: metaDep,

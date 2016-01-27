@@ -13,7 +13,6 @@ import type {
     Deps,
     DepFn,
     Loader,
-    AsyncResult,
     SetterResult,
     Setter,
     Dependency,

@@ -7,8 +7,10 @@ import type {
     EntityMeta,
     Cacheable
 } from '../nodeInterfaces'
-import type {Cursor, Notifier} from '../../modelInterfaces'
+import type {Notifier} from '../../modelInterfaces'
 import merge from '../../utils/merge'
+import type {Observer, Subscription, Observable} from '../../observableInterfaces'
+import EntityMetaImpl from './EntityMetaImpl'
 
 function setPending<E>(meta: EntityMeta<E>): EntityMeta<E> {
     return merge(meta, {
@@ -37,62 +39,140 @@ function setError<E>(meta: EntityMeta<E>, reason: E): EntityMeta<E> {
     })
 }
 
-// implements AsyncUpdater
-export default class AsyncUpdaterImpl<V: Object, E> {
-    pending: () => void;
-    success: (value: V) => void;
-    error: (error: E) => void;
+type ValueRef<V> = {
+    value: V;
+}
+
+type Setter<V> = (value: V) => boolean;
+
+// implements Observer
+class ModelDepObserver<V, E> {
+    _set: Setter<V>;
+    _notifyData: () => void;
+    _notifyMeta: () => void;
+    _valueRef: ValueRef<V>;
+    _metaRef: MetaSource<E>;
+    _subscription: Subscription;
 
     constructor(
-        cursor: Cursor<V>,
-        notifier: Notifier,
-        base: DepBase<V>,
-        model: MetaSource<E>,
-        dataOwners: Array<Cacheable>,
-        metaOwners: Array<Cacheable>
+        set: Setter<V>,
+        valueRef: ValueRef<V>,
+        metaRef: MetaSource<E>,
+        subscription: Subscription,
+        notifyData: () => void,
+        notifyMeta: () => void
     ) {
-        function notifyDataChanges(): void {
+        this._set = set
+        this._notifyData = notifyData
+        this._notifyMeta = notifyMeta
+        this._subscription = subscription
+        this._valueRef = valueRef
+        this._metaRef = metaRef
+    }
+
+    next(value: V): void {
+        if (this._set(value)) {
+            this._valueRef.value = value
+            this._notifyData()
+        }
+        const metaRef = this._metaRef
+        const newMeta: EntityMeta<E> = setSuccess(metaRef.meta);
+        if (newMeta !== metaRef.meta) {
+            metaRef.meta = newMeta
+            this._notifyMeta()
+        }
+    }
+
+    error(errorValue: E): void {
+        const metaRef = this._metaRef
+        const newMeta: EntityMeta<E> = setError(metaRef.meta, errorValue);
+        if (newMeta !== metaRef.meta) {
+            metaRef.meta = newMeta
+            this._notifyMeta()
+        }
+        this._subscription.unsubscribe()
+    }
+
+    complete(completeValue?: V): void {
+        this._subscription.unsubscribe()
+    }
+}
+
+const defaultSubscription: Subscription = {
+    unsubscribe() {}
+};
+
+// implements AsyncUpdater
+export default class AsyncUpdaterImpl<V: Object, E> {
+    meta: EntityMeta<E>;
+    metaOwners: Array<Cacheable>;
+
+    subscribe: (value: Observable<V, E>) => void;
+    unsubscribe: () => void;
+    isSubscribed: boolean;
+
+    constructor(
+        setter: Setter<V>,
+        valueRef: ValueRef<V>,
+        notifier: Notifier,
+        dataOwners: Array<Cacheable>
+    ) {
+        this.meta = new EntityMetaImpl()
+        const self = this
+        const metaOwners = this.metaOwners = []
+
+        function notifyData(): void {
             for (let i = 0, l = dataOwners.length; i < l; i++) {
                 dataOwners[i].isRecalculate = true
             }
             notifier.notify()
         }
 
-        function notifyMetaChanges(): void {
+        function notifyMeta(): void {
             for (let i = 0, l = metaOwners.length; i < l; i++) {
                 metaOwners[i].isRecalculate = true
             }
             notifier.notify()
         }
 
-        this.pending = function pending(): void {
-            const newMeta: EntityMeta<E> = setPending(model.meta);
-            if (model.meta === newMeta) {
+        function pending(): void {
+            const newMeta: EntityMeta<E> = setPending(self.meta);
+            if (self.meta === newMeta) {
                 // if previous value is pending - do not handle this value: only first
                 return
             }
-            model.meta = newMeta
-            notifyMetaChanges()
+            self.meta = newMeta
+            notifyMeta()
         }
 
-        this.success = function success(value: V): void {
-            if (cursor.set(value)) {
-                base.value = value
-                notifyDataChanges()
+        let subscription: Subscription = defaultSubscription;
+
+        const subscriptionRef: Subscription = {
+            unsubscribe(): void {
+                subscription.unsubscribe()
             }
-            const newMeta: EntityMeta<E> = setSuccess(model.meta);
-            if (newMeta !== model.meta) {
-                model.meta = newMeta
-                notifyMetaChanges()
-            }
+        };
+
+        const observer: Observer<V, E> = new ModelDepObserver(
+            setter,
+            valueRef,
+            (this: MetaSource<E>),
+            subscriptionRef,
+            notifyData,
+            notifyMeta
+        );
+
+        this.subscribe = function subscribe(value: Observable<V, E>): void {
+            subscription.unsubscribe()
+            pending()
+            subscription = value.subscribe(observer)
+            self.isSubscribed = true
         }
 
-        this.error = function error(reason: E): void {
-            const newMeta: EntityMeta<E> = setError(model.meta, reason);
-            if (newMeta !== model.meta) {
-                model.meta = newMeta
-                notifyMetaChanges()
-            }
+        this.unsubscribe = function unsubscribe(): void {
+            subscription.unsubscribe()
+            subscription = defaultSubscription
+            self.isSubscribed = false
         }
     }
 }
