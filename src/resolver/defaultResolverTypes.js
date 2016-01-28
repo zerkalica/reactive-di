@@ -90,7 +90,7 @@ function addRelation(id: DepId, parents: Array<Set<DepId>>): void {
     }
 }
 
-export function resolveModel<V: Object, E>(
+function resolveModel<V: Object, E>(
     annotation: ModelAnnotation<V>|AsyncModelAnnotation<V, E>,
     acc: AnnotationResolver
 ): void {
@@ -132,7 +132,7 @@ function endMeta(cacheable: Cacheable, sources: Array<AsyncUpdater>, acc: CacheB
     depSet.forEach(iteratePathSet)
 }
 
-export function resolveMeta<E>(annotation: MetaAnnotation<E>, acc: AnnotationResolver): void {
+function resolveMeta<E>(annotation: MetaAnnotation<E>, acc: AnnotationResolver): void {
     const {base} = annotation
     const dep: MetaDep<E> = new MetaDepImpl(base.id, base.info);
 
@@ -150,7 +150,7 @@ export function resolveMeta<E>(annotation: MetaAnnotation<E>, acc: AnnotationRes
     endMeta(dep.base, dep.sources, newBuilderInfo)
 }
 
-export function resolveClass<V: Object>(annotation: ClassAnnotation<V>, acc: AnnotationResolver): void {
+function resolveClass<V: Object>(annotation: ClassAnnotation<V>, acc: AnnotationResolver): void {
     const {base} = annotation
     const dep: ClassDep<V> = new ClassDepImpl(base.id, base.info, base.target);
     begin(base.id, dep, acc.builderInfo)
@@ -158,7 +158,7 @@ export function resolveClass<V: Object>(annotation: ClassAnnotation<V>, acc: Ann
     endRegular(dep.base, acc.builderInfo)
 }
 
-export function resolveFactory<V: Object>(annotation: FactoryAnnotation<V>, acc: AnnotationResolver): void {
+function resolveFactory<V: Object>(annotation: FactoryAnnotation<V>, acc: AnnotationResolver): void {
     const {base} = annotation
     const dep: FactoryDep<V> = new FactoryDepImpl(base.id, base.info, base.target);
     begin(base.id, dep, acc.builderInfo)
@@ -166,7 +166,7 @@ export function resolveFactory<V: Object>(annotation: FactoryAnnotation<V>, acc:
     endRegular(dep.base, acc.builderInfo)
 }
 
-export function resolveSetter<V: Object, E>(annotation: SetterAnnotation<V>, acc: AnnotationResolver): void {
+function resolveSetter<V: Object, E>(annotation: SetterAnnotation<V>, acc: AnnotationResolver): void {
     const {base} = annotation
     const {builderInfo} = acc
     const newAcc: AnnotationResolver = {
@@ -194,6 +194,15 @@ export function resolveSetter<V: Object, E>(annotation: SetterAnnotation<V>, acc
     endRegular(dep.base, builderInfo)
 }
 
-export function resolveLoader<V: Object, E>(annotation: LoaderAnnotation<V, E>, acc: AnnotationResolver): void {
+function resolveLoader<V: Object, E>(annotation: LoaderAnnotation<V, E>, acc: AnnotationResolver): void {
     resolveFactory(((annotation: any): FactoryAnnotation<Observable<V, E>>), acc)
+}
+
+export default {
+    class: resolveClass,
+    factory: resolveFactory,
+    model: resolveModel,
+    asyncmodel: resolveModel,
+    meta: resolveMeta,
+    loader: resolveLoader
 }

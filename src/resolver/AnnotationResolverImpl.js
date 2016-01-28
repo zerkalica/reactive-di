@@ -14,6 +14,8 @@ import type {
     ClassDep
 } from '../nodes/nodeInterfaces'
 import type {
+    ResolverType,
+    CacheBuilderInfo,
     ResolverTypeMap,
     DependencyResolver,
     AnnotationResolver
@@ -27,6 +29,29 @@ import type {
 
 // implements DependencyResolver, AnnotationResolver
 export default class AnnotationResolverImpl {
-    parents: Array<Set<DepId>>;
-    cache: SimpleMap<DepId, AnyDep>;
+    driver: AnnotationDriver;
+    resolvers: SimpleMap<string, ResolverType>;
+    middlewares: SimpleMap<DepId|string, Array<Dependency>>;
+    createCursor: CursorCreator;
+    notifier: Notifier;
+
+    builderInfo: CacheBuilderInfo;
+
+    constructor(
+        driver: AnnotationDriver,
+        resolvers: SimpleMap<string, ResolverType>,
+        middlewares: SimpleMap<DepId|string, Array<Dependency>>,
+        createCursor: CursorCreator,
+        notifier: Notifier
+    ) {
+        this.driver = driver
+        this.resolvers = resolvers
+        this.builderInfo = {
+            cache: {},
+            parents: []
+        }
+        this.middlewares = middlewares
+        this.createCursor = this.createCursor
+        this.notifier = notifier
+    }
 }

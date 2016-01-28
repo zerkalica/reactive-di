@@ -28,7 +28,7 @@ export type AnnotationResolver = {
     driver: AnnotationDriver;
     resolvers: SimpleMap<string, ResolverType>;
     builderInfo: CacheBuilderInfo;
-    middlewares: SimpleMap<DepId|string, Array<Dependency>>;
+    middlewares: SimpleMap<Dependency|string, Array<Dependency>>;
     createCursor: CursorCreator;
     notifier: Notifier;
 }
