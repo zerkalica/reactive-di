@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {EntityMeta} from '../nodeInterfaces'
+import type {EntityMeta} from './modelInterfaces'
 
 type EntityMetaRec<E> = {
     pending?: boolean;

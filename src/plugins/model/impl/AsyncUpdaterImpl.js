@@ -1,16 +1,15 @@
 /* @flow */
 
+import merge from '../../../utils/merge'
+import EntityMetaImpl from '../EntityMetaImpl'
+import type {Notifier} from '../../../modelInterfaces'
 import type {
-    AsyncUpdater,
     MetaSource,
     DepBase,
-    EntityMeta,
     Cacheable
-} from '../nodeInterfaces'
-import type {Notifier} from '../../modelInterfaces'
-import merge from '../../utils/merge'
-import type {Observer, Subscription, Observable} from '../../observableInterfaces'
-import EntityMetaImpl from './EntityMetaImpl'
+} from '../../../nodes/nodeInterfaces'
+import type {Observer, Subscription, Observable} from '../../../observableInterfaces'
+import type {AsyncUpdater, EntityMeta} from '../modelInterfaces'
 
 function setPending<E>(meta: EntityMeta<E>): EntityMeta<E> {
     return merge(meta, {

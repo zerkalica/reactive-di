@@ -42,31 +42,6 @@ import type {FromJS, Cursor, Notifier} from '../modelInterfaces'
 import EntityMetaImpl from './impl/EntityMetaImpl'
 import AsyncUpdaterImpl from './impl/AsyncUpdaterImpl'
 
-// implements DepBase
-class DepBaseImpl<V> {
-    isRecalculate: boolean;
-    value: V;
-    relations: Array<DepId>;
-    id: DepId;
-    info: Info;
-    subscriptions: Array<Subscription>;
-
-    constructor(
-        id: DepId,
-        info: Info,
-        value?: V
-    ) {
-        this.id = id
-        this.info = info
-        this.isRecalculate = value === undefined
-        this.relations = []
-        this.subscriptions = []
-        if (value !== undefined) {
-            this.value = value
-        }
-    }
-}
-
 // implements DepArgs
 export class DepArgsImpl<M> {
     deps: Array<AnyDep>;
@@ -111,56 +86,6 @@ class InvokerImpl<V, T, M> {
     }
 }
 
-// implements ModelDep
-export class ModelDepImpl<V: Object, E> {
-    kind: 'model';
-    base: DepBase<V>;
-
-    fromJS: FromJS<V>;
-    dataOwners: Array<Cacheable>;
-    get: () => V;
-
-    set: (value: V) => void;
-    updater: ?AsyncUpdater<V, E>;
-    loader: ?FactoryDep<Observable<V, E>>;
-
-    constructor(
-        id: DepId,
-        info: Info,
-        cursor: Cursor<V>,
-        fromJS: FromJS<V>,
-        notifier: Notifier,
-        isAsync: boolean = false,
-        loader: ?FactoryDep<Observable<V, E>> = null
-    ) {
-        this.kind = 'model'
-        this.loader = loader
-        const base = this.base = new DepBaseImpl(id, info, cursor.get())
-
-        this.fromJS = fromJS
-        const dataOwners = this.dataOwners = []
-        this.get = cursor.get
-
-        this.set = function set(value: V): void {
-            if (cursor.set(value)) {
-                base.value = value
-                for (let i = 0, l = dataOwners.length; i < l; i++) {
-                    dataOwners[i].isRecalculate = true
-                }
-                notifier.notify()
-            }
-        }
-        if (isAsync) {
-            this.updater = new AsyncUpdaterImpl(
-                cursor.set,
-                base,
-                notifier,
-                dataOwners
-            )
-        }
-    }
-}
-
 // implements ClassDep
 export class ClassDepImpl<V: Object> {
     kind: 'class';
@@ -192,22 +117,6 @@ export class FactoryDepImpl<V: any, E> {
         this.kind = 'factory'
         this.base = new DepBaseImpl(id, info)
         this.invoker = new InvokerImpl(target)
-    }
-}
-
-// implements MetaDep
-export class MetaDepImpl<E> {
-    kind: 'meta';
-    base: DepBase<EntityMeta<E>>;
-    sources: Array<AsyncUpdater>;
-
-    constructor(
-        id: DepId,
-        info: Info
-    ) {
-        this.kind = 'meta'
-        this.base = new DepBaseImpl(id, info)
-        this.sources = []
     }
 }
 

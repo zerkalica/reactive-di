@@ -31,23 +31,9 @@ import type {FromJS} from '../modelInterfaces'
 /* eslint-enable no-unused-vars */
 
 
-// implements Info
-class InfoImpl {
-    tags: Array<string>;
-    displayName: string;
-
-    constructor(
-        kind: string,
-        name: string,
-        tags: Array<string>
-    ) {
-        this.displayName = kind + '@' + name
-        this.tags = tags.concat([kind, name])
-    }
-}
 
 // implements AnnotationBase
-class AnnotationBaseImpl<T: Function> {
+export class AnnotationBaseImpl<T: Function> {
     id: DepId;
     info: Info;
     target: T;
@@ -60,50 +46,6 @@ class AnnotationBaseImpl<T: Function> {
         const name: string = getFunctionName(target);
         this.info = new InfoImpl(kind, name, tags)
         this.target = target
-    }
-}
-
-// implements ModelInfo
-class ModelInfoImpl<V> {
-    childs: Array<Dependency>;
-    statePath: Array<string>;
-    fromJS: FromJS<V>;
-
-    constructor() {
-        this.childs = []
-        this.statePath = []
-    }
-}
-
-// implements ModelAnnotation
-export class ModelAnnotationImpl<V: Object> {
-    kind: 'model';
-    base: AnnotationBase<Class<V>>;
-    info: ModelInfo<V>;
-
-    constructor(target: Class<V>, tags: Array<string>) {
-        this.kind = 'model'
-        this.base = new AnnotationBaseImpl(this.kind, tags, target)
-        this.info = new ModelInfoImpl()
-    }
-}
-
-// implements AsyncModelAnnotation
-export class AsyncModelAnnotationImpl<V: Object, E> {
-    kind: 'asyncmodel';
-    base: AnnotationBase<Class<V>>;
-    info: ModelInfo<V>;
-    loader: ?Loader<V, E>;
-
-    constructor(
-        target: Class<V>,
-        tags: Array<string>,
-        loader?: ?Loader<V, E>
-    ) {
-        this.kind = 'asyncmodel'
-        this.base = new AnnotationBaseImpl(this.kind, tags, target)
-        this.info = new ModelInfoImpl()
-        this.loader = loader || null
     }
 }
 

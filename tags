@@ -84,12 +84,13 @@ eslint-config-airplus	package.json	/^    "eslint-config-airplus": "^1.0.6",$/;"	
 eslint-plugin-react	package.json	/^    "eslint-plugin-react": "^3.15.0",$/;"	f
 factory	dist/Annotations.js	/^function factory(driver \/*: AbstractMetaDriver*\/, tags \/*: Array<string>*\/, rawDeps \/*: Array<Dependency>*\/) \/*: DepDecoratorFn*\/ {$/;"	f
 files	package.json	/^  "files": [$/;"	f
+function.unsubscribe	src/ReactiveDiImpl.js	/^        function unsubscribe() {$/;"	f
 getDepId	dist/model/__tests__/ExampleState.js	/^function getDepId(obj \/*: Object*\/) \/*: string*\/ {$/;"	f
 getFunctionName	dist/utils/getFunctionName.js	/^function getFunctionName(func \/*: Function*\/) \/*: string*\/ {$/;"	f
 getter	dist/Annotations.js	/^function getter \/*:: <T: Object>*\/(cacheRec \/*: CacheRec*\/) \/*: T*\/ {$/;"	f
 glob	package.json	/^    "glob": "^6.0.4",$/;"	f
 iterator	dist/utils/Collection.js	/^obj[_iterator2.default] = function iterator() {$/;"	f
-iterator	src/utils/Collection.js	/^obj[Symbol.iterator] = function iterator() {$/;"	f
+iterator	src/utils/BaseCollection.js	/^(BaseCollection.prototype: Object)[Symbol.iterator] = function iterator() {$/;"	f
 keywords	package.json	/^  "keywords": [$/;"	f
 klass	dist/Annotations.js	/^function klass(driver \/*: AbstractMetaDriver*\/, tags \/*: Array<string>*\/, rawDeps \/*: Array<Dependency>*\/) \/*: DepDecoratorFn*\/ {$/;"	f
 klass.createObject	dist/Annotations.js	/^        function createObject() \/*: T*\/ {$/;"	f
@@ -103,7 +104,6 @@ name	package.json	/^  "name": "reactive-di",$/;"	f
 normalizeDeps	dist/Annotations.js	/^function normalizeDeps(driver \/*: AbstractMetaDriver*\/, rDeps \/*: Array<Object>*\/) \/*: NormalizedDeps*\/ {$/;"	f
 normalizeMiddlewares	dist/ReactiveDi.js	/^function normalizeMiddlewares(rawMiddlewares \/*: Array<[Dependency, Array<Dependency>]>*\/, getDepMeta \/*: (dep: Dependency) => DepMeta*\/) \/*: MiddlewareMap*\/ {$/;"	f
 obj	dist/utils/Collection.js	/^        }*\/ = Collection.prototype;$/;"	f
-obj	src/utils/Collection.js	/^} = Collection.prototype;$/;"	c
 options	package.json	/^  "options": {$/;"	f
 postinstall	package.json	/^    "postinstall": "test -d conf && conf\/resources\/postinstall.sh $npm_package_name || exit 0",$/;"	f
 postversion	package.json	/^    "postversion": "git push && git push --tags",$/;"	f

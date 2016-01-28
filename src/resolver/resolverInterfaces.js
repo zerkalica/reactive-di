@@ -1,6 +1,7 @@
 /* @flow */
 
 import type {
+    Deps,
     Dependency,
     DepId,
     AnyAnnotation,
@@ -14,23 +15,24 @@ import type {
 } from '../modelInterfaces'
 
 import type {
+    DepBase,
+    DepArgs,
     AnyDep,
     ClassDep,
-    FactoryDep
+    FactoryDep,
+    MetaDep
 } from '../nodes/nodeInterfaces'
 
-export type CacheBuilderInfo = {
-    parents: Array<Set<DepId>>;
-    cache: SimpleMap<DepId, AnyDep>;
-}
-
 export type AnnotationResolver = {
-    driver: AnnotationDriver;
-    resolvers: SimpleMap<string, ResolverType>;
-    builderInfo: CacheBuilderInfo;
-    middlewares: SimpleMap<Dependency|string, Array<Dependency>>;
     createCursor: CursorCreator;
     notifier: Notifier;
+    getDeps(deps: ?Deps, id: DepId, tags: Array<string>): DepArgs;
+    resolveRoot(annotatedDep: Dependency): AnyDep;
+    resolve(annotatedDep: Dependency): AnyDep;
+    addRelation(id: DepId): void;
+    begin(dep: AnyDep): void;
+    end<T: AnyDep>(dep: T): void;
+    newRoot(): AnnotationResolver;
 }
 
 export type DependencyResolver = {
