@@ -4,8 +4,8 @@ import type {
     DepFn,
     AnnotationBase,
     Dependency
-} from '../../annotations/annotationInterfaces'
-import type {DepBase} from '../../nodes/nodeInterfaces'
+} from '../../annotationInterfaces'
+import type {DepBase} from '../../nodeInterfaces'
 import type {Observable} from '../../observableInterfaces'
 import type {
     FactoryDep,

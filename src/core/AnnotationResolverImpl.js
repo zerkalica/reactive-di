@@ -1,82 +1,64 @@
 /* @flow */
 
+import createId from '../utils/createId'
 import type {
-    Deps,
-    DepId,
-    Tag,
-    Dependency,
     AnnotationDriver,
-    AnyAnnotation
-} from '../annotations/annotationInterfaces'
-import type {
-    Cacheable,
-    DepBase,
-    DepArgs,
-    AnyDep,
-    FactoryDep,
-    ClassDep,
-    MetaDep,
-    AsyncUpdater
-} from '../nodes/nodeInterfaces'
-import type {
-    ResolverType,
-    ResolverTypeMap,
-    DependencyResolver,
-    AnnotationResolver
-} from './resolverInterfaces'
+    DepId,
+    Dependency,
+    Deps,
+    AnyAnnotation,
+    Tag
+} from '../annotationInterfaces'
 import type {
     Notifier,
     SimpleMap,
-    Cursor,
     CursorCreator
 } from '../modelInterfaces'
-import type {FinalizeFn} from './finalizers'
-
-import {DepArgsImpl} from '../nodes/nodeImpl'
-import createId from '../utils/createId'
-import {defaultFinalizer, metaFinalizer} from './finalizers'
-
-const defaultFinalizers = {
-    meta: metaFinalizer
-}
+import type {
+    AnyDep,
+    DepArgs,
+    DependencyResolver,
+    AnnotationResolver
+} from '../nodeInterfaces'
+import type {FinalizeFn} from '../pluginInterfaces'
+import type {Plugin} from '../pluginInterfaces'
+import {DepArgsImpl} from './DepArgsImpl'
 
 // implements DependencyResolver, AnnotationResolver
 export default class AnnotationResolverImpl {
     _driver: AnnotationDriver;
-    _resolvers: SimpleMap<string, ResolverType>;
     _middlewares: SimpleMap<DepId|string, Array<Dependency>>;
     _parents: Array<Set<DepId>>;
     _cache: SimpleMap<DepId, AnyDep>;
-    _finalizers: SimpleMap<string, FinalizeFn>;
+    _plugins: SimpleMap<string, Plugin>;
 
     createCursor: CursorCreator;
     notifier: Notifier;
 
     constructor(
         driver: AnnotationDriver,
-        resolvers: SimpleMap<string, ResolverType>,
-        middlewares: SimpleMap<DepId|string, Array<Dependency>>,
+        middlewares: SimpleMap<DepId|Tag, Array<Dependency>>,
         createCursor: CursorCreator,
         notifier: Notifier,
-        cache: SimpleMap<DepId, AnyDep>
+        plugins: SimpleMap<string, Plugin>,
+        cache?: SimpleMap<DepId, AnyDep>
     ) {
         this._driver = driver
-        this._resolvers = resolvers
         this._middlewares = middlewares
         this.createCursor = createCursor
         this.notifier = notifier
         this._parents = []
-        this._cache = cache
-        this._finalizers = defaultFinalizers
+        this._cache = cache || Object.create(null)
+        this._plugins = plugins
     }
 
     newRoot(): AnnotationResolver {
         return new AnnotationResolverImpl(
             this._driver,
-            this._resolvers,
             this._middlewares,
             this.createCursor,
             this.notifier,
+            this._plugins,
             this._cache
         )
     }
@@ -90,7 +72,7 @@ export default class AnnotationResolverImpl {
         const {_parents: parents, _cache: cache} = this
         const depSet: Set<DepId> = parents.pop();
         const {relations} = dep.base
-        const iterateFn: FinalizeFn<T> = this._finalizers[dep.kind] || defaultFinalizer;
+        const iterateFn: FinalizeFn<T> = this._plugins[dep.kind];
 
         function iteratePathSet(relationId: DepId): void {
             const target: AnyDep = cache[relationId];
@@ -107,22 +89,24 @@ export default class AnnotationResolverImpl {
         }
     }
 
-    resolveRoot(annotatedDep: Dependency): AnyDep {
-        return this.resolve(annotatedDep, true)
+    get(annotatedDep: Dependency): AnyDep {
+        const dep: AnyDep = this.resolve(annotatedDep, true);
+        return dep.base.resolve(dep, (this: DependencyResolver))
     }
 
     resolve(annotatedDep: Dependency, isRoot: boolean = false): AnyDep {
         const annotation: AnyAnnotation = this._driver.get(annotatedDep);
         let dep: AnyDep = this._cache[annotation.base.id];
         if (!dep) {
-            const {_resolvers: resolvers} = this
+            const {_plugins: plugins} = this
             const {base} = annotation
             if (!base.id) {
                 base.id = createId()
             }
-            const resolver: ResolverType = resolvers[annotation.kind];
-            resolver(annotation, this)
+            const plugin: Plugin = plugins[annotation.kind];
+            plugin.create(annotation, (this: AnnotationResolver))
             dep = this._cache[base.id]
+            dep.base.resolve = plugin.resolve
         } else if (!isRoot) {
             const {_parents: parents} = this
             const {relations} = dep.base
@@ -137,9 +121,9 @@ export default class AnnotationResolverImpl {
         return dep
     }
 
-    _resolveMiddlewares(id: DepId, tags: Array<string>): ?Array<AnyDep> {
+    _resolveMiddlewares(id: DepId, tags: Array<Tag>): ?Array<AnyDep> {
         const {_middlewares: middlewares} = this
-        const ids: Array<string> = [id].concat(tags);
+        const ids: Array<Tag> = [id].concat(tags);
         const middlewareDeps: Array<AnyDep> = [];
         for (let i = 0, l = ids.length; i < l; i++) {
             const depMiddlewares: Array<Dependency> = middlewares[ids[i]] || [];
@@ -151,7 +135,7 @@ export default class AnnotationResolverImpl {
         return middlewareDeps.length ? middlewareDeps : null
     }
 
-    getDeps(deps: ?Deps, id: DepId, tags: Array<string>): DepArgs {
+    getDeps(deps: ?Deps, id: DepId, tags: Array<Tag>): DepArgs {
         let depNames: ?Array<string> = null;
         const resolvedDeps: Array<AnyDep> = [];
         if (deps && deps.length) {

@@ -4,12 +4,12 @@ import EntityMetaImpl, {updateMeta} from '../model/EntityMetaImpl'
 import type {
     DepId,
     Info
-} from '../../annotations/annotationInterfaces'
+} from '../../annotationInterfaces'
 import type {
     AnyDep,
     DepBase,
-    DepProcessor
-} from '../../nodes/nodeInterfaces'
+    DependencyResolver
+} from '../../nodeInterfaces'
 import type {Plugin} from '../../pluginInterfaces'
 import type {AnnotationResolver} from '../../resolver/resolverInterfaces'
 import type {
@@ -41,7 +41,7 @@ class MetaDepImpl<E> {
 // depends on model
 // implements Plugin
 export default class MetaPlugin {
-    resolve<E>(dep: MetaDep<E>, acc: DepProcessor): void {
+    resolve<E>(dep: MetaDep<E>, acc: DependencyResolver): void {
         const {base, sources} = dep
         const meta: EntityMeta = new EntityMetaImpl();
         for (let i = 0, l = sources.length; i < l; i++) {

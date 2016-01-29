@@ -5,16 +5,16 @@ import EntityMetaImpl, {updateMeta} from '../model/EntityMetaImpl'
 import type {
     DepId,
     Info
-} from '../../annotations/annotationInterfaces'
+} from '../../annotationInterfaces'
 import type {
     Cursor
 } from '../../modelInterfaces'
 import type {
     AnyDep,
     DepBase,
-    DepProcessor,
+    DependencyResolver,
     Cacheable
-} from '../../nodes/nodeInterfaces'
+} from '../../nodeInterfaces'
 import type {
     Observable,
     Subscription
@@ -40,7 +40,7 @@ import type {
 export default class ModelPlugin {
     resolve<V: Object, E>(
         dep: ModelDep<V, E>,
-        acc: DepProcessor
+        acc: DependencyResolver
     ): void {
         const {base, updater, loader} = dep
         if (updater && loader && !updater.isSubscribed) {

@@ -1,22 +1,16 @@
 /* @flow */
 
-import type {AnnotationBase, Dependency} from '../../annotations/annotationInterfaces'
+import type {AnnotationBase, Dependency} from '../../annotationInterfaces'
 import type {
-    DepFn
-} from '../../annotations/annotationInterfaces'
+    DepFn,
+    Deps
+} from '../../annotationInterfaces'
 import type {SimpleMap} from '../../modelInterfaces'
 import type {
     DepBase,
     AnyDep
-} from '../../nodes/nodeInterfaces'
-
-export type Deps = Array<Dependency | SimpleMap<string, Dependency>>;
-
-export type DepArgs<M> = {
-    deps: Array<AnyDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<M>;
-}
+} from '../../nodeInterfaces'
+import type {DepArgs} from '../../pluginInterfaces'
 
 export type Invoker<V, M> = {
     target: V;
@@ -34,4 +28,10 @@ export type FactoryAnnotation<V> = {
     kind: 'factory';
     base: AnnotationBase<DepFn<V>>;
     deps: ?Deps;
+}
+
+export type Hooks<T> = {
+    onUnmount: () => void;
+    onMount: () => void;
+    onUpdate: (currentValue: T, nextValue: T) => void;
 }

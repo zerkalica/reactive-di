@@ -4,7 +4,7 @@ import type {
     AnnotationDriver,
     AnyAnnotation,
     Dependency
-} from '../annotations/annotationInterfaces'
+} from '../annotationInterfaces'
 
 // const metaSymbol = Symbol('__rdi__meta')
 const metaSymbol = '__rdi__meta'

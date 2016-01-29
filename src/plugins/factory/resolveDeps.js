@@ -1,17 +1,19 @@
 /* @flow */
 
 import type {
-    DepProcessor
-    AnyDep,
-    DepArgs
-} from './nodeInterfaces'
-
-import type {SimpleMap} from '../modelInterfaces'
-import type {MiddlewareFn, MiddlewareMap} from '../utils/createProxy'
+    DependencyResolver
+    AnyDep
+} from '../../nodeInterfaces'
+import type {DepArgs} from './factoryInterfaces'
+import type {SimpleMap} from '../../modelInterfaces'
+import type {
+    MiddlewareFn,
+    MiddlewareMap
+} from '../../utils/createProxy'
 
 export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(
     dep: DepArgs,
-    acc: DepProcessor
+    acc: DependencyResolver
 ): {
     deps: Array<AnyDep|SimpleMap<string, AnyDep>>,
     middlewares: ?Array<A>

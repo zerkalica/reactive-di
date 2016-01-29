@@ -1,11 +1,13 @@
 /* @flow */
+
+import getFunctionName from '../utils/getFunctionName'
 import type {
     DepId,
-    Info
-} from '../annotations/annotationInterfaces'
-import type {
-    Subscription
-} from '../observableInterfaces'
+    Info,
+    Tag
+} from '../annotationInterfaces'
+import type {ResolveFn, DependencyResolver} from '../nodeInterfaces'
+import type {Subscription} from '../observableInterfaces'
 
 // implements DepBase
 export class DepBaseImpl<V> {
@@ -15,6 +17,7 @@ export class DepBaseImpl<V> {
     id: DepId;
     info: Info;
     subscriptions: Array<Subscription>;
+    resolver: ResolveFn;
 
     constructor(
         id: DepId,
@@ -34,15 +37,32 @@ export class DepBaseImpl<V> {
 
 // implements Info
 export class InfoImpl {
-    tags: Array<string>;
+    tags: Array<Tag>;
     displayName: string;
 
     constructor(
         kind: string,
         name: string,
-        tags: Array<string>
+        tags: Array<Tag>
     ) {
         this.displayName = kind + '@' + name
         this.tags = tags.concat([kind, name])
+    }
+}
+
+// implements AnnotationBase
+export class AnnotationBaseImpl<T: Function> {
+    id: DepId;
+    info: Info;
+    target: T;
+
+    constructor(
+        kind: string,
+        tags: Array<string>,
+        target: T
+    ) {
+        const name: string = getFunctionName(target);
+        this.info = new InfoImpl(kind, name, tags)
+        this.target = target
     }
 }

@@ -7,7 +7,7 @@ import type {
     MetaSource,
     DepBase,
     Cacheable
-} from '../../../nodes/nodeInterfaces'
+} from '../../../nodeInterfaces'
 import type {Observer, Subscription, Observable} from '../../../observableInterfaces'
 import type {AsyncUpdater, EntityMeta} from '../modelInterfaces'
 

@@ -1,7 +1,7 @@
 /* @flow */
 
 import {AnnotationBaseImpl} from '../../annotations/annotationImpl'
-import type {AnnotationBase, Dependency} from '../../annotations/annotationInterfaces'
+import type {AnnotationBase, Dependency} from '../../annotationInterfaces'
 import type {
     FromJS
 } from '../../modelInterfaces'

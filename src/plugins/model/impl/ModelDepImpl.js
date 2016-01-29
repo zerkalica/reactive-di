@@ -4,7 +4,7 @@ import AsyncUpdaterImpl from './AsyncUpdaterImpl'
 import type {
     DepId,
     Info
-} from '../../../annotations/annotationInterfaces'
+} from '../../../annotationInterfaces'
 import type {
     Notifier,
     Cursor,
@@ -13,7 +13,7 @@ import type {
 import type {
     Cacheable,
     DepBase
-} from '../../../nodes/nodeInterfaces'
+} from '../../../nodeInterfaces'
 import type {Observable} from '../../../observableInterfaces'
 import type {
     FactoryDep

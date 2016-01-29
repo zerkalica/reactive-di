@@ -4,12 +4,12 @@ import type {
     DepFn,
     AnnotationBase,
     Dependency
-} from '../../annotations/annotationInterfaces'
+} from '../../annotationInterfaces'
 import type {FromJS} from '../../modelInterfaces'
 import type {
     DepBase,
     Cacheable
-} from '../../nodes/nodeInterfaces'
+} from '../../nodeInterfaces'
 import type {Observable} from '../../observableInterfaces'
 import type {FactoryDep} from '../factory/factoryInterfaces'
 
