@@ -1,7 +1,7 @@
 /* @flow */
 
-import type {HooksRec} from '../../annotationInterfaces'
-import type {DepArgs} from '../../nodeInterfaces'
+import type {HooksRec} from '../../interfaces/annotationInterfaces'
+import type {DepArgs} from '../../interfaces/nodeInterfaces'
 import type {
     Invoker,
     Hooks

@@ -16,17 +16,17 @@ import type {
     DepId,
     Dependency,
     Tag
-} from './annotationInterfaces'
+} from './interfaces/annotationInterfaces'
 import type {
     Notify,
     SimpleMap,
     CursorCreator
-} from './modelInterfaces'
+} from './interfaces/modelInterfaces'
 import type {
     ReactiveDi,
     AnnotationResolver
-} from './nodeInterfaces'
-import type {Plugin} from './pluginInterfaces'
+} from './interfaces/nodeInterfaces'
+import type {Plugin} from './interfaces/pluginInterfaces'
 
 function createPureStateDi(
     state: Object,

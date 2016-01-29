@@ -4,7 +4,7 @@ import type {
     Deps,
     AnnotationBase,
     DepFn
-} from '../../annotationInterfaces'
+} from '../../interfaces/annotationInterfaces'
 import {AnnotationBaseImpl} from '../../core/pluginImpls'
 import type {Loader} from '../model/modelInterfaces'
 import type {LoaderAnnotation} from './loaderInterfaces'

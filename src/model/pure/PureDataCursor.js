@@ -1,7 +1,7 @@
 /* @flow */
 
 /* eslint-disable no-unused-vars */
-import type {Cursor} from '../../modelInterfaces'
+import type {Cursor} from '../../interfaces/modelInterfaces'
 /* eslint-enable no-unused-vars */
 
 function setInPath<V: Object, S: Object>(

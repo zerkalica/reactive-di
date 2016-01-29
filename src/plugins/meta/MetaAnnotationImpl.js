@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {AnnotationBase, Dependency} from '../../annotationInterfaces'
+import type {AnnotationBase, Dependency} from '../../interfaces/annotationInterfaces'
 import {AnnotationBaseImpl} from '../../core/pluginImpls'
 import type {MetaAnnotation} from './metaInterfaces'
 

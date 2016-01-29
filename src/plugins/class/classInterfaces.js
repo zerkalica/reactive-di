@@ -1,7 +1,7 @@
 /* @flow */
 
-import type {Deps, AnnotationBase, Dependency} from '../../annotationInterfaces'
-import type {DepBase} from '../../nodeInterfaces'
+import type {Deps, AnnotationBase, Dependency} from '../../interfaces/annotationInterfaces'
+import type {DepBase} from '../../interfaces/nodeInterfaces'
 import type {Invoker} from '../factory/factoryInterfaces'
 
 export type ClassInvoker<V> = Invoker<Class<V>, ClassDep>;

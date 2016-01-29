@@ -3,14 +3,14 @@ import EntityMetaImpl, {updateMeta} from '../model/EntityMetaImpl'
 import type {
     DepId,
     Info
-} from '../../annotationInterfaces'
+} from '../../interfaces/annotationInterfaces'
 import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     AnyDep,
     DepBase,
     AnnotationResolver
-} from '../../nodeInterfaces'
-import type {Plugin} from '../../pluginInterfaces'
+} from '../../interfaces/nodeInterfaces'
+import type {Plugin} from '../../interfaces/pluginInterfaces'
 import type {
     AsyncUpdater,
     EntityMeta

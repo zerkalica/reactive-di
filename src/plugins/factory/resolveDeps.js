@@ -3,8 +3,8 @@
 import type {
     AnyDep,
     DepArgs
-} from '../../nodeInterfaces'
-import type {SimpleMap} from '../../modelInterfaces'
+} from '../../interfaces/nodeInterfaces'
+import type {SimpleMap} from '../../interfaces/modelInterfaces'
 import type {
     MiddlewareFn,
     MiddlewareMap

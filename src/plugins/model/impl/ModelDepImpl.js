@@ -4,18 +4,18 @@ import AsyncUpdaterImpl from './AsyncUpdaterImpl'
 import type {
     DepId,
     Info
-} from '../../../annotationInterfaces'
+} from '../../../interfaces/annotationInterfaces'
 import {DepBaseImpl} from '../../../core/pluginImpls'
 import type {
     Notify,
     Cursor,
     FromJS
-} from '../../../modelInterfaces'
+} from '../../../interfaces/modelInterfaces'
 import type {
     Cacheable,
     DepBase
-} from '../../../nodeInterfaces'
-import type {Observable} from '../../../observableInterfaces'
+} from '../../../interfaces/nodeInterfaces'
+import type {Observable} from '../../../interfaces/observableInterfaces'
 import type {
     FactoryDep
 } from '../../factory/factoryInterfaces'

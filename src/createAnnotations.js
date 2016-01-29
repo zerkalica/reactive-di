@@ -11,7 +11,7 @@ import type {
     Dependency,
     Annotations,
     AnnotationDriver
-} from './annotationInterfaces'
+} from './interfaces/annotationInterfaces'
 import type {Loader} from './plugins/model/modelInterfaces'
 import type {Setter} from './plugins/setter/setterInterfaces'
 import {
@@ -71,7 +71,7 @@ export default function createAnnotations(
                     source,
                     tags
                 ))
-            }
+            };
         },
 
         asyncmodel<V: Object, E>(loader?: ?Loader<V, E>): (target: Class<V>) => Class<V> {
@@ -81,7 +81,7 @@ export default function createAnnotations(
                     tags,
                     loader
                 ))
-            }
+            };
         },
 
         setter<V: Object, E>(model: Class<V>, ...deps: Deps): (target: DepFn<Setter<V>>) => DepFn<Setter<V>> {
@@ -92,7 +92,7 @@ export default function createAnnotations(
                     deps,
                     tags
                 ))
-            }
+            };
         }
         /* eslint-enable no-undef */
     }

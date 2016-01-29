@@ -7,19 +7,19 @@ import type {
     Deps,
     AnyAnnotation,
     Tag
-} from '../annotationInterfaces'
+} from '../interfaces/annotationInterfaces'
 import type {
     Notify,
     SimpleMap,
     CursorCreator
-} from '../modelInterfaces'
+} from '../interfaces/modelInterfaces'
 import type {
     AnyDep,
     DepArgs,
     AnnotationResolver
-} from '../nodeInterfaces'
-import type {FinalizeFn, Resolve} from '../pluginInterfaces'
-import type {Plugin} from '../pluginInterfaces'
+} from '../interfaces/nodeInterfaces'
+import type {FinalizeFn, Resolve} from '../interfaces/pluginInterfaces'
+import type {Plugin} from '../interfaces/pluginInterfaces'
 import {DepArgsImpl} from './DepArgsImpl'
 
 function createResolver(resolve: Resolve, dep: AnyDep, acc: AnnotationResolver): () => void {

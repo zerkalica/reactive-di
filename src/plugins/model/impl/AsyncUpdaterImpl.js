@@ -2,16 +2,16 @@
 
 import merge from '../../../utils/merge'
 import EntityMetaImpl from '../EntityMetaImpl'
-import type {Notify} from '../../../modelInterfaces'
+import type {Notify} from '../../../interfaces/modelInterfaces'
 import type {
     DepBase,
     Cacheable
-} from '../../../nodeInterfaces'
+} from '../../../interfaces/nodeInterfaces'
 import type {
     Observer,
     Subscription,
     Observable
-} from '../../../observableInterfaces'
+} from '../../../interfaces/observableInterfaces'
 import type {
     MetaSource,
     AsyncUpdater,

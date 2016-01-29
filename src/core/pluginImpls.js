@@ -5,8 +5,8 @@ import type {
     DepId,
     Info,
     Tag
-} from '../annotationInterfaces'
-import type {Subscription} from '../observableInterfaces'
+} from '../interfaces/annotationInterfaces'
+import type {Subscription} from '../interfaces/observableInterfaces'
 
 // implements DepBase
 export class DepBaseImpl<V> {

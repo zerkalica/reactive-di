@@ -1,7 +1,7 @@
 /* @flow */
 
-import type {AnnotationDriver} from '../../annotationInterfaces'
-import type {FromJS, SimpleMap} from '../../modelInterfaces'
+import type {AnnotationDriver} from '../../interfaces/annotationInterfaces'
+import type {FromJS, SimpleMap} from '../../interfaces/modelInterfaces'
 import type {ModelAnnotation} from '../../plugins/model/modelInterfaces'
 
 type PropCreator<V: Object, N: Object> = (value: V) => N;

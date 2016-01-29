@@ -8,13 +8,13 @@ import type {
     DepFn,
     DepId,
     Info
-} from '../../annotationInterfaces'
+} from '../../interfaces/annotationInterfaces'
 import type {
     AnyDep,
     DepBase
-} from '../../nodeInterfaces'
-import type {Plugin} from '../../pluginInterfaces'
-import type {AnnotationResolver} from '../../nodeInterfaces'
+} from '../../interfaces/nodeInterfaces'
+import type {Plugin} from '../../interfaces/pluginInterfaces'
+import type {AnnotationResolver} from '../../interfaces/nodeInterfaces'
 import {createObjectProxy} from '../../utils/createProxy'
 import {fastCreateObject} from '../../utils/fastCall'
 import type {

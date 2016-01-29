@@ -3,10 +3,10 @@ import type {
     AnyDep,
     AnnotationResolver,
     ReactiveDi
-} from '../nodeInterfaces'
-import type {Dependency} from '../annotationInterfaces'
-import type {Subscription} from '../observableInterfaces'
-import type {Notify} from '../modelInterfaces'
+} from '../interfaces/nodeInterfaces'
+import type {Dependency} from '../interfaces/annotationInterfaces'
+import type {Subscription} from '../interfaces/observableInterfaces'
+import type {Notify} from '../interfaces/modelInterfaces'
 
 type ListenersRef = {listeners: Array<AnyDep>};
 

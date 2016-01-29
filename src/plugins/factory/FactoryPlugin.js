@@ -8,14 +8,14 @@ import type {
     DepFn,
     DepId,
     Info
-} from '../../annotationInterfaces'
+} from '../../interfaces/annotationInterfaces'
 import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     AnyDep,
     DepBase,
     AnnotationResolver,
-} from '../../nodeInterfaces'
-import type {Plugin} from '../../pluginInterfaces'
+} from '../../interfaces/nodeInterfaces'
+import type {Plugin} from '../../interfaces/pluginInterfaces'
 import {createFunctionProxy} from '../../utils/createProxy'
 import {fastCall} from '../../utils/fastCall'
 import type {EntityMeta} from '../model/modelInterfaces'

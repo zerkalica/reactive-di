@@ -5,22 +5,22 @@ import EntityMetaImpl, {updateMeta} from '../model/EntityMetaImpl'
 import type {
     DepId,
     Info
-} from '../../annotationInterfaces'
+} from '../../interfaces/annotationInterfaces'
 import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     Cursor
-} from '../../modelInterfaces'
+} from '../../interfaces/modelInterfaces'
 import type {
     AnyDep,
     DepBase,
     AnnotationResolver,
     Cacheable
-} from '../../nodeInterfaces'
+} from '../../interfaces/nodeInterfaces'
 import type {
     Observable,
     Subscription
-} from '../../observableInterfaces'
-import type {Plugin} from '../../pluginInterfaces'
+} from '../../interfaces/observableInterfaces'
+import type {Plugin} from '../../interfaces/pluginInterfaces'
 import type {
     FactoryDep
 } from '../factory/factoryInterfaces'

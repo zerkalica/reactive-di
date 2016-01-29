@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {Observer, Observable, Subscription} from '../observableInterfaces'
+import type {Observer, Observable, Subscription} from '../interfaces/observableInterfaces'
 
 type Cancelable = {
     cancel(): void;

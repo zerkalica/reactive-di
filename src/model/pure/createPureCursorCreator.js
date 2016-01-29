@@ -1,7 +1,7 @@
 /* @flow */
 
 import PureDataCursor from './PureDataCursor'
-import type {Cursor, CursorCreator} from '../../modelInterfaces'
+import type {Cursor, CursorCreator} from '../../interfaces/modelInterfaces'
 
 // implements CursorCreator
 export default function createPureCursorCreator<S: Object>(state: S): CursorCreator {

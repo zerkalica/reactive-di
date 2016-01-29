@@ -4,13 +4,13 @@ import type {
     DepFn,
     AnnotationBase,
     Dependency
-} from '../../annotationInterfaces'
-import type {FromJS} from '../../modelInterfaces'
+} from '../../interfaces/annotationInterfaces'
+import type {FromJS} from '../../interfaces/modelInterfaces'
 import type {
     DepBase,
     Cacheable
-} from '../../nodeInterfaces'
-import type {Observable} from '../../observableInterfaces'
+} from '../../interfaces/nodeInterfaces'
+import type {Observable} from '../../interfaces/observableInterfaces'
 import type {FactoryDep} from '../factory/factoryInterfaces'
 
 export type Loader<V: Object, E> = DepFn<Observable<V, E>>;

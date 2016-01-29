@@ -1,16 +1,16 @@
 /* @flow */
 
-import type {AnnotationBase, Dependency} from '../../annotationInterfaces'
+import type {AnnotationBase, Dependency} from '../../interfaces/annotationInterfaces'
 import type {
     DepFn,
     Deps
-} from '../../annotationInterfaces'
-import type {SimpleMap} from '../../modelInterfaces'
+} from '../../interfaces/annotationInterfaces'
+import type {SimpleMap} from '../../interfaces/modelInterfaces'
 import type {
     DepBase,
     AnyDep
-} from '../../nodeInterfaces'
-import type {DepArgs} from '../../nodeInterfaces'
+} from '../../interfaces/nodeInterfaces'
+import type {DepArgs} from '../../interfaces/nodeInterfaces'
 
 export type Invoker<V, M> = {
     target: V;

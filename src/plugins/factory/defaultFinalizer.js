@@ -3,8 +3,8 @@
 import type {
     Cacheable,
     AnyDep
-} from '../../nodeInterfaces'
-import type {Subscription} from '../../observableInterfaces'
+} from '../../interfaces/nodeInterfaces'
+import type {Subscription} from '../../interfaces/observableInterfaces'
 import type {MetaDep} from '../meta/metaInterfaces'
 import type {ModelDep} from '../model/modelInterfaces'
 

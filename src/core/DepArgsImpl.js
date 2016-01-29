@@ -1,7 +1,7 @@
 /* @flow */
 import type {
     AnyDep
-} from '../nodeInterfaces'
+} from '../interfaces/nodeInterfaces'
 
 // implements DepArgs
 export class DepArgsImpl<M> {
