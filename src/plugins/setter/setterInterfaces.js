@@ -1,6 +1,7 @@
 /* @flow */
 
 import type {
+    Deps,
     DepFn,
     AnnotationBase,
     Dependency
@@ -9,7 +10,6 @@ import type {DepBase} from '../../nodeInterfaces'
 import type {Observable} from '../../observableInterfaces'
 import type {
     FactoryDep,
-    Deps,
     Invoker
 } from '../factory/factoryInterfaces'
 

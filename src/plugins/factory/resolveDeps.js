@@ -2,9 +2,9 @@
 
 import type {
     DependencyResolver
-    AnyDep
+    AnyDep,
+    DepArgs
 } from '../../nodeInterfaces'
-import type {DepArgs} from './factoryInterfaces'
 import type {SimpleMap} from '../../modelInterfaces'
 import type {
     MiddlewareFn,
@@ -15,7 +15,7 @@ export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(
     dep: DepArgs,
     acc: DependencyResolver
 ): {
-    deps: Array<AnyDep|SimpleMap<string, AnyDep>>,
+    deps: Array<any|SimpleMap<string, any>>,
     middlewares: ?Array<A>
 } {
     const {deps, depNames, middlewares} = dep
@@ -23,11 +23,12 @@ export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(
     const argsObject = {}
     for (let i = 0, j = deps.length; i < j; i++) {
         const childDep: AnyDep = deps[i];
-        const value = acc.resolve(childDep)
+        const {base} = childDep
+        base.resolve(childDep, acc)
         if (depNames) {
-            argsObject[depNames[i]] = value
+            argsObject[depNames[i]] = base.value
         } else {
-            argsArray.push(value)
+            argsArray.push(base.value)
         }
     }
 
@@ -35,7 +36,7 @@ export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(
     if (middlewares) {
         resolvedMiddlewares = []
         for (let i = 0, j = middlewares.length; i < j; i++) {
-            resolvedMiddlewares.push(acc.resolve(middlewares[i]))
+            resolvedMiddlewares.push(acc.get(middlewares[i]))
         }
     }
 

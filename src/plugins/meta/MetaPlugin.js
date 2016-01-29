@@ -5,18 +5,18 @@ import type {
     DepId,
     Info
 } from '../../annotationInterfaces'
+import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     AnyDep,
     DepBase,
-    DependencyResolver
+    DependencyResolver,
+    AnnotationResolver
 } from '../../nodeInterfaces'
 import type {Plugin} from '../../pluginInterfaces'
-import type {AnnotationResolver} from '../../resolver/resolverInterfaces'
 import type {
     AsyncUpdater,
     EntityMeta
 } from '../model/modelInterfaces'
-import {DepBaseImpl} from '../pluginImpls'
 import type {
     MetaDep,
     MetaAnnotation

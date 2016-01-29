@@ -1,11 +1,11 @@
 /* @flow */
 
-import {AnnotationBaseImpl} from '../../annotations/annotationImpl'
 import type {
+    Deps,
     AnnotationBase,
     DepFn
 } from '../../annotationInterfaces'
-import type {Deps} from '../factory/factoryInterfaces'
+import {AnnotationBaseImpl} from '../../core/pluginImpls'
 import type {Loader} from '../model/modelInterfaces'
 import type {LoaderAnnotation} from './loaderInterfaces'
 

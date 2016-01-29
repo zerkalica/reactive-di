@@ -9,20 +9,17 @@ import type {
     DepId,
     Info
 } from '../../annotationInterfaces'
+import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     AnyDep,
     DepBase,
+    AnnotationResolver,
     DependencyResolver
 } from '../../nodeInterfaces'
 import type {Plugin} from '../../pluginInterfaces'
-import type {AnnotationResolver} from '../../resolver/resolverInterfaces'
 import {createFunctionProxy} from '../../utils/createProxy'
 import {fastCall} from '../../utils/fastCall'
-import type {
-    AsyncUpdater,
-    EntityMeta
-} from '../model/modelInterfaces'
-import {DepBaseImpl} from '../pluginImpls'
+import type {EntityMeta} from '../model/modelInterfaces'
 import type {
     FactoryDep,
     FactoryAnnotation,
@@ -67,7 +64,7 @@ export default class FactoryPlugin {
         const {base} = annotation
         const dep: FactoryDep<V> = new FactoryDepImpl(base.id, base.info, base.target);
         acc.begin(dep)
-        dep.invoker.depArgs = acc.getDeps(annotation.deps, base.id, base.info.tags)
+        dep.invoker.depArgs = acc.getDeps(annotation.deps, base.target, base.info.tags)
         acc.end(dep)
     }
 

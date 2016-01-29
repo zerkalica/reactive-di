@@ -10,7 +10,7 @@ import type {
     DepBase,
     AnyDep
 } from '../../nodeInterfaces'
-import type {DepArgs} from '../../pluginInterfaces'
+import type {DepArgs} from '../../nodeInterfaces'
 
 export type Invoker<V, M> = {
     target: V;

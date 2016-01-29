@@ -1,14 +1,12 @@
 /* @flow */
 
-import {AnnotationBaseImpl} from '../../annotations/annotationImpl'
 import type {
+    Deps,
     AnnotationBase,
     DepFn
 } from '../../annotationInterfaces'
-import type {
-    Deps,
-    FactoryAnnotation
-} from './factoryInterfaces'
+import {AnnotationBaseImpl} from '../../core/pluginImpls'
+import type {FactoryAnnotation} from './factoryInterfaces'
 
 // implements FactoryAnnotation
 export default class FactoryAnnotationImpl<V> {

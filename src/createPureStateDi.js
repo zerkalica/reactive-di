@@ -3,15 +3,14 @@
 import createPureCursorCreator from './model/pure/createPureCursorCreator'
 import setupStateAnnotations from './model/pure/setupStateAnnotations'
 import AnnotationResolverImpl from './core/AnnotationResolverImpl'
-import ReactiveDiImpl from './core/ReactiveDiImpl'
-import SymbolMetaDriver from './drivers/SymbolMetaDriver'
 import ClassPlugin from './plugins/class/ClassPlugin'
 import FactoryPlugin from './plugins/factory/FactoryPlugin'
 import LoaderPlugin from './plugins/loader/LoaderPlugin'
 import MetaPlugin from './plugins/meta/MetaPlugin'
 import ModelPlugin from './plugins/model/ModelPlugin'
+import ReactiveDiImpl from './core/ReactiveDiImpl'
 import SetterPlugin from './plugins/setter/SetterPlugin'
-
+import SymbolMetaDriver from './drivers/SymbolMetaDriver'
 import type {
     AnnotationDriver,
     DepId,
@@ -25,56 +24,23 @@ import type {
 } from './modelInterfaces'
 import type {
     ReactiveDi,
-    DependencyResolver
+    AnnotationResolver
 } from './nodeInterfaces'
 import type {Plugin} from './pluginInterfaces'
 
-function prepareMiddlewares(
-    driver: AnnotationDriver,
-    raw: Array<[Dependency|Tag, Array<Dependency>]>
-): SimpleMap<DepId|Tag, Array<Dependency>> {
-    const middlewares: SimpleMap<DepId|Tag, Array<Dependency>> = {};
-    for (let i = 0, l = raw.length; i < l; i++) {
-        const [source, mdls] = raw[i];
-        if (!Array.isArray(mdls)) {
-            throw new TypeError('raw middleware format is not an Array<[Dependency, Array<Dependency>]>')
-        }
-        if (typeof source === 'string') {
-            middlewares[source] = mdls
-        } else {
-            const {base} = driver.get(source)
-            middlewares[base.id] = mdls
-        }
-    }
-    return middlewares
-}
-
-function prepareOverrides(
-    driver: AnnotationDriver,
-    raw: Array<[Dependency, Dependency]>
-): SimpleMap<DepId, Dependency> {
-    const overrides: SimpleMap<DepId, Dependency> = {};
-    for (let i = 0, l = raw.length; i < l; i++) {
-        const [source, dep] = raw[i];
-        const {base} = driver.get(source)
-        overrides[base.id] = dep
-    }
-    return overrides
-}
-
 function createPureStateDi(
-    middlewares: Array<[Dependency|Tag, Array<Dependency>]>,
-    overrides: Array<[Dependency, Dependency]>,
-    state: Object
+    state: Object,
+    middlewares?: Map<Dependency|Tag, Array<Dependency>>,
+    overrides?: Map<Dependency, Dependency>
 ): ReactiveDi {
-    function createResolver(notifier: Notifier): DependencyResolver {
+    function createResolver(notifier: Notifier): AnnotationResolver {
         const driver: AnnotationDriver = new SymbolMetaDriver();
         setupStateAnnotations(driver, state)
 
         return new AnnotationResolverImpl(
             driver,
-            prepareMiddlewares(driver, middlewares),
-            prepareOverrides(driver, overrides),
+            middlewares || new Map(),
+            overrides || new Map(),
             createPureCursorCreator(state),
             notifier,
             {

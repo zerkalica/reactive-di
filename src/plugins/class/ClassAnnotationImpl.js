@@ -1,8 +1,8 @@
 /* @flow */
 
-import {AnnotationBaseImpl} from '../../annotations/annotationImpl'
+import {AnnotationBaseImpl} from '../../core/pluginImpls'
 import type {AnnotationBase, DepFn} from '../../annotationInterfaces'
-import type {Deps} from '../factory/factoryInterfaces'
+import type {Deps} from '../../annotationInterfaces'
 import type {ClassAnnotation} from './classInterfaces'
 
 // implements ClassAnnotation

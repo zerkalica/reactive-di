@@ -6,12 +6,14 @@ import type {
     DepId,
     Info
 } from '../../annotationInterfaces'
+import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     Cursor
 } from '../../modelInterfaces'
 import type {
     AnyDep,
     DepBase,
+    AnnotationResolver,
     DependencyResolver,
     Cacheable
 } from '../../nodeInterfaces'
@@ -20,7 +22,6 @@ import type {
     Subscription
 } from '../../observableInterfaces'
 import type {Plugin} from '../../pluginInterfaces'
-import type {AnnotationResolver} from '../../resolver/resolverInterfaces'
 import type {
     FactoryDep
 } from '../factory/factoryInterfaces'
@@ -28,7 +29,6 @@ import type {
     AsyncUpdater,
     EntityMeta
 } from '../model/modelInterfaces'
-import {DepBaseImpl} from '../pluginImpls'
 import type {
     ModelDep,
     ModelAnnotation,

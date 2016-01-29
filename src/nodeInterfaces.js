@@ -9,27 +9,34 @@ import type {
 import type {Subscription} from './observableInterfaces'
 import type {CursorCreator, Notifier} from './modelInterfaces'
 
-export type AnyDep = {
-};
+import type {ClassDep} from './plugins/class/classInterfaces'
+import type {FactoryDep} from './plugins/factory/factoryInterfaces'
+import type {LoaderDep} from './plugins/loader/loaderInterfaces'
+import type {MetaDep} from './plugins/meta/metaInterfaces'
+import type {ModelDep} from './plugins/model/modelInterfaces'
+import type {SetterDep} from './plugins/setter/setterInterfaces'
+
+
+export type AnyDep = ClassDep | FactoryDep | MetaDep | ModelDep | SetterDep;
 
 export type Cacheable = {
     isRecalculate: boolean;
 };
 
 export type DependencyResolver = {
-    get(annotatedDep: Dependency): AnyDep;
+    get<T: AnyDep>(annotatedDep: Dependency): T;
 }
 
 export type ResolveFn = (dep: AnyDep, acc: DependencyResolver) => void;
 
-export type DepBase<V> = Cacheable & {
+export type DepBase<V> = {
     isRecalculate: boolean;
     value: V;
     relations: Array<DepId>;
     id: DepId;
     info: Info;
     subscriptions: Array<Subscription>;
-    resolver: ResolveFn;
+    resolve: ResolveFn;
 }
 
 export type DepArgs<M> = {
@@ -41,7 +48,7 @@ export type DepArgs<M> = {
 export type AnnotationResolver = {
     createCursor: CursorCreator;
     notifier: Notifier;
-    getDeps(deps: ?Deps, id: DepId, tags: Array<string>): DepArgs;
+    getDeps(deps: ?Deps, dep: Dependency, tags: Array<string>): DepArgs;
     resolve(annotatedDep: Dependency): AnyDep;
     addRelation(id: DepId): void;
     begin(dep: AnyDep): void;

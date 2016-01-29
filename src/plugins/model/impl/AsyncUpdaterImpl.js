@@ -4,12 +4,19 @@ import merge from '../../../utils/merge'
 import EntityMetaImpl from '../EntityMetaImpl'
 import type {Notifier} from '../../../modelInterfaces'
 import type {
-    MetaSource,
     DepBase,
     Cacheable
 } from '../../../nodeInterfaces'
-import type {Observer, Subscription, Observable} from '../../../observableInterfaces'
-import type {AsyncUpdater, EntityMeta} from '../modelInterfaces'
+import type {
+    Observer,
+    Subscription,
+    Observable
+} from '../../../observableInterfaces'
+import type {
+    MetaSource,
+    AsyncUpdater,
+    EntityMeta
+} from '../modelInterfaces'
 
 function setPending<E>(meta: EntityMeta<E>): EntityMeta<E> {
     return merge(meta, {

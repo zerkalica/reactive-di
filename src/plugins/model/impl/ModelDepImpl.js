@@ -5,6 +5,7 @@ import type {
     DepId,
     Info
 } from '../../../annotationInterfaces'
+import {DepBaseImpl} from '../../../core/pluginImpls'
 import type {
     Notifier,
     Cursor,
@@ -18,7 +19,6 @@ import type {Observable} from '../../../observableInterfaces'
 import type {
     FactoryDep
 } from '../../factory/factoryInterfaces'
-import {DepBaseImpl} from '../../pluginImpls'
 import type {
     ModelDep,
     AsyncUpdater

@@ -27,18 +27,20 @@ import {DepArgsImpl} from './DepArgsImpl'
 // implements DependencyResolver, AnnotationResolver
 export default class AnnotationResolverImpl {
     _driver: AnnotationDriver;
-    _middlewares: SimpleMap<DepId|string, Array<Dependency>>;
     _parents: Array<Set<DepId>>;
     _cache: SimpleMap<DepId, AnyDep>;
     _plugins: SimpleMap<string, Plugin>;
-    _overrides: Array<[Dependency, Dependency]>;
+
+    _middlewares: Map<Dependency|Tag, Array<Dependency>>;
+    _overrides: Map<Dependency, Dependency>;
+
     createCursor: CursorCreator;
     notifier: Notifier;
 
     constructor(
         driver: AnnotationDriver,
-        middlewares: SimpleMap<DepId|Tag, Array<Dependency>>,
-        overrides: Array<[Dependency, Dependency]>,
+        middlewares: Map<Dependency|Tag, Array<Dependency>>,
+        overrides: Map<Dependency, Dependency>,
         createCursor: CursorCreator,
         notifier: Notifier,
         plugins: SimpleMap<string, Plugin>,
@@ -75,7 +77,7 @@ export default class AnnotationResolverImpl {
         const {_parents: parents, _cache: cache} = this
         const depSet: Set<DepId> = parents.pop();
         const {relations} = dep.base
-        const iterateFn: FinalizeFn<T> = this._plugins[dep.kind];
+        const iterateFn: FinalizeFn<T> = this._plugins[dep.kind].finalize;
 
         function iteratePathSet(relationId: DepId): void {
             const target: AnyDep = cache[relationId];
@@ -92,12 +94,8 @@ export default class AnnotationResolverImpl {
         }
     }
 
-    get(annotatedDep: Dependency): AnyDep {
-        const dep: AnyDep = this.resolve(annotatedDep, true);
-        return dep.base.resolve(dep, (this: DependencyResolver))
-    }
-
-    resolve(annotatedDep: Dependency, isRoot: boolean = false): AnyDep {
+    resolve(annotatedDep: Dependency): AnyDep {
+        const {_parents: parents} = this
         let annotation: AnyAnnotation = this._driver.get(annotatedDep);
         let dep: AnyDep = this._cache[annotation.base.id];
         if (!dep) {
@@ -105,7 +103,7 @@ export default class AnnotationResolverImpl {
             if (!id) {
                 id = annotation.base.id = createId()
             }
-            const overridedDep: ?Dependency = this._overrides[annotatedDep];
+            const overridedDep: ?Dependency = this._overrides.get(annotatedDep);
             if (overridedDep) {
                 annotation = this._driver.get(overridedDep)
                 annotation.base.id = id
@@ -114,8 +112,7 @@ export default class AnnotationResolverImpl {
             plugin.create(annotation, (this: AnnotationResolver))
             dep = this._cache[id]
             dep.base.resolve = plugin.resolve
-        } else if (!isRoot) {
-            const {_parents: parents} = this
+        } else if (parents.length) {
             const {relations} = dep.base
             for (let j = 0, k = parents.length; j < k; j++) {
                 const parent: Set<DepId> = parents[j];
@@ -128,21 +125,23 @@ export default class AnnotationResolverImpl {
         return dep
     }
 
-    _resolveMiddlewares(id: DepId, tags: Array<Tag>): ?Array<AnyDep> {
+    _resolveMiddlewares(dep: Dependency, tags: Array<Tag>): ?Array<AnyDep> {
         const {_middlewares: middlewares} = this
-        const ids: Array<Tag> = [id].concat(tags);
+        const ids: Array<Dependency|Tag> = [dep].concat(tags);
         const middlewareDeps: Array<AnyDep> = [];
         for (let i = 0, l = ids.length; i < l; i++) {
-            const depMiddlewares: Array<Dependency> = middlewares[ids[i]] || [];
-            for (let j = 0, k = depMiddlewares.length; j < k; j++) {
-                middlewareDeps.push(this.resolve(depMiddlewares[j]))
+            const depMiddlewares: ?Array<Dependency> = middlewares.get(ids[i]);
+            if (depMiddlewares) {
+                for (let j = 0, k = depMiddlewares.length; j < k; j++) {
+                    middlewareDeps.push(this.resolve(depMiddlewares[j]))
+                }
             }
         }
 
         return middlewareDeps.length ? middlewareDeps : null
     }
 
-    getDeps(deps: ?Deps, id: DepId, tags: Array<Tag>): DepArgs {
+    getDeps(deps: ?Deps, dep: Dependency, tags: Array<Tag>): DepArgs {
         let depNames: ?Array<string> = null;
         const resolvedDeps: Array<AnyDep> = [];
         if (deps && deps.length) {
@@ -159,7 +158,7 @@ export default class AnnotationResolverImpl {
                 }
             }
         }
-        const middlewares: ?Array<AnyDep> = this._resolveMiddlewares(id, tags);
+        const middlewares: ?Array<AnyDep> = this._resolveMiddlewares(dep, tags);
 
         return new DepArgsImpl(resolvedDeps, depNames, middlewares)
     }

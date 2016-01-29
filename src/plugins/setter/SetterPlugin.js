@@ -8,18 +8,18 @@ import type {
     DepId,
     Info
 } from '../../annotationInterfaces'
+import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     AnyDep,
     DepBase,
+    AnnotationResolver,
     DependencyResolver
 } from '../../nodeInterfaces'
 import type {Observable} from '../../observableInterfaces'
 import type {Plugin} from '../../pluginInterfaces'
-import type {AnnotationResolver} from '../../resolver/resolverInterfaces'
 import {createFunctionProxy} from '../../utils/createProxy'
 import {fastCall} from '../../utils/fastCall'
 import type {FactoryDep} from '../factory/factoryInterfaces'
-import {DepBaseImpl} from '../pluginImpls'
 import type {
     Setter,
     SetterDep,

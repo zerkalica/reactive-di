@@ -1,8 +1,7 @@
 /* @flow */
 
-import {AnnotationBaseImpl} from '../../annotations/annotationImpl'
-import type {AnnotationBase, DepFn} from '../../annotationInterfaces'
-import type {Deps} from '../factory/factoryInterfaces'
+import type {Deps, AnnotationBase, DepFn} from '../../annotationInterfaces'
+import {AnnotationBaseImpl} from '../../core/pluginImpls'
 import type {SetterAnnotation, Setter} from './setterInterfaces'
 
 // implements SetterAnnotation
