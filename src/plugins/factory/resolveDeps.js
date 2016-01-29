@@ -1,7 +1,6 @@
 /* @flow */
 
 import type {
-    DependencyResolver
     AnyDep,
     DepArgs
 } from '../../nodeInterfaces'
@@ -11,10 +10,7 @@ import type {
     MiddlewareMap
 } from '../../utils/createProxy'
 
-export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(
-    dep: DepArgs,
-    acc: DependencyResolver
-): {
+export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(dep: DepArgs): {
     deps: Array<any|SimpleMap<string, any>>,
     middlewares: ?Array<A>
 } {
@@ -22,9 +18,8 @@ export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(
     const argsArray = []
     const argsObject = {}
     for (let i = 0, j = deps.length; i < j; i++) {
-        const childDep: AnyDep = deps[i];
-        const {base} = childDep
-        base.resolve(childDep, acc)
+        const {base}: AnyDep = deps[i];
+        base.resolve()
         if (depNames) {
             argsObject[depNames[i]] = base.value
         } else {
@@ -36,7 +31,9 @@ export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(
     if (middlewares) {
         resolvedMiddlewares = []
         for (let i = 0, j = middlewares.length; i < j; i++) {
-            resolvedMiddlewares.push(acc.get(middlewares[i]))
+            const {base} = middlewares[i];
+            base.resolve()
+            resolvedMiddlewares.push(base.value)
         }
     }
 

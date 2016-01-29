@@ -1,30 +1,23 @@
 /* @flow */
 
-import {
-    LoaderAnnotationImpl,
-    ClassAnnotationImpl,
-    FactoryAnnotationImpl,
-    MetaAnnotationImpl,
-    ModelAnnotationImpl,
-    SetterAnnotationImpl
-} from './annotationImpl'
-
+import ClassAnnotationImpl from './plugins/class/ClassAnnotationImpl'
+import FactoryAnnotationImpl from './plugins/factory/FactoryAnnotationImpl'
+import LoaderAnnotationImpl from './plugins/loader/LoaderAnnotationImpl'
+import MetaAnnotationImpl from './plugins/meta/MetaAnnotationImpl'
+import SetterAnnotationImpl from './plugins/setter/SetterAnnotationImpl'
 import type {
     Deps,
     DepFn,
-    Loader,
-    SetterResult,
-    Setter,
     Dependency,
-    Hooks,
-    HooksRec,
     Annotations,
-    AnnotationDriver,
-    AnyAnnotation,
-    ModelAnnotation,
-    ClassAnnotation,
-    FactoryAnnotation
+    AnnotationDriver
 } from './annotationInterfaces'
+import type {Loader} from './plugins/model/modelInterfaces'
+import type {Setter} from './plugins/setter/setterInterfaces'
+import {
+    AsyncModelAnnotationImpl,
+    ModelAnnotationImpl
+} from './plugins/model/ModelAnnotationImpl'
 
 /* eslint-disable no-undef */
 

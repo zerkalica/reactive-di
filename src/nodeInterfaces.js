@@ -7,7 +7,7 @@ import type {
     Deps
 } from './annotationInterfaces'
 import type {Subscription} from './observableInterfaces'
-import type {CursorCreator, Notifier} from './modelInterfaces'
+import type {CursorCreator, Notify} from './modelInterfaces'
 
 import type {ClassDep} from './plugins/class/classInterfaces'
 import type {FactoryDep} from './plugins/factory/factoryInterfaces'
@@ -23,12 +23,6 @@ export type Cacheable = {
     isRecalculate: boolean;
 };
 
-export type DependencyResolver = {
-    get<T: AnyDep>(annotatedDep: Dependency): T;
-}
-
-export type ResolveFn = (dep: AnyDep, acc: DependencyResolver) => void;
-
 export type DepBase<V> = {
     isRecalculate: boolean;
     value: V;
@@ -36,7 +30,7 @@ export type DepBase<V> = {
     id: DepId;
     info: Info;
     subscriptions: Array<Subscription>;
-    resolve: ResolveFn;
+    resolve: () => void;
 }
 
 export type DepArgs<M> = {
@@ -47,7 +41,7 @@ export type DepArgs<M> = {
 
 export type AnnotationResolver = {
     createCursor: CursorCreator;
-    notifier: Notifier;
+    notify: Notify;
     getDeps(deps: ?Deps, dep: Dependency, tags: Array<string>): DepArgs;
     resolve(annotatedDep: Dependency): AnyDep;
     addRelation(id: DepId): void;
@@ -56,6 +50,7 @@ export type AnnotationResolver = {
     newRoot(): AnnotationResolver;
 }
 
-export type ReactiveDi = DependencyResolver & {
+export type ReactiveDi =  {
+    get(annotatedDep: Dependency): any;
     subscribe(annotatedDep: Dependency): Subscription;
 }

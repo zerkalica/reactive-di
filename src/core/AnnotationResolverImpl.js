@@ -1,6 +1,5 @@
 /* @flow */
 
-import createId from '../utils/createId'
 import type {
     AnnotationDriver,
     DepId,
@@ -10,21 +9,26 @@ import type {
     Tag
 } from '../annotationInterfaces'
 import type {
-    Notifier,
+    Notify,
     SimpleMap,
     CursorCreator
 } from '../modelInterfaces'
 import type {
     AnyDep,
     DepArgs,
-    DependencyResolver,
     AnnotationResolver
 } from '../nodeInterfaces'
-import type {FinalizeFn} from '../pluginInterfaces'
+import type {FinalizeFn, Resolve} from '../pluginInterfaces'
 import type {Plugin} from '../pluginInterfaces'
 import {DepArgsImpl} from './DepArgsImpl'
 
-// implements DependencyResolver, AnnotationResolver
+function createResolver(resolve: Resolve, dep: AnyDep, acc: AnnotationResolver): () => void {
+    return function resolveDep(): void {
+        return resolve(dep, acc)
+    }
+}
+
+// implements AnnotationResolver
 export default class AnnotationResolverImpl {
     _driver: AnnotationDriver;
     _parents: Array<Set<DepId>>;
@@ -34,15 +38,17 @@ export default class AnnotationResolverImpl {
     _middlewares: Map<Dependency|Tag, Array<Dependency>>;
     _overrides: Map<Dependency, Dependency>;
 
+    _lastId: number;
+
     createCursor: CursorCreator;
-    notifier: Notifier;
+    notify: Notify;
 
     constructor(
         driver: AnnotationDriver,
         middlewares: Map<Dependency|Tag, Array<Dependency>>,
         overrides: Map<Dependency, Dependency>,
         createCursor: CursorCreator,
-        notifier: Notifier,
+        notify: Notify,
         plugins: SimpleMap<string, Plugin>,
         cache?: SimpleMap<DepId, AnyDep>
     ) {
@@ -50,10 +56,11 @@ export default class AnnotationResolverImpl {
         this._middlewares = middlewares
         this._overrides = overrides
         this.createCursor = createCursor
-        this.notifier = notifier
+        this.notify = notify
         this._parents = []
         this._cache = cache || Object.create(null)
         this._plugins = plugins
+        this._lastId = 0
     }
 
     newRoot(): AnnotationResolver {
@@ -62,7 +69,7 @@ export default class AnnotationResolverImpl {
             this._middlewares,
             this._overrides,
             this.createCursor,
-            this.notifier,
+            this.notify,
             this._plugins,
             this._cache
         )
@@ -94,6 +101,10 @@ export default class AnnotationResolverImpl {
         }
     }
 
+    _createId(): string {
+        return '' + (++this._lastId)
+    }
+
     resolve(annotatedDep: Dependency): AnyDep {
         const {_parents: parents} = this
         let annotation: AnyAnnotation = this._driver.get(annotatedDep);
@@ -101,7 +112,7 @@ export default class AnnotationResolverImpl {
         if (!dep) {
             let id = annotation.base.id
             if (!id) {
-                id = annotation.base.id = createId()
+                id = annotation.base.id = this._createId()
             }
             const overridedDep: ?Dependency = this._overrides.get(annotatedDep);
             if (overridedDep) {
@@ -111,7 +122,7 @@ export default class AnnotationResolverImpl {
             const plugin: Plugin = this._plugins[annotation.kind];
             plugin.create(annotation, (this: AnnotationResolver))
             dep = this._cache[id]
-            dep.base.resolve = plugin.resolve
+            dep.base.resolve = createResolver(plugin.resolve, dep, (self: AnnotationResolver))
         } else if (parents.length) {
             const {relations} = dep.base
             for (let j = 0, k = parents.length; j < k; j++) {

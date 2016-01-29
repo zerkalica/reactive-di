@@ -12,8 +12,7 @@ import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     AnyDep,
     DepBase,
-    AnnotationResolver,
-    DependencyResolver
+    AnnotationResolver
 } from '../../nodeInterfaces'
 import type {Observable} from '../../observableInterfaces'
 import type {Plugin} from '../../pluginInterfaces'
@@ -50,15 +49,15 @@ export class SetterDepImpl<V: Object, E> {
 // depends on factory, model
 // implements Plugin
 export default class SetterPlugin {
-    resolve<V: Object, E>(dep: SetterDep<V, E>, acc: DependencyResolver): void {
+    resolve<V: Object, E>(dep: SetterDep<V, E>): void {
         const {base, invoker} = dep
-        const {deps, middlewares} = resolveDeps(invoker.depArgs, acc)
-        const fn: Setter<V> = fastCall(invoker.target, deps);
+        const args = resolveDeps(invoker.depArgs);
+        const fn: Setter<V> = fastCall(invoker.target, args.deps);
         if (typeof fn !== 'function') {
             throw new Error('No callable returns from dep ' + base.info.displayName)
         }
         base.isRecalculate = false
-        base.value = createFunctionProxy(fn, [dep.set].concat(middlewares || []))
+        base.value = createFunctionProxy(fn, [dep.set].concat(args.middlewares || []))
     }
 
     create<V: Object, E>(annotation: SetterAnnotation<V>, acc: AnnotationResolver): void {
@@ -77,7 +76,7 @@ export default class SetterPlugin {
         );
 
         acc.begin(dep)
-        dep.invoker.depArgs = acc.getDeps(annotation.deps, base.id, base.info.tags)
+        dep.invoker.depArgs = acc.getDeps(annotation.deps, base.target, base.info.tags)
         acc.end(dep)
     }
 

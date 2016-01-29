@@ -7,7 +7,7 @@ import type {
 } from '../../../annotationInterfaces'
 import {DepBaseImpl} from '../../../core/pluginImpls'
 import type {
-    Notifier,
+    Notify,
     Cursor,
     FromJS
 } from '../../../modelInterfaces'
@@ -42,7 +42,7 @@ export default class ModelDepImpl<V: Object, E> {
         info: Info,
         cursor: Cursor<V>,
         fromJS: FromJS<V>,
-        notifier: Notifier,
+        notify: Notify,
         isAsync: boolean = false,
         loader: ?FactoryDep<Observable<V, E>> = null
     ) {
@@ -60,14 +60,14 @@ export default class ModelDepImpl<V: Object, E> {
                 for (let i = 0, l = dataOwners.length; i < l; i++) {
                     dataOwners[i].isRecalculate = true
                 }
-                notifier.notify()
+                notify()
             }
         }
         if (isAsync) {
             this.updater = new AsyncUpdaterImpl(
                 cursor.set,
                 base,
-                notifier,
+                notify,
                 dataOwners
             )
         }

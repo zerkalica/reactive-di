@@ -14,7 +14,6 @@ import type {
     AnyDep,
     DepBase,
     AnnotationResolver,
-    DependencyResolver
 } from '../../nodeInterfaces'
 import type {Plugin} from '../../pluginInterfaces'
 import {createFunctionProxy} from '../../utils/createProxy'
@@ -46,9 +45,9 @@ export class FactoryDepImpl<V: any, E> {
 // depends on meta
 // implements Plugin
 export default class FactoryPlugin {
-    resolve<V: Object>(dep: FactoryDep<V>, acc: DependencyResolver): void {
+    resolve<V: Object>(dep: FactoryDep<V>): void {
         const {base, invoker} = dep
-        const {deps, middlewares} = resolveDeps(invoker.depArgs, acc)
+        const {deps, middlewares} = resolveDeps(invoker.depArgs)
         let fn: V = fastCall(invoker.target, deps);
         if (middlewares) {
             if (typeof fn !== 'function') {

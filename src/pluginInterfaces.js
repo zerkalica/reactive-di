@@ -3,13 +3,14 @@
 import type {Dependency} from './annotationInterfaces'
 import type {
     AnyDep,
-    DependencyResolver
+    AnnotationResolver
 } from './nodeInterfaces'
-import type {AnnotationResolver} from './resolverInterfaces'
 
 export type Plugin<Annotation, Dep> = {
-    resolve(dep: Dep, acc: DependencyResolver): void;
+    resolve(dep: Dep): void;
     create(annotation: Annotation, acc: AnnotationResolver): void;
     finalize(dep: Dep, target: AnyDep): void;
 }
+
+export type Resolve = (dep: AnyDep) => void;
 export type FinalizeFn<T> = (dep: T, target: AnyDep) => void;

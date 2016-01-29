@@ -14,7 +14,6 @@ import type {
     AnyDep,
     DepBase,
     AnnotationResolver,
-    DependencyResolver,
     Cacheable
 } from '../../nodeInterfaces'
 import type {
@@ -38,13 +37,11 @@ import type {
 // depends on factory
 // implements Plugin
 export default class ModelPlugin {
-    resolve<V: Object, E>(
-        dep: ModelDep<V, E>,
-        acc: DependencyResolver
-    ): void {
+    resolve<V: Object, E>(dep: ModelDep<V, E>): void {
         const {base, updater, loader} = dep
         if (updater && loader && !updater.isSubscribed) {
-            updater.subscribe((acc.resolve(loader): Observable<V, E>))
+            loader.base.resolve()
+            updater.subscribe((loader.base.value: Observable<V, E>))
         }
         base.isRecalculate = false
         base.value = dep.get()
@@ -66,7 +63,7 @@ export default class ModelPlugin {
             base.info,
             cursor,
             info.fromJS,
-            acc.notifier,
+            acc.notify,
             annotation.kind === 'asyncmodel',
             loader
         );

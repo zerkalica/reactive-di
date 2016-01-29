@@ -10,7 +10,7 @@ import type {Loader} from '../model/modelInterfaces'
 import type {LoaderAnnotation} from './loaderInterfaces'
 
 // implements LoaderAnnotation
-export class LoaderAnnotationImpl<V: Object, E> {
+export default class LoaderAnnotationImpl<V: Object, E> {
     kind: 'loader';
     base: AnnotationBase<Loader<V, E>>;
     deps: ?Deps;

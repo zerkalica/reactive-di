@@ -18,7 +18,7 @@ import type {
     Tag
 } from './annotationInterfaces'
 import type {
-    Notifier,
+    Notify,
     SimpleMap,
     CursorCreator
 } from './modelInterfaces'
@@ -33,7 +33,7 @@ function createPureStateDi(
     middlewares?: Map<Dependency|Tag, Array<Dependency>>,
     overrides?: Map<Dependency, Dependency>
 ): ReactiveDi {
-    function createResolver(notifier: Notifier): AnnotationResolver {
+    function createResolver(notify: Notify): AnnotationResolver {
         const driver: AnnotationDriver = new SymbolMetaDriver();
         setupStateAnnotations(driver, state)
 
@@ -42,7 +42,7 @@ function createPureStateDi(
             middlewares || new Map(),
             overrides || new Map(),
             createPureCursorCreator(state),
-            notifier,
+            notify,
             {
                 class: new ClassPlugin(),
                 factory: new FactoryPlugin(),

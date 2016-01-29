@@ -11,8 +11,7 @@ import type {
 } from '../../annotationInterfaces'
 import type {
     AnyDep,
-    DepBase,
-    DependencyResolver
+    DepBase
 } from '../../nodeInterfaces'
 import type {Plugin} from '../../pluginInterfaces'
 import type {AnnotationResolver} from '../../nodeInterfaces'
@@ -49,9 +48,9 @@ export class ClassDepImpl<V: Object> {
 // depends on factory
 // implements Plugin
 export default class ClassPlugin {
-    resolve<V: Object>(dep: ClassDep<V>, acc: DependencyResolver): void {
+    resolve<V: Object>(dep: ClassDep<V>): void {
         const {base, invoker} = dep
-        const {deps, middlewares} = resolveDeps(invoker.depArgs, acc)
+        const {deps, middlewares} = resolveDeps(invoker.depArgs)
         let obj: V = fastCreateObject(invoker.target, deps);
         if (middlewares) {
             obj = createObjectProxy(obj, middlewares)
@@ -64,7 +63,7 @@ export default class ClassPlugin {
         const {base} = annotation
         const dep: ClassDep<V> = new ClassDepImpl(base.id, base.info, base.target);
         acc.begin(dep)
-        dep.invoker.depArgs = acc.getDeps(annotation.deps, base.id, base.info.tags)
+        dep.invoker.depArgs = acc.getDeps(annotation.deps, base.target, base.info.tags)
         acc.end(dep)
     }
 

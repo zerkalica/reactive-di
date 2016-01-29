@@ -1,47 +1,64 @@
 /* @flow */
 import type {
     AnyDep,
-    DependencyResolver
+    AnnotationResolver,
+    ReactiveDi
 } from '../nodeInterfaces'
 import type {Dependency} from '../annotationInterfaces'
 import type {Subscription} from '../observableInterfaces'
-import type {Notifier} from '../modelInterfaces'
+import type {Notify} from '../modelInterfaces'
 
-// implements ReactiveDi, Notifier
-export default class ReactiveDiImpl {
-    _resolver: DependencyResolver;
-    _listeners: Array<AnyDep>;
+type ListenersRef = {listeners: Array<AnyDep>};
 
-    constructor(createResolver: (notifier: Notifier) => DependencyResolver) {
-        this._resolver = createResolver((this: Notifier))
+// implements Subscription
+class DiSubscription {
+    _subscriptions: Array<Subscription>;
+    _ref: ListenersRef;
+    _listenersFilter: (dep: AnyDep) => boolean;
+
+    constructor(target: AnyDep, subscriptions: Array<Subscription>, ref: ListenersRef) {
+        this._subscriptions = subscriptions
+        this._ref = ref
+        this._listenersFilter = function listenersFilter(dep: AnyDep): boolean {
+            return dep !== target
+        }
     }
 
-    notify(): void {
-        const {_listeners: listeners, _resolver: resolver} = this
-        for (let i = 0, l = listeners.length; i < l; i++) {
-            resolver.get(listeners[i])
+    unsubscribe(): void {
+        const {_ref: ref, _subscriptions: subscriptions} = this
+        for (let i = 0, l = subscriptions.length; i < l; i++) {
+            subscriptions[i].unsubscribe()
         }
+        ref.listeners = ref.listeners.filter(this._listenersFilter)
+    }
+}
+
+// implements ReactiveDi
+export default class ReactiveDiImpl {
+    _resolver: AnnotationResolver;
+    _ref: ListenersRef;
+
+    constructor(createResolver: (notify: Notify) => AnnotationResolver) {
+        const ref: ListenersRef = this._ref = {listeners: []};
+
+        function notify(): void {
+            const {listeners} = ref
+            for (let i = 0, l = listeners.length; i < l; i++) {
+                listeners[i].base.resolve();
+            }
+        }
+
+        const resolver: AnnotationResolver = this._resolver = createResolver(notify);
     }
 
     subscribe(annotatedDep: Dependency): Subscription {
-        const self = this
-        const dep: AnyDep = this._resolver.get(annotatedDep);
-        this._listeners.push(dep)
-        function listenersFilter(registeredDep: AnyDep): boolean {
-            return dep !== registeredDep
-        }
-        const subscriptions: Array<Subscription> = dep.base.subscriptions;
-        function unsubscribe() {
-            for (let i = 0, l = subscriptions.length; i < l; i++) {
-                subscriptions[i].unsubscribe()
-            }
-            self._listeners = self._listeners.filter(listenersFilter)
-        }
-
-        return {unsubscribe}
+        const {_ref: ref, _resolver: resolver} = this
+        const dep: AnyDep = resolver.resolve(annotatedDep);
+        ref.listeners.push(dep)
+        return new DiSubscription(dep, dep.base.subscriptions, ref)
     }
 
-    get<V: any, E>(annotatedDep: Dependency<V>): V {
-        return this._resolver.get(annotatedDep).base.value
+    get(annotatedDep: Dependency): any {
+        return this._resolver.resolve(annotatedDep).base.value
     }
 }

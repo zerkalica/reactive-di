@@ -6,7 +6,6 @@ import type {
     Info,
     Tag
 } from '../annotationInterfaces'
-import type {ResolveFn, DependencyResolver} from '../nodeInterfaces'
 import type {Subscription} from '../observableInterfaces'
 
 // implements DepBase
@@ -17,7 +16,7 @@ export class DepBaseImpl<V> {
     id: DepId;
     info: Info;
     subscriptions: Array<Subscription>;
-    resolve: ResolveFn;
+    resolve: () => void;
 
     constructor(
         id: DepId,

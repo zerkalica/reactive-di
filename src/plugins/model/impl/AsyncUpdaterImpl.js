@@ -2,7 +2,7 @@
 
 import merge from '../../../utils/merge'
 import EntityMetaImpl from '../EntityMetaImpl'
-import type {Notifier} from '../../../modelInterfaces'
+import type {Notify} from '../../../modelInterfaces'
 import type {
     DepBase,
     Cacheable
@@ -120,7 +120,7 @@ export default class AsyncUpdaterImpl<V: Object, E> {
     constructor(
         setter: Setter<V>,
         valueRef: ValueRef<V>,
-        notifier: Notifier,
+        notify: Notify,
         dataOwners: Array<Cacheable>
     ) {
         this.meta = new EntityMetaImpl()
@@ -131,14 +131,14 @@ export default class AsyncUpdaterImpl<V: Object, E> {
             for (let i = 0, l = dataOwners.length; i < l; i++) {
                 dataOwners[i].isRecalculate = true
             }
-            notifier.notify()
+            notify()
         }
 
         function notifyMeta(): void {
             for (let i = 0, l = metaOwners.length; i < l; i++) {
                 metaOwners[i].isRecalculate = true
             }
-            notifier.notify()
+            notify()
         }
 
         function pending(): void {

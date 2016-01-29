@@ -1,5 +1,4 @@
 /* @flow */
-
 import EntityMetaImpl, {updateMeta} from '../model/EntityMetaImpl'
 import type {
     DepId,
@@ -9,7 +8,6 @@ import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     AnyDep,
     DepBase,
-    DependencyResolver,
     AnnotationResolver
 } from '../../nodeInterfaces'
 import type {Plugin} from '../../pluginInterfaces'
@@ -41,7 +39,7 @@ class MetaDepImpl<E> {
 // depends on model
 // implements Plugin
 export default class MetaPlugin {
-    resolve<E>(dep: MetaDep<E>, acc: DependencyResolver): void {
+    resolve<E>(dep: MetaDep<E>): void {
         const {base, sources} = dep
         const meta: EntityMeta = new EntityMetaImpl();
         for (let i = 0, l = sources.length; i < l; i++) {
