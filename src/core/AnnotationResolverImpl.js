@@ -31,13 +31,14 @@ export default class AnnotationResolverImpl {
     _parents: Array<Set<DepId>>;
     _cache: SimpleMap<DepId, AnyDep>;
     _plugins: SimpleMap<string, Plugin>;
-
+    _overrides: Array<[Dependency, Dependency]>;
     createCursor: CursorCreator;
     notifier: Notifier;
 
     constructor(
         driver: AnnotationDriver,
         middlewares: SimpleMap<DepId|Tag, Array<Dependency>>,
+        overrides: Array<[Dependency, Dependency]>,
         createCursor: CursorCreator,
         notifier: Notifier,
         plugins: SimpleMap<string, Plugin>,
@@ -45,6 +46,7 @@ export default class AnnotationResolverImpl {
     ) {
         this._driver = driver
         this._middlewares = middlewares
+        this._overrides = overrides
         this.createCursor = createCursor
         this.notifier = notifier
         this._parents = []
@@ -56,6 +58,7 @@ export default class AnnotationResolverImpl {
         return new AnnotationResolverImpl(
             this._driver,
             this._middlewares,
+            this._overrides,
             this.createCursor,
             this.notifier,
             this._plugins,
@@ -95,17 +98,21 @@ export default class AnnotationResolverImpl {
     }
 
     resolve(annotatedDep: Dependency, isRoot: boolean = false): AnyDep {
-        const annotation: AnyAnnotation = this._driver.get(annotatedDep);
+        let annotation: AnyAnnotation = this._driver.get(annotatedDep);
         let dep: AnyDep = this._cache[annotation.base.id];
         if (!dep) {
-            const {_plugins: plugins} = this
-            const {base} = annotation
-            if (!base.id) {
-                base.id = createId()
+            let id = annotation.base.id
+            if (!id) {
+                id = annotation.base.id = createId()
             }
-            const plugin: Plugin = plugins[annotation.kind];
+            const overridedDep: ?Dependency = this._overrides[annotatedDep];
+            if (overridedDep) {
+                annotation = this._driver.get(overridedDep)
+                annotation.base.id = id
+            }
+            const plugin: Plugin = this._plugins[annotation.kind];
             plugin.create(annotation, (this: AnnotationResolver))
-            dep = this._cache[base.id]
+            dep = this._cache[id]
             dep.base.resolve = plugin.resolve
         } else if (!isRoot) {
             const {_parents: parents} = this

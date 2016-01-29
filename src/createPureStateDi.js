@@ -63,7 +63,6 @@ function prepareOverrides(
 }
 
 function createPureStateDi(
-    plugins: SimpleMap<string, Plugin>,
     middlewares: Array<[Dependency|Tag, Array<Dependency>]>,
     overrides: Array<[Dependency, Dependency]>,
     state: Object
