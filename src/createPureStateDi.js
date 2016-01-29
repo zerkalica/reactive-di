@@ -29,9 +29,43 @@ import type {
 } from './nodeInterfaces'
 import type {Plugin} from './pluginInterfaces'
 
+function prepareMiddlewares(
+    driver: AnnotationDriver,
+    raw: Array<[Dependency|Tag, Array<Dependency>]>
+): SimpleMap<DepId|Tag, Array<Dependency>> {
+    const middlewares: SimpleMap<DepId|Tag, Array<Dependency>> = {};
+    for (let i = 0, l = raw.length; i < l; i++) {
+        const [source, mdls] = raw[i];
+        if (!Array.isArray(mdls)) {
+            throw new TypeError('raw middleware format is not an Array<[Dependency, Array<Dependency>]>')
+        }
+        if (typeof source === 'string') {
+            middlewares[source] = mdls
+        } else {
+            const {base} = driver.get(source)
+            middlewares[base.id] = mdls
+        }
+    }
+    return middlewares
+}
+
+function prepareOverrides(
+    driver: AnnotationDriver,
+    raw: Array<[Dependency, Dependency]>
+): SimpleMap<DepId, Dependency> {
+    const overrides: SimpleMap<DepId, Dependency> = {};
+    for (let i = 0, l = raw.length; i < l; i++) {
+        const [source, dep] = raw[i];
+        const {base} = driver.get(source)
+        overrides[base.id] = dep
+    }
+    return overrides
+}
+
 function createPureStateDi(
     plugins: SimpleMap<string, Plugin>,
-    middlewares: SimpleMap<DepId|Tag, Array<Dependency>>,
+    middlewares: Array<[Dependency|Tag, Array<Dependency>]>,
+    overrides: Array<[Dependency, Dependency]>,
     state: Object
 ): ReactiveDi {
     function createResolver(notifier: Notifier): DependencyResolver {
@@ -40,7 +74,8 @@ function createPureStateDi(
 
         return new AnnotationResolverImpl(
             driver,
-            middlewares,
+            prepareMiddlewares(driver, middlewares),
+            prepareOverrides(driver, overrides),
             createPureCursorCreator(state),
             notifier,
             {
