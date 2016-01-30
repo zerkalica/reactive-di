@@ -34,6 +34,7 @@ export default class AnnotationResolverImpl {
     _overrides: Map<Dependency, Dependency>;
 
     _lastId: number;
+    _salt: string;
 
     createCursor: CursorCreator;
     notify: Notify;
@@ -56,6 +57,7 @@ export default class AnnotationResolverImpl {
         this._cache = cache || Object.create(null)
         this._plugins = plugins
         this._lastId = 0
+        this._salt = Math.random().toString(36).substr(2, 6);
     }
 
     newRoot(): AnnotationResolver {
@@ -97,7 +99,7 @@ export default class AnnotationResolverImpl {
     }
 
     _createId(): string {
-        return '' + (++this._lastId)
+        return this._salt + '.' + (++this._lastId)
     }
 
     resolveAnnotation(annotation: AnyAnnotation): AnyDep {

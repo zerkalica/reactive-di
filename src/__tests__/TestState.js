@@ -10,13 +10,13 @@ type UserRec = {
     name?: string
 };
 
-class User {
+export class User {
     id: string;
     name: string;
 
     constructor(rec: UserRec = {}) {
-        this.id = rec.id || ''
-        this.name = rec.name || ''
+        this.id = rec.id || '1'
+        this.name = rec.name || 'initial name'
     }
 
     copy(rec: UserRec): User {

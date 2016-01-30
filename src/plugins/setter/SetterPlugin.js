@@ -65,8 +65,7 @@ export class SetterDepImpl<V: Object, E> {
 export default class SetterPlugin {
     create<V: Object, E>(annotation: SetterAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
-        const newAcc: AnnotationResolver = acc.newRoot();
-        const modelDep: AnyDep = newAcc.resolve(annotation.model);
+        const modelDep: AnyDep = acc.newRoot().resolve(annotation.model);
         if (modelDep.kind !== 'model') {
             throw new Error('Not a model dep type: ' + modelDep.kind)
         }
