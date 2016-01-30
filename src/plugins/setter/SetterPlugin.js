@@ -74,6 +74,7 @@ export default class SetterPlugin {
             base.target,
             updater ? updater.subscribe : modelDep.set
         );
+        // TODO: wait resolving setter dependencies through meta promise
 
         acc.begin(dep)
         dep.invoker.depArgs = acc.getDeps(annotation.deps, base.target, base.info.tags)

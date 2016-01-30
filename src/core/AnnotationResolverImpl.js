@@ -105,14 +105,20 @@ export default class AnnotationResolverImpl {
         return '' + (++this._lastId)
     }
 
+    resolveAnnotation(annotation: AnyAnnotation): AnyDep {
+        function dummyDependency(): void {}
+        return this.resolve(this._driver.set(dummyDependency, annotation))
+    }
+
     resolve(annotatedDep: Dependency): AnyDep {
         const {_parents: parents} = this
         let annotation: AnyAnnotation = this._driver.get(annotatedDep);
         let dep: AnyDep = this._cache[annotation.base.id];
         if (!dep) {
-            let id = annotation.base.id
+            const {base} = annotation
+            let id = base.id
             if (!id) {
-                id = annotation.base.id = this._createId()
+                id = base.id = this._createId()
             }
             const overridedDep: ?Dependency = this._overrides.get(annotatedDep);
             if (overridedDep) {
@@ -122,7 +128,7 @@ export default class AnnotationResolverImpl {
             const plugin: Plugin = this._plugins[annotation.kind];
             plugin.create(annotation, (this: AnnotationResolver))
             dep = this._cache[id]
-            dep.base.resolve = createResolver(plugin.resolve, dep, (self: AnnotationResolver))
+            dep.base.resolve = createResolver(plugin.resolve, dep, (this: AnnotationResolver))
         } else if (parents.length) {
             const {relations} = dep.base
             for (let j = 0, k = parents.length; j < k; j++) {

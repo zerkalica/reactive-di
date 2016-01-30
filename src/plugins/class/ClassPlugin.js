@@ -50,10 +50,10 @@ export class ClassDepImpl<V: Object> {
 export default class ClassPlugin {
     resolve<V: Object>(dep: ClassDep<V>): void {
         const {base, invoker} = dep
-        const {deps, middlewares} = resolveDeps(invoker.depArgs)
-        let obj: V = fastCreateObject(invoker.target, deps);
-        if (middlewares) {
-            obj = createObjectProxy(obj, middlewares)
+        const args = resolveDeps(invoker.depArgs)
+        let obj: V = fastCreateObject(invoker.target, args.deps);
+        if (args.middlewares) {
+            obj = createObjectProxy(obj, args.middlewares)
         }
         base.isRecalculate = false
         base.value = obj
