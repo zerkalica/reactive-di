@@ -44,22 +44,25 @@ export class SetterDepImpl<V: Object, E> {
         this.invoker = new InvokerImpl(target)
         this.set = set
     }
-}
 
-// depends on factory, model
-// implements Plugin
-export default class SetterPlugin {
-    resolve<V: Object, E>(dep: SetterDep<V, E>): void {
-        const {base, invoker} = dep
+    resolve(): void {
+        const {base, invoker} = this
+        if (!base.isRecalculate) {
+            return
+        }
         const args = resolveDeps(invoker.depArgs);
         const fn: Setter<V> = fastCall(invoker.target, args.deps);
         if (typeof fn !== 'function') {
             throw new Error('No callable returns from dep ' + base.info.displayName)
         }
         base.isRecalculate = false
-        base.value = createFunctionProxy(fn, [dep.set].concat(args.middlewares || []))
+        base.value = createFunctionProxy(fn, [this.set].concat(args.middlewares || []))
     }
+}
 
+// depends on factory, model
+// implements Plugin
+export default class SetterPlugin {
     create<V: Object, E>(annotation: SetterAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
         const newAcc: AnnotationResolver = acc.newRoot();

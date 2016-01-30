@@ -37,16 +37,6 @@ import type {
 // depends on factory
 // implements Plugin
 export default class ModelPlugin {
-    resolve<V: Object, E>(dep: ModelDep<V, E>): void {
-        const {base, updater, loader} = dep
-        if (updater && loader && !updater.isSubscribed) {
-            loader.base.resolve()
-            updater.subscribe((loader.base.value: Observable<V, E>))
-        }
-        base.isRecalculate = false
-        base.value = dep.get()
-    }
-
     create<V: Object, E>(
         annotation: ModelAnnotation<V>|AsyncModelAnnotation<V, E>,
         acc: AnnotationResolver

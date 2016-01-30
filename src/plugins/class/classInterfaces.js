@@ -9,6 +9,7 @@ export type ClassDep<V: Object> = {
     kind: 'class';
     base: DepBase<V>;
     invoker: ClassInvoker<V>;
+    resolve: () => void;
 }
 
 export type ClassAnnotation<V: Object> = {

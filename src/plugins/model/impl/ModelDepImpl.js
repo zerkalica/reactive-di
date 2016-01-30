@@ -72,4 +72,17 @@ export default class ModelDepImpl<V: Object, E> {
             )
         }
     }
+
+    resolve(): void {
+        const {base, updater, loader} = this
+        if (!base.isRecalculate) {
+            return
+        }
+        if (updater && loader && !updater.isSubscribed) {
+            loader.resolve()
+            updater.subscribe((loader.base.value: Observable<V, E>))
+        }
+        base.isRecalculate = false
+        base.value = this.get()
+    }
 }

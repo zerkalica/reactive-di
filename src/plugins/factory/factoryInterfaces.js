@@ -22,6 +22,7 @@ export type FactoryDep<V: any> = {
     kind: 'factory';
     base: DepBase<V>;
     invoker: FactoryInvoker<V>;
+    resolve: () => void;
 }
 
 export type FactoryAnnotation<V> = {

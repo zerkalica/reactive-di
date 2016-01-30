@@ -40,13 +40,12 @@ export class FactoryDepImpl<V: any, E> {
         this.base = new DepBaseImpl(id, info)
         this.invoker = new InvokerImpl(target)
     }
-}
 
-// depends on meta
-// implements Plugin
-export default class FactoryPlugin {
-    resolve<V: Object>(dep: FactoryDep<V>): void {
-        const {base, invoker} = dep
+    resolve(): void {
+        const {base, invoker} = this
+        if (!base.isRecalculate) {
+            return
+        }
         const {deps, middlewares} = resolveDeps(invoker.depArgs)
         let fn: V = fastCall(invoker.target, deps);
         if (middlewares) {
@@ -58,7 +57,11 @@ export default class FactoryPlugin {
         base.value = fn
         base.isRecalculate = false
     }
+}
 
+// depends on meta
+// implements Plugin
+export default class FactoryPlugin {
     create<V>(annotation: FactoryAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
         const dep: FactoryDep<V> = new FactoryDepImpl(base.id, base.info, base.target);

@@ -7,7 +7,6 @@ import type {
 } from './nodeInterfaces'
 
 export type Plugin<Annotation, Dep> = {
-    resolve(dep: Dep): void;
     create(annotation: Annotation, acc: AnnotationResolver): void;
     finalize(dep: Dep, target: AnyDep): void;
 }

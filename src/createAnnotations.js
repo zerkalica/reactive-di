@@ -25,7 +25,7 @@ export type Annotations = {
     factory(...deps: Array<DepItem>): <T: DepFn>(target: T) => T;
     loader(...deps: Array<DepItem>): <V: Object, E>(target: Loader<V, E>) => Loader<V, E>;
     meta<T: Dependency>(target: T): () => void;
-    model(): <V: Object>(target: Class<V>) => Class<V>;
+    model<V: Object>(target: Class<V>): Class<V>;
     setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: DepFn<Setter<V>>) => DepFn<Setter<V>>;
 }
 
@@ -73,13 +73,11 @@ export default function createAnnotations(
             ))
         },
 
-        model(): <V: Object>(target: Class<V>) => Class<V> {
-            return function _model<V: Object>(source: Class<V>): Class<V> {
-                return driver.annotate(source, new ModelAnnotationImpl(
-                    source,
-                    tags
-                ))
-            };
+        model<V: Object>(target: Class<V>): Class<V> {
+            return driver.annotate(target, new ModelAnnotationImpl(
+                target,
+                tags
+            ))
         },
 
         asyncmodel<V: Object, E>(loader?: ?Loader<V, E>): (target: Class<V>) => Class<V> {

@@ -1,5 +1,6 @@
 /* @flow */
 
+import getFunctionName from '../utils/getFunctionName'
 import type {
     AnnotationDriver,
     DepId,
@@ -21,12 +22,6 @@ import type {
 import type {FinalizeFn, Resolve} from '../interfaces/pluginInterfaces'
 import type {Plugin} from '../interfaces/pluginInterfaces'
 import {DepArgsImpl} from './DepArgsImpl'
-
-function createResolver(resolve: Resolve, dep: AnyDep, acc: AnnotationResolver): () => void {
-    return function resolveDep(): void {
-        return resolve(dep, acc)
-    }
-}
 
 // implements AnnotationResolver
 export default class AnnotationResolverImpl {
@@ -128,7 +123,6 @@ export default class AnnotationResolverImpl {
             const plugin: Plugin = this._plugins[annotation.kind];
             plugin.create(annotation, (this: AnnotationResolver))
             dep = this._cache[id]
-            dep.base.resolve = createResolver(plugin.resolve, dep, (this: AnnotationResolver))
         } else if (parents.length) {
             const {relations} = dep.base
             for (let j = 0, k = parents.length; j < k; j++) {
@@ -138,6 +132,7 @@ export default class AnnotationResolverImpl {
                 }
             }
         }
+        dep.resolve()
 
         return dep
     }

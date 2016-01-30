@@ -52,6 +52,7 @@ export type AsyncModelAnnotation<V: Object, E> = {
 export type ModelDep<V: Object, E> = {
     kind: 'model';
     base: DepBase<V>;
+    resolve(): void;
 
     fromJS: FromJS<V>;
     dataOwners: Array<Cacheable>;

@@ -28,7 +28,7 @@ import type {
 } from './interfaces/nodeInterfaces'
 import type {Plugin} from './interfaces/pluginInterfaces'
 
-function createPureStateDi<T: Object>(
+export default function createPureStateDi<T: Object>(
     state: T,
     middlewares?: Map<Dependency|Tag, Array<Dependency>>,
     overrides?: Map<Dependency, Dependency>

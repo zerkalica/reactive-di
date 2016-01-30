@@ -22,6 +22,7 @@ export type SetterDep<V: Object, E> = {
     base: DepBase<Setter<V>>;
     invoker: SetterInvoker<V>;
     set: (value: V|Observable<V, E>) => void;
+    resolve: () => void;
 }
 
 export type SetterAnnotation<V: Object> = {

@@ -18,12 +18,12 @@ export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(dep: DepArgs)
     const argsArray = []
     const argsObject = {}
     for (let i = 0, j = deps.length; i < j; i++) {
-        const {base}: AnyDep = deps[i];
-        base.resolve()
+        const dep: AnyDep = deps[i];
+        dep.resolve()
         if (depNames) {
-            argsObject[depNames[i]] = base.value
+            argsObject[depNames[i]] = dep.base.value
         } else {
-            argsArray.push(base.value)
+            argsArray.push(dep.base.value)
         }
     }
 

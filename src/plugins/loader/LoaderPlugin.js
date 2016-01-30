@@ -32,7 +32,7 @@ import type {Observable} from '../../interfaces/observableInterfaces'
 export class LoaderDepImpl<V: Object, E> {
     kind: 'loader';
     base: DepBase<Observable<V, E>>;
-    meta: DepBase<EntityMeta<E>>;
+    meta: MetaDep<E>;
     invoker: LoaderInvoker<V, E>;
 
     constructor(
@@ -44,15 +44,14 @@ export class LoaderDepImpl<V: Object, E> {
         this.base = new DepBaseImpl(id, info)
         this.invoker = new InvokerImpl(target)
     }
-}
 
-// depends on meta
-// implements Plugin
-export default class LoaderPlugin {
-    resolve<V: Object, E>(dep: LoaderDep<V, E>): void {
-        const {base, invoker, meta} = dep
+    resolve(): void {
+        const {base, invoker, meta} = this
+        if (!base.isRecalculate) {
+            return
+        }
         meta.resolve()
-        const value: EntityMeta<E> = meta.value;
+        const value: EntityMeta<E> = meta.base.value;
         if (!value.fulfilled) {
             return
         }
@@ -67,7 +66,11 @@ export default class LoaderPlugin {
         base.value = fn
         base.isRecalculate = false
     }
+}
 
+// depends on meta
+// implements Plugin
+export default class LoaderPlugin {
     create<V: Object, E>(annotation: LoaderAnnotation<V, E>, acc: AnnotationResolver): void {
         const {base} = annotation
         const {info} = base
@@ -77,7 +80,7 @@ export default class LoaderPlugin {
         if (metaDep.kind !== 'meta') {
             throw new Error('Not a meta type: ' + metaDep.kind)
         }
-        dep.meta = metaDep.base
+        dep.meta = metaDep
         dep.invoker.depArgs = acc.getDeps(annotation.deps, base.target, info.tags)
         acc.end(dep)
     }

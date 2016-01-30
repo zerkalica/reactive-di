@@ -13,4 +13,5 @@ export type MetaDep<E> = {
     kind: 'meta';
     base: DepBase<EntityMeta<E>>;
     sources: Array<AsyncUpdater>;
+    resolve(): void;
 }

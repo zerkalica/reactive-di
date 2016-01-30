@@ -44,7 +44,7 @@ export default class ReactiveDiImpl {
         function notify(): void {
             const {listeners} = ref
             for (let i = 0, l = listeners.length; i < l; i++) {
-                listeners[i].base.resolve();
+                listeners[i].resolve();
             }
         }
 

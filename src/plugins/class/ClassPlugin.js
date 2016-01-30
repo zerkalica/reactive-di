@@ -43,13 +43,12 @@ export class ClassDepImpl<V: Object> {
         this.base = new DepBaseImpl(id, info)
         this.invoker = new InvokerImpl(target)
     }
-}
 
-// depends on factory
-// implements Plugin
-export default class ClassPlugin {
-    resolve<V: Object>(dep: ClassDep<V>): void {
-        const {base, invoker} = dep
+    resolve(): void {
+        const {base, invoker} = this
+        if (!base.isRecalculate) {
+            return
+        }
         const args = resolveDeps(invoker.depArgs)
         let obj: V = fastCreateObject(invoker.target, args.deps);
         if (args.middlewares) {
@@ -58,7 +57,11 @@ export default class ClassPlugin {
         base.isRecalculate = false
         base.value = obj
     }
+}
 
+// depends on factory
+// implements Plugin
+export default class ClassPlugin {
     create<V: Object>(annotation: ClassAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
         const dep: ClassDep<V> = new ClassDepImpl(base.id, base.info, base.target);

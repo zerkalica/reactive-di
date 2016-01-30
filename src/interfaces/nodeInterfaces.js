@@ -29,7 +29,6 @@ export type DepBase<V> = {
     value: V;
     id: DepId;
     info: Info;
-    resolve: () => void;
 
     relations: Array<DepId>;
     subscriptions: Array<Subscription>;

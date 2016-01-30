@@ -22,7 +22,7 @@ export default class SymbolMetaDriver {
     getAnnotation<V, A: AnyAnnotation>(dep: Dependency<V>): A {
         const annotation: A = (dep: Function)[metaSymbol];
         if (!annotation || !annotation.kind) {
-            throw new TypeError('Not an annotated dependency: ' + ((dep: Function).displayName || String(dep)))
+            throw new TypeError('Can\'t get not annotated dependency: ' + ((dep: Function).displayName || String(dep)))
         }
         return annotation
     }

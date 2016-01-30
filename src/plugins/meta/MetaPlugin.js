@@ -34,13 +34,12 @@ class MetaDepImpl<E> {
         this.base = new DepBaseImpl(id, info)
         this.sources = []
     }
-}
 
-// depends on model
-// implements Plugin
-export default class MetaPlugin {
-    resolve<E>(dep: MetaDep<E>): void {
-        const {base, sources} = dep
+    resolve(): void {
+        const {base, sources} = this
+        if (!base.isRecalculate) {
+            return
+        }
         const meta: EntityMeta = new EntityMetaImpl();
         for (let i = 0, l = sources.length; i < l; i++) {
             updateMeta(meta, sources[i].meta)
@@ -48,7 +47,11 @@ export default class MetaPlugin {
         base.value = merge(base.value, meta)
         base.isRecalculate = false
     }
+}
 
+// depends on model
+// implements Plugin
+export default class MetaPlugin {
     create<E>(annotation: MetaAnnotation<E>, acc: AnnotationResolver): void {
         const {base} = annotation
         const dep: MetaDep<E> = new MetaDepImpl(base.id, base.info);
