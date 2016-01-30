@@ -9,7 +9,7 @@ describe('SymbolMetaDriverTest', () => {
         function fn() {}
         const meta = new FactoryAnnotationImpl(fn, [], null, null)
         const driver = new SymbolMetaDriver()
-        driver.set(fn, meta)
-        assert(driver.get(fn) === meta)
+        driver.annotate(fn, meta)
+        assert(driver.getAnnotation(fn) === meta)
     })
 })

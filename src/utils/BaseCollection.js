@@ -38,6 +38,8 @@ export type Collection<Item: CollectionItem> = {
     map<V>(mapFn: MapFn<Item, V>): Array<V>;
     filter(filterFn: FilterFn<Item>): Collection<Item>;
     sort(sortFn: SortFn<Item>): Collection<Item>;
+    toJS(): Array<Item>;
+    toJSON(): string;
 }
 
 type ItemsMap<Item> = {
@@ -103,6 +105,14 @@ export default class BaseCollection<Item: CollectionItem> {
         }
 
         return {itemsMap, items}
+    }
+
+    toJS(): Array<Item> {
+        return this._items
+    }
+
+    toJSON(): string {
+        return JSON.stringify(this.toJS())
     }
 
     fromArray(recs: Array<ItemRec>): Collection<Item> {

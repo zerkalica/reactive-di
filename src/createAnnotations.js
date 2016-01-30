@@ -6,10 +6,9 @@ import LoaderAnnotationImpl from './plugins/loader/LoaderAnnotationImpl'
 import MetaAnnotationImpl from './plugins/meta/MetaAnnotationImpl'
 import SetterAnnotationImpl from './plugins/setter/SetterAnnotationImpl'
 import type {
-    Deps,
+    DepItem,
     DepFn,
     Dependency,
-    Annotations,
     AnnotationDriver
 } from './interfaces/annotationInterfaces'
 import type {Loader} from './plugins/model/modelInterfaces'
@@ -21,15 +20,24 @@ import {
 
 /* eslint-disable no-undef */
 
+export type Annotations = {
+    klass(...deps: Array<DepItem>): <P: Object>(target: Class<P>) => Class<P>;
+    factory(...deps: Array<DepItem>): <T: DepFn>(target: T) => T;
+    loader(...deps: Array<DepItem>): <V: Object, E>(target: Loader<V, E>) => Loader<V, E>;
+    meta<T: Dependency>(target: T): () => void;
+    model(): <V: Object>(target: Class<V>) => Class<V>;
+    setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: DepFn<Setter<V>>) => DepFn<Setter<V>>;
+}
+
 export default function createAnnotations(
     driver: AnnotationDriver,
     tags: Array<string> = []
 ): Annotations {
     return {
         /* eslint-disable no-unused-vars */
-        klass(...deps: Deps): <P: Object>(target: Class<P>) => Class<P> {
+        klass(...deps: Array<DepItem>): <P: Object>(target: Class<P>) => Class<P> {
             return function _klass<P: Object>(target: Class<P>): Class<P> {
-                return driver.set(target, new ClassAnnotationImpl(
+                return driver.annotate(target, new ClassAnnotationImpl(
                     target,
                     deps,
                     tags
@@ -37,9 +45,9 @@ export default function createAnnotations(
             }
         },
 
-        factory(...deps: Deps): <T: DepFn>(target: T) => T {
+        factory(...deps: Array<DepItem>): <T: DepFn>(target: T) => T {
             return function _factory<T: DepFn>(target: T): T {
-                return driver.set(target, new FactoryAnnotationImpl(
+                return driver.annotate(target, new FactoryAnnotationImpl(
                     target,
                     deps,
                     tags
@@ -47,9 +55,9 @@ export default function createAnnotations(
             }
         },
 
-        loader(...deps: Deps): <V: Object, E>(target: Loader<V, E>) => Loader<V, E> {
+        loader(...deps: Array<DepItem>): <V: Object, E>(target: Loader<V, E>) => Loader<V, E> {
             return function _loader<V: Object, E>(target: Loader<V, E>): Loader<V, E> {
-                return driver.set(target, new LoaderAnnotationImpl(
+                return driver.annotate(target, new LoaderAnnotationImpl(
                     target,
                     deps,
                     tags
@@ -59,7 +67,7 @@ export default function createAnnotations(
 
         meta<T: Dependency>(target: T): () => void {
             function dummyTargetId(): void {}
-            return driver.set((dummyTargetId: any), new MetaAnnotationImpl(
+            return driver.annotate((dummyTargetId: any), new MetaAnnotationImpl(
                 target,
                 tags
             ))
@@ -67,7 +75,7 @@ export default function createAnnotations(
 
         model(): <V: Object>(target: Class<V>) => Class<V> {
             return function _model<V: Object>(source: Class<V>): Class<V> {
-                return driver.set(source, new ModelAnnotationImpl(
+                return driver.annotate(source, new ModelAnnotationImpl(
                     source,
                     tags
                 ))
@@ -76,7 +84,7 @@ export default function createAnnotations(
 
         asyncmodel<V: Object, E>(loader?: ?Loader<V, E>): (target: Class<V>) => Class<V> {
             return function _asyncmodel(target: Class<V>): Class<V> {
-                return driver.set(target, new ModelAnnotationImpl(
+                return driver.annotate(target, new AsyncModelAnnotationImpl(
                     target,
                     tags,
                     loader
@@ -84,9 +92,9 @@ export default function createAnnotations(
             };
         },
 
-        setter<V: Object, E>(model: Class<V>, ...deps: Deps): (target: DepFn<Setter<V>>) => DepFn<Setter<V>> {
+        setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: DepFn<Setter<V>>) => DepFn<Setter<V>> {
             return function _setter(target: DepFn<Setter<V>>): DepFn<Setter<V>> {
-                return driver.set(target, new SetterAnnotationImpl(
+                return driver.annotate(target, new SetterAnnotationImpl(
                     model,
                     target,
                     deps,

@@ -28,7 +28,7 @@ export default function setupStateAnnotations<T: Object>(
     obj: T,
     statePath: Array<string> = []
 ): FromJS<T> {
-    const annotation: ModelAnnotation = driver.get(obj.constructor);
+    const annotation: ModelAnnotation = driver.getAnnotation(obj.constructor);
     const {info} = annotation
     if (!info.statePath) {
         info.statePath = statePath
