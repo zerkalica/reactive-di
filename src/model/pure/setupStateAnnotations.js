@@ -30,7 +30,7 @@ export default function setupStateAnnotations<T: Object>(
 ): FromJS<T> {
     const annotation: ModelAnnotation = driver.getAnnotation(obj.constructor);
     const {info} = annotation
-    if (!info.statePath) {
+    if (!info.statePath.length) {
         info.statePath = statePath
         const keys: Array<string> = Object.keys(obj);
         const propCreators: PropCreatorMap = {};
