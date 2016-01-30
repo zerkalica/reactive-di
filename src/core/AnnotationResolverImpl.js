@@ -23,6 +23,11 @@ import type {FinalizeFn, Resolve} from '../interfaces/pluginInterfaces'
 import type {Plugin} from '../interfaces/pluginInterfaces'
 import {DepArgsImpl} from './DepArgsImpl'
 
+type IdCreator = {
+    createId(): string;
+}
+
+// implements IdCreator
 class IdCreatorImpl {
     _lastId: number;
     _salt: string;
@@ -47,7 +52,7 @@ export default class AnnotationResolverImpl {
     _middlewares: Map<Dependency|Tag, Array<Dependency>>;
     _overrides: Map<Dependency, Dependency>;
 
-    _idCreator: IdCreatorImpl;
+    _idCreator: IdCreator;
     createCursor: CursorCreator;
     notify: Notify;
 
@@ -58,7 +63,7 @@ export default class AnnotationResolverImpl {
         createCursor: CursorCreator,
         notify: Notify,
         plugins: SimpleMap<string, Plugin>,
-        idCreator?: IdCreatorImpl,
+        idCreator?: IdCreator,
         cache?: SimpleMap<DepId, AnyDep>
     ) {
         this._driver = driver
