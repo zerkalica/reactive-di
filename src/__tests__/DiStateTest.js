@@ -134,4 +134,66 @@ describe('DiStateTest', () => {
         di.get(MyDep)
         assert(fn.calledOnce)
     })
+
+    it('should not hit, if a changed', () => {
+        class C {
+            v: string = 'test';
+            copy(rec: {v: string}): C {
+                const next = new C()
+                next.v = rec.v
+                return next
+            }
+        }
+        model(C)
+
+        class B {
+            v: number = '123';
+            copy(rec: {v: number}): B {
+                const next = new B()
+                next.v = rec.v
+                return next
+            }
+        }
+        model(B)
+
+        class A {
+            b: B = new B();
+            c: C = new C();
+            copy(rec: {b: B, c: C}): A {
+                const next = new A()
+                next.b = rec.b
+                next.c = rec.c
+                return next
+            }
+        }
+        model(A)
+
+        class AppState {
+            a: A = new A();
+            copy(rec: {a: A}): AppState {
+                const next = new AppState()
+                next.a = rec.a
+                return next
+            }
+        }
+        model(AppState)
+        function aSetter(a: A): (rec: {b: B, c: C}) => A {
+            return function aSet(rec: {b: B, c: C}): A {
+                return a.copy(rec)
+            }
+        }
+        setter(A, A)(aSetter)
+
+        const di = createPureStateDi(new AppState())
+        const fn = sinon.spy(v => v)
+        const aSet = di.get(aSetter)
+        factory(A)(fn)
+        di.get(fn)
+        aSet({
+            c: new C(),
+            b: new B()
+        })
+        di.get(fn)
+        assert(fn.calledTwice)
+    })
 })
