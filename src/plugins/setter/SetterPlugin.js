@@ -50,6 +50,7 @@ export class SetterDepImpl<V: Object, E> {
         if (!base.isRecalculate) {
             return
         }
+
         const args = resolveDeps(invoker.depArgs);
         const fn: Setter<V> = fastCall(invoker.target, args.deps);
         if (typeof fn !== 'function') {

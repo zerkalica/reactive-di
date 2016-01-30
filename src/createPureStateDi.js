@@ -1,7 +1,6 @@
 /* @flow */
 
 import createPureCursorCreator from './model/pure/createPureCursorCreator'
-import setupStateAnnotations from './model/pure/setupStateAnnotations'
 import AnnotationResolverImpl from './core/AnnotationResolverImpl'
 import ClassPlugin from './plugins/class/ClassPlugin'
 import FactoryPlugin from './plugins/factory/FactoryPlugin'
@@ -35,13 +34,12 @@ export default function createPureStateDi<T: Object>(
 ): ReactiveDi {
     function createResolver(notify: Notify): AnnotationResolver {
         const driver: AnnotationDriver = new SymbolMetaDriver();
-        setupStateAnnotations(driver, state)
 
         return new AnnotationResolverImpl(
             driver,
             middlewares || new Map(),
             overrides || new Map(),
-            createPureCursorCreator(state),
+            createPureCursorCreator(driver, state),
             notify,
             {
                 class: new ClassPlugin(),
