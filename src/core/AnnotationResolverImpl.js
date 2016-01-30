@@ -46,6 +46,7 @@ export default class AnnotationResolverImpl {
         createCursor: CursorCreator,
         notify: Notify,
         plugins: SimpleMap<string, Plugin>,
+        salt?: string,
         cache?: SimpleMap<DepId, AnyDep>
     ) {
         this._driver = driver
@@ -54,10 +55,10 @@ export default class AnnotationResolverImpl {
         this.createCursor = createCursor
         this.notify = notify
         this._parents = []
-        this._cache = cache || Object.create(null)
         this._plugins = plugins
         this._lastId = 0
-        this._salt = Math.random().toString(36).substr(2, 6);
+        this._salt = salt || Math.random().toString(36).substr(2, 6);
+        this._cache = cache || Object.create(null)
     }
 
     newRoot(): AnnotationResolver {
@@ -68,6 +69,7 @@ export default class AnnotationResolverImpl {
             this.createCursor,
             this.notify,
             this._plugins,
+            this._salt,
             this._cache
         )
     }
@@ -134,7 +136,6 @@ export default class AnnotationResolverImpl {
                 }
             }
         }
-        dep.resolve()
 
         return dep
     }

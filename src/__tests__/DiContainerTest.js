@@ -2,47 +2,98 @@
 /* @flow */
 
 import assert from 'power-assert'
+import sinon from 'sinon'
+
 import annotations from './annotations'
 import createPureStateDi from '../createPureStateDi'
-import {AppState, CurrentUser} from './TestState'
 
 const {
+    model,
+    klass,
     factory,
     setter
 } = annotations
 
-function currentUserFacet(user: CurrentUser): CurrentUser {
-    return user
-}
-factory(CurrentUser)(currentUserFacet)
-
-function ChangeCurrentUserName(user: CurrentUser): (name: string) => CurrentUser {
-    return function changeCurrentUserName(name: string): User {
-        return user.copy({name})
-    }
-}
-setter(CurrentUser, CurrentUser)(ChangeCurrentUserName)
+class AppState {}
+model(AppState)
 
 describe('DiContainerTest', () => {
-    it('facet should return CurrentUser instance', () => {
-        const state = new AppState()
-        const di = createPureStateDi(state)
-        const currentUser: CurrentUser = di.get(currentUserFacet);
-        assert(currentUser instanceof CurrentUser)
+    describe('basics', () => {
+        it('should throws exception if incorrect data passed to constructor', () => {
+            assert.throws(() => createPureStateDi({}), /not annotated/)
+        })
     })
 
-    it('setter should change instance', () => {
-        const state = new AppState()
-        const di = createPureStateDi(state)
+    describe('get', () => {
+        it('should throws exception if no decorated function passed', () => {
+            const di = createPureStateDi(new AppState())
+            function WrongDep() {}
 
-        const currentUser: CurrentUser = di.get(currentUserFacet);
-        assert(currentUser instanceof CurrentUser)
-        const changeUserName = di.get(ChangeCurrentUserName)
-        changeUserName('new-name')
+            assert.throws(() => di.get(WrongDep), /not annotated dependency/)
+        })
 
-        const newCurrentUser: CurrentUser = di.get(currentUserFacet);
-        assert(newCurrentUser instanceof CurrentUser)
-        assert(newCurrentUser !== currentUser)
-        assert(newCurrentUser.name === 'new-name')
+        /* eslint-disable padded-blocks */
+        it('should return class instance', () => {
+            const di = createPureStateDi(new AppState())
+            class Test {}
+            klass()(Test)
+            const instance = di.get(Test)
+            assert(instance instanceof Test)
+        })
+        /* eslint-enable padded-blocks */
+
+        /* eslint-disable padded-blocks */
+        it('should cache class instance', () => {
+            const di = createPureStateDi(new AppState())
+            const Test = sinon.spy(class TestBase {})
+            klass()(Test)
+            const instance1 = di.get(Test)
+            const instance2 = di.get(Test)
+            assert(instance1 === instance2)
+            assert(Test.calledOnce)
+        })
+        /* eslint-enable padded-blocks */
+
+        it('should cache factory return value', () => {
+            const di = createPureStateDi(new AppState())
+            function testBase() {
+                return 123
+            }
+            const test = sinon.spy(testBase)
+            factory()(test)
+
+            di.get(test)
+            const instance1 = di.get(test)
+            assert(instance1 === 123)
+            assert(test.calledOnce)
+        })
+
+        it('should handle simple deps from array definition', () => {
+            const di = createPureStateDi(new AppState())
+            function MyDep() {
+                return 123
+            }
+            factory()(MyDep)
+
+            const TestFake = sinon.spy(class Test {})
+            klass(MyDep)(TestFake)
+
+            di.get(TestFake)
+            assert(TestFake.calledWith(123))
+        })
+
+        it('should handle simple deps from object definition', () => {
+            const di = createPureStateDi(new AppState())
+            function MyDep() {
+                return 123
+            }
+            factory()(MyDep)
+
+            const TestFake = sinon.spy(class Test {})
+            klass({fac: MyDep})(TestFake)
+
+            di.get(TestFake)
+            assert(TestFake.calledWith({fac: 123}))
+        })
     })
 })
