@@ -15,7 +15,6 @@ type DeletedItems<T> = {[id: Id]: [T, number]};
 type CollectionRec<T> = {
     items?: Array<T>;
     deleted?: DeletedItems<T>;
-    itemsMap?: {[id: Id]: T};
 }
 type UpdateFn<V> = (oldItem: V) => V;
 
@@ -48,25 +47,21 @@ type ItemsMap<Item> = {
 
 // implements Collection<Item>
 export default class BaseCollection<Item: CollectionItem> {
-    _items: Array<Item>;
-    _deleted: DeletedItems<Item>;
-    _itemsMap: ItemsMap<Item>;
+    items: Array<Item>;
+    deleted: DeletedItems<Item>;
     length: number;
 
     createItem: (rec: ItemRec) => Item;
 
     constructor(rec?: CollectionRec<Item>|Array<ItemRec> = []) {
         if (Array.isArray(rec)) {
-            const {items, itemsMap} = this._recsToItems(rec)
-            this._items = items
-            this._itemsMap = itemsMap
-            this._deleted = {}
+            this.items = this._recsToItems(rec)
+            this.deleted = {}
         } else {
-            this._items = rec.items || []
-            this._deleted = rec.deleted || {}
-            this._itemsMap = rec.itemsMap || {}
+            this.items = rec.items || []
+            this.deleted = rec.deleted || {}
         }
-        this.length = this._items.length
+        this.length = this.items.length
     }
 
     _copy(rec: CollectionRec<Item>): Collection<Item> {
@@ -77,7 +72,7 @@ export default class BaseCollection<Item: CollectionItem> {
         items: Array<Item>,
         deleted: DeletedItems<Item>
     } {
-        const oldItems = this._items
+        const oldItems = this.items
         const items: Array<Item> = [];
         const deleted: DeletedItems<Item> = {};
         for (let i = 0, l = oldItems.length; i < l; i++) {
@@ -92,10 +87,7 @@ export default class BaseCollection<Item: CollectionItem> {
         return {items, deleted}
     }
 
-    _recsToItems(recs: Array<ItemRec>): {
-        items: Array<Item>,
-        itemsMap: ItemsMap<Item>
-    } {
+    _recsToItems(recs: Array<ItemRec>): Array<Item> {
         const items: Array<Item> = [];
         const itemsMap: ItemsMap<Item> = {};
         for (let i = 0, l = recs.length; i < l; i++) {
@@ -104,11 +96,11 @@ export default class BaseCollection<Item: CollectionItem> {
             items.push(item)
         }
 
-        return {itemsMap, items}
+        return items
     }
 
     toJS(): Array<Item> {
-        return this._items
+        return this.items
     }
 
     toJSON(): string {
@@ -116,31 +108,21 @@ export default class BaseCollection<Item: CollectionItem> {
     }
 
     fromArray(recs: Array<ItemRec>): Collection<Item> {
-        const {items, itemsMap} = this._recsToItems(recs)
         return this._copy({
-            items,
-            itemsMap,
+            items: this._recsToItems(recs),
             deleted: {}
         })
     }
 
     add(item: Item): Collection<Item> {
-        const itemsMap: ItemsMap<Item> = {...this._itemsMap};
-        itemsMap[item.id] = item
-
         return this._copy({
-            items: this._items.concat([item]),
-            itemsMap
+            items: this.items.concat([item])
         })
     }
 
     remove(id: Id): Collection<Item> {
-        const itemsMap: ItemsMap<Item> = {...this._itemsMap};
-        delete itemsMap[id]
-
         return this._copy({
             items: this._getDeleted(id).items,
-            itemsMap
         })
     }
 
@@ -151,26 +133,28 @@ export default class BaseCollection<Item: CollectionItem> {
     }
 
     restore(id: Id): Collection<Item> {
-        if (!this._deleted[id]) {
-            throw new Error('Element not exists in collection: ' + id)
+        if (!this.deleted[id]) {
+            throw new Error('Can\'t restore: element doesn\'t exists in collection: ' + id)
         }
-        const [item, index] = this._deleted[id]
-        delete this._deleted[id]
-        const items = [].concat(this._items)
+        const [item, index] = this.deleted[id]
+        delete this.deleted[id]
+        const items = [].concat(this.items)
         items.splice(index, 0, item)
         return this._copy({items})
     }
 
     get(id: Id): Item {
-        const item: Item = this._itemsMap[id];
-        if (!item) {
-            throw new Error('Element not exists in collection: ' + id)
+        const {items} = this
+        for (let i = 0, l = items.length; i < l; i++) {
+            if (items[i].id === id) {
+                return items[i]
+            }
         }
-        return item
+        throw new Error('Can\'t get: element doesn\'t exists in collection: ' + id)
     }
 
     update(id: Id, updateFn: UpdateFn<Item>): Collection<Item> {
-        const oldItems: Array<Item> = this._items;
+        const oldItems: Array<Item> = this.items;
         const items: Array<Item> = [];
         let isFound: boolean = false;
         let isChanged: boolean = false;
@@ -188,7 +172,7 @@ export default class BaseCollection<Item: CollectionItem> {
             }
         }
         if (!isFound) {
-            throw new Error('Element not exists in collection: ' + id)
+            throw new Error('Can\'t update: element doesn\'t exists in collection: ' + id)
         }
 
         return isChanged ? this._copy({items}) : this
@@ -199,15 +183,15 @@ export default class BaseCollection<Item: CollectionItem> {
     }
 
     find(findFn: FindFn<Item>): Item {
-        return this._items.find(findFn)
+        return this.items.find(findFn)
     }
 
     map<V>(mapFn: MapFn<Item, V>): Array<V> {
-        return this._items.map(mapFn)
+        return this.items.map(mapFn)
     }
 
     filter(filterFn: FilterFn<Item>): Collection<Item> {
-        const items = this._items.filter(filterFn)
+        const items = this.items.filter(filterFn)
 
         return items.length !== this.length
             ? this._copy({items})
@@ -215,7 +199,7 @@ export default class BaseCollection<Item: CollectionItem> {
     }
 
     sort(sortFn: SortFn<Item>): Collection<Item> {
-        const oldItems = this._items
+        const oldItems = this.items
         const items = oldItems.sort(sortFn)
 
         let isChanged: boolean = false;
@@ -234,15 +218,15 @@ export default class BaseCollection<Item: CollectionItem> {
     return {
         next() {
             let rec
-            if (this._pos < this._items.length) {
-                rec = {value: this._items[this._pos], done: false}
+            if (this._pos < this.items.length) {
+                rec = {value: this.items[this._pos], done: false}
                 this._pos++
             } else {
                 rec = {done: true}
             }
             return rec
         },
-        items: this._items,
+        items: this.items,
         _pos: 0
     }
 }
