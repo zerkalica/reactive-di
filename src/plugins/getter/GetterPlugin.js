@@ -33,7 +33,7 @@ class GetterDepImpl<V> {
 
         this.base.value = function getter(): V {
             return modelBase.value
-        }
+        };
     }
 
     resolve(): void {
