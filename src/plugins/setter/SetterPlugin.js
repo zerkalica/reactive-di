@@ -33,31 +33,43 @@ export class SetterDepImpl<V: Object, E> {
     invoker: SetterInvoker<V>;
     set: (value: V|Observable<V, E>) => void;
 
+    _valueRef: DepBase<V>;
+
     constructor(
         id: DepId,
         info: Info,
         target: DepFn<Setter<V>>,
-        set: (value: V|Observable<V, E>) => void
+        set: (value: V|Observable<V, E>) => void,
+        valueRef: DepBase<V>
     ) {
         this.kind = 'setter'
         this.base = new DepBaseImpl(id, info)
         this.invoker = new InvokerImpl(target)
         this.set = set
+        this._valueRef = valueRef
     }
 
     resolve(): void {
-        const {base, invoker} = this
+        const {base, invoker, _valueRef: valueRef} = this
         if (!base.isRecalculate) {
             return
         }
 
-        const args = resolveDeps(invoker.depArgs);
-        const fn: Setter<V> = fastCall(invoker.target, args.deps);
-        if (typeof fn !== 'function') {
-            throw new Error('No callable returns from dep ' + base.info.displayName)
+        const set = this.set
+        const depArgs = resolveDeps(invoker.depArgs);
+        const deps = depArgs.deps
+        const middlewares = depArgs.middlewares || []
+        function setter(...args: any): void {
+            const result = fastCall(invoker.target, [valueRef.value].concat(deps, args))
+            const middleareArgs = [result].concat(args)
+            for (let i = 0, l = middlewares.length; i < l; i++) {
+                fastCall(middlewares[i], middleareArgs)
+            }
+            set(result)
         }
+
         base.isRecalculate = false
-        base.value = createFunctionProxy(fn, [this.set].concat(args.middlewares || []))
+        base.value = setter
     }
 }
 
@@ -75,7 +87,8 @@ export default class SetterPlugin {
             base.id,
             base.info,
             base.target,
-            updater ? updater.subscribe : modelDep.set
+            updater ? updater.subscribe : modelDep.set,
+            modelDep.base
         );
         // TODO: wait resolving setter dependencies through meta promise
 

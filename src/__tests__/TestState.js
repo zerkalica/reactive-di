@@ -3,14 +3,18 @@
 import annotations from './annotations'
 
 const {
-    model
+    model,
+    setter
 } = annotations
 
 export function createState(): {
     A: Function,
     B: Function,
     C: Function,
-    AppState: Function
+    AppState: Function,
+    aSetter: Function,
+    bSetter: Function,
+    cSetter: Function
 } {
     class C {
         v: string = 'test';
@@ -56,5 +60,28 @@ export function createState(): {
     }
     model(AppState)
 
-    return {A, B, C, AppState}
+    function aSetter(a: A, b: B): A {
+        return a.copy({b})
+    }
+    setter(A)(aSetter)
+
+    function bSetter(b: B, v: number): B {
+        return b.copy({v})
+    }
+    setter(B)(bSetter)
+
+    function cSetter(c: C, v: string): C {
+        return c.copy({v})
+    }
+    setter(C)(cSetter)
+
+    return {
+        A,
+        B,
+        C,
+        AppState,
+        aSetter,
+        bSetter,
+        cSetter
+    }
 }

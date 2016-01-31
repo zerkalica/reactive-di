@@ -11,7 +11,6 @@ const {
     model,
     klass,
     factory,
-    setter
 } = annotations
 
 class AppState {}

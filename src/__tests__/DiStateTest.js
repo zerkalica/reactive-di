@@ -19,13 +19,7 @@ import type {Getter} from '../plugins/getter/getterInterfaces'
 
 describe('DiStateTest', () => {
     it('should handle a.b, if a changed', () => {
-        const {A, B, C, AppState} = createState()
-        function aSetter(a: Getter<A>): (b: B) => B {
-            return function aSet(b: B): B {
-                return a().copy({b})
-            }
-        }
-        setter(A, getter(A))(aSetter)
+        const {A, B, C, AppState, aSetter} = createState()
         const di = createPureStateDi(new AppState())
         const aSet = di.get(aSetter)
         const MyDep = factory(B)(v => v)
@@ -37,13 +31,7 @@ describe('DiStateTest', () => {
     })
 
     it('should handle a, if a.b changed', () => {
-        const {A, B, C, AppState} = createState()
-        function bSetter(b: B): (v: number) => B {
-            return function bSet(v: number): B {
-                return b.copy({v})
-            }
-        }
-        setter(B, B)(bSetter)
+        const {A, B, C, AppState, bSetter} = createState()
 
         const di = createPureStateDi(new AppState())
         const bSet = di.get(bSetter)
@@ -62,13 +50,7 @@ describe('DiStateTest', () => {
     })
 
     it('should not handle a.c, if a.b changed', () => {
-        const {A, B, C, AppState} = createState()
-        function bSetter(b: B): (v: number) => B {
-            return function bSet(v: number): B {
-                return b.copy({v})
-            }
-        }
-        setter(B, B)(bSetter)
+        const {A, B, C, AppState, bSetter} = createState()
 
         const di = createPureStateDi(new AppState())
         const bSet = di.get(bSetter)
@@ -80,13 +62,7 @@ describe('DiStateTest', () => {
     })
 
     it('should handle a.b, if a.b changed', () => {
-        const {A, B, C, AppState} = createState()
-        function bSetter(b: B): (v: number) => B {
-            return function bSet(v: number): B {
-                return b.copy({v})
-            }
-        }
-        setter(B, B)(bSetter)
+        const {A, B, C, AppState, bSetter} = createState()
 
         const di = createPureStateDi(new AppState())
         const bSet = di.get(bSetter)
