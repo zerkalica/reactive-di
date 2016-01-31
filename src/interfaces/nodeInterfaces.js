@@ -16,9 +16,16 @@ import type {LoaderDep} from '../plugins/loader/loaderInterfaces'
 import type {MetaDep} from '../plugins/meta/metaInterfaces'
 import type {ModelDep} from '../plugins/model/modelInterfaces'
 import type {SetterDep} from '../plugins/setter/setterInterfaces'
+import type {GetterDep} from '../plugins/getter/getterInterfaces'
 
-
-export type AnyDep = ClassDep | FactoryDep | LoaderDep | MetaDep | ModelDep | SetterDep;
+export type AnyDep =
+    ClassDep
+    | FactoryDep
+    | LoaderDep
+    | MetaDep
+    | ModelDep
+    | SetterDep
+    | GetterDep;
 
 export type Cacheable = {
     isRecalculate: boolean;

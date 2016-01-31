@@ -9,6 +9,7 @@ import type {LoaderAnnotation} from '../plugins/loader/loaderInterfaces'
 import type {MetaAnnotation} from '../plugins/meta/metaInterfaces'
 import type {ModelAnnotation, AsyncModelAnnotation} from '../plugins/model/modelInterfaces'
 import type {SetterAnnotation} from '../plugins/setter/setterInterfaces'
+import type {GetterAnnotation} from '../plugins/getter/getterInterfaces'
 
 export type DepId = string;
 export type Tag = string;
@@ -50,4 +51,5 @@ export type AnyAnnotation =
     | MetaAnnotation
     | ModelAnnotation
     | AsyncModelAnnotation
+    | GetterAnnotation
     | SetterAnnotation;

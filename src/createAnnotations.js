@@ -5,6 +5,7 @@ import FactoryAnnotationImpl from './plugins/factory/FactoryAnnotationImpl'
 import LoaderAnnotationImpl from './plugins/loader/LoaderAnnotationImpl'
 import MetaAnnotationImpl from './plugins/meta/MetaAnnotationImpl'
 import SetterAnnotationImpl from './plugins/setter/SetterAnnotationImpl'
+import GetterAnnotationImpl from './plugins/getter/GetterAnnotationImpl'
 import type {
     DepItem,
     DepFn,
@@ -68,6 +69,14 @@ export default function createAnnotations(
         meta<T: Dependency>(target: T): () => void {
             function dummyTargetId(): void {}
             return driver.annotate((dummyTargetId: any), new MetaAnnotationImpl(
+                target,
+                tags
+            ))
+        },
+
+        getter<T: Dependency>(target: T): () => void {
+            function dummyTargetId(): void {}
+            return driver.annotate((dummyTargetId: any), new GetterAnnotationImpl(
                 target,
                 tags
             ))

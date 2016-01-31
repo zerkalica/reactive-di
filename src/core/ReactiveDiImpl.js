@@ -89,7 +89,8 @@ export default class ReactiveDiImpl {
 
     get(annotatedDep: Dependency): any {
         const dep: AnyDep = this._resolver.resolve(annotatedDep);
+        const {base} = dep
         dep.resolve()
-        return dep.base.value
+        return base.value
     }
 }

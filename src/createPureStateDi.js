@@ -9,6 +9,8 @@ import MetaPlugin from './plugins/meta/MetaPlugin'
 import ModelPlugin from './plugins/model/ModelPlugin'
 import ReactiveDiImpl from './core/ReactiveDiImpl'
 import SetterPlugin from './plugins/setter/SetterPlugin'
+import GetterPlugin from './plugins/getter/GetterPlugin'
+
 import SymbolMetaDriver from './drivers/SymbolMetaDriver'
 import type {
     AnnotationDriver,
@@ -46,6 +48,7 @@ export default function createPureStateDi<T: Object>(
                 factory: new FactoryPlugin(),
                 loader: new LoaderPlugin(),
                 setter: new SetterPlugin(),
+                getter: new GetterPlugin(),
                 model: new ModelPlugin(),
                 meta: new MetaPlugin()
             }

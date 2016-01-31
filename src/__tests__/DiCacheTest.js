@@ -14,7 +14,7 @@ const {
     setter
 } = annotations
 
-describe('DiStateTest', () => {
+describe('DiCacheTest', () => {
     it('should hit from cache, if no changes', () => {
         class A {
             b: number = 123;
