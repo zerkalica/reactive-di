@@ -79,7 +79,11 @@ export default class ReactiveDiImpl {
         const {_resolver: resolver} = this
         const dep: AnyDep = resolver.resolve(annotatedDep);
         const removeListener: () => void = this._listeners.add(dep);
-
+        // If facet subscribed first time and depends on state a.b
+        // and we change another branch in state: a.c,
+        // facet will be called - because it never called before and cache is empty.
+        // Prevent calling facet after first subscription:
+        dep.base.isRecalculate = false
         return new DiSubscription(dep.base.subscriptions, removeListener)
     }
 

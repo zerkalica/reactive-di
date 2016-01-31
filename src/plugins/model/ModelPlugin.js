@@ -2,11 +2,11 @@
 
 import ModelDepImpl from './impl/ModelDepImpl'
 import EntityMetaImpl, {updateMeta} from '../model/EntityMetaImpl'
+import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     DepId,
     Info
 } from '../../interfaces/annotationInterfaces'
-import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     Cursor
 } from '../../interfaces/modelInterfaces'

@@ -177,6 +177,7 @@ describe('DiStateTest', () => {
             }
         }
         model(AppState)
+
         function aSetter(a: A): (rec: {b: B, c: C}) => A {
             return function aSet(rec: {b: B, c: C}): A {
                 return a.copy(rec)

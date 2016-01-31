@@ -16,7 +16,6 @@ export class DepBaseImpl<V> {
     id: DepId;
     info: Info;
     subscriptions: Array<Subscription>;
-    resolve: () => void;
 
     constructor(
         id: DepId,
