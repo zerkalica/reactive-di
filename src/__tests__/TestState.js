@@ -1,63 +1,60 @@
 /* @flow */
 
 import annotations from './annotations'
-import merge from '../utils/merge'
-import BaseCollection from '../utils/BaseCollection'
-const {model} = annotations
 
-type UserRec = {
-    id?: string,
-    name?: string
-};
+const {
+    model
+} = annotations
 
-export class User {
-    id: string;
-    name: string;
-
-    constructor(rec: UserRec = {}) {
-        this.id = rec.id || '1'
-        this.name = rec.name || 'initial name'
+export function createState(): {
+    A: Function,
+    B: Function,
+    C: Function,
+    AppState: Function
+} {
+    class C {
+        v: string = 'test';
+        copy(rec: {v?: string}): C {
+            const next = new C()
+            next.v = rec.v || this.v
+            return next
+        }
     }
+    model(C)
 
-    copy(rec: UserRec): User {
-        return merge(this, rec)
+    class B {
+        v: number = 123;
+        copy(rec: {v?: number}): B {
+            const next = new B()
+            next.v = rec.v || this.v
+            return next
+        }
     }
+    model(B)
+
+    class A {
+        b: B = new B();
+        c: C = new C();
+        v: number = 123;
+        copy(rec: {b?: B, c?: C, v?: number}): A {
+            const next = new A()
+            next.b = rec.b || this.b
+            next.c = rec.c || this.c
+            next.v = rec.v || this.v
+            return next
+        }
+    }
+    model(A)
+
+    class AppState {
+        a: A = new A();
+        copy(rec: {a?: A}): AppState {
+            const next = new AppState()
+            next.a = rec.a || this.a
+            return next
+        }
+    }
+    model(AppState)
+
+    return {A, B, C, AppState}
 }
-
-export class CurrentUser extends User {
-}
-model(CurrentUser)
-
-type UserStoreRec = {
-    currentUser?: CurrentUser
-};
-
-export class UserStore {
-    currentUser: CurrentUser;
-
-    constructor(rec: UserStoreRec = {}) {
-        this.currentUser = rec.currentUser || new CurrentUser()
-    }
-
-    copy(rec: UserStoreRec): UserStore {
-        return merge(this, rec)
-    }
-}
-model(UserStore)
-
-type AppStateRec = {
-    userStore?: UserStore
-};
-
-export class AppState {
-    userStore: UserStore;
-
-    constructor(rec: AppStateRec = {}) {
-        this.userStore = rec.userStore || new UserStore()
-    }
-
-    copy(rec: AppStateRec): AppState {
-        return merge(this, rec)
-    }
-}
-model(AppState)
