@@ -37,7 +37,7 @@ export default function createPureStateDi<T: Object>(
     function createResolver(notify: Notify): AnnotationResolver {
         const driver: AnnotationDriver = new SymbolMetaDriver();
 
-        return new AnnotationResolverImpl(
+        const resolver: AnnotationResolver = new AnnotationResolverImpl(
             driver,
             middlewares || new Map(),
             overrides || new Map(),
@@ -52,7 +52,9 @@ export default function createPureStateDi<T: Object>(
                 model: new ModelPlugin(),
                 meta: new MetaPlugin()
             }
-        )
+        );
+        resolver.resolve(state.constructor)
+        return resolver
     }
 
     return new ReactiveDiImpl(createResolver)

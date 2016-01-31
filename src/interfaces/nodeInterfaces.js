@@ -35,8 +35,8 @@ export type DepBase<V> = {
     isRecalculate: boolean;
     value: V;
     id: DepId;
-    info: Info;
 
+    info: Info;
     relations: Array<DepId>;
     subscriptions: Array<Subscription>;
 }

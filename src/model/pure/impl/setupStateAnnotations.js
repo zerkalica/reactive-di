@@ -1,7 +1,13 @@
 /* @flow */
 
-import type {AnnotationDriver} from '../../../interfaces/annotationInterfaces'
-import type {FromJS, SimpleMap} from '../../../interfaces/modelInterfaces'
+import type {
+    Dependency,
+    AnnotationDriver
+} from '../../../interfaces/annotationInterfaces'
+import type {
+    FromJS,
+    SimpleMap
+} from '../../../interfaces/modelInterfaces'
 import type {ModelAnnotation} from '../../../plugins/model/modelInterfaces'
 
 type PropCreator<V: Object, N: Object> = (value: V) => N;
@@ -39,7 +45,11 @@ export default function setupStateAnnotations<T: Object>(
             const prop: any = obj[key];
             if (prop !== null && typeof prop === 'object') {
                 info.childs.push(prop.constructor)
-                propCreators[key] = setupStateAnnotations(driver, prop, statePath.concat(key))
+                propCreators[key] = setupStateAnnotations(
+                    driver,
+                    prop,
+                    statePath.concat(key)
+                )
             }
         }
         const fromJS: FromJS<T> = createFromJS(obj.constructor, propCreators);

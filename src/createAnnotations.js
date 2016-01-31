@@ -25,6 +25,7 @@ export type Annotations = {
     klass(...deps: Array<DepItem>): <P: Object>(target: Class<P>) => Class<P>;
     factory(...deps: Array<DepItem>): <T: DepFn>(target: T) => T;
     loader(...deps: Array<DepItem>): <V: Object, E>(target: Loader<V, E>) => Loader<V, E>;
+    getter<T: Dependency>(target: T): () => void;
     meta<T: Dependency>(target: T): () => void;
     model<V: Object>(target: Class<V>): Class<V>;
     setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: DepFn<Setter<V>>) => DepFn<Setter<V>>;

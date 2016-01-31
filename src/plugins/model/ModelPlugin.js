@@ -58,22 +58,26 @@ export default class ModelPlugin {
             loader
         );
         acc.addRelation(base.id)
-        acc.begin(dep)
+
         const {childs} = info
+        acc.begin(dep)
         for (let i = 0, l = childs.length; i < l; i++) {
             acc.resolve(childs[i])
         }
         acc.end(dep)
     }
 
-    finalize(dep: ModelDep, target: AnyDep): void {
+    finalize(dep: ModelDep, child: AnyDep): void {
         const {base} = dep
-        switch (target.kind) {
+        switch (child.kind) {
             case 'model':
-                target.dataOwners.push((base: Cacheable))
+                const {base: childBase, dataOwners: childOwners} = child
+                dep.dataOwners.push(childBase)
+                childOwners.push((base: Cacheable))
+                childBase.relations.push(base.id)
                 break
             default:
-                throw new TypeError('Unhandlered dep type: ' + target.kind)
+                throw new TypeError('Unhandlered dep type: ' + child.kind)
         }
     }
 }
