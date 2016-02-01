@@ -26,7 +26,7 @@ import type {
     SetterAnnotation,
     SetterInvoker
 } from './setterInterfaces'
-import type {ModelDep} from '../model/modelInterfaces'
+import type {AnyModelDep} from '../model/modelInterfaces'
 
 // implements SetterDep
 export class SetterDepImpl<V: Object, E> {
@@ -35,13 +35,13 @@ export class SetterDepImpl<V: Object, E> {
 
     _invoker: SetterInvoker<V>;
     _value: (...args: any) => void;
-    _model: ModelDep<V, E>;
+    _model: AnyModelDep<V, E>;
 
     constructor(
         id: DepId,
         info: Info,
         target: DepFn<SetterResult<V>>,
-        model: ModelDep<V, E>
+        model: AnyModelDep<V, E>
     ) {
         this.kind = 'setter'
         this.base = new DepBaseImpl(id, info)
@@ -87,10 +87,9 @@ export default class SetterPlugin {
     create<V: Object, E>(annotation: SetterAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
         const modelDep: AnyDep = acc.newRoot().resolve(annotation.model);
-        if (modelDep.kind !== 'model') {
+        if (modelDep.kind !== 'model' && modelDep.kind !== 'asyncmodel') {
             throw new Error('Not a model dep type: ' + modelDep.kind)
         }
-        const {updater} = modelDep
         const dep: SetterDep<V, E> = new SetterDepImpl(
             base.id,
             base.info,

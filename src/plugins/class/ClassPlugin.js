@@ -3,7 +3,7 @@
 import defaultFinalizer from '../factory/defaultFinalizer'
 import resolveDeps from '../factory/resolveDeps'
 import InvokerImpl from '../factory/InvokerImpl'
-import EntityMetaImpl, {updateMeta} from '../model/EntityMetaImpl'
+import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     DepFn,
     DepId,
@@ -14,15 +14,10 @@ import type {
     AnyDep,
     DepBase
 } from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces'
 import type {AnnotationResolver} from '../../interfaces/nodeInterfaces'
+import type {Plugin} from '../../interfaces/pluginInterfaces'
 import {createObjectProxy} from '../../utils/createProxy'
 import {fastCreateObject} from '../../utils/fastCall'
-import type {
-    AsyncUpdater,
-    EntityMeta
-} from '../model/modelInterfaces'
-import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     ClassDep,
     ClassAnnotation,

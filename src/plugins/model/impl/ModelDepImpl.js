@@ -1,6 +1,5 @@
 /* @flow */
 
-import AsyncUpdaterImpl from './AsyncUpdaterImpl'
 import type {
     DepId,
     Info
@@ -15,13 +14,11 @@ import type {
     Cacheable,
     DepBase
 } from '../../../interfaces/nodeInterfaces'
-import type {Observable} from '../../../interfaces/observableInterfaces'
 import type {
     FactoryDep
 } from '../../factory/factoryInterfaces'
 import type {
     ModelDep,
-    AsyncUpdater
 } from '../modelInterfaces'
 
 // implements ModelDep
@@ -31,10 +28,6 @@ export default class ModelDepImpl<V: Object, E> {
 
     fromJS: FromJS<V>;
     dataOwners: Array<Cacheable>;
-
-    set: (value: V) => void;
-    updater: ?AsyncUpdater<V, E>;
-    _loader: ?FactoryDep<Observable<V, E>>;
 
     _cursor: Cursor<V>;
     _fromJS: FromJS<V>;
@@ -47,27 +40,15 @@ export default class ModelDepImpl<V: Object, E> {
         info: Info,
         cursor: Cursor<V>,
         fromJS: FromJS<V>,
-        notify: Notify,
-        isAsync: boolean = false,
-        loader: ?FactoryDep<Observable<V, E>> = null
+        notify: Notify
     ) {
         this.kind = 'model'
-        this._loader = loader
         const base = this.base = new DepBaseImpl(id, info)
         this._cursor = cursor
         this._fromJS = fromJS
         this._notify = notify
 
         this.dataOwners = []
-
-        if (isAsync) {
-            this.updater = new AsyncUpdaterImpl(
-                cursor.set,
-                base,
-                notify,
-                this.dataOwners
-            )
-        }
     }
 
     set(value: V): void {
@@ -82,17 +63,13 @@ export default class ModelDepImpl<V: Object, E> {
     }
 
     setFromJS(data: Object): void {
-        this._cursor.set(this._fromJS(data))
+        this.set(this._fromJS(data))
     }
 
     resolve(): V {
-        const {base, updater, _loader: loader} = this
+        const {base} = this
         if (!base.isRecalculate) {
             return this._value
-        }
-        if (updater && loader && !updater.isSubscribed) {
-            const load: Observable<V, E> = loader.resolve();
-            updater.subscribe(load)
         }
         base.isRecalculate = false
         this._value = this._cursor.get()

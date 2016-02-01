@@ -1,5 +1,5 @@
 /* @flow */
-import EntityMetaImpl, {updateMeta} from '../model/EntityMetaImpl'
+import EntityMetaImpl, {updateMeta} from '../asyncmodel/EntityMetaImpl'
 import type {
     DepId,
     Info
@@ -12,9 +12,9 @@ import type {
 } from '../../interfaces/nodeInterfaces'
 import type {Plugin} from '../../interfaces/pluginInterfaces'
 import type {
-    AsyncUpdater,
-    EntityMeta
-} from '../model/modelInterfaces'
+    EntityMeta,
+    MetaSource
+} from '../asyncmodel/asyncmodelInterfaces'
 import type {
     MetaDep,
     MetaAnnotation
@@ -24,7 +24,7 @@ import type {
 class MetaDepImpl<E> {
     kind: 'meta';
     base: DepBase;
-    sources: Array<AsyncUpdater>;
+    sources: Array<MetaSource>;
     _value: EntityMeta<E>;
 
     constructor(
@@ -51,7 +51,7 @@ class MetaDepImpl<E> {
     }
 }
 
-// depends on model
+// depends on asyncmodel
 // implements Plugin
 export default class MetaPlugin {
     create<E>(annotation: MetaAnnotation<E>, acc: AnnotationResolver): void {
@@ -66,9 +66,9 @@ export default class MetaPlugin {
     }
 
     finalize<E>(dep: MetaDep<E>, target: AnyDep): void {
-        if (target.kind === 'model' && target.updater) {
-            target.updater.metaOwners.push(dep.base)
-            dep.sources.push(((target.updater: any): AsyncUpdater))
+        if (target.kind === 'asyncmodel') {
+            target.metaOwners.push(dep.base)
+            dep.sources.push((target: MetaSource))
         }
     }
 }

@@ -11,6 +11,7 @@ import type {ModelDep} from '../model/modelInterfaces'
 export default function defaultFinalizer(dep: AnyDep, target: AnyDep): void {
     const {base} = dep
     switch(target.kind) {
+        case 'asyncmodel':
         case 'model':
             target.dataOwners.push((base: Cacheable))
             if (target.updater) {

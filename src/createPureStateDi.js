@@ -7,6 +7,7 @@ import FactoryPlugin from './plugins/factory/FactoryPlugin'
 import LoaderPlugin from './plugins/loader/LoaderPlugin'
 import MetaPlugin from './plugins/meta/MetaPlugin'
 import ModelPlugin from './plugins/model/ModelPlugin'
+import AsyncModelPlugin from './plugins/asyncmodel/AsyncModelPlugin'
 import ReactiveDiImpl from './core/ReactiveDiImpl'
 import SetterPlugin from './plugins/setter/SetterPlugin'
 import GetterPlugin from './plugins/getter/GetterPlugin'
@@ -50,6 +51,7 @@ export default function createPureStateDi<T: Object>(
                 setter: new SetterPlugin(),
                 getter: new GetterPlugin(),
                 model: new ModelPlugin(),
+                asyncmodel: new AsyncModelPlugin(),
                 meta: new MetaPlugin()
             }
         );

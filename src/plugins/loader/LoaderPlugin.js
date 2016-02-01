@@ -3,37 +3,38 @@
 import defaultFinalizer from '../factory/defaultFinalizer'
 import resolveDeps from '../factory/resolveDeps'
 import InvokerImpl from '../factory/InvokerImpl'
-import EntityMetaImpl, {updateMeta} from '../model/EntityMetaImpl'
+import MetaAnnotationImpl from '../meta/MetaAnnotationImpl'
+import EntityMetaImpl, {updateMeta} from '../asyncmodel/EntityMetaImpl'
+import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     DepFn,
     DepId,
     Info
 } from '../../interfaces/annotationInterfaces'
-import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
+    DepArgs,
     AnyDep,
     DepBase,
     AnnotationResolver,
 } from '../../interfaces/nodeInterfaces'
+import type {Observable} from '../../interfaces/observableInterfaces'
 import type {Plugin} from '../../interfaces/pluginInterfaces'
 import {createFunctionProxy} from '../../utils/createProxy'
 import {fastCall} from '../../utils/fastCall'
-import type {EntityMeta} from '../model/modelInterfaces'
+import type {EntityMeta} from '../asyncmodel/asyncmodelInterfaces'
+import type {MetaDep} from '../meta/metaInterfaces'
 import type {
     LoaderDep,
     LoaderAnnotation,
     LoaderInvoker
 } from './loaderInterfaces'
-import type {MetaDep} from '../meta/metaInterfaces'
-import MetaAnnotationImpl from '../meta/MetaAnnotationImpl'
-import type {Observable} from '../../interfaces/observableInterfaces'
 
 // implements LoaderDep
 export class LoaderDepImpl<V: Object, E> {
     kind: 'loader';
     base: DepBase;
-    meta: MetaDep<E>;
-    invoker: LoaderInvoker<V, E>;
+    _meta: MetaDep<E>;
+    _invoker: LoaderInvoker<V, E>;
     _value: Observable<V, E>;
 
     constructor(
@@ -43,11 +44,11 @@ export class LoaderDepImpl<V: Object, E> {
     ) {
         this.kind = 'loader'
         this.base = new DepBaseImpl(id, info)
-        this.invoker = new InvokerImpl(target)
+        this._invoker = new InvokerImpl(target)
     }
 
     resolve(): Observable<V, E> {
-        const {base, invoker, meta} = this
+        const {base, _invoker: invoker, _meta: meta} = this
         if (!base.isRecalculate) {
             return this._value
         }
@@ -68,6 +69,11 @@ export class LoaderDepImpl<V: Object, E> {
 
         return fn
     }
+
+    setDepArgs(depArgs: DepArgs, meta: MetaDep<E>): void {
+        this._invoker.depArgs = depArgs
+        this._meta = meta
+    }
 }
 
 // depends on meta
@@ -82,8 +88,7 @@ export default class LoaderPlugin {
         if (metaDep.kind !== 'meta') {
             throw new Error('Not a meta type: ' + metaDep.kind)
         }
-        dep.meta = metaDep
-        dep.invoker.depArgs = acc.getDeps(annotation.deps, base.target, info.tags)
+        dep.setDepArgs(acc.getDeps(annotation.deps, base.target, info.tags), metaDep)
         acc.end(dep)
     }
 

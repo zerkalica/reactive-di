@@ -16,19 +16,19 @@ import type {
     GetterDep,
     GetterAnnotation
 } from './getterInterfaces'
-import type {ModelDep} from '../model/modelInterfaces'
+import type {AnyModelDep} from '../model/modelInterfaces'
 
 // implements GetterDep
 class GetterDepImpl<V: Object, E> {
     kind: 'getter';
     base: DepBase;
-    _model: ModelDep<V, E>;
+    _model: AnyModelDep<V, E>;
     _value: Getter<V>;
 
     constructor(
         id: DepId,
         info: Info,
-        model: ModelDep<V, E>
+        model: AnyModelDep<V, E>
     ) {
         this.kind = 'getter'
         this.base = new DepBaseImpl(id, info)
@@ -43,13 +43,13 @@ class GetterDepImpl<V: Object, E> {
     }
 }
 
-// depends on model
+// depends on model, asyncmodel
 // implements Plugin
 export default class GetterPlugin {
     create<V: Object, E>(annotation: GetterAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
         const modelDep: AnyDep = acc.newRoot().resolve(base.target);
-        if (modelDep.kind !== 'model') {
+        if (modelDep.kind !== 'model' && modelDep.kind !== 'asyncmodel') {
             throw new Error('Not a model dep type: ' + modelDep.kind)
         }
 

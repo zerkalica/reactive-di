@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {EntityMeta} from './modelInterfaces'
+import type {EntityMeta} from './asyncmodelInterfaces'
 
 type EntityMetaRec<E> = {
     pending?: boolean;

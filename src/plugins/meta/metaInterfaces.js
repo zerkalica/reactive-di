@@ -2,7 +2,7 @@
 
 import type {AnnotationBase, Dependency} from '../../interfaces/annotationInterfaces'
 import type {DepBase} from '../../interfaces/nodeInterfaces'
-import type {EntityMeta, AsyncUpdater} from '../model/modelInterfaces'
+import type {EntityMeta, MetaSource} from '../asyncmodel/asyncmodelInterfaces'
 
 export type MetaAnnotation<V> = {
     kind: 'meta';
@@ -12,6 +12,6 @@ export type MetaAnnotation<V> = {
 export type MetaDep<E> = {
     kind: 'meta';
     base: DepBase;
-    sources: Array<AsyncUpdater>;
+    sources: Array<MetaSource>;
     resolve(): EntityMeta<E>;
 }

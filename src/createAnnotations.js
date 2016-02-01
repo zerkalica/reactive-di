@@ -12,12 +12,10 @@ import type {
     Dependency,
     AnnotationDriver
 } from './interfaces/annotationInterfaces'
-import type {Loader} from './plugins/model/modelInterfaces'
+import type {Loader} from './plugins/asyncmodel/asyncmodelInterfaces'
 import type {SetterResult} from './plugins/setter/setterInterfaces'
-import {
-    AsyncModelAnnotationImpl,
-    ModelAnnotationImpl
-} from './plugins/model/ModelAnnotationImpl'
+import ModelAnnotationImpl from './plugins/model/ModelAnnotationImpl'
+import AsyncModelAnnotationImpl from './plugins/asyncmodel/AsyncModelAnnotationImpl'
 
 /* eslint-disable no-undef */
 
@@ -28,6 +26,7 @@ export type Annotations = {
     getter<T: Dependency>(target: T): () => void;
     meta<T: Dependency>(target: T): () => void;
     model<V: Object>(target: Class<V>): Class<V>;
+    asyncmodel<V: Object, E>(loader?: ?Loader<V, E>): (target: Class<V>) => Class<V>;
     setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: DepFn<SetterResult<V>>) => DepFn<SetterResult<V>>;
 }
 

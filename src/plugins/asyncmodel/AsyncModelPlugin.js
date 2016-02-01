@@ -1,7 +1,13 @@
 /* @flow */
 
-import modelFinalizer from './modelFinalizer'
-import ModelDepImpl from './impl/ModelDepImpl'
+import modelFinalizer from '../model/modelFinalizer'
+import AsyncModelDepImpl from './impl/AsyncModelDepImpl'
+import EntityMetaImpl, {updateMeta} from './EntityMetaImpl'
+import {DepBaseImpl} from '../../core/pluginImpls'
+import type {
+    DepId,
+    Info
+} from '../../interfaces/annotationInterfaces'
 import type {
     Cursor
 } from '../../interfaces/modelInterfaces'
@@ -20,14 +26,16 @@ import type {
     FactoryDep
 } from '../factory/factoryInterfaces'
 import type {
-    ModelDep,
-    ModelAnnotation,
-} from './modelInterfaces'
+    EntityMeta,
+    AsyncModelDep,
+    AsyncModelAnnotation
+} from './asyncmodelInterfaces'
 
+// depends on factory
 // implements Plugin
-export default class ModelPlugin {
+export default class AsyncModelPlugin {
     create<V: Object, E>(
-        annotation: ModelAnnotation<V>,
+        annotation: AsyncModelAnnotation<V, E>,
         acc: AnnotationResolver
     ): void {
         const {base, info} = annotation
@@ -37,12 +45,13 @@ export default class ModelPlugin {
             ? (acc.newRoot().resolve(annotation.loader, acc): any)
             : null;
 
-        const dep: ModelDep<V> = new ModelDepImpl(
+        const dep: AsyncModelDep<V, E> = new AsyncModelDepImpl(
             base.id,
             base.info,
             cursor,
             info.fromJS,
-            acc.notify
+            acc.notify,
+            loader
         );
         acc.addRelation(base.id)
 
@@ -54,7 +63,7 @@ export default class ModelPlugin {
         acc.end(dep)
     }
 
-    finalize(dep: ModelDep, child: AnyDep): void {
+    finalize(dep: AsyncModelDep, child: AnyDep): void {
         modelFinalizer(dep, child)
     }
 }

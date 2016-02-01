@@ -15,6 +15,7 @@ import type {FactoryDep} from '../plugins/factory/factoryInterfaces'
 import type {LoaderDep} from '../plugins/loader/loaderInterfaces'
 import type {MetaDep} from '../plugins/meta/metaInterfaces'
 import type {ModelDep} from '../plugins/model/modelInterfaces'
+import type {AsyncModelDep} from '../plugins/asyncmodel/asyncmodelInterfaces'
 import type {SetterDep} from '../plugins/setter/setterInterfaces'
 import type {GetterDep} from '../plugins/getter/getterInterfaces'
 
@@ -23,6 +24,7 @@ export type AnyDep =
     | FactoryDep
     | LoaderDep
     | MetaDep
+    | AsyncModelDep
     | ModelDep
     | SetterDep
     | GetterDep;
