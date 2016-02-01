@@ -12,17 +12,10 @@ import type {
 } from '../../interfaces/nodeInterfaces'
 import type {DepArgs} from '../../interfaces/nodeInterfaces'
 
-export type Invoker<V, M> = {
-    target: V;
-    depArgs: DepArgs<M>;
-}
-
-export type FactoryInvoker<V> = Invoker<DepFn<V>, FactoryDep>;
-export type FactoryDep<V: any> = {
-    kind: 'factory';
-    base: DepBase<V>;
-    invoker: FactoryInvoker<V>;
-    resolve: () => void;
+export type Hooks<T> = {
+    onUnmount: () => void;
+    onMount: () => void;
+    onUpdate: (currentValue: T, nextValue: T) => void;
 }
 
 export type FactoryAnnotation<V> = {
@@ -31,8 +24,15 @@ export type FactoryAnnotation<V> = {
     deps: ?Deps;
 }
 
-export type Hooks<T> = {
-    onUnmount: () => void;
-    onMount: () => void;
-    onUpdate: (currentValue: T, nextValue: T) => void;
+export type Invoker<V, M> = {
+    target: V;
+    depArgs: DepArgs<M>;
+}
+
+export type FactoryInvoker<V> = Invoker<DepFn<V>, FactoryDep>;
+export type FactoryDep<V: any> = {
+    kind: 'factory';
+    base: DepBase;
+    resolve(): V;
+    setDepArgs(depArgs: DepArgs): void;
 }

@@ -23,8 +23,9 @@ import type {
 // implements MetaDep
 class MetaDepImpl<E> {
     kind: 'meta';
-    base: DepBase<EntityMeta<E>>;
+    base: DepBase;
     sources: Array<AsyncUpdater>;
+    _value: EntityMeta<E>;
 
     constructor(
         id: DepId,
@@ -35,17 +36,18 @@ class MetaDepImpl<E> {
         this.sources = []
     }
 
-    resolve(): void {
+    resolve(): EntityMeta<E> {
         const {base, sources} = this
         if (!base.isRecalculate) {
-            return
+            return this._value
         }
         const meta: EntityMeta = new EntityMetaImpl();
         for (let i = 0, l = sources.length; i < l; i++) {
             updateMeta(meta, sources[i].meta)
         }
-        base.value = merge(base.value, meta)
+        this._value = merge(this._value, meta)
         base.isRecalculate = false
+        return this._value
     }
 }
 

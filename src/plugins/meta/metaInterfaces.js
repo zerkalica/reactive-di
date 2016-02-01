@@ -11,7 +11,7 @@ export type MetaAnnotation<V> = {
 
 export type MetaDep<E> = {
     kind: 'meta';
-    base: DepBase<EntityMeta<E>>;
+    base: DepBase;
     sources: Array<AsyncUpdater>;
-    resolve(): void;
+    resolve(): EntityMeta<E>;
 }

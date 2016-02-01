@@ -27,15 +27,20 @@ import type {
 // implements ModelDep
 export default class ModelDepImpl<V: Object, E> {
     kind: 'model';
-    base: DepBase<V>;
+    base: DepBase;
 
     fromJS: FromJS<V>;
     dataOwners: Array<Cacheable>;
-    get: () => V;
 
     set: (value: V) => void;
     updater: ?AsyncUpdater<V, E>;
-    loader: ?FactoryDep<Observable<V, E>>;
+    _loader: ?FactoryDep<Observable<V, E>>;
+
+    _cursor: Cursor<V>;
+    _fromJS: FromJS<V>;
+    _notify: Notify;
+
+    _value: V;
 
     constructor(
         id: DepId,
@@ -47,42 +52,51 @@ export default class ModelDepImpl<V: Object, E> {
         loader: ?FactoryDep<Observable<V, E>> = null
     ) {
         this.kind = 'model'
-        this.loader = loader
-        const base = this.base = new DepBaseImpl(id, info, cursor.get())
+        this._loader = loader
+        const base = this.base = new DepBaseImpl(id, info)
+        this._cursor = cursor
+        this._fromJS = fromJS
+        this._notify = notify
 
-        this.fromJS = fromJS
-        const dataOwners = this.dataOwners = []
-        this.get = cursor.get
+        this.dataOwners = []
 
-        this.set = function set(value: V): void {
-            if (cursor.set(value)) {
-                base.value = value
-                for (let i = 0, l = dataOwners.length; i < l; i++) {
-                    dataOwners[i].isRecalculate = true
-                }
-                notify()
-            }
-        }
         if (isAsync) {
             this.updater = new AsyncUpdaterImpl(
                 cursor.set,
                 base,
                 notify,
-                dataOwners
+                this.dataOwners
             )
         }
     }
 
-    resolve(): void {
-        const {base, updater, loader} = this
+    set(value: V): void {
+        if (this._cursor.set(value)) {
+            this._value = value
+            const {dataOwners} = this
+            for (let i = 0, l = dataOwners.length; i < l; i++) {
+                dataOwners[i].isRecalculate = true
+            }
+            this._notify()
+        }
+    }
+
+    setFromJS(data: Object): void {
+        this._cursor.set(this._fromJS(data))
+    }
+
+    resolve(): V {
+        const {base, updater, _loader: loader} = this
         if (!base.isRecalculate) {
-            return
+            return this._value
         }
         if (updater && loader && !updater.isSubscribed) {
-            loader.resolve()
-            updater.subscribe((loader.base.value: Observable<V, E>))
+            const load: Observable<V, E> = loader.resolve();
+            updater.subscribe(load)
         }
         base.isRecalculate = false
-        base.value = this.get()
+        this._value = this._cursor.get()
+
+        return this._value
     }
 }

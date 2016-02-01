@@ -6,7 +6,7 @@ import type {
     AnnotationBase,
     Dependency
 } from '../../interfaces/annotationInterfaces'
-import type {DepBase} from '../../interfaces/nodeInterfaces'
+import type {DepBase, DepArgs} from '../../interfaces/nodeInterfaces'
 import type {Observable} from '../../interfaces/observableInterfaces'
 import type {
     FactoryDep,
@@ -14,20 +14,18 @@ import type {
 } from '../factory/factoryInterfaces'
 
 export type SetterResult<V> = Promise<V> | V;
-export type Setter<V> = DepFn<SetterResult<V>>;
 
-export type SetterInvoker<V> = Invoker<DepFn<Setter<V>>, FactoryDep>;
+export type SetterInvoker<V> = Invoker<DepFn<SetterResult<V>>, FactoryDep>;
 export type SetterDep<V: Object, E> = {
     kind: 'setter';
-    base: DepBase<Setter<V>>;
-    invoker: SetterInvoker<V>;
-    set: (value: V|Observable<V, E>) => void;
-    resolve: () => void;
+    base: DepBase;
+    resolve(): (...args: any) => void;
+    setDepArgs(depArgs: DepArgs): void;
 }
 
 export type SetterAnnotation<V: Object> = {
     kind: 'setter';
-    base: AnnotationBase<DepFn<Setter<V>>>;
+    base: AnnotationBase<DepFn<SetterResult<V>>>;
     deps: ?Deps;
     model: Class<V>;
 }

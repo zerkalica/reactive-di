@@ -10,6 +10,7 @@ import type {
 } from '../../interfaces/annotationInterfaces'
 import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
+    DepArgs,
     AnyDep,
     DepBase,
     AnnotationResolver
@@ -20,56 +21,63 @@ import {createFunctionProxy} from '../../utils/createProxy'
 import {fastCall} from '../../utils/fastCall'
 import type {FactoryDep} from '../factory/factoryInterfaces'
 import type {
-    Setter,
+    SetterResult,
     SetterDep,
     SetterAnnotation,
     SetterInvoker
 } from './setterInterfaces'
+import type {ModelDep} from '../model/modelInterfaces'
 
 // implements SetterDep
 export class SetterDepImpl<V: Object, E> {
     kind: 'setter';
-    base: DepBase<Setter<V>>;
-    invoker: SetterInvoker<V>;
-    set: (value: V|Observable<V, E>) => void;
+    base: DepBase;
 
-    _valueRef: DepBase<V>;
+    _invoker: SetterInvoker<V>;
+    _value: (...args: any) => void;
+    _model: ModelDep<V, E>;
 
     constructor(
         id: DepId,
         info: Info,
-        target: DepFn<Setter<V>>,
-        set: (value: V|Observable<V, E>) => void,
-        valueRef: DepBase<V>
+        target: DepFn<SetterResult<V>>,
+        model: ModelDep<V, E>
     ) {
         this.kind = 'setter'
         this.base = new DepBaseImpl(id, info)
-        this.invoker = new InvokerImpl(target)
-        this.set = set
-        this._valueRef = valueRef
+
+        this._invoker = new InvokerImpl(target)
+        this._model = model
     }
 
-    resolve(): void {
-        const {base, invoker, _valueRef: valueRef} = this
-        if (!base.isRecalculate) {
-            return
+    resolve(): (...args: any) => void {
+        if (!this.base.isRecalculate) {
+            return this._value
         }
 
-        const set = this.set
-        const depArgs = resolveDeps(invoker.depArgs);
-        const deps = depArgs.deps
-        const middlewares = depArgs.middlewares || []
+        const {_invoker: invoker, _model: model} = this
+        const {deps, middlewares} = resolveDeps(invoker.depArgs);
+
         function setter(...args: any): void {
-            const result = fastCall(invoker.target, [valueRef.value].concat(deps, args))
-            const middleareArgs = [result].concat(args)
-            for (let i = 0, l = middlewares.length; i < l; i++) {
-                fastCall(middlewares[i], middleareArgs)
+            const result = fastCall(invoker.target, [model.resolve()].concat(deps, args))
+            // console.log(111, result)
+            if (middlewares) {
+                const middleareArgs = [result].concat(args)
+                for (let i = 0, l = middlewares.length; i < l; i++) {
+                    fastCall(middlewares[i], middleareArgs)
+                }
             }
-            set(result)
+            model.set(result)
         }
 
-        base.isRecalculate = false
-        base.value = setter
+        this.base.isRecalculate = false
+        this._value = setter
+
+        return setter
+    }
+
+    setDepArgs(depArgs: DepArgs): void {
+        this._invoker.depArgs = depArgs
     }
 }
 
@@ -87,13 +95,12 @@ export default class SetterPlugin {
             base.id,
             base.info,
             base.target,
-            updater ? updater.subscribe : modelDep.set,
-            modelDep.base
+            modelDep
         );
         // TODO: wait resolving setter dependencies through meta promise
 
         acc.begin(dep)
-        dep.invoker.depArgs = acc.getDeps(annotation.deps, base.target, base.info.tags)
+        dep.setDepArgs(acc.getDeps(annotation.deps, base.target, base.info.tags))
         acc.end(dep)
     }
 

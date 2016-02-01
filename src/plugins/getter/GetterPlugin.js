@@ -16,50 +16,52 @@ import type {
     GetterDep,
     GetterAnnotation
 } from './getterInterfaces'
+import type {ModelDep} from '../model/modelInterfaces'
 
 // implements GetterDep
-class GetterDepImpl<V> {
+class GetterDepImpl<V: Object, E> {
     kind: 'getter';
-    base: DepBase<Getter<V>>;
+    base: DepBase;
+    _model: ModelDep<V, E>;
+    _value: Getter<V>;
 
     constructor(
         id: DepId,
         info: Info,
-        modelBase: DepBase<V>,
+        model: ModelDep<V, E>
     ) {
         this.kind = 'getter'
         this.base = new DepBaseImpl(id, info)
-        this.base.isRecalculate = false
-
-        this.base.value = function getter(): V {
-            return modelBase.value
-        };
+        this._model = model
+        this._value = function getter(): V {
+            return model.resolve()
+        }
     }
 
-    resolve(): void {
+    resolve(): Getter<V> {
+        return this._value
     }
 }
 
 // depends on model
 // implements Plugin
 export default class GetterPlugin {
-    create<V>(annotation: GetterAnnotation<V>, acc: AnnotationResolver): void {
+    create<V: Object, E>(annotation: GetterAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
         const modelDep: AnyDep = acc.newRoot().resolve(base.target);
         if (modelDep.kind !== 'model') {
             throw new Error('Not a model dep type: ' + modelDep.kind)
         }
 
-        const dep: GetterDep<V> = new GetterDepImpl(
+        const dep: GetterDep<V, E> = new GetterDepImpl(
             base.id,
             base.info,
-            modelDep.base
+            modelDep
         );
 
         acc.begin(dep)
         acc.end(dep)
     }
 
-    finalize<V>(dep: GetterDep<V>, target: AnyDep): void {
-    }
+    finalize<V: Object, E>(dep: GetterDep<V, E>, target: AnyDep): void {}
 }

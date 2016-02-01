@@ -31,9 +31,10 @@ import type {Observable} from '../../interfaces/observableInterfaces'
 // implements LoaderDep
 export class LoaderDepImpl<V: Object, E> {
     kind: 'loader';
-    base: DepBase<Observable<V, E>>;
+    base: DepBase;
     meta: MetaDep<E>;
     invoker: LoaderInvoker<V, E>;
+    _value: Observable<V, E>;
 
     constructor(
         id: DepId,
@@ -45,15 +46,14 @@ export class LoaderDepImpl<V: Object, E> {
         this.invoker = new InvokerImpl(target)
     }
 
-    resolve(): void {
+    resolve(): Observable<V, E> {
         const {base, invoker, meta} = this
         if (!base.isRecalculate) {
-            return
+            return this._value
         }
-        meta.resolve()
-        const value: EntityMeta<E> = meta.base.value;
+        const value: EntityMeta<E> = meta.resolve();
         if (!value.fulfilled) {
-            return
+            return this._value
         }
         const {deps, middlewares} = resolveDeps(invoker.depArgs)
         let fn: V = fastCall(invoker.target, deps);
@@ -63,8 +63,10 @@ export class LoaderDepImpl<V: Object, E> {
             }
             fn = createFunctionProxy(fn, middlewares)
         }
-        base.value = fn
+        this._value = fn
         base.isRecalculate = false
+
+        return fn
     }
 }
 

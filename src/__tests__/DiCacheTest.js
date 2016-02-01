@@ -25,20 +25,20 @@ describe('DiCacheTest', () => {
     })
 
     it('should not hit a, if a.b changed', () => {
-        const {A, AppState, aSetter} = createState()
+        const {B, AppState, bSetter} = createState()
 
         const di = createPureStateDi(new AppState())
         const fn = sinon.spy(v => v)
-        factory(A)(fn)
-        const aSet = di.get(aSetter)
+        factory(B)(fn)
+        const bSet = di.get(bSetter)
 
         di.get(fn)
-        aSet(321)
+        bSet(321)
         di.get(fn)
 
         assert(fn.calledTwice)
-        assert(fn.firstCall.calledWith({b: 123}))
-        assert(fn.secondCall.calledWith({b: 321}))
+        assert(fn.firstCall.calledWith({v: 123}))
+        assert(fn.secondCall.calledWith({v: 321}))
     })
 
     it('should hit, if a.c changed', () => {

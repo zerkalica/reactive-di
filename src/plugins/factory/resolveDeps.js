@@ -19,11 +19,10 @@ export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(dep: DepArgs)
     const argsObject = {}
     for (let i = 0, j = deps.length; i < j; i++) {
         const dep: AnyDep = deps[i];
-        dep.resolve()
         if (depNames) {
-            argsObject[depNames[i]] = dep.base.value
+            argsObject[depNames[i]] = dep.resolve()
         } else {
-            argsArray.push(dep.base.value)
+            argsArray.push(dep.resolve())
         }
     }
 
@@ -31,9 +30,7 @@ export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(dep: DepArgs)
     if (middlewares) {
         resolvedMiddlewares = []
         for (let i = 0, j = middlewares.length; i < j; i++) {
-            const {base} = middlewares[i];
-            base.resolve()
-            resolvedMiddlewares.push(base.value)
+            resolvedMiddlewares.push(middlewares[i].resolve())
         }
     }
 

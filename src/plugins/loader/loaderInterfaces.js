@@ -20,8 +20,8 @@ export type LoaderAnnotation<V: Object, E> = {
 export type LoaderInvoker<V: Object, E> = FactoryInvoker<Observable<V, E>>;
 export type LoaderDep<V: Object, E> = {
     kind: 'loader';
-    base: DepBase<Observable<V, E>>;
+    base: DepBase;
     meta: MetaDep<E>;
     invoker: LoaderInvoker<V, E>;
-    resolve(): void;
+    resolve(): Observable<V, E>;
 }

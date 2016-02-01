@@ -31,9 +31,8 @@ export type Cacheable = {
     isRecalculate: boolean;
 };
 
-export type DepBase<V> = {
+export type DepBase = {
     isRecalculate: boolean;
-    value: V;
     id: DepId;
 
     info: Info;

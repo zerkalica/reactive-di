@@ -13,8 +13,8 @@ export type GetterAnnotation<V> = {
 }
 export type Getter<V> = () => V;
 
-export type GetterDep<V> = {
+export type GetterDep<V: Object, E> = {
     kind: 'getter';
-    base: DepBase<Getter<V>>;
-    resolve(): void;
+    base: DepBase;
+    resolve(): Getter<V>;
 }

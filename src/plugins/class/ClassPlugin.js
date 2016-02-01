@@ -10,6 +10,7 @@ import type {
     Info
 } from '../../interfaces/annotationInterfaces'
 import type {
+    DepArgs,
     AnyDep,
     DepBase
 } from '../../interfaces/nodeInterfaces'
@@ -31,8 +32,9 @@ import type {
 // implements ClassDep
 export class ClassDepImpl<V: Object> {
     kind: 'class';
-    base: DepBase<V>;
-    invoker: ClassInvoker<V>;
+    base: DepBase;
+    _invoker: ClassInvoker<V>;
+    _value: V;
 
     constructor(
         id: DepId,
@@ -41,13 +43,13 @@ export class ClassDepImpl<V: Object> {
     ) {
         this.kind = 'class'
         this.base = new DepBaseImpl(id, info)
-        this.invoker = new InvokerImpl(target)
+        this._invoker = new InvokerImpl(target)
     }
 
-    resolve(): void {
-        const {base, invoker} = this
+    resolve(): V {
+        const {base, _invoker: invoker} = this
         if (!base.isRecalculate) {
-            return
+            return this._value
         }
         const args = resolveDeps(invoker.depArgs)
         let obj: V = fastCreateObject(invoker.target, args.deps);
@@ -55,9 +57,16 @@ export class ClassDepImpl<V: Object> {
             obj = createObjectProxy(obj, args.middlewares)
         }
         base.isRecalculate = false
-        base.value = obj
+        this._value = obj
+
+        return this._value
+    }
+
+    setDepArgs(depArgs: DepArgs): void {
+        this._invoker.depArgs = depArgs
     }
 }
+
 
 // depends on factory
 // implements Plugin
@@ -66,7 +75,7 @@ export default class ClassPlugin {
         const {base} = annotation
         const dep: ClassDep<V> = new ClassDepImpl(base.id, base.info, base.target);
         acc.begin(dep)
-        dep.invoker.depArgs = acc.getDeps(annotation.deps, base.target, base.info.tags)
+        dep.setDepArgs(acc.getDeps(annotation.deps, base.target, base.info.tags))
         acc.end(dep)
     }
 

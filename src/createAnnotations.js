@@ -13,7 +13,7 @@ import type {
     AnnotationDriver
 } from './interfaces/annotationInterfaces'
 import type {Loader} from './plugins/model/modelInterfaces'
-import type {Setter} from './plugins/setter/setterInterfaces'
+import type {SetterResult} from './plugins/setter/setterInterfaces'
 import {
     AsyncModelAnnotationImpl,
     ModelAnnotationImpl
@@ -28,7 +28,7 @@ export type Annotations = {
     getter<T: Dependency>(target: T): () => void;
     meta<T: Dependency>(target: T): () => void;
     model<V: Object>(target: Class<V>): Class<V>;
-    setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: DepFn<Setter<V>>) => DepFn<Setter<V>>;
+    setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: DepFn<SetterResult<V>>) => DepFn<SetterResult<V>>;
 }
 
 export default function createAnnotations(
@@ -100,8 +100,8 @@ export default function createAnnotations(
             };
         },
 
-        setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: DepFn<Setter<V>>) => DepFn<Setter<V>> {
-            return function _setter(target: DepFn<Setter<V>>): DepFn<Setter<V>> {
+        setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: DepFn<SetterResult<V>>) => DepFn<SetterResult<V>> {
+            return function _setter(target: DepFn<SetterResult<V>>): DepFn<SetterResult<V>> {
                 return driver.annotate(target, new SetterAnnotationImpl(
                     model,
                     target,

@@ -51,16 +51,21 @@ export type AsyncModelAnnotation<V: Object, E> = {
 
 export type ModelDep<V: Object, E> = {
     kind: 'model';
-    base: DepBase<V>;
-    resolve(): void;
-
-    fromJS: FromJS<V>;
+    base: DepBase;
+    resolve(): V;
+    setFromJS(value: Object): void;
+    set(value: V): void;
     dataOwners: Array<Cacheable>;
-    get: () => V;
-    set: (value: V) => void;
-
     updater: ?AsyncUpdater<V, E>;
-    loader: ?FactoryDep<Observable<V, E>>;
+}
+
+export type AsyncModelDep<V: Object, E> = {
+    kind: 'asyncmodel';
+    base: DepBase;
+    resolve(): V;
+    setFromJS(value: Object): void;
+    dataOwners: Array<Cacheable>;
+    updater: AsyncUpdater<V, E>;
 }
 
 export type MetaSource<E> = {

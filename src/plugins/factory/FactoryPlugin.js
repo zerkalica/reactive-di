@@ -11,6 +11,7 @@ import type {
 } from '../../interfaces/annotationInterfaces'
 import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
+    DepArgs,
     AnyDep,
     DepBase,
     AnnotationResolver,
@@ -28,8 +29,9 @@ import type {
 // implements FactoryDep
 export class FactoryDepImpl<V: any, E> {
     kind: 'factory';
-    base: DepBase<V>;
-    invoker: FactoryInvoker<V>;
+    base: DepBase;
+    _invoker: FactoryInvoker<V>;
+    _value :V;
 
     constructor(
         id: DepId,
@@ -38,13 +40,13 @@ export class FactoryDepImpl<V: any, E> {
     ) {
         this.kind = 'factory'
         this.base = new DepBaseImpl(id, info)
-        this.invoker = new InvokerImpl(target)
+        this._invoker = new InvokerImpl(target)
     }
 
-    resolve(): void {
-        const {base, invoker} = this
+    resolve(): V {
+        const {base, _invoker: invoker} = this
         if (!base.isRecalculate) {
-            return
+            return this._value
         }
         const {deps, middlewares} = resolveDeps(invoker.depArgs)
         let fn: V = fastCall(invoker.target, deps);
@@ -54,8 +56,14 @@ export class FactoryDepImpl<V: any, E> {
             }
             fn = createFunctionProxy(fn, middlewares)
         }
-        base.value = fn
+        this._value = fn
         base.isRecalculate = false
+
+        return this._value
+    }
+
+    setDepArgs(depArgs: DepArgs): void {
+        this._invoker.depArgs = depArgs
     }
 }
 
@@ -66,7 +74,7 @@ export default class FactoryPlugin {
         const {base} = annotation
         const dep: FactoryDep<V> = new FactoryDepImpl(base.id, base.info, base.target);
         acc.begin(dep)
-        dep.invoker.depArgs = acc.getDeps(annotation.deps, base.target, base.info.tags)
+        dep.setDepArgs(acc.getDeps(annotation.deps, base.target, base.info.tags))
         acc.end(dep)
     }
 
