@@ -105,6 +105,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
 
     _error: (error: E) => void;
     _success: (value: V) => void;
+    _promiseDone: boolean;
 
     constructor(
         id: DepId,
@@ -128,7 +129,8 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this.dataOwners = []
         this.metaOwners = []
         this.meta = new EntityMetaImpl({pending: true})
-        this.promise = Promise.resolve()
+        this._promiseDone = true
+        this._updatePromise()
     }
 
     _notifyMeta(): void {
@@ -175,6 +177,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this._notifyMeta()
         }
         this._success(value)
+        this._promiseDone = true
     }
 
     error(errorValue: E): void {
@@ -185,20 +188,30 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this._notifyMeta()
         }
         this._error(errorValue)
+        this._promiseDone = true
     }
 
     complete(completeValue?: V): void {
         this.unsubscribe()
     }
 
-    set(value: Observable<V, E>): void {
-        if (this._subscription) {
-            this._subscription.unsubscribe()
+    _updatePromise(): void {
+        if (!this._promiseDone) {
+            return
         }
+        this._promiseDone = false
         const {promise, error, success} = createPromiseHandlers()
         this.promise = promise
         this._error = error
         this._success = success
+    }
+
+    set(value: Observable<V, E>): void {
+        if (this._subscription) {
+            this._subscription.unsubscribe()
+        }
+
+        this._updatePromise()
 
         this._pending()
         this._subscription = value.subscribe((this: Observer<V, E>))
