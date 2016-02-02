@@ -4,7 +4,6 @@ import createPureCursorCreator from './model/pure/createPureCursorCreator'
 import AnnotationResolverImpl from './core/AnnotationResolverImpl'
 import ClassPlugin from './plugins/class/ClassPlugin'
 import FactoryPlugin from './plugins/factory/FactoryPlugin'
-import LoaderPlugin from './plugins/loader/LoaderPlugin'
 import MetaPlugin from './plugins/meta/MetaPlugin'
 import ModelPlugin from './plugins/model/ModelPlugin'
 import AsyncModelPlugin from './plugins/asyncmodel/AsyncModelPlugin'
@@ -47,7 +46,6 @@ export default function createPureStateDi<T: Object>(
             {
                 class: new ClassPlugin(),
                 factory: new FactoryPlugin(),
-                loader: new LoaderPlugin(),
                 setter: new SetterPlugin(),
                 getter: new GetterPlugin(),
                 model: new ModelPlugin(),

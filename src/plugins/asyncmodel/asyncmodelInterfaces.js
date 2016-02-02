@@ -14,7 +14,7 @@ import type {Observable} from '../../interfaces/observableInterfaces'
 import type {FactoryDep} from '../factory/factoryInterfaces'
 import type {ModelInfo} from '../model/modelInterfaces'
 
-export type Loader<V: Object, E> = DepFn<Observable<V, E>>;
+export type Loader<V: Object, E> = (model: V, ...x: any) => Observable<V, E>|V;
 
 export type EntityMeta<E> = {
     pending: boolean;

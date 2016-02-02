@@ -1,34 +1,40 @@
 /* @flow */
+
+import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     DepFn,
     DepId,
     Info
 } from '../../interfaces/annotationInterfaces'
-import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     AnyDep,
     DepBase,
     AnnotationResolver
 } from '../../interfaces/nodeInterfaces'
 import type {Plugin} from '../../interfaces/pluginInterfaces'
+import type {AsyncModelDep} from '../asyncmodel/asyncmodelInterfaces'
+import type {ModelDep} from '../model/modelInterfaces'
 import type {
     Getter,
     GetterDep,
     GetterAnnotation
 } from './getterInterfaces'
-import type {AnyModelDep} from '../model/modelInterfaces'
 
+type AnyModelDep<V, E> = ModelDep<V>|AsyncModelDep<V, E>;
+type Resolvable<V> = {
+    resolve: () => V;
+};
 // implements GetterDep
 class GetterDepImpl<V: Object, E> {
     kind: 'getter';
     base: DepBase;
-    _model: AnyModelDep<V, E>;
+    _model: Resolvable<V>;
     _value: Getter<V>;
 
     constructor(
         id: DepId,
         info: Info,
-        model: AnyModelDep<V, E>
+        model: Resolvable<V>
     ) {
         this.kind = 'getter'
         this.base = new DepBaseImpl(id, info)
@@ -48,7 +54,7 @@ class GetterDepImpl<V: Object, E> {
 export default class GetterPlugin {
     create<V: Object, E>(annotation: GetterAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
-        const modelDep: AnyDep = acc.newRoot().resolve(base.target);
+        const modelDep: AnyModelDep<V, E> = (acc.newRoot().resolve(base.target): any);
         if (modelDep.kind !== 'model' && modelDep.kind !== 'asyncmodel') {
             throw new Error('Not a model dep type: ' + modelDep.kind)
         }
@@ -56,7 +62,7 @@ export default class GetterPlugin {
         const dep: GetterDep<V, E> = new GetterDepImpl(
             base.id,
             base.info,
-            modelDep
+            (modelDep: Resolvable<V>)
         );
 
         acc.begin(dep)

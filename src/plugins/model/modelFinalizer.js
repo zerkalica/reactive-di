@@ -1,9 +1,13 @@
 /* @flow */
-import type {AnyModelDep} from './modelInterfaces'
+import type {AsyncModelDep} from '../asyncmodel/asyncmodelInterfaces'
+import type {ModelDep} from '../model/modelInterfaces'
+
 import type {
     Cacheable,
     AnyDep
 } from '../../interfaces/nodeInterfaces'
+
+type AnyModelDep<V, E> = ModelDep<V> | AsyncModelDep<V, E>;
 
 export default function modelFinalizer(dep: AnyModelDep, child: AnyDep): void {
     const {base} = dep

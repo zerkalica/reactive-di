@@ -8,15 +8,14 @@ import type {
 } from '../../interfaces/annotationInterfaces'
 import type {DepBase, DepArgs} from '../../interfaces/nodeInterfaces'
 import type {Observable} from '../../interfaces/observableInterfaces'
+import type {Loader} from '../asyncmodel/asyncmodelInterfaces'
 import type {
     FactoryDep,
     Invoker
 } from '../factory/factoryInterfaces'
 import type {MetaDep} from '../meta/metaInterfaces'
 
-export type SetterResult<V> = Promise<V> | V;
-
-export type SetterInvoker<V> = Invoker<DepFn<SetterResult<V>>, FactoryDep>;
+export type SetterInvoker<V, E> = Invoker<Loader<V, E>, FactoryDep>;
 export type SetterDep<V: Object, E> = {
     kind: 'setter';
     base: DepBase;
@@ -24,9 +23,9 @@ export type SetterDep<V: Object, E> = {
     setDepArgs(depArgs: DepArgs, metaDep: MetaDep<E>): void;
 }
 
-export type SetterAnnotation<V: Object> = {
+export type SetterAnnotation<V: Object, E> = {
     kind: 'setter';
-    base: AnnotationBase<DepFn<SetterResult<V>>>;
+    base: AnnotationBase<Loader<V, E>>;
     deps: ?Deps;
     model: Class<V>;
 }

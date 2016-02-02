@@ -5,7 +5,6 @@ import type {FromJS, SimpleMap} from './modelInterfaces'
 
 import type {ClassAnnotation} from '../plugins/class/classInterfaces'
 import type {FactoryAnnotation} from '../plugins/factory/factoryInterfaces'
-import type {LoaderAnnotation} from '../plugins/loader/loaderInterfaces'
 import type {MetaAnnotation} from '../plugins/meta/metaInterfaces'
 import type {ModelAnnotation} from '../plugins/model/modelInterfaces'
 import type {AsyncModelAnnotation} from '../plugins/asyncmodel/asyncmodelInterfaces'
@@ -48,7 +47,6 @@ export type Annotations = {
 export type AnyAnnotation =
     ClassAnnotation
     | FactoryAnnotation
-    | LoaderAnnotation
     | MetaAnnotation
     | ModelAnnotation
     | AsyncModelAnnotation

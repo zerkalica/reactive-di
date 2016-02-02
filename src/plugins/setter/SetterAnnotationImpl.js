@@ -2,18 +2,19 @@
 
 import type {Deps, AnnotationBase, DepFn} from '../../interfaces/annotationInterfaces'
 import {AnnotationBaseImpl} from '../../core/pluginImpls'
-import type {SetterAnnotation, SetterResult} from './setterInterfaces'
+import type {SetterAnnotation} from './setterInterfaces'
+import type {Loader} from '../asyncmodel/asyncmodelInterfaces'
 
 // implements SetterAnnotation
-export default class SetterAnnotationImpl<V: Object> {
+export default class SetterAnnotationImpl<V: Object, E> {
     kind: 'setter';
-    base: AnnotationBase<DepFn<SetterResult<V>>>;
+    base: AnnotationBase<Loader<V, E>>;
     deps: ?Deps;
     model: Class<V>;
 
     constructor(
         model: Class<V>,
-        target: DepFn<SetterResult<V>>,
+        target: Loader<V, E>,
         deps: ?Deps,
         tags: Array<string>
     ) {

@@ -31,5 +31,3 @@ export type ModelDep<V: Object> = {
     set(value: V): void;
     dataOwners: Array<Cacheable>;
 }
-
-export type AnyModelDep<V, E> = ModelDep<V> | AsyncModelDep<V, E>;

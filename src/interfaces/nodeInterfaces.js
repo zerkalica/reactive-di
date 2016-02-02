@@ -12,7 +12,6 @@ import type {CursorCreator, Notify} from './modelInterfaces'
 
 import type {ClassDep} from '../plugins/class/classInterfaces'
 import type {FactoryDep} from '../plugins/factory/factoryInterfaces'
-import type {LoaderDep} from '../plugins/loader/loaderInterfaces'
 import type {MetaDep} from '../plugins/meta/metaInterfaces'
 import type {ModelDep} from '../plugins/model/modelInterfaces'
 import type {AsyncModelDep} from '../plugins/asyncmodel/asyncmodelInterfaces'
@@ -22,7 +21,6 @@ import type {GetterDep} from '../plugins/getter/getterInterfaces'
 export type AnyDep =
     ClassDep
     | FactoryDep
-    | LoaderDep
     | MetaDep
     | AsyncModelDep
     | ModelDep

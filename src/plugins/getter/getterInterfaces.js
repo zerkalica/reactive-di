@@ -2,16 +2,15 @@
 
 import type {
     DepFn,
-    AnnotationBase,
-    Dependency
+    AnnotationBase
 } from '../../interfaces/annotationInterfaces'
 import type {DepBase} from '../../interfaces/nodeInterfaces'
 
-export type GetterAnnotation<V> = {
+export type GetterAnnotation<V: Object> = {
     kind: 'getter';
-    base: AnnotationBase<Dependency<V>>;
+    base: AnnotationBase<Class<V>>;
 }
-export type Getter<V> = () => V;
+export type Getter<V: Object> = () => V;
 
 export type GetterDep<V: Object, E> = {
     kind: 'getter';

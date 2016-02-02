@@ -9,7 +9,7 @@ export default class GetterAnnotationImpl<V> {
     kind: 'getter';
     base: AnnotationBase<Dependency<V>>;
 
-    constructor(target: Dependency, tags: Array<string>) {
+    constructor(target: Dependency<V>, tags: Array<string>) {
         this.kind = 'getter'
         this.base = new AnnotationBaseImpl(this.kind, tags, target)
     }

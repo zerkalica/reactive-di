@@ -1,10 +1,12 @@
 /* @flow */
+
+import merge from '../../utils/merge'
 import EntityMetaImpl, {updateMeta} from '../asyncmodel/EntityMetaImpl'
+import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     DepId,
     Info
 } from '../../interfaces/annotationInterfaces'
-import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     AnyDep,
     DepBase,
@@ -35,6 +37,7 @@ class MetaDepImpl<E> {
         this.kind = 'meta'
         this.base = new DepBaseImpl(id, info)
         this.sources = []
+        this._value = new EntityMetaImpl({peding: true})
     }
 
     resolve(): EntityMeta<E> {

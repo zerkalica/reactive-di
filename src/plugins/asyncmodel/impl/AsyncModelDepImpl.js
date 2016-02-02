@@ -21,9 +21,7 @@ import type {
     Observable,
     Observer
 } from '../../../interfaces/observableInterfaces'
-import type {
-    FactoryDep
-} from '../../factory/factoryInterfaces'
+import type {SetterDep} from '../../setter/setterInterfaces'
 import type {
     EntityMeta,
     AsyncModelDep
@@ -56,6 +54,35 @@ export function setError<E>(meta: EntityMeta<E>, reason: E): EntityMeta<E> {
     })
 }
 
+type PromiseHandlers<V, E> = {
+    success(value: V): void;
+    error(error: E): void;
+    promise: Promise<V>;
+};
+
+function noop() {}
+
+function createPromiseHandlers<V, E>(): PromiseHandlers<V, E> {
+    let success: (value: V) => void = noop;
+    let error: (err: E) => void = noop;
+    const promise = new Promise((resolve, reject) => {
+        function onTimeout(): void {
+            reject(new Error('Timeout error'))
+        }
+        const timerId: number = setTimeout(onTimeout, 10000);
+        success = function successHandler(data: V): void {
+            clearTimeout(timerId)
+            resolve(data)
+        }
+        error = function errorHandler(err: E): void {
+            clearTimeout(timerId)
+            reject(err)
+        }
+    })
+
+    return {promise, success, error}
+}
+
 // implements AsyncModelDep, Oserver
 export default class AsyncModelDepImpl<V: Object, E> {
     kind: 'asyncmodel';
@@ -66,7 +93,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
     metaOwners: Array<Cacheable>;
     promise: Promise<V>;
 
-    _loader: ?FactoryDep<Observable<V, E>>;
+    _loader: ?SetterDep<V, E>;
 
     _cursor: Cursor<V>;
     _fromJS: FromJS<V>;
@@ -76,8 +103,8 @@ export default class AsyncModelDepImpl<V: Object, E> {
 
     _subscription: ?Subscription;
 
-    _reject: (error: E) => void;
-    _resolve: (value: V) => void;
+    _error: (error: E) => void;
+    _success: (value: V) => void;
 
     constructor(
         id: DepId,
@@ -85,7 +112,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
         cursor: Cursor<V>,
         fromJS: FromJS<V>,
         notify: Notify,
-        loader: ?FactoryDep<Observable<V, E>>
+        loader: ?SetterDep<V, E>
     ) {
         this.kind = 'asyncmodel'
         this._loader = loader || null
@@ -95,6 +122,8 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this._fromJS = fromJS
         this._notify = notify
         this._subscription = null
+        this._error = noop
+        this._success = noop
 
         this.dataOwners = []
         this.metaOwners = []
@@ -145,7 +174,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this.meta = newMeta
             this._notifyMeta()
         }
-        this._resolve(value)
+        this._success(value)
     }
 
     error(errorValue: E): void {
@@ -155,7 +184,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this.meta = newMeta
             this._notifyMeta()
         }
-        this._reject(errorValue)
+        this._error(errorValue)
     }
 
     complete(completeValue?: V): void {
@@ -166,11 +195,11 @@ export default class AsyncModelDepImpl<V: Object, E> {
         if (this._subscription) {
             this._subscription.unsubscribe()
         }
-        this.promise = new Promise((resolve, reject) => {
-            this._resolve = resolve
-            this._reject = reject
-            setTimeout(() => reject(new Error('Timeout error')), 10000)
-        })
+        const {promise, error, success} = createPromiseHandlers()
+        this.promise = promise
+        this._error = error
+        this._success = success
+
         this._pending()
         this._subscription = value.subscribe((this: Observer<V, E>))
     }
@@ -187,8 +216,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
             return this._value
         }
         if (this._loader && !this._subscription) {
-            const dataSource: Observable<V, E> = this._loader.resolve();
-            this.set(dataSource)
+            this._loader.resolve()();
         }
         base.isRecalculate = false
         this._value = this._cursor.get()

@@ -23,8 +23,8 @@ import type {
 } from '../../interfaces/observableInterfaces'
 import type {Plugin} from '../../interfaces/pluginInterfaces'
 import type {
-    FactoryDep
-} from '../factory/factoryInterfaces'
+    SetterDep
+} from '../setter/setterInterfaces'
 import type {
     EntityMeta,
     AsyncModelDep,
@@ -41,8 +41,8 @@ export default class AsyncModelPlugin {
         const {base, info} = annotation
         const cursor: Cursor<V> = acc.createCursor(info.statePath);
 
-        const loader: ?FactoryDep<Observable<V, E>> = annotation.loader
-            ? (acc.newRoot().resolve(annotation.loader, acc): any)
+        const loader: ?SetterDep<V, E> = annotation.loader
+            ? (acc.newRoot().resolve(annotation.loader): any)
             : null;
 
         const dep: AsyncModelDep<V, E> = new AsyncModelDepImpl(
