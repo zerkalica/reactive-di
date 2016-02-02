@@ -36,6 +36,34 @@ function isObservable(data: Object): boolean {
     return !!(data.subscribe)
 }
 
+
+function setData<V: Object, E>(info: Info, model: AnyModelDep<V, E>, result: V|Observable<V, E>): void {
+    switch (model.kind) {
+        case 'model':
+            if (isObservable(result)) {
+                throw new Error('Can\'t set observable from setter "'
+                    + info.displayName
+                    + '" to synced model "'
+                    + model.base.info.displayName + '"'
+                )
+            }
+            model.set(((result: any): V))
+            break
+        case 'asyncmodel':
+            if (!isObservable(result)) {
+                throw new Error('Can\'t set not-observable from setter "'
+                    + info.displayName
+                    + '" to async model "'
+                    + model.base.info.displayName + '"'
+                )
+            }
+            ((model: any): AsyncModelDep<V, E>).set(((result: Object): Observable<V, E>))
+            break
+        default:
+            throw new Error('Unhandlered dep type: ' + model.kind + ' in ' + model.base.info.displayName)
+    }
+}
+
 // implements SetterDep
 export class SetterDepImpl<V: Object, E> {
     kind: 'setter';
@@ -66,41 +94,26 @@ export class SetterDepImpl<V: Object, E> {
 
         const {base, _invoker: invoker, _model: model, _metaDep: metaDep} = this
 
-        function setter(...args: any): void {
-            function setterResolver() {
-                const {deps, middlewares} = resolveDeps(invoker.depArgs)
-                const result: Observable<V, E>|V = fastCall(invoker.target, [model.resolve()].concat(deps, args));
-                if (middlewares) {
-                    const middleareArgs = [result].concat(args)
-                    for (let i = 0, l = middlewares.length; i < l; i++) {
-                        fastCall(middlewares[i], middleareArgs)
-                    }
+        function setterResolver(args: Array<any>): void {
+            const {deps, middlewares} = resolveDeps(invoker.depArgs)
+            const result: Observable<V, E>|V = fastCall(invoker.target, [model.resolve()].concat(deps, args));
+            if (middlewares) {
+                const middleareArgs = [result].concat(args)
+                for (let i = 0, l = middlewares.length; i < l; i++) {
+                    fastCall(middlewares[i], middleareArgs)
                 }
-                if (model.kind === 'asyncmodel') {
-                    if (!isObservable(result)) {
-                        throw new Error('Can\'t set not-observable from setter "'
-                            + base.info.displayName
-                            + '" to async model "'
-                            + model.base.info.displayName + '"'
-                        )
-                    }
-                    model.set((result: Observable<V, E>))
-                } else if (model.kind === 'model') {
-                    if (isObservable(result)) {
-                        throw new Error('Can\'t set observable from setter "'
-                            + base.info.displayName
-                            + '" to synced model "'
-                            + model.base.info.displayName + '"'
-                        )
-                    }
-                    model.set(((result: any): V))
-                }
-
             }
+            setData(base.info, model, result)
+        }
+
+        function setter(...args: any): void {
             if (metaDep.resolve().fulfilled) {
-                setterResolver()
+                setterResolver(args)
             } else {
-                metaDep.promise.then(setterResolver)
+                function success(): void {
+                    setterResolver(args)
+                }
+                metaDep.promise.then(success)
             }
         }
 
@@ -129,7 +142,7 @@ export default class SetterPlugin {
             base.id,
             base.info,
             (base.target: Loader<V, E>),
-            modelDep
+            (modelDep: AnyModelDep<V, E>)
         );
         acc.begin(dep)
         const deps = acc.getDeps(annotation.deps, base.target, base.info.tags)
