@@ -6,8 +6,7 @@ import type {
     Dependency
 } from '../interfaces/annotationInterfaces'
 
-// const metaSymbol = Symbol('__rdi__meta')
-const metaSymbol = '__rdi__meta'
+const metaSymbol = typeof Symbol !== 'undefined' ? Symbol('__rdi__meta') : '__rdi__meta'
 
 // implements AnnotationDriver
 export default class SymbolMetaDriver {

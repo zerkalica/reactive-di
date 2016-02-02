@@ -74,6 +74,8 @@ export class SetterDepImpl<V: Object, E> {
     _model: AnyModelDep<V, E>;
     _metaDep: MetaDep<E>;
 
+    _setterResolver: (args: Array<any>) => void;
+
     constructor(
         id: DepId,
         info: Info,
@@ -81,20 +83,12 @@ export class SetterDepImpl<V: Object, E> {
         model: AnyModelDep<V, E>
     ) {
         this.kind = 'setter'
-        this.base = new DepBaseImpl(id, info)
+        const base = this.base = new DepBaseImpl(id, info)
 
-        this._invoker = new InvokerImpl(target)
+        const invoker = this._invoker = new InvokerImpl(target)
         this._model = model
-    }
 
-    resolve(): (...args: any) => void {
-        if (!this.base.isRecalculate) {
-            return this._value
-        }
-
-        const {base, _invoker: invoker, _model: model, _metaDep: metaDep} = this
-
-        function setterResolver(args: Array<any>): void {
+        this._setterResolver = function _setterResolver(args: Array<any>): void {
             const {deps, middlewares} = resolveDeps(invoker.depArgs)
             const result: Observable<V, E>|V = fastCall(invoker.target, [model.resolve()].concat(deps, args));
             if (middlewares) {
@@ -105,6 +99,15 @@ export class SetterDepImpl<V: Object, E> {
             }
             setData(base.info, model, result)
         }
+    }
+
+    resolve(): (...args: any) => void {
+        const {base} = this
+        if (!base.isRecalculate) {
+            return this._value
+        }
+
+        const {_setterResolver: setterResolver, _invoker: invoker, _model: model, _metaDep: metaDep} = this
 
         function setter(...args: any): void {
             if (metaDep.resolve().fulfilled) {
@@ -117,7 +120,7 @@ export class SetterDepImpl<V: Object, E> {
             }
         }
 
-        this.base.isRecalculate = false
+        base.isRecalculate = false
         this._value = setter
 
         return setter
