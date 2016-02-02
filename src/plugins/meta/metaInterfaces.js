@@ -12,6 +12,7 @@ export type MetaAnnotation<V> = {
 export type MetaDep<E> = {
     kind: 'meta';
     base: DepBase;
+    promise: Promise<any>;
     sources: Array<MetaSource>;
     resolve(): EntityMeta<E>;
 }

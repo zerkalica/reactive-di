@@ -26,6 +26,7 @@ class MetaDepImpl<E> {
     base: DepBase;
     sources: Array<MetaSource>;
     _value: EntityMeta<E>;
+    promise: Promise<any>;
 
     constructor(
         id: DepId,
@@ -42,10 +43,14 @@ class MetaDepImpl<E> {
             return this._value
         }
         const meta: EntityMeta = new EntityMetaImpl();
+        const promises: Array<Promise<any>> = [];
         for (let i = 0, l = sources.length; i < l; i++) {
-            updateMeta(meta, sources[i].meta)
+            const sourceDep = sources[i]
+            updateMeta(meta, sourceDep.meta)
+            promises.push(sourceDep.promise)
         }
         this._value = merge(this._value, meta)
+        this.promise = Promise.all(promises)
         base.isRecalculate = false
         return this._value
     }

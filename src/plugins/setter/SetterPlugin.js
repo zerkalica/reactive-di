@@ -3,12 +3,13 @@
 import defaultFinalizer from '../factory/defaultFinalizer'
 import resolveDeps from '../factory/resolveDeps'
 import InvokerImpl from '../factory/InvokerImpl'
+import MetaAnnotationImpl from '../meta/MetaAnnotationImpl'
+import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     DepFn,
     DepId,
     Info
 } from '../../interfaces/annotationInterfaces'
-import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     DepArgs,
     AnyDep,
@@ -20,13 +21,14 @@ import type {Plugin} from '../../interfaces/pluginInterfaces'
 import {createFunctionProxy} from '../../utils/createProxy'
 import {fastCall} from '../../utils/fastCall'
 import type {FactoryDep} from '../factory/factoryInterfaces'
+import type {AnyModelDep} from '../model/modelInterfaces'
 import type {
     SetterResult,
     SetterDep,
     SetterAnnotation,
     SetterInvoker
 } from './setterInterfaces'
-import type {AnyModelDep} from '../model/modelInterfaces'
+import type {MetaDep} from '../meta/metaInterfaces'
 
 // implements SetterDep
 export class SetterDepImpl<V: Object, E> {
@@ -36,6 +38,7 @@ export class SetterDepImpl<V: Object, E> {
     _invoker: SetterInvoker<V>;
     _value: (...args: any) => void;
     _model: AnyModelDep<V, E>;
+    _metaDep: MetaDep<E>;
 
     constructor(
         id: DepId,
@@ -55,19 +58,26 @@ export class SetterDepImpl<V: Object, E> {
             return this._value
         }
 
-        const {_invoker: invoker, _model: model} = this
-        const {deps, middlewares} = resolveDeps(invoker.depArgs);
+        const {_invoker: invoker, _model: model, _metaDep: metaDep} = this
 
         function setter(...args: any): void {
-            const result = fastCall(invoker.target, [model.resolve()].concat(deps, args))
-            // console.log(111, result)
-            if (middlewares) {
-                const middleareArgs = [result].concat(args)
-                for (let i = 0, l = middlewares.length; i < l; i++) {
-                    fastCall(middlewares[i], middleareArgs)
+            function setterResolver() {
+                const {deps, middlewares} = resolveDeps(invoker.depArgs)
+                const result = fastCall(invoker.target, [model.resolve()].concat(deps, args))
+                // console.log(111, result)
+                if (middlewares) {
+                    const middleareArgs = [result].concat(args)
+                    for (let i = 0, l = middlewares.length; i < l; i++) {
+                        fastCall(middlewares[i], middleareArgs)
+                    }
                 }
+                model.set(result)
             }
-            model.set(result)
+            if (metaDep.resolve().fulfilled) {
+                setterResolver()
+            } else {
+                metaDep.promise.then(setterResolver)
+            }
         }
 
         this.base.isRecalculate = false
@@ -76,8 +86,9 @@ export class SetterDepImpl<V: Object, E> {
         return setter
     }
 
-    setDepArgs(depArgs: DepArgs): void {
+    setDepArgs(depArgs: DepArgs, metaDep: MetaDep<E>): void {
         this._invoker.depArgs = depArgs
+        this._metaDep = metaDep
     }
 }
 
@@ -96,11 +107,18 @@ export default class SetterPlugin {
             base.target,
             modelDep
         );
-        // TODO: wait resolving setter dependencies through meta promise
-
         acc.begin(dep)
-        dep.setDepArgs(acc.getDeps(annotation.deps, base.target, base.info.tags))
+        const deps = acc.getDeps(annotation.deps, base.target, base.info.tags)
         acc.end(dep)
+
+        const metaDep: AnyDep = acc.newRoot().resolveAnnotation(new MetaAnnotationImpl(
+            base.target,
+            base.info.tags
+        ));
+        if (metaDep.kind !== 'meta') {
+            throw new Error('Not a meta type: ' + metaDep.kind)
+        }
+        dep.setDepArgs(dep, metaDep)
     }
 
     finalize(dep: FactoryDep, target: AnyDep): void {

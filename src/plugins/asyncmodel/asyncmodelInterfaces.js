@@ -38,6 +38,7 @@ export type AsyncModelDep<V: Object, E> = {
     dataOwners: Array<Cacheable>;
 
     meta: EntityMeta<E>;
+    promise: Promise<any>;
     set(value: Observable<V, E>): void;
     unsubscribe(): void;
     metaOwners: Array<Cacheable>;
@@ -45,5 +46,6 @@ export type AsyncModelDep<V: Object, E> = {
 
 export type MetaSource<E> = {
     meta: EntityMeta<E>;
+    promise: Promise<any>;
     metaOwners: Array<Cacheable>;
 }

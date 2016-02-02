@@ -64,6 +64,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
 
     meta: EntityMeta<E>;
     metaOwners: Array<Cacheable>;
+    promise: Promise<V>;
 
     _loader: ?FactoryDep<Observable<V, E>>;
 
@@ -74,6 +75,9 @@ export default class AsyncModelDepImpl<V: Object, E> {
     _value: V;
 
     _subscription: ?Subscription;
+
+    _reject: (error: E) => void;
+    _resolve: (value: V) => void;
 
     constructor(
         id: DepId,
@@ -95,6 +99,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this.dataOwners = []
         this.metaOwners = []
         this.meta = new EntityMetaImpl({pending: true})
+        this.promise = Promise.resolve()
     }
 
     _notifyMeta(): void {
@@ -140,6 +145,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this.meta = newMeta
             this._notifyMeta()
         }
+        this._resolve(value)
     }
 
     error(errorValue: E): void {
@@ -149,6 +155,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this.meta = newMeta
             this._notifyMeta()
         }
+        this._reject(errorValue)
     }
 
     complete(completeValue?: V): void {
@@ -159,6 +166,11 @@ export default class AsyncModelDepImpl<V: Object, E> {
         if (this._subscription) {
             this._subscription.unsubscribe()
         }
+        this.promise = new Promise((resolve, reject) => {
+            this._resolve = resolve
+            this._reject = reject
+            setTimeout(() => reject(new Error('Timeout error')), 10000)
+        })
         this._pending()
         this._subscription = value.subscribe((this: Observer<V, E>))
     }
