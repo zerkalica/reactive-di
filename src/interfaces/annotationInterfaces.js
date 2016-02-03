@@ -20,6 +20,10 @@ export type Dependency<T> = DepFn<T>|Class<T>;
 export type DepItem = Dependency|SimpleMap<string, Dependency>;
 export type Deps = Array<DepItem>;
 
+export type IdCreator = {
+    createId(): string;
+}
+
 export type HooksRec<T> = {
     onUnmount?: () => void;
     onMount?: () => void;

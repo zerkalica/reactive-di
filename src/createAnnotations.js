@@ -2,6 +2,7 @@
 
 import AsyncModelAnnotationImpl from './plugins/asyncmodel/AsyncModelAnnotationImpl'
 import ClassAnnotationImpl from './plugins/class/ClassAnnotationImpl'
+import DefaultIdCreator from './core/DefaultIdCreator'
 import FactoryAnnotationImpl from './plugins/factory/FactoryAnnotationImpl'
 import GetterAnnotationImpl from './plugins/getter/GetterAnnotationImpl'
 import LoaderAnnotationImpl from './plugins/loader/LoaderAnnotationImpl'
@@ -9,6 +10,7 @@ import MetaAnnotationImpl from './plugins/meta/MetaAnnotationImpl'
 import ModelAnnotationImpl from './plugins/model/ModelAnnotationImpl'
 import SetterAnnotationImpl from './plugins/setter/SetterAnnotationImpl'
 import type {
+    IdCreator,
     DepItem,
     DepFn,
     Dependency,
@@ -33,28 +35,9 @@ export type Annotations = {
     loader<V: Object, E>(model: Class<V>, setter: AsyncUpdater<V, E>): Class<V>;
 }
 
-type IdCreator = {
-    createId(): string;
-}
-
-// implements IdCreator
-class IdCreatorImpl {
-    _lastId: number;
-    _salt: string;
-
-    constructor() {
-        this._salt = Math.random().toString(36).substr(2, 6);
-        this._lastId = 0
-    }
-
-    createId(): string {
-        return this._salt + '.' + (++this._lastId)
-    }
-}
-
 export default function createAnnotations(
     driver: AnnotationDriver,
-    ids: IdCreator = new IdCreatorImpl(),
+    ids: IdCreator = new DefaultIdCreator(),
     tags: Array<string> = []
 ): Annotations {
     return {
