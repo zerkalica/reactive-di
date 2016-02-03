@@ -23,7 +23,11 @@ import type {
 import type {ResolveDepsResult} from '../../factory/resolveDeps'
 import type {MetaDep} from '../../meta/metaInterfaces'
 import type {ModelDep} from '../../model/modelInterfaces'
-import type {SetterCreator, SetFn} from '../setterInterfaces'
+import type {
+    AnyModelDep,
+    SetterCreator,
+    SetFn
+} from '../setterInterfaces'
 
 function isObservable(data: Object): boolean {
     return !!(data.subscribe)
@@ -41,15 +45,26 @@ function assertSync(result: Object, info: Info): void {
     }
 }
 
-function createSetterCreator<V: Object, E>(
-    invoker: Invoker<DepFn<V>, FactoryDep>,
-    info: Info,
-    model: ModelDep<V>|AsyncModelDep<V, E>,
-    meta: MetaDep<E>
+export default function createModelSetterCreator<V: Object, E>(
+    acc: AnnotationResolver,
+    base: AnnotationBase<AnyUpdater<V, E>>,
+    deps: ?Deps,
 ): SetterCreator {
-    const assert = model.kind === 'asyncmodel' ? assertAsync : assertSync
+    const {info, id, target} = base
+    const newAcc = acc.newRoot()
+    const meta: MetaDep<E> = (newAcc.resolveAnnotation(new MetaAnnotationImpl(
+        id + '.meta',
+        target,
+        info.tags
+    )): any);
 
-    function setterResolver(depsResult: ResolveDepsResult, args: Array<any>): void {
+    const invoker = new InvokerImpl(target, acc.getDeps(deps, target, info.tags));
+
+    function setterResolver(
+        depsResult: ResolveDepsResult,
+        model: ModelDep<V>|AsyncModelDep<V, E>,
+        args: Array<any>
+    ): void {
         const {deps, middlewares} = depsResult
         const result: V = fastCall(invoker.target, [model.resolve()].concat(deps, args));
         if (middlewares) {
@@ -58,52 +73,25 @@ function createSetterCreator<V: Object, E>(
                 fastCall(middlewares[i], middleareArgs)
             }
         }
-        assert(result, info)
+        model.kind === 'asyncmodel'
+            ? assertAsync(result, info)
+            : assertSync(result, info)
+
         model.set(result)
     }
 
-    return function createModelSetter(): SetFn {
+    return function createModelSetter(model: AnyModelDep<V, E>): SetFn {
         const depsResult: ResolveDepsResult = resolveDeps(invoker.depArgs);
 
         return function setValue(...args: any): void {
             if (meta.resolve().fulfilled) {
-                setterResolver(depsResult, args)
+                setterResolver(depsResult, model, args)
             } else {
                 function success(): void {
-                    setterResolver(depsResult, args)
+                    setterResolver(depsResult, model, args)
                 }
                 meta.promise.then(success)
             }
         }
     }
-}
-
-export default function createModelSetterCreator<V: Object, E>(
-    acc: AnnotationResolver,
-    model: Class<V>,
-    base: AnnotationBase<AnyUpdater<V, E>>,
-    deps: ?Deps,
-): SetterCreator {
-    const {info, id, target} = base
-    const newAcc = acc.newRoot()
-
-    const modelDep: AnyDep = (newAcc.resolve(model) : any);
-    if (modelDep.kind !== 'model' && modelDep.kind !== 'asyncmodel') {
-        throw new Error('Not a model dep type: ' + modelDep.kind + ' in ' + modelDep.base.info.displayName)
-    }
-
-    const metaDep: MetaDep<E> = (newAcc.resolveAnnotation(new MetaAnnotationImpl(
-        id + '.meta',
-        target,
-        info.tags
-    )): any);
-
-    const invoker = new InvokerImpl(target, acc.getDeps(deps, target, info.tags));
-
-    return createSetterCreator(
-        invoker,
-        info,
-        modelDep,
-        metaDep
-    )
 }

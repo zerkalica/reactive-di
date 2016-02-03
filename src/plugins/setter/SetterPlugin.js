@@ -15,6 +15,7 @@ import type {
 } from '../../interfaces/nodeInterfaces'
 import type {Plugin} from '../../interfaces/pluginInterfaces'
 import type {
+    AnyModelDep,
     SetterDep,
     SetterCreator,
     SetterAnnotation,
@@ -25,18 +26,18 @@ import type {
 export class SetterDepImpl<V: Object, E> {
     kind: 'setter';
     base: DepBase;
-
     _value: SetFn;
-
     _createSetter: SetterCreator;
+    _model: AnyModelDep<V, E>;
 
     constructor(id: DepId, info: Info) {
         this.kind = 'setter'
         this.base = new DepBaseImpl(id, info);
     }
 
-    init(createSetter: SetterCreator): void {
+    init(createSetter: SetterCreator, model: AnyModelDep<V, E>): void {
         this._createSetter = createSetter
+        this._model = model
     }
 
     resolve(): SetFn {
@@ -45,7 +46,7 @@ export class SetterDepImpl<V: Object, E> {
             return this._value
         }
 
-        this._value = this._createSetter()
+        this._value = this._createSetter(this._model)
 
         base.isRecalculate = false
 
@@ -60,12 +61,17 @@ export default class SetterPlugin {
         const {base} = annotation
         const dep: SetterDepImpl<V, E> = new SetterDepImpl(base.id, base.info);
         acc.begin(dep)
+        const newAcc = acc.newRoot()
+        const model: AnyDep = (newAcc.resolve(annotation.model) : any);
+        if (model.kind !== 'model' && model.kind !== 'asyncmodel') {
+            throw new Error('Not a model dep type: ' + model.kind + ' in ' + model.base.info.displayName)
+        }
+
         dep.init(createModelSetterCreator(
             acc,
-            annotation.model,
             base,
             annotation.deps
-        ))
+        ), model)
         acc.end(dep)
     }
 

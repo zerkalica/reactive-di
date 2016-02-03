@@ -24,6 +24,7 @@ export type LoaderDep<V: Object, E> = {
 
 export type LoaderAnnotation<V: Object, E> = {
     kind: 'loader';
-    base: AnnotationBase<Class<V>>;
-    setter: AsyncUpdater<V, E>;
+    base: AnnotationBase<AsyncUpdater<V, E>>;
+    deps: ?Deps;
+    model: Class<V>;
 }

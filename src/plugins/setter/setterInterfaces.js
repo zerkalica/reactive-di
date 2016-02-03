@@ -8,7 +8,10 @@ import type {
 } from '../../interfaces/annotationInterfaces'
 import type {DepBase, DepArgs} from '../../interfaces/nodeInterfaces'
 import type {Observable} from '../../interfaces/observableInterfaces'
-import type {AnyUpdater} from '../asyncmodel/asyncmodelInterfaces'
+import type {
+    AnyUpdater,
+    AsyncModelDep
+} from '../asyncmodel/asyncmodelInterfaces'
 import type {ModelDep} from '../model/modelInterfaces'
 import type {
     FactoryInvoker,
@@ -17,8 +20,10 @@ import type {
 } from '../factory/factoryInterfaces'
 import type {MetaDep} from '../meta/metaInterfaces'
 
+export type AnyModelDep<V, E> = ModelDep<V>|AsyncModelDep<V, E>;
+
 export type SetFn = (...args: any) => void;
-export type SetterCreator = () => SetFn;
+export type SetterCreator = (model: AnyModelDep) => SetFn;
 
 export type SetterDep = {
     kind: 'setter';

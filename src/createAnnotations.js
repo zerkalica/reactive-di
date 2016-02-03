@@ -32,7 +32,7 @@ export type Annotations = {
     model<V: Object>(target: Class<V>): Class<V>;
     asyncmodel<V: Object>(target: Class<V>): Class<V>;
     setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: AnyUpdater<V, E>) => AnyUpdater<V, E>;
-    loader<V: Object, E>(model: Class<V>, setter: AsyncUpdater<V, E>): Class<V>;
+    loader<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E>;
 }
 
 export default function createAnnotations(
@@ -76,7 +76,16 @@ export default function createAnnotations(
 
         getter<V: Object>(target: Class<V>): Class<V> {
             function dummyTargetId(): void {}
-            const modelAnnotation = driver.getAnnotation(target)
+            const modelAnnotation: AnyAnnotation = driver.getAnnotation(target);
+            if (
+                modelAnnotation.kind !== 'model'
+                || modelAnnotation.kind !== 'asyncmodel'
+            ) {
+                throw new Error('Target '
+                    + modelAnnotation.base.info.displayName
+                    + ' is not a model'
+                )
+            }
             return driver.annotate((dummyTargetId: any), new GetterAnnotationImpl(
                 modelAnnotation.base.id + '.getter',
                 target,
@@ -112,17 +121,16 @@ export default function createAnnotations(
             };
         },
 
-        loader<V: Object, E>(model: Class<V>, setter: AsyncUpdater<V, E>): Class<V> {
-            function dummyTargetId(): void {}
-            const setterAnnotation = driver.getAnnotation(setter)
-            driver.annotate((dummyTargetId: any), new LoaderAnnotationImpl(
-                setterAnnotation.base.id + '.loader',
-                model,
-                setter,
-                tags
-            ))
-
-            return model
+        loader<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E> {
+            return function _loader(target: AsyncUpdater<V, E>): AsyncUpdater<V, E> {
+                return driver.annotate(target, new LoaderAnnotationImpl(
+                    ids.createId(),
+                    model,
+                    target,
+                    deps,
+                    tags
+                ))
+            };
         }
         /* eslint-enable no-undef */
     }

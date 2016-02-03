@@ -3,7 +3,8 @@
 import {AnnotationBaseImpl} from '../../core/pluginImpls'
 import type {
     DepId,
-    AnnotationBase
+    AnnotationBase,
+    Deps
 } from '../../interfaces/annotationInterfaces'
 import type {AsyncUpdater} from '../asyncmodel/asyncmodelInterfaces'
 import type {LoaderAnnotation} from './loaderInterfaces'
@@ -12,16 +13,19 @@ import type {LoaderAnnotation} from './loaderInterfaces'
 export default class LoaderAnnotationImpl<V: Object, E> {
     kind: 'loader';
     base: AnnotationBase<AsyncUpdater<V, E>>;
-    setter: AsyncUpdater<V, E>;
+    model: Class<V>;
+    deps: ?Deps;
 
     constructor(
         id: DepId,
-        setter: AsyncUpdater<V, E>,
+        target: AsyncUpdater<V, E>,
         model: Class<V>,
+        deps: ?Deps,
         tags: Array<string>
     ) {
         this.kind = 'loader'
-        this.base = new AnnotationBaseImpl(id, this.kind, tags, model)
-        this.setter = setter
+        this.base = new AnnotationBaseImpl(id, this.kind, tags, target)
+        this.model = model
+        this.deps = deps
     }
 }
