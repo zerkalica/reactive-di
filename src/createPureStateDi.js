@@ -9,6 +9,7 @@ import GetterPlugin from './plugins/getter/GetterPlugin'
 import MetaPlugin from './plugins/meta/MetaPlugin'
 import ModelPlugin from './plugins/model/ModelPlugin'
 import ReactiveDiImpl from './core/ReactiveDiImpl'
+import LoaderPlugin from './plugins/loader/LoaderPlugin'
 import SetterPlugin from './plugins/setter/SetterPlugin'
 import SymbolMetaDriver from './drivers/SymbolMetaDriver'
 import type {
@@ -48,6 +49,7 @@ export default function createPureStateDi<T: Object>(
                 setter: new SetterPlugin(),
                 getter: new GetterPlugin(),
                 model: new ModelPlugin(),
+                loader: new LoaderPlugin(),
                 asyncmodel: new AsyncModelPlugin(),
                 meta: new MetaPlugin()
             }
