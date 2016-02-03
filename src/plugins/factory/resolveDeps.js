@@ -10,10 +10,12 @@ import type {
     MiddlewareMap
 } from '../../utils/createProxy'
 
-export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(dep: DepArgs): {
+export type ResolveDepsResult<A> = {
     deps: Array<any|SimpleMap<string, any>>,
     middlewares: ?Array<A>
-} {
+}
+
+export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(dep: DepArgs): ResolveDepsResult<A> {
     const {deps, depNames, middlewares} = dep
     const argsArray = []
     const argsObject = {}

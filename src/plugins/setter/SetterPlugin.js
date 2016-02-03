@@ -31,7 +31,7 @@ import type {
     SetterAnnotation,
     SetFn
 } from './setterInterfaces'
-import createModelSetter from './createModelSetter'
+import ModelSetterCreator from './ModelSetterCreator'
 
 type SetterInvoker<V, E> = Invoker<AnyUpdater<V, E>, FactoryDep>;
 
@@ -41,6 +41,8 @@ export class SetterDepImpl<V: Object, E> {
     base: DepBase;
 
     _value: SetFn;
+
+    _setterCreator: ModelSetterCreator;
 
     constructor(id: DepId, info: Info) {
         this.kind = 'setter'
@@ -52,7 +54,7 @@ export class SetterDepImpl<V: Object, E> {
         modelDep: ModelDep|AsyncModelDep,
         metaDep: MetaDep<E>
     ): void {
-        this._value = createModelSetter(
+        this._setterCreator = new ModelSetterCreator(
             invoker,
             this.base.info,
             modelDep,
@@ -65,6 +67,8 @@ export class SetterDepImpl<V: Object, E> {
         if (!base.isRecalculate) {
             return this._value
         }
+
+        this._value = this._setterCreator.create()
 
         base.isRecalculate = false
 
