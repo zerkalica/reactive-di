@@ -2,23 +2,12 @@
 
 import modelFinalizer from './modelFinalizer'
 import ModelDepImpl from './impl/ModelDepImpl'
-import type {
-    Cursor
-} from '../../interfaces/modelInterfaces'
+import type {Cursor} from '../../interfaces/modelInterfaces'
 import type {
     AnyDep,
-    DepBase,
-    AnnotationResolver,
-    Cacheable
+    AnnotationResolver
 } from '../../interfaces/nodeInterfaces'
-import type {
-    Observable,
-    Subscription
-} from '../../interfaces/observableInterfaces'
 import type {Plugin} from '../../interfaces/pluginInterfaces'
-import type {
-    FactoryDep
-} from '../factory/factoryInterfaces'
 import type {
     ModelDep,
     ModelAnnotation,
@@ -26,16 +15,9 @@ import type {
 
 // implements Plugin
 export default class ModelPlugin {
-    create<V: Object, E>(
-        annotation: ModelAnnotation<V>,
-        acc: AnnotationResolver
-    ): void {
+    create<V: Object, E>(annotation: ModelAnnotation<V>, acc: AnnotationResolver): void {
         const {base, info} = annotation
         const cursor: Cursor<V> = acc.createCursor(info.statePath);
-
-        const loader: ?FactoryDep<Observable<V, E>> = annotation.loader
-            ? (acc.newRoot().resolve(annotation.loader, acc): any)
-            : null;
 
         const dep: ModelDep<V> = new ModelDepImpl(
             base.id,

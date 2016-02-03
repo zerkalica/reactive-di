@@ -1,11 +1,12 @@
 /* @flow */
 
+import {AnnotationBaseImpl} from '../../core/pluginImpls'
 import type {
     Deps,
+    DepId,
     AnnotationBase,
     DepFn
 } from '../../interfaces/annotationInterfaces'
-import {AnnotationBaseImpl} from '../../core/pluginImpls'
 import type {FactoryAnnotation} from './factoryInterfaces'
 
 // implements FactoryAnnotation
@@ -14,9 +15,9 @@ export default class FactoryAnnotationImpl<V> {
     base: AnnotationBase<DepFn<V>>;
     deps: ?Deps;
 
-    constructor(target: DepFn<V>, deps: ?Deps, tags: Array<string>) {
+    constructor(id: DepId, target: DepFn<V>, deps: ?Deps, tags: Array<string>) {
         this.kind = 'factory'
-        this.base = new AnnotationBaseImpl(this.kind, tags, target)
+        this.base = new AnnotationBaseImpl(id, this.kind, tags, target)
         this.deps = deps
     }
 }

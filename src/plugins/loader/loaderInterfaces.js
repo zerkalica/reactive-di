@@ -8,25 +8,22 @@ import type {
 } from '../../interfaces/annotationInterfaces'
 import type {DepBase, DepArgs} from '../../interfaces/nodeInterfaces'
 import type {Observable} from '../../interfaces/observableInterfaces'
-import type {AnyUpdater} from '../asyncmodel/asyncmodelInterfaces'
-import type {ModelDep} from '../model/modelInterfaces'
+import type {AsyncUpdater} from '../asyncmodel/asyncmodelInterfaces'
 import type {
-    FactoryInvoker,
     FactoryDep,
     Invoker
 } from '../factory/factoryInterfaces'
 import type {MetaDep} from '../meta/metaInterfaces'
+import type {SetterDep} from '../setter/setterInterfaces'
 
-export type SetFn = (...args: any) => void;
-export type SetterDep = {
-    kind: 'setter';
+export type LoaderDep<V: Object, E> = {
+    kind: 'loader';
     base: DepBase;
-    resolve(): SetFn;
+    resolve(): V;
 }
 
-export type SetterAnnotation<V: Object, E> = {
-    kind: 'setter';
-    base: AnnotationBase<AnyUpdater<V, E>>;
-    deps: ?Deps;
-    model: Class<V>;
+export type LoaderAnnotation<V: Object, E> = {
+    kind: 'loader';
+    base: AnnotationBase<Class<V>>;
+    setter: AsyncUpdater<V, E>;
 }

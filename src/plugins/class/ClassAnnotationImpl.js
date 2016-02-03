@@ -1,7 +1,11 @@
 /* @flow */
 
 import {AnnotationBaseImpl} from '../../core/pluginImpls'
-import type {AnnotationBase, DepFn} from '../../interfaces/annotationInterfaces'
+import type {
+    DepId,
+    AnnotationBase,
+    DepFn
+} from '../../interfaces/annotationInterfaces'
 import type {Deps} from '../../interfaces/annotationInterfaces'
 import type {ClassAnnotation} from './classInterfaces'
 
@@ -11,9 +15,9 @@ export default class ClassAnnotationImpl<V: Object> {
     base: AnnotationBase<Class<V>>;
     deps: ?Deps;
 
-    constructor(target: Class<V>, deps: ?Deps, tags: Array<string>) {
+    constructor(id: DepId, target: Class<V>, deps: ?Deps, tags: Array<string>) {
         this.kind = 'class'
-        this.base = new AnnotationBaseImpl(this.kind, tags, target)
+        this.base = new AnnotationBaseImpl(id, this.kind, tags, target)
         this.deps = deps
     }
 }

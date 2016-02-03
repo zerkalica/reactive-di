@@ -1,16 +1,19 @@
 /* @flow */
 
-import type {AnnotationBase, Dependency} from '../../interfaces/annotationInterfaces'
+import type {
+    AnnotationBase,
+    DepId
+} from '../../interfaces/annotationInterfaces'
 import {AnnotationBaseImpl} from '../../core/pluginImpls'
 import type {GetterAnnotation} from './getterInterfaces'
 
 // implements GetterAnnotation
-export default class GetterAnnotationImpl<V> {
+export default class GetterAnnotationImpl<V: Object> {
     kind: 'getter';
-    base: AnnotationBase<Dependency<V>>;
+    base: AnnotationBase<Class<V>>;
 
-    constructor(target: Dependency<V>, tags: Array<string>) {
+    constructor(id: DepId, target: Class<V>, tags: Array<string>) {
         this.kind = 'getter'
-        this.base = new AnnotationBaseImpl(this.kind, tags, target)
+        this.base = new AnnotationBaseImpl(id, this.kind, tags, target)
     }
 }

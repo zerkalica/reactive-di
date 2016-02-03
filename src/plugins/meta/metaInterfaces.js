@@ -14,5 +14,5 @@ export type MetaDep<E> = {
     base: DepBase;
     promise: Promise<any>;
     sources: Array<MetaSource>;
-    resolve(): EntityMeta<E>;
+    resolve: () => EntityMeta<E>;
 }

@@ -25,7 +25,7 @@ import type {
 } from './factoryInterfaces'
 
 // implements FactoryDep
-export class FactoryDepImpl<V: any, E> {
+export class FactoryDepImpl<V: any> {
     kind: 'factory';
     base: DepBase;
     _invoker: FactoryInvoker<V>;
@@ -38,7 +38,6 @@ export class FactoryDepImpl<V: any, E> {
     ) {
         this.kind = 'factory'
         this.base = new DepBaseImpl(id, info)
-        this._invoker = new InvokerImpl(target)
     }
 
     resolve(): V {
@@ -60,8 +59,8 @@ export class FactoryDepImpl<V: any, E> {
         return this._value
     }
 
-    setDepArgs(depArgs: DepArgs): void {
-        this._invoker.depArgs = depArgs
+    setInvoker(invoker: FactoryInvoker<V>): void {
+        this._invoker = invoker
     }
 }
 
@@ -70,9 +69,12 @@ export class FactoryDepImpl<V: any, E> {
 export default class FactoryPlugin {
     create<V>(annotation: FactoryAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
-        const dep: FactoryDep<V> = new FactoryDepImpl(base.id, base.info, base.target);
+        const dep: FactoryDepImpl<V> = new FactoryDepImpl(base.id, base.info, base.target);
         acc.begin(dep)
-        dep.setDepArgs(acc.getDeps(annotation.deps, base.target, base.info.tags))
+        dep.setInvoker(new InvokerImpl(
+            base.target,
+            acc.getDeps(annotation.deps, base.target, base.info.tags)
+        ))
         acc.end(dep)
     }
 

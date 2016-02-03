@@ -10,7 +10,6 @@ import type {
     Info
 } from '../../interfaces/annotationInterfaces'
 import type {
-    DepArgs,
     AnyDep,
     DepBase
 } from '../../interfaces/nodeInterfaces'
@@ -38,7 +37,6 @@ export class ClassDepImpl<V: Object> {
     ) {
         this.kind = 'class'
         this.base = new DepBaseImpl(id, info)
-        this._invoker = new InvokerImpl(target)
     }
 
     resolve(): V {
@@ -57,8 +55,8 @@ export class ClassDepImpl<V: Object> {
         return this._value
     }
 
-    setDepArgs(depArgs: DepArgs): void {
-        this._invoker.depArgs = depArgs
+    setInvoker(invoker: ClassInvoker<V>): void {
+        this._invoker = invoker
     }
 }
 
@@ -68,9 +66,12 @@ export class ClassDepImpl<V: Object> {
 export default class ClassPlugin {
     create<V: Object>(annotation: ClassAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
-        const dep: ClassDep<V> = new ClassDepImpl(base.id, base.info, base.target);
+        const dep: ClassDepImpl<V> = new ClassDepImpl(base.id, base.info, base.target);
         acc.begin(dep)
-        dep.setDepArgs(acc.getDeps(annotation.deps, base.target, base.info.tags))
+        dep.setInvoker(new InvokerImpl(
+            base.target,
+            acc.getDeps(annotation.deps, base.target, base.info.tags)
+        ))
         acc.end(dep)
     }
 

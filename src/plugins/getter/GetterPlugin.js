@@ -56,7 +56,7 @@ export default class GetterPlugin {
         const {base} = annotation
         const modelDep: AnyModelDep<V, E> = (acc.newRoot().resolve(base.target): any);
         if (modelDep.kind !== 'model' && modelDep.kind !== 'asyncmodel') {
-            throw new Error('Not a model dep type: ' + modelDep.kind)
+            throw new Error('Not a model dep type: ' + modelDep.kind + ' in ' + modelDep.base.info.displayName)
         }
 
         const dep: GetterDep<V, E> = new GetterDepImpl(

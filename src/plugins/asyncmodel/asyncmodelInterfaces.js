@@ -14,7 +14,9 @@ import type {Observable} from '../../interfaces/observableInterfaces'
 import type {FactoryDep} from '../factory/factoryInterfaces'
 import type {ModelInfo} from '../model/modelInterfaces'
 
-export type Loader<V: Object, E> = (model: V, ...x: any) => Observable<V, E>|V;
+export type AsyncUpdater<V: Object, E> = (model: V, ...x: any) => Observable<V, E>;
+export type SyncUpdater<V: Object> = (model: V, ...x: any) => V;
+export type AnyUpdater<V: Object, E> = AsyncUpdater<V, E> | SyncUpdater<V>;
 
 export type EntityMeta<E> = {
     pending: boolean;
@@ -27,7 +29,6 @@ export type AsyncModelAnnotation<V: Object, E> = {
     kind: 'asyncmodel';
     base: AnnotationBase<Class<V>>;
     info: ModelInfo<V>;
-    loader: ?Loader<V, E>;
 }
 
 export type AsyncModelDep<V: Object, E> = {
@@ -39,7 +40,7 @@ export type AsyncModelDep<V: Object, E> = {
 
     meta: EntityMeta<E>;
     promise: Promise<any>;
-    set(value: Observable<V, E>): void;
+    set(value: V|Observable<V, E>): void;
     unsubscribe(): void;
     metaOwners: Array<Cacheable>;
 }

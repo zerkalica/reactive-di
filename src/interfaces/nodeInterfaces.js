@@ -17,6 +17,7 @@ import type {ModelDep} from '../plugins/model/modelInterfaces'
 import type {AsyncModelDep} from '../plugins/asyncmodel/asyncmodelInterfaces'
 import type {SetterDep} from '../plugins/setter/setterInterfaces'
 import type {GetterDep} from '../plugins/getter/getterInterfaces'
+import type {LoaderDep} from '../plugins/loader/loaderInterfaces'
 
 export type AnyDep =
     ClassDep
@@ -24,6 +25,7 @@ export type AnyDep =
     | MetaDep
     | AsyncModelDep
     | ModelDep
+    | LoaderDep
     | SetterDep
     | GetterDep;
 

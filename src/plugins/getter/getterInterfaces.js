@@ -15,5 +15,5 @@ export type Getter<V: Object> = () => V;
 export type GetterDep<V: Object, E> = {
     kind: 'getter';
     base: DepBase;
-    resolve(): Getter<V>;
+    resolve: () => Getter<V>;
 }

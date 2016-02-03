@@ -7,7 +7,7 @@ import FactoryAnnotationImpl from '../../plugins/factory/FactoryAnnotationImpl'
 describe('SymbolMetaDriverTest', () => {
     it('shoud set/get DepMeta', () => {
         function fn() {}
-        const meta = new FactoryAnnotationImpl(fn, null, [])
+        const meta = new FactoryAnnotationImpl('id1', fn, null, [])
         const driver = new SymbolMetaDriver()
         driver.annotate(fn, meta)
         assert(driver.getAnnotation(fn) === meta)

@@ -1,11 +1,11 @@
 /* @flow */
 
-import type {AnnotationBase} from '../../interfaces/annotationInterfaces'
-import {AnnotationBaseImpl} from '../../core/pluginImpls'
 import type {
-    AsyncModelAnnotation,
-    Loader
-} from './asyncmodelInterfaces'
+    DepId,
+    AnnotationBase
+} from '../../interfaces/annotationInterfaces'
+import {AnnotationBaseImpl} from '../../core/pluginImpls'
+import type {AsyncModelAnnotation} from './asyncmodelInterfaces'
 import type {ModelInfo} from '../model/modelInterfaces'
 import ModelInfoImpl from '../model/ModelInfoImpl'
 
@@ -14,16 +14,14 @@ export default class AsyncModelAnnotationImpl<V: Object, E> {
     kind: 'asyncmodel';
     base: AnnotationBase<Class<V>>;
     info: ModelInfo<V>;
-    loader: ?Loader<V, E>;
 
     constructor(
+        id: DepId,
         target: Class<V>,
-        tags: Array<string>,
-        loader?: ?Loader<V, E>
+        tags: Array<string>
     ) {
         this.kind = 'asyncmodel'
-        this.base = new AnnotationBaseImpl(this.kind, tags, target)
+        this.base = new AnnotationBaseImpl(id, this.kind, tags, target)
         this.info = new ModelInfoImpl()
-        this.loader = loader || null
     }
 }

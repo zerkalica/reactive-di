@@ -23,25 +23,6 @@ import type {FinalizeFn, Resolve} from '../interfaces/pluginInterfaces'
 import type {Plugin} from '../interfaces/pluginInterfaces'
 import {DepArgsImpl} from './DepArgsImpl'
 
-type IdCreator = {
-    createId(): string;
-}
-
-// implements IdCreator
-class IdCreatorImpl {
-    _lastId: number;
-    _salt: string;
-
-    constructor() {
-        this._salt = Math.random().toString(36).substr(2, 6);
-        this._lastId = 0
-    }
-
-    createId(): string {
-        return this._salt + '.' + (++this._lastId)
-    }
-}
-
 // implements AnnotationResolver
 export default class AnnotationResolverImpl {
     _driver: AnnotationDriver;
@@ -52,7 +33,6 @@ export default class AnnotationResolverImpl {
     _middlewares: Map<Dependency|Tag, Array<Dependency>>;
     _overrides: Map<Dependency, Dependency>;
 
-    _idCreator: IdCreator;
     createCursor: CursorCreator;
     notify: Notify;
 
@@ -63,7 +43,6 @@ export default class AnnotationResolverImpl {
         createCursor: CursorCreator,
         notify: Notify,
         plugins: SimpleMap<string, Plugin>,
-        idCreator?: IdCreator,
         cache?: SimpleMap<DepId, AnyDep>
     ) {
         this._driver = driver
@@ -73,7 +52,6 @@ export default class AnnotationResolverImpl {
         this.notify = notify
         this._parents = []
         this._plugins = plugins
-        this._idCreator = idCreator || new IdCreatorImpl()
         this._cache = cache || Object.create(null)
     }
 
@@ -85,7 +63,6 @@ export default class AnnotationResolverImpl {
             this.createCursor,
             this.notify,
             this._plugins,
-            this._idCreator,
             this._cache
         )
     }
@@ -124,21 +101,17 @@ export default class AnnotationResolverImpl {
     resolve(annotatedDep: Dependency): AnyDep {
         const {_parents: parents} = this
         let annotation: AnyAnnotation = this._driver.getAnnotation(annotatedDep);
-        let dep: AnyDep = this._cache[annotation.base.id];
+        const {base} = annotation
+        let dep: AnyDep = this._cache[base.id];
         if (!dep) {
-            const {base} = annotation
-            let id = base.id
-            if (!id) {
-                id = base.id = this._idCreator.createId()
-            }
             const overridedDep: ?Dependency = this._overrides.get(annotatedDep);
             if (overridedDep) {
                 annotation = this._driver.getAnnotation(overridedDep)
-                annotation.base.id = id
+                annotation.base.id = base.id
             }
             const plugin: Plugin = this._plugins[annotation.kind];
             plugin.create(annotation, (this: AnnotationResolver))
-            dep = this._cache[id]
+            dep = this._cache[base.id]
         } else if (parents.length) {
             const {relations} = dep.base
             for (let j = 0, k = parents.length; j < k; j++) {

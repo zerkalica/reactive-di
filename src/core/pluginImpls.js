@@ -55,11 +55,13 @@ export class AnnotationBaseImpl<T: Function> {
     target: T;
 
     constructor(
+        id: DepId,
         kind: string,
         tags: Array<string>,
         target: T
     ) {
         const name: string = getFunctionName(target);
+        this.id = id
         this.info = new InfoImpl(kind, name, tags)
         this.target = target
     }

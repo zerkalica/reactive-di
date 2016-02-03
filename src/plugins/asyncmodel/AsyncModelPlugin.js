@@ -23,9 +23,6 @@ import type {
 } from '../../interfaces/observableInterfaces'
 import type {Plugin} from '../../interfaces/pluginInterfaces'
 import type {
-    SetterDep
-} from '../setter/setterInterfaces'
-import type {
     EntityMeta,
     AsyncModelDep,
     AsyncModelAnnotation
@@ -39,19 +36,13 @@ export default class AsyncModelPlugin {
         acc: AnnotationResolver
     ): void {
         const {base, info} = annotation
-        const cursor: Cursor<V> = acc.createCursor(info.statePath);
-
-        const loader: ?SetterDep<V, E> = annotation.loader
-            ? (acc.newRoot().resolve(annotation.loader): any)
-            : null;
 
         const dep: AsyncModelDep<V, E> = new AsyncModelDepImpl(
             base.id,
             base.info,
-            cursor,
+            acc.createCursor(info.statePath),
             info.fromJS,
-            acc.notify,
-            loader
+            acc.notify
         );
         acc.addRelation(base.id)
 

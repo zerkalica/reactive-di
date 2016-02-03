@@ -13,8 +13,8 @@ export default class MetaAnnotationImpl<V> {
     kind: 'meta';
     base: AnnotationBase<Dependency<V>>;
 
-    constructor(target: Dependency, tags: Array<string>) {
+    constructor(id: DepId, target: Dependency, tags: Array<string>) {
         this.kind = 'meta'
-        this.base = new AnnotationBaseImpl(this.kind, tags, target)
+        this.base = new AnnotationBaseImpl(id, this.kind, tags, target)
     }
 }

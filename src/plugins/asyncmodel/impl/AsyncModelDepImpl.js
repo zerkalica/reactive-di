@@ -93,8 +93,6 @@ export default class AsyncModelDepImpl<V: Object, E> {
     metaOwners: Array<Cacheable>;
     promise: Promise<V>;
 
-    _loader: ?SetterDep<V, E>;
-
     _cursor: Cursor<V>;
     _fromJS: FromJS<V>;
     _notify: Notify;
@@ -112,11 +110,9 @@ export default class AsyncModelDepImpl<V: Object, E> {
         info: Info,
         cursor: Cursor<V>,
         fromJS: FromJS<V>,
-        notify: Notify,
-        loader: ?SetterDep<V, E>
+        notify: Notify
     ) {
         this.kind = 'asyncmodel'
-        this._loader = loader || null
 
         const base = this.base = new DepBaseImpl(id, info)
         this._cursor = cursor
@@ -128,7 +124,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
 
         this.dataOwners = []
         this.metaOwners = []
-        this.meta = new EntityMetaImpl({pending: true})
+        this.meta = new EntityMetaImpl()
         this._promiseDone = true
         this._updatePromise()
     }
@@ -206,15 +202,16 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this._success = success
     }
 
-    set(value: Observable<V, E>): void {
-        if (this._subscription) {
-            this._subscription.unsubscribe()
-        }
+    set(value: V|Observable<V, E>): void {
+        this.unsubscribe()
 
         this._updatePromise()
-
-        this._pending()
-        this._subscription = value.subscribe((this: Observer<V, E>))
+        if (value.subscribe === 'function') {
+            this._pending()
+            this._subscription = (value: Observable<V, E>).subscribe((this: Observer<V, E>))
+        } else {
+            this.next(((value: any): V))
+        }
     }
 
     setFromJS(data: Object): void {
@@ -227,9 +224,6 @@ export default class AsyncModelDepImpl<V: Object, E> {
         const {base} = this
         if (!base.isRecalculate) {
             return this._value
-        }
-        if (this._loader && !this._subscription) {
-            this._loader.resolve()();
         }
         base.isRecalculate = false
         this._value = this._cursor.get()

@@ -19,5 +19,4 @@ export type ClassDep<V: Object> = {
     kind: 'class';
     base: DepBase;
     resolve(): V;
-    setDepArgs(depArgs: DepArgs): void;
 }

@@ -2,15 +2,14 @@
 
 import createPureCursorCreator from './model/pure/createPureCursorCreator'
 import AnnotationResolverImpl from './core/AnnotationResolverImpl'
+import AsyncModelPlugin from './plugins/asyncmodel/AsyncModelPlugin'
 import ClassPlugin from './plugins/class/ClassPlugin'
 import FactoryPlugin from './plugins/factory/FactoryPlugin'
+import GetterPlugin from './plugins/getter/GetterPlugin'
 import MetaPlugin from './plugins/meta/MetaPlugin'
 import ModelPlugin from './plugins/model/ModelPlugin'
-import AsyncModelPlugin from './plugins/asyncmodel/AsyncModelPlugin'
 import ReactiveDiImpl from './core/ReactiveDiImpl'
 import SetterPlugin from './plugins/setter/SetterPlugin'
-import GetterPlugin from './plugins/getter/GetterPlugin'
-
 import SymbolMetaDriver from './drivers/SymbolMetaDriver'
 import type {
     AnnotationDriver,

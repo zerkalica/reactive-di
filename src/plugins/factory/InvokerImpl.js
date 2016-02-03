@@ -28,8 +28,9 @@ export default class InvokerImpl<V, T, M> {
     target: T;
     depArgs: DepArgs<M>;
 
-    constructor(target: T, hooks: ?HooksRec<V>, middlewares: ?Array<M>) {
+    constructor(target: T, depArgs: DepArgs<M>, hooks: ?HooksRec<V>) {
         this.target = target
         this.hooks = new HooksImpl(hooks || {})
+        this.depArgs = depArgs
     }
 }

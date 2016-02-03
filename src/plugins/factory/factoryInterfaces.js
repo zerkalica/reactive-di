@@ -34,5 +34,4 @@ export type FactoryDep<V: any> = {
     kind: 'factory';
     base: DepBase;
     resolve(): V;
-    setDepArgs(depArgs: DepArgs): void;
 }
