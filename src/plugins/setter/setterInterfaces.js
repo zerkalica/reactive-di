@@ -18,6 +18,8 @@ import type {
 import type {MetaDep} from '../meta/metaInterfaces'
 
 export type SetFn = (...args: any) => void;
+export type SetterCreator = () => SetFn;
+
 export type SetterDep = {
     kind: 'setter';
     base: DepBase;
