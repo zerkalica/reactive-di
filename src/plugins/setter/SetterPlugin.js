@@ -62,7 +62,7 @@ export default class SetterPlugin {
         const dep: SetterDepImpl<V, E> = new SetterDepImpl(base.id, base.info);
         acc.begin(dep)
         const newAcc = acc.newRoot()
-        const model: AnyDep = (newAcc.resolve(annotation.model) : any);
+        const model: AnyDep = newAcc.resolve(annotation.model);
         if (model.kind !== 'model' && model.kind !== 'asyncmodel') {
             throw new Error('Not a model dep type: ' + model.kind + ' in ' + model.base.info.displayName)
         }
