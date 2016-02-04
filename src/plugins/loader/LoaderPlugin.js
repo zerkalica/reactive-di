@@ -32,7 +32,7 @@ import type {
     LoaderDep
 } from './loaderInterfaces'
 import type {AsyncModelDep} from '../asyncmodel/asyncmodelInterfaces'
-
+import SetterAnnotationImpl from '../setter/setterInterfaces'
 // implements LoaderDep
 class LoaderDepImpl<V: Object, E> {
     kind: 'loader';
@@ -79,12 +79,19 @@ export default class LoaderPlugin {
         acc.begin(dep)
         const model: AnyDep = acc.resolve(annotation.model);
         if (model.kind !== 'asyncmodel') {
-            throw new Error('Not an asyncmodel in ' + base.info.displayName)
+            throw new Error('Not an asyncmodel ' + model.base.info.displayName
+                + ' in ' + base.info.displayName)
         }
-        const setterDep: AnyDep = acc.resolve(base.target);
+        const setterDep: AnyDep = acc.resolveAnnotation(new SetterAnnotationImpl(
+            base.id + '.setter',
+            annotation.model,
+            base.target,
+            annotation.deps,
+            base.info.tags
+        ));
         if (setterDep.kind !== 'setter') {
             throw new Error ('Not a setter: ' + setterDep.base.info.displayName
-            + ' in ' + base.info.displayName)
+                + ' in ' + base.info.displayName)
         }
 
         dep.init(setterDep, model)
