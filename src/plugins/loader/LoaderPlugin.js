@@ -25,41 +25,48 @@ import type {FactoryDep} from '../factory/factoryInterfaces'
 import type {MetaDep} from '../meta/metaInterfaces'
 import type {
     SetFn,
-    SetterCreator
+    SetterDep,
 } from '../setter/setterInterfaces'
 import type {
     LoaderAnnotation,
     LoaderDep
 } from './loaderInterfaces'
-import createModelSetterCreator from '../setter/impl/createModelSetterCreator'
 import type {AsyncModelDep} from '../asyncmodel/asyncmodelInterfaces'
 
 // implements LoaderDep
 class LoaderDepImpl<V: Object, E> {
     kind: 'loader';
     base: DepBase;
-    _createSetter: SetterCreator;
+    _setterDep: SetterDep;
     _model: AsyncModelDep<V, E>;
+    _setter: SetFn;
+    _value: V;
 
     constructor(id: DepId, info: Info) {
         this.kind = 'loader'
         this.base = new DepBaseImpl(id, info)
     }
 
-    init(createSetter: SetterCreator, model: AsyncModelDep<V, E>): void {
-        this._createSetter = createSetter
+    init(setterDep: SetterDep, model: AsyncModelDep<V, E>): void {
+        this._setterDep = setterDep
         this._model = model
     }
 
     resolve(): V {
-        const {base, _model: model} = this
-        if (!model.isSubscribed) {
-            const subscribe: SetFn = this._createSetter(model);
-            subscribe()
+        if (!this.base.isRecalculate) {
+            return this._value
+        }
+
+        const {base, _model: model, _setterDep: setterDep} = this
+        const setter: SetFn = setterDep.resolve();
+        if (setter !== this._setter) {
+            setter()
+            this._setter = setter
         }
 
         base.isRecalculate = false
-        return model.resolve()
+        this._value = model.resolve()
+        return this._value
     }
 }
 
@@ -74,12 +81,13 @@ export default class LoaderPlugin {
         if (model.kind !== 'asyncmodel') {
             throw new Error('Not an asyncmodel in ' + base.info.displayName)
         }
+        const setterDep: AnyDep = acc.resolve(base.target);
+        if (setterDep.kind !== 'setter') {
+            throw new Error ('Not a setter: ' + setterDep.base.info.displayName
+            + ' in ' + base.info.displayName)
+        }
 
-        dep.init(createModelSetterCreator(
-            acc,
-            base,
-            annotation.deps
-        ), model)
+        dep.init(setterDep, model)
 
         acc.end(dep)
     }
