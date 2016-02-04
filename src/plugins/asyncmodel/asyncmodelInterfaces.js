@@ -37,10 +37,9 @@ export type AsyncModelDep<V: Object, E> = {
     resolve(): V;
     setFromJS(value: Object): void;
     dataOwners: Array<Cacheable>;
-    isSubscribed:  boolean;
     meta: EntityMeta<E>;
     promise: Promise<any>;
-    set(value: V|Observable<V, E>): void;
+    set(value: Observable<V, E>): void;
     unsubscribe(): void;
     metaOwners: Array<Cacheable>;
 }

@@ -93,8 +93,6 @@ export default class AsyncModelDepImpl<V: Object, E> {
     metaOwners: Array<Cacheable>;
     promise: Promise<V>;
 
-    isSubscribed: boolean;
-
     _cursor: Cursor<V>;
     _fromJS: FromJS<V>;
     _notify: Notify;
@@ -129,7 +127,6 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this.meta = new EntityMetaImpl()
         this._promiseDone = true
         this._updatePromise()
-        this.isSubscribed = false
     }
 
     _notifyMeta(): void {
@@ -162,7 +159,6 @@ export default class AsyncModelDepImpl<V: Object, E> {
         if (this._subscription) {
             this._subscription.unsubscribe()
             this._subscription = null
-            this.isSubscribed = false
         }
     }
 
@@ -206,14 +202,15 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this._success = success
     }
 
-    set(value: V|Observable<V, E>): void {
+    set(value: Observable<V, E>): void {
         this.unsubscribe()
 
         this._updatePromise()
         if (typeof value.subscribe === 'function') {
-            this._pending()
+            if (this._subscription) {
+                this._pending()
+            }
             this._subscription = (value: Observable<V, E>).subscribe((this: Observer<V, E>))
-            this.isSubscribed = true
         } else {
             this.next(((value: any): V))
         }
