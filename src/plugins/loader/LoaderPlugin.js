@@ -32,7 +32,6 @@ import type {
     LoaderDep
 } from './loaderInterfaces'
 import type {AsyncModelDep} from '../asyncmodel/asyncmodelInterfaces'
-import SetterAnnotationImpl from '../setter/setterInterfaces'
 // implements LoaderDep
 class LoaderDepImpl<V: Object, E> {
     kind: 'loader';
