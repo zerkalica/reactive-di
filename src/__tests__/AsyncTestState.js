@@ -18,7 +18,7 @@ export function createState(): {
     AppState: Function,
     aSetter: Function,
     bSetter: Function,
-    cSetter: Function
+    cLoader: Function
 } {
 
     class C {
@@ -32,9 +32,7 @@ export function createState(): {
     asyncmodel(C)
 
     function cLoader(c: C): Observable<C, Error> {
-        return promiseToObservable(new Promise(resolve => resolve(
-            c.copy({v: 'test2'})
-        )))
+        return promiseToObservable(Promise.resolve(c.copy({v: 'test2'})))
     }
     loader(C)(cLoader)
 
@@ -72,8 +70,8 @@ export function createState(): {
     }
     model(AppState)
 
-    function aSetter(a: A, b: B): A {
-        return a.copy({b})
+    function aSetter(a: A, v: number): Observable<A, Error> {
+        return promiseToObservable(Promise.resolve(a.copy({v})))
     }
     setter(A)(aSetter)
 
@@ -82,18 +80,13 @@ export function createState(): {
     }
     setter(B)(bSetter)
 
-    function cSetter(c: C, v: string): C {
-        return c.copy({v})
-    }
-    setter(C)(cSetter)
-
     return {
         A,
         B,
         C,
+        cLoader,
         AppState,
         aSetter,
-        bSetter,
-        cSetter
+        bSetter
     }
 }

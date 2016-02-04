@@ -210,7 +210,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this.unsubscribe()
 
         this._updatePromise()
-        if (value.subscribe === 'function') {
+        if (typeof value.subscribe === 'function') {
             this._pending()
             this._subscription = (value: Observable<V, E>).subscribe((this: Observer<V, E>))
             this.isSubscribed = true

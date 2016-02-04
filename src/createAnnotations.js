@@ -79,11 +79,11 @@ export default function createAnnotations(
             const modelAnnotation: AnyAnnotation = driver.getAnnotation(target);
             if (
                 modelAnnotation.kind !== 'model'
-                || modelAnnotation.kind !== 'asyncmodel'
+                && modelAnnotation.kind !== 'asyncmodel'
             ) {
                 throw new Error('Target '
                     + modelAnnotation.base.info.displayName
-                    + ' is not a model'
+                    + ' is not a model: ' + modelAnnotation.kind
                 )
             }
             return driver.annotate((dummyTargetId: any), new GetterAnnotationImpl(
@@ -125,8 +125,8 @@ export default function createAnnotations(
             return function _loader(target: AsyncUpdater<V, E>): AsyncUpdater<V, E> {
                 return driver.annotate(target, new LoaderAnnotationImpl(
                     ids.createId(),
-                    model,
                     target,
+                    model,
                     deps,
                     tags
                 ))
