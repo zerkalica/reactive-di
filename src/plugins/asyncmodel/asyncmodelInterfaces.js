@@ -41,6 +41,7 @@ export type AsyncModelDep<V: Object, E> = {
     meta: EntityMeta<E>;
     promise: Promise<any>;
     set(value: Observable<V, E>): void;
+    isSubscribed: boolean;
     unsubscribe(): void;
     metaOwners: Array<Cacheable>;
 }

@@ -38,7 +38,6 @@ class LoaderDepImpl<V: Object, E> {
     base: DepBase;
     _setterDep: SetterDep;
     _model: AsyncModelDep<V, E>;
-    _setter: SetFn;
     _value: V;
 
     constructor(id: DepId, info: Info) {
@@ -58,9 +57,8 @@ class LoaderDepImpl<V: Object, E> {
 
         const {base, _model: model, _setterDep: setterDep} = this
         const setter: SetFn = setterDep.resolve();
-        if (setter !== this._setter) {
+        if (!model.isSubscribed) {
             setter()
-            this._setter = setter
         }
 
         base.isRecalculate = false

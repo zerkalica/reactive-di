@@ -46,7 +46,12 @@ export class SetterDepImpl<V: Object, E> {
             return this._value
         }
 
-        this._value = this._createSetter(this._model)
+        const {_model: model} = this
+
+        if (model.kind === 'asyncmodel') {
+            model.unsubscribe()
+        }
+        this._value = this._createSetter(model)
 
         base.isRecalculate = false
 

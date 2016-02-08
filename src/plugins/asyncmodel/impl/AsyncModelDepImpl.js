@@ -93,6 +93,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
     meta: EntityMeta<E>;
     metaOwners: Array<Cacheable>;
     promise: Promise<V>;
+    isSubscribed: boolean;
 
     _cursor: Cursor<V>;
     _fromJS: FromJS<V>;
@@ -128,6 +129,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this.meta = new EntityMetaImpl()
         this._promiseDone = true
         this.refCount = 0
+        this.isSubscribed = false
         this._updatePromise()
     }
 
@@ -162,6 +164,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this._subscription.unsubscribe()
             this._subscription = null
         }
+        this.isSubscribed = false
     }
 
     next(value: V): void {
@@ -214,6 +217,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
 
         this._updatePromise()
         if (typeof value.subscribe === 'function') {
+            this.isSubscribed = true
             if (this._subscription) {
                 this._pending()
             }
