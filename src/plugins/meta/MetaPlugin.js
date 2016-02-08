@@ -52,6 +52,7 @@ class MetaDepImpl<E> {
             updateMeta(meta, sourceDep.meta)
             promises.push(sourceDep.promise)
         }
+
         this._value = merge(this._value, meta)
         this.promise = Promise.all(promises)
         base.isRecalculate = false

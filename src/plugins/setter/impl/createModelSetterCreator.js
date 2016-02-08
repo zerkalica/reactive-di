@@ -76,7 +76,6 @@ export default function createModelSetterCreator<V: Object, E>(
         model.kind === 'asyncmodel'
             ? assertAsync(result, info)
             : assertSync(result, info)
-
         model.set(result)
     }
 

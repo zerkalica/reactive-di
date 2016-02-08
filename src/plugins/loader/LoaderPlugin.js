@@ -39,15 +39,22 @@ class LoaderDepImpl<V: Object, E> {
     _setterDep: SetterDep;
     _model: AsyncModelDep<V, E>;
     _value: V;
+    _setter: ?SetFn;
 
     constructor(id: DepId, info: Info) {
         this.kind = 'loader'
         this.base = new DepBaseImpl(id, info)
+        this._setter = null
     }
 
     init(setterDep: SetterDep, model: AsyncModelDep<V, E>): void {
         this._setterDep = setterDep
         this._model = model
+    }
+
+    reset(): void {
+        this._model.unsubscribe()
+        this._setter = null
     }
 
     resolve(): V {
@@ -57,7 +64,9 @@ class LoaderDepImpl<V: Object, E> {
 
         const {base, _model: model, _setterDep: setterDep} = this
         const setter: SetFn = setterDep.resolve();
-        if (!model.isSubscribed) {
+        if (this._setter !== setter) {
+            model.unsubscribe()
+            this._setter = setter
             setter()
         }
 

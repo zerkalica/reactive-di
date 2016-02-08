@@ -164,6 +164,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this._subscription.unsubscribe()
             this._subscription = null
         }
+        this.refCount = 0
         this.isSubscribed = false
     }
 
@@ -218,10 +219,8 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this._updatePromise()
         if (typeof value.subscribe === 'function') {
             this.isSubscribed = true
-            if (this._subscription) {
-                this._pending()
-            }
             this._subscription = (value: Observable<V, E>).subscribe((this: Observer<V, E>))
+            this._pending()
         } else {
             this.next(((value: any): V))
         }
