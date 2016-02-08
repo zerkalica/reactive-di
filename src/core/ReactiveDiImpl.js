@@ -2,7 +2,8 @@
 import type {
     AnyDep,
     AnnotationResolver,
-    ReactiveDi
+    ReactiveDi,
+    AsyncSubscription
 } from '../interfaces/nodeInterfaces'
 import type {Dependency} from '../interfaces/annotationInterfaces'
 import type {Subscription} from '../interfaces/observableInterfaces'
@@ -45,22 +46,40 @@ class ListenerManagerImpl {
 
 // implements Subscription
 class DiSubscription {
-    _subscriptions: Array<Subscription>;
+    _subscriptions: Array<AsyncSubscription>;
     _removeListener: () => void;
+    _unmountable: Array<Array<AsyncSubscription>>;
 
     constructor(
-        subscriptions: Array<Subscription>,
+        unmountable: Array<Array<AsyncSubscription>>,
+        subscriptions: Array<AsyncSubscription>,
         removeListener: () => void
     ) {
         this._subscriptions = subscriptions
         this._removeListener = removeListener
+        this._unmountable = unmountable
+        for (let i = 0, l = subscriptions.length; i < l; i++) {
+            subscriptions[i].refCount++;
+        }
+        while (subscriptions = unmountable.pop()) {
+            this._unsubscribe(subscriptions)
+        }
+    }
+
+    _unsubscribe(subscriptions: Array<AsyncSubscription>): void {
+        for (let i = 0, l = subscriptions.length; i < l; i++) {
+            const subscription = subscriptions[i];
+            if (subscription.refCount > 0) {
+                subscription.refCount--;
+                if (subscription.refCount === 0) {
+                    subscription.unsubscribe()
+                }
+            }
+        }
     }
 
     unsubscribe(): void {
-        const {_subscriptions: subscriptions} = this
-        for (let i = 0, l = subscriptions.length; i < l; i++) {
-            subscriptions[i].unsubscribe()
-        }
+        this._unmountable.push(this._subscriptions)
         this._removeListener()
     }
 }
@@ -69,10 +88,12 @@ class DiSubscription {
 export default class ReactiveDiImpl {
     _resolver: AnnotationResolver;
     _listeners: ListenerManager;
+    _unmountable: Array<Array<AsyncSubscription>>;
 
     constructor(createResolver: (notify: Notify) => AnnotationResolver) {
         this._listeners = new ListenerManagerImpl()
         this._resolver = createResolver(this._listeners.notify);
+        this._unmountable = []
     }
 
     subscribe(annotatedDep: Dependency): Subscription {
@@ -84,7 +105,8 @@ export default class ReactiveDiImpl {
         // facet will be called - because it never called before and cache is empty.
         // Prevent calling facet after first subscription:
         dep.base.isRecalculate = false
-        return new DiSubscription(dep.base.subscriptions, removeListener)
+
+        return new DiSubscription(this._unmountable, dep.base.subscriptions, removeListener)
     }
 
     get(annotatedDep: Dependency): any {

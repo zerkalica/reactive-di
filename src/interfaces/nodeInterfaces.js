@@ -33,13 +33,18 @@ export type Cacheable = {
     isRecalculate: boolean;
 };
 
+export type AsyncSubscription = {
+    refCount: number;
+    unsubscribe: () => void;
+};
+
 export type DepBase = {
     isRecalculate: boolean;
     id: DepId;
 
     info: Info;
     relations: Array<DepId>;
-    subscriptions: Array<Subscription>;
+    subscriptions: Array<AsyncSubscription>;
 }
 
 export type DepArgs<M> = {

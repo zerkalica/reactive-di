@@ -89,6 +89,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
     base: DepBase;
     dataOwners: Array<Cacheable>;
 
+    refCount: number;
     meta: EntityMeta<E>;
     metaOwners: Array<Cacheable>;
     promise: Promise<V>;
@@ -126,6 +127,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this.metaOwners = []
         this.meta = new EntityMetaImpl()
         this._promiseDone = true
+        this.refCount = 0
         this._updatePromise()
     }
 
@@ -200,6 +202,11 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this.promise = promise
         this._error = error
         this._success = success
+    }
+
+    reset(): void {
+        this.unsubscribe()
+        this._pending()
     }
 
     set(value: Observable<V, E>): void {

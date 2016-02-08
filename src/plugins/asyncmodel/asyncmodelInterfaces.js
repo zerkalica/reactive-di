@@ -34,6 +34,7 @@ export type AsyncModelAnnotation<V: Object, E> = {
 export type AsyncModelDep<V: Object, E> = {
     kind: 'asyncmodel';
     base: DepBase;
+    refCount: number;
     resolve(): V;
     setFromJS(value: Object): void;
     dataOwners: Array<Cacheable>;

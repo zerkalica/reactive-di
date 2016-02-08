@@ -2,9 +2,9 @@
 
 import type {
     Cacheable,
-    AnyDep
+    AnyDep,
+    AsyncSubscription
 } from '../../interfaces/nodeInterfaces'
-import type {Subscription} from '../../interfaces/observableInterfaces'
 import type {MetaDep} from '../meta/metaInterfaces'
 import type {ModelDep} from '../model/modelInterfaces'
 
@@ -15,7 +15,7 @@ export default function defaultFinalizer(dep: AnyDep, target: AnyDep): void {
         case 'model':
             target.dataOwners.push((base: Cacheable))
             if (target.updater) {
-                base.subscriptions.push((target.updater: Subscription))
+                base.subscriptions.push((target.updater: AsyncSubscription))
             }
             break
         case 'meta':

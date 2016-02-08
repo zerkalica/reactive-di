@@ -6,7 +6,7 @@ import type {
     Info,
     Tag
 } from '../interfaces/annotationInterfaces'
-import type {Subscription} from '../interfaces/observableInterfaces'
+import type {AsyncSubscription} from '../interfaces/nodeInterfaces'
 
 // implements DepBase
 export class DepBaseImpl<V> {
@@ -15,7 +15,7 @@ export class DepBaseImpl<V> {
     relations: Array<DepId>;
     id: DepId;
     info: Info;
-    subscriptions: Array<Subscription>;
+    subscriptions: Array<AsyncSubscription>;
 
     constructor(
         id: DepId,
