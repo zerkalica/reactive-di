@@ -89,48 +89,35 @@ export default class AsyncModelDepImpl<V: Object, E> {
     base: DepBase;
     dataOwners: Array<Cacheable>;
 
-    refCount: number;
     meta: EntityMeta<E>;
     metaOwners: Array<Cacheable>;
     promise: Promise<V>;
-    isSubscribed: boolean;
 
     _cursor: Cursor<V>;
     _fromJS: FromJS<V>;
-    _notify: Notify;
 
     _value: V;
 
-    _subscription: ?Subscription;
-
     _error: (error: E) => void;
     _success: (value: V) => void;
-    _promiseDone: boolean;
 
     constructor(
         id: DepId,
         info: Info,
         cursor: Cursor<V>,
-        fromJS: FromJS<V>,
-        notify: Notify
+        fromJS: FromJS<V>
     ) {
         this.kind = 'asyncmodel'
 
         const base = this.base = new DepBaseImpl(id, info)
         this._cursor = cursor
         this._fromJS = fromJS
-        this._notify = notify
-        this._subscription = null
         this._error = noop
         this._success = noop
 
         this.dataOwners = []
         this.metaOwners = []
         this.meta = new EntityMetaImpl({pending: true})
-        this._promiseDone = true
-        this.refCount = 0
-        this.isSubscribed = false
-        this._updatePromise()
     }
 
     _notifyMeta(): void {
@@ -147,29 +134,20 @@ export default class AsyncModelDepImpl<V: Object, E> {
         }
     }
 
-    _pending(): void {
+    pending(): void {
         const newMeta: EntityMeta<E> = setPending(this.meta);
         if (this.meta === newMeta) {
             // if previous value is pending - do not handle this value: only first
             return
         }
         this.meta = newMeta
+        this._updatePromise()
         this._notifyMeta()
     }
 
     reset(): void {
-        this.unsubscribe()
-        this._pending()
+        this.pending()
         this._notifyData()
-    }
-
-    unsubscribe(): void {
-        if (this._subscription) {
-            this._subscription.unsubscribe()
-            this._subscription = null
-        }
-        this.refCount = 0
-        this.isSubscribed = false
     }
 
     next(value: V): void {
@@ -183,49 +161,22 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this._notifyMeta()
         }
         this._success(value)
-        this._notify()
-        this._promiseDone = true
     }
 
     error(errorValue: E): void {
         const newMeta: EntityMeta<E> = setError(this.meta, errorValue);
-        this.unsubscribe()
         if (newMeta !== this.meta) {
             this.meta = newMeta
             this._notifyMeta()
         }
         this._error(errorValue)
-        this._notify()
-        this._promiseDone = true
-    }
-
-    complete(completeValue?: V): void {
-        this.unsubscribe()
     }
 
     _updatePromise(): void {
-        if (!this._promiseDone) {
-            return
-        }
-        this._promiseDone = false
         const {promise, error, success} = createPromiseHandlers()
         this.promise = promise
         this._error = error
         this._success = success
-    }
-
-    set(value: Observable<V, E>): void {
-        this.unsubscribe()
-
-        this._updatePromise()
-        if (typeof value.subscribe === 'function') {
-            this.isSubscribed = true
-            this._subscription = (value: Observable<V, E>).subscribe((this: Observer<V, E>))
-            this._pending()
-            this._notify()
-        } else {
-            this.next(((value: any): V))
-        }
     }
 
     setFromJS(data: Object): void {

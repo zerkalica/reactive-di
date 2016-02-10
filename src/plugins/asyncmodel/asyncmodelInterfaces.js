@@ -34,16 +34,18 @@ export type AsyncModelAnnotation<V: Object, E> = {
 export type AsyncModelDep<V: Object, E> = {
     kind: 'asyncmodel';
     base: DepBase;
-    refCount: number;
     resolve(): V;
     setFromJS(value: Object): void;
+
     dataOwners: Array<Cacheable>;
     meta: EntityMeta<E>;
     promise: Promise<any>;
-    set(value: Observable<V, E>): void;
-    isSubscribed: boolean;
-    unsubscribe(): void;
+
     metaOwners: Array<Cacheable>;
+    reset(): void;
+    pending(): void;
+    next(value: V): void;
+    error(err: E): void;
 }
 
 export type MetaSource<E> = {

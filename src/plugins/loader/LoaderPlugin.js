@@ -63,8 +63,9 @@ class LoaderDepImpl<V: Object, E> {
     }
 
     reset(): void {
-        this._setter = null
+        this._setterDep.unsubscribe()
         this._model.reset()
+        this._setter = null
     }
 
     resolve(): V {

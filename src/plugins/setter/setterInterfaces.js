@@ -28,6 +28,7 @@ export type SetterCreator = (model: AnyModelDep) => SetFn;
 export type SetterDep = {
     kind: 'setter';
     base: DepBase;
+    unsubscribe(): void;
     resolve(): SetFn;
 }
 

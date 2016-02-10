@@ -39,26 +39,27 @@ export default class ModelDepImpl<V: Object, E> {
         id: DepId,
         info: Info,
         cursor: Cursor<V>,
-        fromJS: FromJS<V>,
-        notify: Notify
+        fromJS: FromJS<V>
     ) {
         this.kind = 'model'
         const base = this.base = new DepBaseImpl(id, info)
         this._cursor = cursor
         this._fromJS = fromJS
-        this._notify = notify
 
         this.dataOwners = []
+    }
+
+    _notifyData(): void {
+        const {dataOwners} = this
+        for (let i = 0, l = dataOwners.length; i < l; i++) {
+            dataOwners[i].isRecalculate = true
+        }
     }
 
     set(value: V): void {
         if (this._cursor.set(value)) {
             this._value = value
-            const {dataOwners} = this
-            for (let i = 0, l = dataOwners.length; i < l; i++) {
-                dataOwners[i].isRecalculate = true
-            }
-            this._notify()
+            this._notifyData()
         }
     }
 

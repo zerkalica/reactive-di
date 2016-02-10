@@ -23,8 +23,7 @@ export default class ModelPlugin {
             base.id,
             base.info,
             cursor,
-            info.fromJS,
-            acc.notify
+            info.fromJS
         );
         acc.addRelation(base.id)
 

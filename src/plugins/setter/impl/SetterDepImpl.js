@@ -3,17 +3,24 @@
 import resolveDeps from '../../factory/resolveDeps'
 import InvokerImpl from '../../factory/InvokerImpl'
 import MetaAnnotationImpl from '../../meta/MetaAnnotationImpl'
+import {DepBaseImpl} from '../../../core/pluginImpls'
 import type {
     AnnotationBase,
     Deps,
+    DepId,
     DepFn,
     Info
 } from '../../../interfaces/annotationInterfaces'
 import type {
     AnyDep,
+    DepBase,
     AnnotationResolver
 } from '../../../interfaces/nodeInterfaces'
-import type {Observable} from '../../../interfaces/observableInterfaces'
+import type {
+    Subscription,
+    Observer,
+    Observable
+} from '../../../interfaces/observableInterfaces'
 import {fastCall} from '../../../utils/fastCall'
 import type {AnyUpdater, AsyncModelDep} from '../../asyncmodel/asyncmodelInterfaces'
 import type {
@@ -45,16 +52,23 @@ function assertSync(result: Object, info: Info): void {
     }
 }
 
-class AsyncModelObservable<V: Object, E> {
+const defaultSubscription: Subscription = {
+    unsubscribe() {}
+};
+
+class AsyncModelObserver<V: Object, E> {
+    _subscription: Subscription;
     _model: AsyncModelDep<V, E>;
     _notify: () => void;
 
     constructor(
-        model: AsyncModelDep,
+        observable: Observable<V, E>,
+        model: AsyncModelDep<V, E>,
         notify: () => void
     ) {
         this._model = model
         this._notify = notify
+        this._subscription = observable.subscribe((this: Observer<V, E>))
     }
 
     next(value: V): void {
@@ -65,25 +79,56 @@ class AsyncModelObservable<V: Object, E> {
     error(err: E): void {
         this._model.error(err)
         this._notify()
+        this.complete()
     }
 
     complete(): void {
-        this._model.unsubscribe()
+        this._subscription.unsubscribe()
     }
 }
 
-export default function createModelSetterCreator<V: Object, E>(
-    notify: () => void,
-    meta: MetaDep<E>,
-    invoker: Invoker,
-    info: Info
-): SetterCreator {
-    function setterResolver(
-        depsResult: ResolveDepsResult,
-        model: ModelDep<V>|AsyncModelDep<V, E>,
+// implements SetterDep
+export default class SetterDepImpl<V: Object, E> {
+    kind: 'setter';
+    base: DepBase;
+    _notify: () => void;
+    _invoker: Invoker;
+    _value: SetFn;
+    _model: AnyModelDep<V, E>;
+    _meta: MetaDep<E>;
+
+    _observer: ?Observer<V, E>;
+
+    constructor(
+        id: DepId,
+        info: Info,
+        notify: () => void,
+        model: AnyModelDep<V, E>,
+        meta: MetaDep<E>
+    ) {
+        this.kind = 'setter'
+        this._notify = notify
+        this._model = model
+        this._meta = meta
+        this.base = new DepBaseImpl(id, info)
+    }
+
+    init(invoker: Invoker): void {
+        this._invoker = invoker
+    }
+
+    unsubscribe(): void {
+        if (this._observer) {
+            this._observer.complete()
+            this._observer = null
+        }
+    }
+
+    _setterResolver(
+        {deps, middlewares}: ResolveDepsResult,
         args: Array<any>
     ): void {
-        const {deps, middlewares} = depsResult
+        const {base, _model: model, _notify: notify, _invoker: invoker} = this
         const result: V = fastCall(invoker.target, [model.resolve()].concat(deps, args));
         if (middlewares) {
             const middleareArgs = [result].concat(args)
@@ -94,15 +139,16 @@ export default function createModelSetterCreator<V: Object, E>(
 
         switch (model.kind) {
             case 'model':
-                assertSync(result, info)
+                assertSync(result, base.info)
                 model.set(result)
                 break
             case 'asyncmodel':
-                assertAsync(result, info)
+                assertAsync(result, base.info)
                 model.pending()
-                this._subscription = (result: Observable<V, E>).subscribe(
-                    new AsyncModelObservable(model, notify)
-                )
+                if (this._observer) {
+                    this._observer.complete()
+                }
+                this._observer = new AsyncModelObserver(result, model, notify);
                 break
             default:
                 throw new Error('Unknown type: ' + model.kind + ' in ' + model.base.info.displayName)
@@ -110,18 +156,29 @@ export default function createModelSetterCreator<V: Object, E>(
         notify()
     }
 
-    return function createModelSetter(model: AnyModelDep<V, E>): SetFn {
+    resolve(): SetFn {
+        const {base} = this
+        if (!base.isRecalculate) {
+            return this._value
+        }
+        const self = this
+        const {_meta: meta, _invoker: invoker} = this
+
         const depsResult: ResolveDepsResult = resolveDeps(invoker.depArgs);
 
-        return function setValue(...args: any): void {
+        this._value = function setValue(...args: any): void {
             if (meta.resolve().fulfilled) {
-                setterResolver(depsResult, model, args)
+                self._setterResolver(depsResult, args)
             } else {
                 function success(): void {
-                    setterResolver(depsResult, model, args)
+                    self._setterResolver(depsResult, args)
                 }
                 meta.promise.then(success)
             }
         }
+
+        base.isRecalculate = false
+
+        return this._value
     }
 }

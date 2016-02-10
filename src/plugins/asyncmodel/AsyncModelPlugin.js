@@ -41,8 +41,7 @@ export default class AsyncModelPlugin {
             base.id,
             base.info,
             acc.createCursor(info.statePath),
-            info.fromJS,
-            acc.notify
+            info.fromJS
         );
         acc.addRelation(base.id)
 
