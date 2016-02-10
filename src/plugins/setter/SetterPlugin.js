@@ -2,6 +2,8 @@
 
 import createModelSetterCreator from './impl/createModelSetterCreator'
 import defaultFinalizer from '../factory/defaultFinalizer'
+import InvokerImpl from '../factory/InvokerImpl'
+import MetaAnnotationImpl from '../meta/MetaAnnotationImpl'
 import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
     DepId,
@@ -14,6 +16,7 @@ import type {
     AnnotationResolver
 } from '../../interfaces/nodeInterfaces'
 import type {Plugin} from '../../interfaces/pluginInterfaces'
+import type {MetaDep} from '../meta/metaInterfaces'
 import type {
     AnyModelDep,
     SetterDep,
@@ -66,11 +69,20 @@ export default class SetterPlugin {
         if (model.kind !== 'model' && model.kind !== 'asyncmodel') {
             throw new Error('Not a model dep type: ' + model.kind + ' in ' + model.base.info.displayName)
         }
+        const {id, target, info} = base
+        const meta: MetaDep<E> = (newAcc.resolveAnnotation(new MetaAnnotationImpl(
+            id + '.meta',
+            target,
+            info.tags
+        )): any);
+
+        const invoker = new InvokerImpl(target, acc.getDeps(annotation.deps, target, info.tags));
 
         dep.init(createModelSetterCreator(
-            acc,
-            base,
-            annotation.deps
+            acc.notify,
+            meta,
+            invoker,
+            info
         ), model)
         acc.end(dep)
     }

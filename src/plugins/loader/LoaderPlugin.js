@@ -14,6 +14,7 @@ import type {
 import type {
     DepArgs,
     AnyDep,
+    Cacheable,
     DepBase,
     AnnotationResolver
 } from '../../interfaces/nodeInterfaces'
@@ -36,6 +37,8 @@ import type {AsyncModelDep} from '../asyncmodel/asyncmodelInterfaces'
 class LoaderDepImpl<V: Object, E> {
     kind: 'loader';
     base: DepBase;
+    dataOwners: Array<Cacheable>;
+
     _setterDep: SetterDep;
     _model: AsyncModelDep<V, E>;
     _value: V;
@@ -52,9 +55,16 @@ class LoaderDepImpl<V: Object, E> {
         this._model = model
     }
 
+    _notifyData(): void {
+        const {dataOwners} = this
+        for (let i = 0, l = dataOwners.length; i < l; i++) {
+            dataOwners[i].isRecalculate = true
+        }
+    }
+
     reset(): void {
-        this._model.unsubscribe()
         this._setter = null
+        this._model.reset()
     }
 
     resolve(): V {
@@ -65,7 +75,6 @@ class LoaderDepImpl<V: Object, E> {
         const {base, _model: model, _setterDep: setterDep} = this
         const setter: SetFn = setterDep.resolve();
         if (this._setter !== setter) {
-            model.unsubscribe()
             this._setter = setter
             setter()
         }

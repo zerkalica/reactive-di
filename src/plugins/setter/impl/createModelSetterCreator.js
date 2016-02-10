@@ -45,21 +45,39 @@ function assertSync(result: Object, info: Info): void {
     }
 }
 
+class AsyncModelObservable<V: Object, E> {
+    _model: AsyncModelDep<V, E>;
+    _notify: () => void;
+
+    constructor(
+        model: AsyncModelDep,
+        notify: () => void
+    ) {
+        this._model = model
+        this._notify = notify
+    }
+
+    next(value: V): void {
+        this._model.next(value)
+        this._notify()
+    }
+
+    error(err: E): void {
+        this._model.error(err)
+        this._notify()
+    }
+
+    complete(): void {
+        this._model.unsubscribe()
+    }
+}
+
 export default function createModelSetterCreator<V: Object, E>(
-    acc: AnnotationResolver,
-    base: AnnotationBase<AnyUpdater<V, E>>,
-    deps: ?Deps,
+    notify: () => void,
+    meta: MetaDep<E>,
+    invoker: Invoker,
+    info: Info
 ): SetterCreator {
-    const {info, id, target} = base
-    const newAcc = acc.newRoot()
-    const meta: MetaDep<E> = (newAcc.resolveAnnotation(new MetaAnnotationImpl(
-        id + '.meta',
-        target,
-        info.tags
-    )): any);
-
-    const invoker = new InvokerImpl(target, acc.getDeps(deps, target, info.tags));
-
     function setterResolver(
         depsResult: ResolveDepsResult,
         model: ModelDep<V>|AsyncModelDep<V, E>,
@@ -73,10 +91,23 @@ export default function createModelSetterCreator<V: Object, E>(
                 fastCall(middlewares[i], middleareArgs)
             }
         }
-        model.kind === 'asyncmodel'
-            ? assertAsync(result, info)
-            : assertSync(result, info)
-        model.set(result)
+
+        switch (model.kind) {
+            case 'model':
+                assertSync(result, info)
+                model.set(result)
+                break
+            case 'asyncmodel':
+                assertAsync(result, info)
+                model.pending()
+                this._subscription = (result: Observable<V, E>).subscribe(
+                    new AsyncModelObservable(model, notify)
+                )
+                break
+            default:
+                throw new Error('Unknown type: ' + model.kind + ' in ' + model.base.info.displayName)
+        }
+        notify()
     }
 
     return function createModelSetter(model: AnyModelDep<V, E>): SetFn {

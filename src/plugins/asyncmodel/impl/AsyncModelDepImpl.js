@@ -126,7 +126,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
 
         this.dataOwners = []
         this.metaOwners = []
-        this.meta = new EntityMetaImpl()
+        this.meta = new EntityMetaImpl({pending: true})
         this._promiseDone = true
         this.refCount = 0
         this.isSubscribed = false
@@ -138,7 +138,6 @@ export default class AsyncModelDepImpl<V: Object, E> {
         for (let i = 0, l = metaOwners.length; i < l; i++) {
             metaOwners[i].isRecalculate = true
         }
-        this._notify()
     }
 
     _notifyData(): void {
@@ -146,7 +145,6 @@ export default class AsyncModelDepImpl<V: Object, E> {
         for (let i = 0, l = dataOwners.length; i < l; i++) {
             dataOwners[i].isRecalculate = true
         }
-        this._notify()
     }
 
     _pending(): void {
@@ -157,6 +155,12 @@ export default class AsyncModelDepImpl<V: Object, E> {
         }
         this.meta = newMeta
         this._notifyMeta()
+    }
+
+    reset(): void {
+        this.unsubscribe()
+        this._pending()
+        this._notifyData()
     }
 
     unsubscribe(): void {
@@ -179,6 +183,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this._notifyMeta()
         }
         this._success(value)
+        this._notify()
         this._promiseDone = true
     }
 
@@ -190,6 +195,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this._notifyMeta()
         }
         this._error(errorValue)
+        this._notify()
         this._promiseDone = true
     }
 
@@ -208,11 +214,6 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this._success = success
     }
 
-    reset(): void {
-        this.unsubscribe()
-        this._pending()
-    }
-
     set(value: Observable<V, E>): void {
         this.unsubscribe()
 
@@ -221,6 +222,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
             this.isSubscribed = true
             this._subscription = (value: Observable<V, E>).subscribe((this: Observer<V, E>))
             this._pending()
+            this._notify()
         } else {
             this.next(((value: any): V))
         }
