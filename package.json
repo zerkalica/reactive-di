@@ -58,7 +58,7 @@
     "babel-runtime": "5.x.x",
     "babel-cli": "^6.5.1",
     "babel-core": "^6.5.1",
-    "babel-eslint": "^5.0.0-beta6",
+    "babel-eslint": "^5.0.0-0",
     "babel-plugin-espower": "^2.1.1",
     "babel-plugin-flow-comments": "^6.3.19",
     "babel-plugin-syntax-decorators": "^6.5.0",

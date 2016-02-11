@@ -6,7 +6,6 @@ import sinon from 'sinon'
 
 import annotations from './annotations'
 import createPureStateDi from '../createPureStateDi'
-import {createState} from './AsyncTestState'
 import type {Observable} from '../interfaces/observableInterfaces'
 import promiseToObservable from '../utils/promiseToObservable'
 
@@ -20,7 +19,7 @@ const {
 
 describe('DiAsyncTest', () => {
     describe('loading data', () => {
-        it('should load async data', (): Promise<any> => {
+        it('should load async data', (): Promise<void> => {
             class C {
                 v: string;
                 constructor(v: string = 'test1') {
@@ -31,7 +30,7 @@ describe('DiAsyncTest', () => {
 
             const dataSource = Promise.resolve(new C('test2'))
 
-            function cLoader(c: C): Observable<C, Error> {
+            function cLoader(c: C): Observable<C, Error> { // eslint-disable-line
                 return promiseToObservable(dataSource)
             }
             loader(C)(cLoader)
@@ -49,6 +48,7 @@ describe('DiAsyncTest', () => {
             const di = createPureStateDi(new AppState())
             const MyDep = sinon.spy((c: C, meta: EntityMeta) => ({v: c.v, meta}))
             factory(cLoader, meta(cLoader))(MyDep)
+
             assert.deepEqual(di.get(MyDep), {
                 v: 'test1',
                 meta: {
@@ -71,5 +71,7 @@ describe('DiAsyncTest', () => {
                 })
             })
         })
+
+        it('should load')
     })
 })

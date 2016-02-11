@@ -21,7 +21,7 @@ import type {Getter} from '../plugins/getter/getterInterfaces'
 describe('DiSettersGettersTest', () => {
     describe('getter', () => {
         it('should detached from state updates', () => {
-            const {A, B, C, AppState, bSetter} = createState()
+            const {B, C, AppState, bSetter} = createState()
 
             const fn = sinon.spy(v => v)
             factory(getter(B))(fn)
