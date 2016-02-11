@@ -4,7 +4,10 @@ import {fastCall, fastCallMethod} from './fastCall'
 export type MiddlewareFn = (result: any, ...args: Array<any>) => void;
 export type MiddlewareMap = {[method: string]: MiddlewareFn};
 
-export function createFunctionProxy<T: Function>(source: Function, middlewares: Array<MiddlewareFn>): T {
+export function createFunctionProxy<T: Function>(
+    source: Function,
+    middlewares: Array<MiddlewareFn>
+): T {
     function functionProxy(...args: Array<any>): any {
         let res = fastCall(source, args)
         const newArgs = [res].concat(args)

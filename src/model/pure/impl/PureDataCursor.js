@@ -30,7 +30,8 @@ export default class PureDataCursor<S: Object, V: Object> {
 
     constructor(path: Array<string>, stateRef: {state: S}) {
         /* eslint-disable no-new-func */
-        const selector: Selector<S, V> = ((new Function('s', 'return ' + ['s'].concat(path).join('.'))): Function);
+        const selector: Selector<S, V> =
+            ((new Function('s', 'return ' + ['s'].concat(path).join('.'))): Function);
         /* eslint-enable no-new-func */
         this.get = function get(): V {
             return selector(stateRef.state)

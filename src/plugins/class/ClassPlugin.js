@@ -5,7 +5,6 @@ import resolveDeps from '../factory/resolveDeps'
 import InvokerImpl from '../factory/InvokerImpl'
 import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
-    DepFn,
     DepId,
     Info
 } from '../../interfaces/annotationInterfaces'
@@ -14,7 +13,7 @@ import type {
     DepBase
 } from '../../interfaces/nodeInterfaces'
 import type {AnnotationResolver} from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces'
+import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
 import {createObjectProxy} from '../../utils/createProxy'
 import {fastCreateObject} from '../../utils/fastCall'
 import type {
@@ -33,7 +32,7 @@ export class ClassDepImpl<V: Object> {
     constructor(
         id: DepId,
         info: Info,
-        target: Class<V>
+        target: Class<V> // eslint-disable-line
     ) {
         this.kind = 'class'
         this.base = new DepBaseImpl(id, info)

@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {IdCreator} from '../interfaces/annotationInterfaces'
+import type {IdCreator} from '../interfaces/annotationInterfaces' // eslint-disable-line
 
 // implements IdCreator
 export default class DefaultIdCreator {

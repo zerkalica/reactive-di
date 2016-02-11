@@ -1,15 +1,11 @@
 /* @flow */
 
-import type {AnnotationBase, Dependency} from '../../interfaces/annotationInterfaces'
+import type {AnnotationBase} from '../../interfaces/annotationInterfaces'
 import type {
     DepFn,
     Deps
 } from '../../interfaces/annotationInterfaces'
-import type {SimpleMap} from '../../interfaces/modelInterfaces'
-import type {
-    DepBase,
-    AnyDep
-} from '../../interfaces/nodeInterfaces'
+import type {DepBase} from '../../interfaces/nodeInterfaces'
 import type {DepArgs} from '../../interfaces/nodeInterfaces'
 
 export type Hooks<T> = {

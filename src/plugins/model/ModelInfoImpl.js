@@ -1,6 +1,6 @@
 /* @flow */
 import type {Dependency} from '../../interfaces/annotationInterfaces'
-import type ModelInfo from './modelInterfaces'
+import type ModelInfo from './modelInterfaces' // eslint-disable-line
 import type {FromJS} from '../../interfaces/modelInterfaces'
 
 // implements ModelInfo

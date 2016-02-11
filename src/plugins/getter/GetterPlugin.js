@@ -2,7 +2,6 @@
 
 import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
-    DepFn,
     DepId,
     Info
 } from '../../interfaces/annotationInterfaces'
@@ -11,7 +10,7 @@ import type {
     DepBase,
     AnnotationResolver
 } from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces'
+import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
 import type {AsyncModelDep} from '../asyncmodel/asyncmodelInterfaces'
 import type {ModelDep} from '../model/modelInterfaces'
 import type {
@@ -24,8 +23,9 @@ type AnyModelDep<V, E> = ModelDep<V>|AsyncModelDep<V, E>;
 type Resolvable<V> = {
     resolve: () => V;
 };
+
 // implements GetterDep
-class GetterDepImpl<V: Object, E> {
+class GetterDepImpl<V: Object> {
     kind: 'getter';
     base: DepBase;
     _model: Resolvable<V>;
@@ -56,10 +56,12 @@ export default class GetterPlugin {
         const {base} = annotation
         const modelDep: AnyModelDep<V, E> = (acc.newRoot().resolve(base.target): any);
         if (modelDep.kind !== 'model' && modelDep.kind !== 'asyncmodel') {
-            throw new Error('Not a model dep type: ' + modelDep.kind + ' in ' + modelDep.base.info.displayName)
+            throw new Error(
+                `Not a model dep type: ${modelDep.kind} in ${modelDep.base.info.displayName}`
+            )
         }
 
-        const dep: GetterDep<V, E> = new GetterDepImpl(
+        const dep: GetterDep<V> = new GetterDepImpl(
             base.id,
             base.info,
             (modelDep: Resolvable<V>)
@@ -69,5 +71,5 @@ export default class GetterPlugin {
         acc.end(dep)
     }
 
-    finalize<V: Object, E>(dep: GetterDep<V, E>, target: AnyDep): void {}
+    finalize<V: Object, E>(dep: GetterDep<V>, target: AnyDep): void {} // eslint-disable-line
 }

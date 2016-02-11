@@ -8,7 +8,6 @@ import type {
     Info
 } from '../../../interfaces/annotationInterfaces'
 import type {
-    Notify,
     Cursor,
     FromJS
 } from '../../../interfaces/modelInterfaces'
@@ -17,14 +16,8 @@ import type {
     DepBase
 } from '../../../interfaces/nodeInterfaces'
 import type {
-    Subscription,
-    Observable,
-    Observer
-} from '../../../interfaces/observableInterfaces'
-import type {SetterDep} from '../../setter/setterInterfaces'
-import type {
     EntityMeta,
-    AsyncModelDep
+    AsyncModelDep // eslint-disable-line
 } from '../asyncmodelInterfaces'
 
 export function setPending<E>(meta: EntityMeta<E>): EntityMeta<E> {
@@ -109,7 +102,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
     ) {
         this.kind = 'asyncmodel'
 
-        const base = this.base = new DepBaseImpl(id, info)
+        this.base = new DepBaseImpl(id, info)
         this._cursor = cursor
         this._fromJS = fromJS
         this._error = noop

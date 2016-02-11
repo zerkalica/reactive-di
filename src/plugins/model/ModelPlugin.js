@@ -7,7 +7,7 @@ import type {
     AnyDep,
     AnnotationResolver
 } from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces'
+import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
 import type {
     ModelDep,
     ModelAnnotation,

@@ -8,16 +8,20 @@ import type {
 } from '../../interfaces/annotationInterfaces'
 import type {
     ModelInfo,
-    ModelAnnotation
+    ModelAnnotation // eslint-disable-line
 } from './modelInterfaces'
 
 // implements ModelAnnotation
 export default class ModelAnnotationImpl<V: Object> {
     kind: 'model';
-    base: AnnotationBase<Class<V>>;
+    base: AnnotationBase<Class<V>>; // eslint-disable-line
     info: ModelInfo<V>;
 
-    constructor(id: DepId, target: Class<V>, tags: Array<string>) {
+    constructor(
+        id: DepId,
+        target: Class<V>, // eslint-disable-line
+        tags: Array<string>
+    ) {
         this.kind = 'model'
         this.base = new AnnotationBaseImpl(id, this.kind, tags, target)
         this.info = new ModelInfoImpl()

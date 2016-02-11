@@ -6,8 +6,8 @@ import type {
 } from '../../interfaces/nodeInterfaces'
 import type {SimpleMap} from '../../interfaces/modelInterfaces'
 import type {
-    MiddlewareFn,
-    MiddlewareMap
+    MiddlewareFn, // eslint-disable-line
+    MiddlewareMap // eslint-disable-line
 } from '../../utils/createProxy'
 
 export type ResolveDepsResult<A> = {
@@ -15,8 +15,10 @@ export type ResolveDepsResult<A> = {
     middlewares: ?Array<A>
 }
 
-export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(dep: DepArgs): ResolveDepsResult<A> {
-    const {deps, depNames, middlewares} = dep
+export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(
+    ownerDep: DepArgs
+): ResolveDepsResult<A> {
+    const {deps, depNames, middlewares} = ownerDep
     const argsArray = []
     const argsObject = {}
     for (let i = 0, j = deps.length; i < j; i++) {

@@ -1,6 +1,5 @@
 /* @flow */
 
-import getFunctionName from '../utils/getFunctionName'
 import type {
     AnnotationDriver,
     DepId,
@@ -19,9 +18,25 @@ import type {
     DepArgs,
     AnnotationResolver
 } from '../interfaces/nodeInterfaces'
-import type {FinalizeFn, Resolve} from '../interfaces/pluginInterfaces'
+import type {FinalizeFn} from '../interfaces/pluginInterfaces'
 import type {Plugin} from '../interfaces/pluginInterfaces'
-import {DepArgsImpl} from './DepArgsImpl'
+
+// implements DepArgs
+export class DepArgsImpl<M> {
+    deps: Array<AnyDep>;
+    depNames: ?Array<string>;
+    middlewares: ?Array<M>;
+
+    constructor(
+        deps: Array<AnyDep>,
+        depNames: ?Array<string>,
+        middlewares: ?Array<M>
+    ) {
+        this.deps = deps
+        this.depNames = depNames
+        this.middlewares = middlewares
+    }
+}
 
 // implements AnnotationResolver
 export default class AnnotationResolverImpl {
@@ -148,8 +163,9 @@ export default class AnnotationResolverImpl {
         if (deps && deps.length) {
             if (typeof deps[0] === 'object' && deps.length === 1) {
                 depNames = []
-                const argsObject: SimpleMap<string, Dependency> = ((deps[0]: any): SimpleMap<string, Dependency>);
-                for (let key in argsObject) {
+                const argsObject: SimpleMap<string, Dependency> =
+                    ((deps[0]: any): SimpleMap<string, Dependency>);
+                for (let key in argsObject) { // eslint-disable-line
                     resolvedDeps.push(this.resolve(argsObject[key]))
                     depNames.push(key)
                 }

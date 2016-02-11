@@ -1,20 +1,13 @@
 /* @flow */
 
 import resolveDeps from '../../factory/resolveDeps'
-import InvokerImpl from '../../factory/InvokerImpl'
-import MetaAnnotationImpl from '../../meta/MetaAnnotationImpl'
 import {DepBaseImpl} from '../../../core/pluginImpls'
 import type {
-    AnnotationBase,
-    Deps,
     DepId,
-    DepFn,
     Info
 } from '../../../interfaces/annotationInterfaces'
 import type {
-    AnyDep,
-    DepBase,
-    AnnotationResolver
+    DepBase
 } from '../../../interfaces/nodeInterfaces'
 import type {
     Subscription,
@@ -22,17 +15,12 @@ import type {
     Observable
 } from '../../../interfaces/observableInterfaces'
 import {fastCall} from '../../../utils/fastCall'
-import type {AnyUpdater, AsyncModelDep} from '../../asyncmodel/asyncmodelInterfaces'
-import type {
-    FactoryDep,
-    Invoker
-} from '../../factory/factoryInterfaces'
+import type {AsyncModelDep} from '../../asyncmodel/asyncmodelInterfaces'
+import type {Invoker} from '../../factory/factoryInterfaces'
 import type {ResolveDepsResult} from '../../factory/resolveDeps'
 import type {MetaDep} from '../../meta/metaInterfaces'
-import type {ModelDep} from '../../model/modelInterfaces'
 import type {
     AnyModelDep,
-    SetterCreator,
     SetFn
 } from '../setterInterfaces'
 
@@ -40,7 +28,7 @@ function isObservable(data: Object): boolean {
     return !!(data.subscribe)
 }
 
-function assertAsync(result: Object, info: Info): void  {
+function assertAsync(result: Object, info: Info): void {
     if (!isObservable(result)) {
         throw new Error(`${info.displayName} must return observable`)
     }
@@ -51,10 +39,6 @@ function assertSync(result: Object, info: Info): void {
         throw new Error(`${info.displayName} must return raw value, not observable`)
     }
 }
-
-const defaultSubscription: Subscription = {
-    unsubscribe() {}
-};
 
 class AsyncModelObserver<V: Object, E> {
     _subscription: Subscription;
@@ -125,9 +109,10 @@ export default class SetterDepImpl<V: Object, E> {
     }
 
     _setterResolver(
-        {deps, middlewares}: ResolveDepsResult,
+        depResult: ResolveDepsResult,
         args: Array<any>
     ): void {
+        const {deps, middlewares} = depResult
         const {base, _model: model, _notify: notify, _invoker: invoker} = this
         const result: V = fastCall(invoker.target, [model.resolve()].concat(deps, args));
         if (middlewares) {
@@ -138,6 +123,7 @@ export default class SetterDepImpl<V: Object, E> {
         }
 
         switch (model.kind) {
+            /* eslint-disable indent */
             case 'model':
                 assertSync(result, base.info)
                 model.set(result)
@@ -151,7 +137,9 @@ export default class SetterDepImpl<V: Object, E> {
                 this._observer = new AsyncModelObserver(result, model, notify);
                 break
             default:
-                throw new Error('Unknown type: ' + model.kind + ' in ' + model.base.info.displayName)
+                throw new Error(
+                    'Unknown type: ' + model.kind + ' in ' + model.base.info.displayName
+                )
         }
         notify()
     }
@@ -167,12 +155,13 @@ export default class SetterDepImpl<V: Object, E> {
         const depsResult: ResolveDepsResult = resolveDeps(invoker.depArgs);
 
         this._value = function setValue(...args: any): void {
-            if (meta.resolve().fulfilled) {
+            function success(): void {
                 self._setterResolver(depsResult, args)
+            }
+
+            if (meta.resolve().fulfilled) {
+                success()
             } else {
-                function success(): void {
-                    self._setterResolver(depsResult, args)
-                }
                 meta.promise.then(success)
             }
         }

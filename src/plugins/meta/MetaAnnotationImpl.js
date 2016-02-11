@@ -6,7 +6,7 @@ import type {
     Dependency
 } from '../../interfaces/annotationInterfaces'
 import {AnnotationBaseImpl} from '../../core/pluginImpls'
-import type {MetaAnnotation} from './metaInterfaces'
+import type {MetaAnnotation} from './metaInterfaces' // eslint-disable-line
 
 // implements MetaAnnotation
 export default class MetaAnnotationImpl<V> {

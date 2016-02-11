@@ -9,7 +9,6 @@ import type {
     DepBase,
     Cacheable
 } from '../../interfaces/nodeInterfaces'
-import type {AsyncModelDep} from '../asyncmodel/asyncmodelInterfaces'
 
 export type ModelInfo<V> = {
     childs: Array<Dependency>;
@@ -19,7 +18,7 @@ export type ModelInfo<V> = {
 
 export type ModelAnnotation<V: Object> = {
     kind: 'model';
-    base: AnnotationBase<Class<V>>;
+    base: AnnotationBase<Class<V>>; // eslint-disable-line
     info: ModelInfo<V>;
 }
 

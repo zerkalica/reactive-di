@@ -15,14 +15,11 @@ import type {
     DepBase
 } from '../../../interfaces/nodeInterfaces'
 import type {
-    FactoryDep
-} from '../../factory/factoryInterfaces'
-import type {
-    ModelDep,
+    ModelDep // eslint-disable-line
 } from '../modelInterfaces'
 
 // implements ModelDep
-export default class ModelDepImpl<V: Object, E> {
+export default class ModelDepImpl<V: Object> {
     kind: 'model';
     base: DepBase;
 
@@ -42,7 +39,7 @@ export default class ModelDepImpl<V: Object, E> {
         fromJS: FromJS<V>
     ) {
         this.kind = 'model'
-        const base = this.base = new DepBaseImpl(id, info)
+        this.base = new DepBaseImpl(id, info)
         this._cursor = cursor
         this._fromJS = fromJS
 

@@ -1,17 +1,13 @@
 /* @flow */
 
 import type {
-    DepFn,
-    AnnotationBase,
-    Dependency
+    AnnotationBase
 } from '../../interfaces/annotationInterfaces'
-import type {FromJS} from '../../interfaces/modelInterfaces'
 import type {
     DepBase,
     Cacheable
 } from '../../interfaces/nodeInterfaces'
 import type {Observable} from '../../interfaces/observableInterfaces'
-import type {FactoryDep} from '../factory/factoryInterfaces'
 import type {ModelInfo} from '../model/modelInterfaces'
 
 export type AsyncUpdater<V: Object, E> = (model: V, ...x: any) => Observable<V, E>;
@@ -25,9 +21,9 @@ export type EntityMeta<E> = {
     reason: ?E;
 }
 
-export type AsyncModelAnnotation<V: Object, E> = {
+export type AsyncModelAnnotation<V: Object> = {
     kind: 'asyncmodel';
-    base: AnnotationBase<Class<V>>;
+    base: AnnotationBase<Class<V>>; // eslint-disable-line
     info: ModelInfo<V>;
 }
 

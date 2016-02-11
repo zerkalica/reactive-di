@@ -6,6 +6,7 @@ import DefaultIdCreator from './core/DefaultIdCreator'
 import FactoryAnnotationImpl from './plugins/factory/FactoryAnnotationImpl'
 import GetterAnnotationImpl from './plugins/getter/GetterAnnotationImpl'
 import LoaderAnnotationImpl from './plugins/loader/LoaderAnnotationImpl'
+import ResetAnnotationImpl from './plugins/loader/ResetAnnotationImpl'
 import MetaAnnotationImpl from './plugins/meta/MetaAnnotationImpl'
 import ModelAnnotationImpl from './plugins/model/ModelAnnotationImpl'
 import SetterAnnotationImpl from './plugins/setter/SetterAnnotationImpl'
@@ -31,8 +32,10 @@ export type Annotations = {
     meta<T: Dependency>(target: T): () => void;
     model<V: Object>(target: Class<V>): Class<V>;
     asyncmodel<V: Object>(target: Class<V>): Class<V>;
-    setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: AnyUpdater<V, E>) => AnyUpdater<V, E>;
-    loader<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E>;
+    setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
+        : (target: AnyUpdater<V, E>) => AnyUpdater<V, E>;
+    loader<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
+        : (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E>;
 }
 
 export default function createAnnotations(
@@ -109,7 +112,8 @@ export default function createAnnotations(
             ))
         },
 
-        setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: AnyUpdater<V, E>) => AnyUpdater<V, E> {
+        setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
+            : (target: AnyUpdater<V, E>) => AnyUpdater<V, E> {
             return function _setter(target: AnyUpdater<V, E>): AnyUpdater<V, E> {
                 return driver.annotate(target, new SetterAnnotationImpl(
                     ids.createId(),
@@ -121,7 +125,8 @@ export default function createAnnotations(
             };
         },
 
-        loader<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>): (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E> {
+        loader<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
+            : (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E> {
             return function _loader(target: AsyncUpdater<V, E>): AsyncUpdater<V, E> {
                 return driver.annotate(target, new LoaderAnnotationImpl(
                     ids.createId(),
@@ -131,6 +136,16 @@ export default function createAnnotations(
                     tags
                 ))
             };
+        },
+
+        reset<T: Dependency>(target: T): () => void {
+            function dummyTargetId(): void {}
+            const loaderAnnotation: AnyAnnotation = driver.getAnnotation(target);
+            return driver.annotate((dummyTargetId: any), new ResetAnnotationImpl(
+                loaderAnnotation.base.id + '.reset',
+                target,
+                tags
+            ))
         }
         /* eslint-enable no-undef */
     }

@@ -41,13 +41,11 @@ class PromiseObservable<T, E> {
 }
 
 export default function promiseToObservable<V, E>(
-    resolver: Promise<V>|Observable<V, E>
+    resolver: Promise<V>
 ): Observable<V, E> {
-    if (typeof resolver.subscribe === 'function') {
-        return ((resolver: any): Observable<V, E>)
-    } else if (typeof resolver.then === 'function') {
-        return new PromiseObservable(((resolver: any): Promise<V>))
-    } else {
-        throw new TypeError('resolver argument is not a Promise or Observable')
+    if (typeof resolver.then !== 'function') {
+        throw new TypeError('resolver argument is not a Promise')
     }
+
+    return new PromiseObservable(resolver)
 }

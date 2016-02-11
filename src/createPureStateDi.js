@@ -10,24 +10,21 @@ import MetaPlugin from './plugins/meta/MetaPlugin'
 import ModelPlugin from './plugins/model/ModelPlugin'
 import ReactiveDiImpl from './core/ReactiveDiImpl'
 import LoaderPlugin from './plugins/loader/LoaderPlugin'
+import ResetPlugin from './plugins/loader/ResetPlugin'
 import SetterPlugin from './plugins/setter/SetterPlugin'
 import SymbolMetaDriver from './drivers/SymbolMetaDriver'
 import type {
     AnnotationDriver,
-    DepId,
     Dependency,
     Tag
 } from './interfaces/annotationInterfaces'
 import type {
-    Notify,
-    SimpleMap,
-    CursorCreator
+    Notify
 } from './interfaces/modelInterfaces'
 import type {
     ReactiveDi,
     AnnotationResolver
 } from './interfaces/nodeInterfaces'
-import type {Plugin} from './interfaces/pluginInterfaces'
 
 export default function createPureStateDi<T: Object>(
     state: T,
@@ -50,6 +47,7 @@ export default function createPureStateDi<T: Object>(
                 getter: new GetterPlugin(),
                 model: new ModelPlugin(),
                 loader: new LoaderPlugin(),
+                reset: new ResetPlugin(),
                 asyncmodel: new AsyncModelPlugin(),
                 meta: new MetaPlugin()
             }

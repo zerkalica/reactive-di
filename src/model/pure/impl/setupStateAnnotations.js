@@ -1,9 +1,6 @@
 /* @flow */
 
-import type {
-    Dependency,
-    AnnotationDriver
-} from '../../../interfaces/annotationInterfaces'
+import type {AnnotationDriver} from '../../../interfaces/annotationInterfaces'
 import type {
     FromJS,
     SimpleMap

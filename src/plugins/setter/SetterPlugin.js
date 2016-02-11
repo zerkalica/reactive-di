@@ -8,7 +8,7 @@ import type {
     AnyDep,
     AnnotationResolver
 } from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces'
+import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
 import type {MetaDep} from '../meta/metaInterfaces'
 import type {
     SetterDep,
@@ -24,7 +24,9 @@ export default class SetterPlugin {
         const newAcc = acc.newRoot()
         const model: AnyDep = newAcc.resolve(annotation.model);
         if (model.kind !== 'model' && model.kind !== 'asyncmodel') {
-            throw new Error('Not a model dep type: ' + model.kind + ' in ' + model.base.info.displayName)
+            throw new Error(
+                'Not a model dep type: ' + model.kind + ' in ' + model.base.info.displayName
+            )
         }
         const meta: MetaDep<E> = (newAcc.resolveAnnotation(new MetaAnnotationImpl(
             id + '.meta',

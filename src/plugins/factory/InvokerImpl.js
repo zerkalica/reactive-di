@@ -3,7 +3,7 @@
 import type {HooksRec} from '../../interfaces/annotationInterfaces'
 import type {DepArgs} from '../../interfaces/nodeInterfaces'
 import type {
-    Invoker,
+    Invoker, // eslint-disable-line
     Hooks
 } from './factoryInterfaces'
 

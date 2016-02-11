@@ -7,7 +7,7 @@ import type {
     AnnotationBase,
     DepFn
 } from '../../interfaces/annotationInterfaces'
-import type {FactoryAnnotation} from './factoryInterfaces'
+import type {FactoryAnnotation} from './factoryInterfaces' // eslint-disable-line
 
 // implements FactoryAnnotation
 export default class FactoryAnnotationImpl<V> {

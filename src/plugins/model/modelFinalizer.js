@@ -12,8 +12,9 @@ type AnyModelDep<V, E> = ModelDep<V> | AsyncModelDep<V, E>;
 export default function modelFinalizer(dep: AnyModelDep, child: AnyDep): void {
     const {base} = dep
     switch (child.kind) {
+        /* eslint-disable indent */
         case 'asyncmodel':
-        case 'model':
+        case 'model': // eslint-disable-line
             const {base: childBase, dataOwners: childOwners} = child
             dep.dataOwners.push(childBase)
             childOwners.push((base: Cacheable))

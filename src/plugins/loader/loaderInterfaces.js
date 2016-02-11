@@ -2,29 +2,32 @@
 
 import type {
     Deps,
-    DepFn,
-    AnnotationBase,
-    Dependency
+    AnnotationBase
 } from '../../interfaces/annotationInterfaces'
-import type {DepBase, DepArgs} from '../../interfaces/nodeInterfaces'
-import type {Observable} from '../../interfaces/observableInterfaces'
+import type {DepBase} from '../../interfaces/nodeInterfaces'
 import type {AsyncUpdater} from '../asyncmodel/asyncmodelInterfaces'
-import type {
-    FactoryDep,
-    Invoker
-} from '../factory/factoryInterfaces'
-import type {MetaDep} from '../meta/metaInterfaces'
-import type {SetterDep} from '../setter/setterInterfaces'
 
-export type LoaderDep<V: Object, E> = {
+export type LoaderDep<V: Object> = {
     kind: 'loader';
     base: DepBase;
     resolve(): V;
+    reset(): void;
+}
+
+export type ResetDep = {
+    kind: 'reset';
+    base: DepBase;
+    resolve(): () => void;
 }
 
 export type LoaderAnnotation<V: Object, E> = {
     kind: 'loader';
     base: AnnotationBase<AsyncUpdater<V, E>>;
     deps: ?Deps;
-    model: Class<V>;
+    model: Class<V>; // eslint-disable-line
+}
+
+export type ResetAnnotation<V: Object, E> = {
+    kind: 'reset';
+    base: AnnotationBase<AsyncUpdater<V, E>>;
 }

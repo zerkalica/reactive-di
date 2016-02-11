@@ -5,17 +5,15 @@ import resolveDeps from './resolveDeps'
 import InvokerImpl from './InvokerImpl'
 import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
-    DepFn,
     DepId,
     Info
 } from '../../interfaces/annotationInterfaces'
 import type {
-    DepArgs,
     AnyDep,
     DepBase,
-    AnnotationResolver,
+    AnnotationResolver
 } from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces'
+import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
 import {createFunctionProxy} from '../../utils/createProxy'
 import {fastCall} from '../../utils/fastCall'
 import type {
@@ -33,11 +31,14 @@ export class FactoryDepImpl<V: any> {
 
     constructor(
         id: DepId,
-        info: Info,
-        target: DepFn<V>
+        info: Info
     ) {
         this.kind = 'factory'
         this.base = new DepBaseImpl(id, info)
+    }
+
+    init(invoker: FactoryInvoker<V>): void {
+        this._invoker = invoker
     }
 
     resolve(): V {
@@ -58,10 +59,6 @@ export class FactoryDepImpl<V: any> {
 
         return this._value
     }
-
-    setInvoker(invoker: FactoryInvoker<V>): void {
-        this._invoker = invoker
-    }
 }
 
 // depends on meta
@@ -71,7 +68,7 @@ export default class FactoryPlugin {
         const {base} = annotation
         const dep: FactoryDepImpl<V> = new FactoryDepImpl(base.id, base.info, base.target);
         acc.begin(dep)
-        dep.setInvoker(new InvokerImpl(
+        dep.init(new InvokerImpl(
             base.target,
             acc.getDeps(annotation.deps, base.target, base.info.tags)
         ))

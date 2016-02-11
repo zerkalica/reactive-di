@@ -5,7 +5,6 @@ type MapFn<T, V> = (v: T, index?: number) => V;
 type FilterFn<T> = (v: T, index?: number) => boolean;
 type SortFn<T> = (a: T, b: T) => number;
 type FindFn<T> = (element: T, index?: number, arr?: Array<T>, thisArg?: Object) => boolean;
-type SetFn<T> = (element: T) => T;
 
 export type Id = string;
 export type CollectionItem = {
@@ -17,8 +16,6 @@ type CollectionRec<T> = {
     deleted?: DeletedItems<T>;
 }
 type UpdateFn<V> = (oldItem: V) => V;
-
-type CreateItem<V> = (rawItem: Object) => V;
 
 type ItemRec = {};
 
@@ -34,7 +31,7 @@ export type Collection<Item: CollectionItem> = {
     set(id: Id, item: Item): Collection<Item>;
     update(id: Id, updateFn: UpdateFn<Item>): Collection<Item>;
     find(findFn: FindFn<Item>): Item;
-    map<V>(mapFn: MapFn<Item, V>): Array<V>;
+    map<V>(mapFn: MapFn<Item, V>): Array<V>; // eslint-disable-line
     filter(filterFn: FilterFn<Item>): Collection<Item>;
     sort(sortFn: SortFn<Item>): Collection<Item>;
     toJS(): Array<Item>;
@@ -122,7 +119,7 @@ export default class BaseCollection<Item: CollectionItem> {
 
     remove(id: Id): Collection<Item> {
         return this._copy({
-            items: this._getDeleted(id).items,
+            items: this._getDeleted(id).items
         })
     }
 

@@ -2,28 +2,12 @@
 
 import modelFinalizer from '../model/modelFinalizer'
 import AsyncModelDepImpl from './impl/AsyncModelDepImpl'
-import EntityMetaImpl, {updateMeta} from './EntityMetaImpl'
-import {DepBaseImpl} from '../../core/pluginImpls'
-import type {
-    DepId,
-    Info
-} from '../../interfaces/annotationInterfaces'
-import type {
-    Cursor
-} from '../../interfaces/modelInterfaces'
 import type {
     AnyDep,
-    DepBase,
-    AnnotationResolver,
-    Cacheable
+    AnnotationResolver
 } from '../../interfaces/nodeInterfaces'
+import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
 import type {
-    Observable,
-    Subscription
-} from '../../interfaces/observableInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces'
-import type {
-    EntityMeta,
     AsyncModelDep,
     AsyncModelAnnotation
 } from './asyncmodelInterfaces'
@@ -32,7 +16,7 @@ import type {
 // implements Plugin
 export default class AsyncModelPlugin {
     create<V: Object, E>(
-        annotation: AsyncModelAnnotation<V, E>,
+        annotation: AsyncModelAnnotation<V>,
         acc: AnnotationResolver
     ): void {
         const {base, info} = annotation

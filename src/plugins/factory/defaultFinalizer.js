@@ -5,12 +5,11 @@ import type {
     AnyDep,
     AsyncSubscription
 } from '../../interfaces/nodeInterfaces'
-import type {MetaDep} from '../meta/metaInterfaces'
-import type {ModelDep} from '../model/modelInterfaces'
 
 export default function defaultFinalizer(dep: AnyDep, target: AnyDep): void {
     const {base} = dep
-    switch(target.kind) {
+    switch (target.kind) {
+        /* eslint-disable indent */
         case 'asyncmodel':
         case 'model':
             target.dataOwners.push((base: Cacheable))
@@ -18,9 +17,9 @@ export default function defaultFinalizer(dep: AnyDep, target: AnyDep): void {
                 base.subscriptions.push((target.updater: AsyncSubscription))
             }
             break
-        case 'meta':
+        case 'meta':  // eslint-disable-line
             const {sources} = target
-            for(let i = 0, l = sources.length; i < l; i++) {
+            for (let i = 0, l = sources.length; i < l; i++) {
                 const {metaOwners} = sources[i]
                 metaOwners.push((base: Cacheable))
             }
