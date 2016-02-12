@@ -8,60 +8,61 @@ import annotations from './annotations'
 import createPureStateDi from '../createPureStateDi'
 import {createState} from './TestState'
 
-const {
-    model,
-    klass,
-    factory,
-    setter
-} = annotations
+const {factory} = annotations
 
 describe('DiEventsTest', () => {
-    it('should update mounted listener', () => {
-        const {A, B, C, AppState, bSetter} = createState()
-        const di = createPureStateDi(new AppState())
-        const fn = sinon.spy(v => {
-            return v
-        })
-        factory(A)(fn)
+    it('should not update non-mounted listener', () => {
+        const {B, AppState, bSetter} = createState()
+        const di = createPureStateDi(new AppState(), factory)
+        const fn = sinon.spy(v => v)
         const bSet = di.get(bSetter)
-        const subscription = di.subscribe(fn)
+        di.createUpdater({b: B}, fn, 'test updater')
+        bSet(321)
+        assert(fn.notCalled)
+    })
+
+    it('should update mounted listener', () => {
+        const {B, AppState, bSetter} = createState()
+        const di = createPureStateDi(new AppState(), factory)
+        const fn = sinon.spy(v => v)
+        const bSet = di.get(bSetter)
+        const updater = di.createUpdater({b: B}, fn, 'test updater')
+        updater.mount()
 
         bSet(321)
         bSet(333)
 
         assert(fn.calledTwice)
-        assert(fn.firstCall.calledWith({ b: { v: 321 }, c: { v: 'test' }, v: 123 }))
-        assert(fn.secondCall.calledWith({ b: { v: 333 }, c: { v: 'test' }, v: 123 }))
+        assert(fn.firstCall.calledWith({b: {v: 321}}))
+        assert(fn.secondCall.calledWith({b: {v: 333}}))
     })
 
     it('should not update listener, if changed another path', () => {
-        const {A, B, C, AppState, bSetter} = createState()
+        const {C, AppState, bSetter} = createState()
 
         const fn = sinon.spy(v => v)
-        factory(C)(fn)
 
-        const di = createPureStateDi(new AppState())
+        const di = createPureStateDi(new AppState(), factory)
+        const updater = di.createUpdater({c: C}, fn, 'test updater')
+        updater.mount()
+
         const bSet = di.get(bSetter)
-        di.subscribe(fn)
         bSet({v: 321})
         assert(fn.notCalled)
     })
 
     it('should not update unsubscribed listener', () => {
-        const {A, B, C, AppState, bSetter} = createState()
+        const {B, AppState, bSetter} = createState()
 
-        const di = createPureStateDi(new AppState())
+        const di = createPureStateDi(new AppState(), factory)
         const bSet = di.get(bSetter)
-        const fn = sinon.spy(v => {
-            return v
-        })
-        factory(B)(fn)
-
-        const subscription = di.subscribe(fn)
+        const fn = sinon.spy(v => v)
+        const updater = di.createUpdater({b: B}, fn, 'test updater')
+        updater.mount()
         bSet(321)
-        subscription.unsubscribe()
+        updater.unmount()
         bSet(333)
         assert(fn.calledOnce)
-        assert(fn.calledWith({v: 321}))
+        assert(fn.calledWith({b: {v: 321}}))
     })
 })

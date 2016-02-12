@@ -6,10 +6,10 @@ import AsyncModelPlugin from './plugins/asyncmodel/AsyncModelPlugin'
 import ClassPlugin from './plugins/class/ClassPlugin'
 import FactoryPlugin from './plugins/factory/FactoryPlugin'
 import GetterPlugin from './plugins/getter/GetterPlugin'
+import LoaderPlugin from './plugins/loader/LoaderPlugin'
 import MetaPlugin from './plugins/meta/MetaPlugin'
 import ModelPlugin from './plugins/model/ModelPlugin'
 import ReactiveDiImpl from './core/ReactiveDiImpl'
-import LoaderPlugin from './plugins/loader/LoaderPlugin'
 import ResetPlugin from './plugins/loader/ResetPlugin'
 import SetterPlugin from './plugins/setter/SetterPlugin'
 import SymbolMetaDriver from './drivers/SymbolMetaDriver'
@@ -18,16 +18,14 @@ import type {
     Dependency,
     Tag
 } from './interfaces/annotationInterfaces'
-import type {
-    Notify
-} from './interfaces/modelInterfaces'
-import type {
-    ReactiveDi,
-    AnnotationResolver
-} from './interfaces/nodeInterfaces'
+import type {ReactiveDi} from './interfaces/diInterfaces'
+import type {Notify} from './interfaces/modelInterfaces'
+import type {AnnotationResolver} from './interfaces/nodeInterfaces'
+import type {FactoryAnnotator} from './plugins/factory/factoryInterfaces'
 
 export default function createPureStateDi<T: Object>(
     state: T,
+    factoryAnnotator: FactoryAnnotator,
     middlewares?: Map<Dependency|Tag, Array<Dependency>>,
     overrides?: Map<Dependency, Dependency>
 ): ReactiveDi {
@@ -56,5 +54,5 @@ export default function createPureStateDi<T: Object>(
         return resolver
     }
 
-    return new ReactiveDiImpl(createResolver)
+    return new ReactiveDiImpl(createResolver, factoryAnnotator)
 }
