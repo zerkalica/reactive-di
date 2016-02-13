@@ -1,41 +1,22 @@
 /* @flow */
 import merge from './merge'
+import type {
+    Collection,
+    Id,
+    ItemRec,
+    CollectionItem, // eslint-disable-line
+    MapFn,
+    SortFn,
+    UpdateFn,
+    FindFn,
+    FilterFn
+} from '../interfaces/collectionInterfaces'
 
-type MapFn<T, V> = (v: T, index?: number) => V;
-type FilterFn<T> = (v: T, index?: number) => boolean;
-type SortFn<T> = (a: T, b: T) => number;
-type FindFn<T> = (element: T, index?: number, arr?: Array<T>, thisArg?: Object) => boolean;
-
-export type Id = string;
-export type CollectionItem = {
-    id: Id;
-}
 type DeletedItems<T> = {[id: Id]: [T, number]};
+
 type CollectionRec<T> = {
     items?: Array<T>;
     deleted?: DeletedItems<T>;
-}
-type UpdateFn<V> = (oldItem: V) => V;
-
-type ItemRec = {};
-
-export type Collection<Item: CollectionItem> = {
-    length: number;
-    createItem(rec: ItemRec): Item;
-    fromArray(items: Array<ItemRec>): Collection<Item>;
-    add(item: Item): Collection<Item>;
-    remove(id: Id): Collection<Item>;
-    softRemove(id: Id): Collection<Item>;
-    restore(id: Id): Collection<Item>;
-    get(id: Id): Item;
-    set(id: Id, item: Item): Collection<Item>;
-    update(id: Id, updateFn: UpdateFn<Item>): Collection<Item>;
-    find(findFn: FindFn<Item>): Item;
-    map<V>(mapFn: MapFn<Item, V>): Array<V>; // eslint-disable-line
-    filter(filterFn: FilterFn<Item>): Collection<Item>;
-    sort(sortFn: SortFn<Item>): Collection<Item>;
-    toJS(): Array<Item>;
-    toJSON(): string;
 }
 
 type ItemsMap<Item> = {
@@ -211,7 +192,7 @@ export default class BaseCollection<Item: CollectionItem> {
     }
 }
 
-(BaseCollection.prototype: Object)[Symbol.iterator] = function iterator() {
+(BaseCollection.prototype: Object)[Symbol.iterator] = function iterator() { // eslint-disable-line
     return {
         next() {
             let rec
