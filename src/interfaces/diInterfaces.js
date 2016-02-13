@@ -3,7 +3,7 @@
 export type DepFn<T> = (...x: any) => T;
 export type Dependency<T> = DepFn<T>|Class<T>; // eslint-disable-line
 
-export type SetState<State: Object> = (state: State) => State;
+export type SetState<State: Object> = (state: State) => void;
 
 export type Updater<State: Object> = {
     getInitialState(): State;
