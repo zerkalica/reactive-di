@@ -1,13 +1,20 @@
 /* @flow */
+
+import type {Dependency} from '../interfaces/annotationInterfaces'
+import type {
+    SetState,
+    Updater,
+    CreateUpdater,
+    ReactiveDi // eslint-disable-line
+} from '../interfaces/diInterfaces'
+import type {Notify} from '../interfaces/modelInterfaces'
 import type {
     AnyDep,
-    AnnotationResolver,
-    ReactiveDi, // eslint-disable-line
-    AsyncSubscription
+    AnnotationResolver
 } from '../interfaces/nodeInterfaces'
-import type {Dependency} from '../interfaces/annotationInterfaces'
 import type {Subscription} from '../interfaces/observableInterfaces'
-import type {Notify} from '../interfaces/modelInterfaces'
+
+import type {FactoryAnnotator} from '../plugins/factory/factoryInterfaces'
 
 type ListenerManager = {
     notify: Notify;
@@ -44,45 +51,98 @@ class ListenerManagerImpl {
     }
 }
 
-// implements Subscription
-class DiSubscription {
-    _removeListener: () => void;
+// implements Updater
+class UpdaterImpl<State: Object, ModelDef: Object> {
+    _subscription: ?Subscription;
+    _updaterDep: (state: State) => State;
 
-    constructor(
-        removeListener: () => void
-    ) {
-        this._removeListener = removeListener
-    }
-
-    unsubscribe(): void {
-        this._removeListener()
-    }
-}
-
-// implements ReactiveDi
-export default class ReactiveDiImpl {
     _resolver: AnnotationResolver;
     _listeners: ListenerManager;
 
-    constructor(createResolver: (notify: Notify) => AnnotationResolver) {
-        this._listeners = new ListenerManagerImpl()
-        this._resolver = createResolver(this._listeners.notify);
+    _unsubscribe: ?() => void;
+
+    constructor(
+        viewModelDef: ModelDef,
+        setState: SetState,
+        displayName: string,
+        factoryAnnotator: FactoryAnnotator,
+        resolver: AnnotationResolver,
+        listeners: ListenerManager
+    ) {
+        this._resolver = resolver
+        this._listeners = listeners
+
+        const self = this
+        function updater(state: State): State {
+            if (self._unsubscribe) {
+                setState(state)
+            }
+            return state
+        }
+        updater.displayName = displayName + '_updater'
+        this._updaterDep = factoryAnnotator(viewModelDef)(updater)
+        this._unsubscribe = null
     }
 
-    subscribe(annotatedDep: Dependency): Subscription {
-        const {_resolver: resolver} = this
-        const dep: AnyDep = resolver.resolve(annotatedDep);
-        const removeListener: () => void = this._listeners.add(dep);
+    getInitialState(): State {
+        return (this._resolver.resolve(this._updaterDep).resolve(): any)
+    }
+
+    mount(): void {
+        if (this._unsubscribe) {
+            return
+        }
+
+        const dep: AnyDep = this._resolver.resolve(this._updaterDep);
         // If facet subscribed first time and depends on state a.b
         // and we change another branch in state: a.c,
         // facet will be called - because it never called before and its cache is empty.
         // Prevent calling facet after first subscription:
         dep.base.isRecalculate = false
 
-        return new DiSubscription(removeListener)
+        this._unsubscribe = this._listeners.add(dep)
     }
 
-    get(annotatedDep: Dependency): any {
-        return this._resolver.resolve(annotatedDep).resolve();
+    unmount(): void {
+        if (!this._unsubscribe) {
+            return
+        }
+        this._unsubscribe()
+        this._unsubscribe = null
+    }
+}
+
+// implements ReactiveDi
+export default class ReactiveDiImpl {
+    createUpdater: CreateUpdater;
+    get: (annotatedDep: Dependency) => any;
+
+    constructor(
+        createResolver: (notify: Notify) => AnnotationResolver,
+        factoryAnnotator: FactoryAnnotator
+    ) {
+        const listeners: ListenerManager = new ListenerManagerImpl();
+        const resolver: AnnotationResolver = createResolver(listeners.notify)
+
+        function createUpdater<State: Object, ModelDef: Object>(
+            viewModelDef: ModelDef,
+            setState: SetState<State>,
+            displayName: string
+        ): Updater<State> {
+            return new UpdaterImpl(
+                viewModelDef,
+                setState,
+                displayName,
+                factoryAnnotator,
+                resolver,
+                listeners
+            )
+        }
+        this.createUpdater = createUpdater
+
+        function get(annotatedDep: Dependency): any {
+            return resolver.resolve(annotatedDep).resolve();
+        }
+        this.get = get
     }
 }

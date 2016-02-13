@@ -1,7 +1,8 @@
 /* @flow */
 
-import type {AnnotationBase} from '../../interfaces/annotationInterfaces'
 import type {
+    AnnotationBase,
+    DepItem,
     DepFn,
     Deps
 } from '../../interfaces/annotationInterfaces'
@@ -31,3 +32,5 @@ export type FactoryDep<V: any> = {
     base: DepBase;
     resolve(): V;
 }
+
+export type FactoryAnnotator = (...deps: Array<DepItem>) => <T: DepFn>(target: T) => T; // eslint-disable-line

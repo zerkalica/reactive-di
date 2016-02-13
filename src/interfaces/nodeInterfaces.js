@@ -1,5 +1,13 @@
 /* @flow */
 
+import type {AsyncModelDep} from '../plugins/asyncmodel/asyncmodelInterfaces'
+import type {ClassDep} from '../plugins/class/classInterfaces'
+import type {FactoryDep} from '../plugins/factory/factoryInterfaces'
+import type {GetterDep} from '../plugins/getter/getterInterfaces'
+import type {LoaderDep, ResetDep} from '../plugins/loader/loaderInterfaces'
+import type {MetaDep} from '../plugins/meta/metaInterfaces'
+import type {ModelDep} from '../plugins/model/modelInterfaces'
+import type {SetterDep} from '../plugins/setter/setterInterfaces'
 import type {
     Info,
     DepId,
@@ -7,17 +15,7 @@ import type {
     Deps,
     AnyAnnotation
 } from './annotationInterfaces'
-import type {Subscription} from './observableInterfaces'
 import type {CursorCreator, Notify} from './modelInterfaces'
-
-import type {ClassDep} from '../plugins/class/classInterfaces'
-import type {FactoryDep} from '../plugins/factory/factoryInterfaces'
-import type {MetaDep} from '../plugins/meta/metaInterfaces'
-import type {ModelDep} from '../plugins/model/modelInterfaces'
-import type {AsyncModelDep} from '../plugins/asyncmodel/asyncmodelInterfaces'
-import type {SetterDep} from '../plugins/setter/setterInterfaces'
-import type {GetterDep} from '../plugins/getter/getterInterfaces'
-import type {LoaderDep, ResetDep} from '../plugins/loader/loaderInterfaces'
 
 export type AnyDep =
     ClassDep
@@ -62,11 +60,6 @@ export type AnnotationResolver = {
     resolve(annotatedDep: Dependency): AnyDep;
     addRelation(id: DepId): void;
     begin(dep: AnyDep): void;
-    end<T: AnyDep>(dep: T): void;
+    end<T: AnyDep>(dep: T): void; // eslint-disable-line
     newRoot(): AnnotationResolver;
-}
-
-export type ReactiveDi =  {
-    get(annotatedDep: Dependency): any;
-    subscribe(annotatedDep: Dependency): Subscription;
 }
