@@ -1,6 +1,6 @@
 {
   "name": "reactive-di",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Reactive dependency injection",
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
