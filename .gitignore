@@ -28,15 +28,11 @@ node_modules
 .lock-wscript
 
 flow
-build
-dist
 tags
 .tags*
 *.map
 /*.js
 /*.sh
-/__tests__
-/cursors
-/utils
-tags
+
 /lib
+/interfaces

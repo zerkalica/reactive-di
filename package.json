@@ -18,7 +18,7 @@
     "precommit": "exit 0",
     "update": "ncu -ua && npm install",
     "clean": "rm -rf $npm_package_options_builddir coverage interfaces",
-    "build": "npm run clean && babel src --source-maps --out-dir $npm_package_options_builddir && rm -rf lib/__tests__",
+    "build": "npm run clean && babel src --source-maps --out-dir $npm_package_options_builddir && cp -rf src/interfaces ./ && rm -rf lib/__tests__ interfaces/annotation* interfaces/node* interfaces/plugin*",
     "build.dev": "npm run build -- --watch",
     "lint": "exit 0 && eslint src",
     "check": "flow check",
@@ -52,7 +52,8 @@
     "*.js",
     "README.md",
     "LICENSE",
-    "lib"
+    "lib",
+    "interfaces"
   ],
   "devDependencies": {
     "babel-runtime": "5.x.x",
