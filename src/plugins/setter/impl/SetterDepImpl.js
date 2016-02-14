@@ -108,12 +108,9 @@ export default class SetterDepImpl<V: Object, E> {
         }
     }
 
-    _setterResolver(
-        depResult: ResolveDepsResult,
-        args: Array<any>
-    ): void {
-        const {deps, middlewares} = depResult
+    _setterResolver(args: Array<any>): void {
         const {base, _model: model, _notify: notify, _invoker: invoker} = this
+        const {deps, middlewares}: ResolveDepsResult = resolveDeps(invoker.depArgs);
         const result: V = fastCall(invoker.target, [model.resolve()].concat(deps, args));
         if (middlewares) {
             const middleareArgs = [result].concat(args)
@@ -152,11 +149,9 @@ export default class SetterDepImpl<V: Object, E> {
         const self = this
         const {_meta: meta, _invoker: invoker} = this
 
-        const depsResult: ResolveDepsResult = resolveDeps(invoker.depArgs);
-
         this._value = function setValue(...args: any): void {
             function success(): void {
-                self._setterResolver(depsResult, args)
+                self._setterResolver(args)
             }
 
             if (meta.resolve().fulfilled) {

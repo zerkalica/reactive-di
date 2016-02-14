@@ -42,7 +42,7 @@ export default class SetterPlugin {
             meta
         );
         acc.begin(dep)
-        const invoker = new InvokerImpl(target, acc.getDeps(annotation.deps, target, info.tags));
+        const invoker = new InvokerImpl(target, newAcc.getDeps(annotation.deps, target, info.tags));
         dep.init(invoker)
         acc.end(dep)
     }
