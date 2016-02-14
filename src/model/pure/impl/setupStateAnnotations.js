@@ -31,7 +31,14 @@ export default function setupStateAnnotations<T: Object>(
     obj: T,
     statePath: Array<string> = []
 ): FromJS<T> {
-    const annotation: ModelAnnotation = driver.getAnnotation(obj.constructor);
+    let annotation: ModelAnnotation;
+    try {
+        annotation = driver.getAnnotation(obj.constructor);
+    } catch (e) {
+        e.message = `${e.message}, path: ${statePath.join('.')}`
+        throw e
+    }
+
     const {info} = annotation
     if (!info.statePath.length) {
         info.statePath = statePath
@@ -40,7 +47,11 @@ export default function setupStateAnnotations<T: Object>(
         for (let i = 0, j = keys.length; i < j; i++) {
             const key: string = keys[i];
             const prop: any = obj[key];
-            if (prop !== null && typeof prop === 'object') {
+            if (
+                prop !== null
+                && typeof prop === 'object'
+                && driver.hasAnnotation(prop.constructor)
+            ) {
                 info.childs.push(prop.constructor)
                 propCreators[key] = setupStateAnnotations(
                     driver,

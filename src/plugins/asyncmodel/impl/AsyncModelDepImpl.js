@@ -103,6 +103,7 @@ export default class AsyncModelDepImpl<V: Object, E> {
         this.kind = 'asyncmodel'
 
         this.base = new DepBaseImpl(id, info)
+        this.base.relations.push(id)
         this._cursor = cursor
         this._fromJS = fromJS
         this._error = noop

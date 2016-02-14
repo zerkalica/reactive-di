@@ -20,6 +20,10 @@ export default class SymbolMetaDriver {
         return dep
     }
 
+    hasAnnotation(dep: Dependency): boolean {
+        return !!(dep: Function)[metaSymbol]
+    }
+
     getAnnotation<V, A: AnyAnnotation>(dep: Dependency<V>): A {
         const annotation: A = (dep: Function)[metaSymbol];
         if (!annotation || !annotation.kind) {

@@ -12,7 +12,7 @@
 .*/src/.*
 
 [libs]
-.*/decl/mochaFlow.js
+decl/mochaFlow.js
 
 [options]
 suppress_comment= \\(.\\|\n\\)*\\$FlowDisable

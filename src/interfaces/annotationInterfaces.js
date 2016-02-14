@@ -41,6 +41,7 @@ export type AnnotationBase<T> = {
 }
 
 export type AnnotationDriver = {
+    hasAnnotation(dep: Dependency): boolean;
     getAnnotation<V, A: AnyAnnotation>(dep: Dependency<V>): A; // eslint-disable-line
     annotate<V, T: Dependency<V>, A: AnyAnnotation>(dep: T, annotation: A): T; // eslint-disable-line
 };

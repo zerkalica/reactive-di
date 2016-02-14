@@ -33,6 +33,6 @@ tags
 *.map
 /*.js
 /*.sh
-
+/dist
 /lib
 /interfaces

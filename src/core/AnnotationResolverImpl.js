@@ -102,7 +102,7 @@ export default class AnnotationResolverImpl {
     }
 
     addRelation(id: DepId): void {
-        const {_parents: parents} = this
+        const {_cache: cache, _parents: parents} = this
         for (let i = 0, l = parents.length; i < l; i++) {
             parents[i].add(id)
         }
@@ -131,7 +131,6 @@ export default class AnnotationResolverImpl {
             const {relations} = dep.base
             for (let j = 0, k = parents.length; j < k; j++) {
                 const parent: Set<DepId> = parents[j];
-                parent.add(dep.base.id)
                 for (let i = 0, l = relations.length; i < l; i++) {
                     parent.add(relations[i])
                 }

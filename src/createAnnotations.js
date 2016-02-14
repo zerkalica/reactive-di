@@ -43,6 +43,9 @@ export default function createAnnotations(
     ids: IdCreator = new DefaultIdCreator(),
     tags: Array<string> = []
 ): Annotations {
+    if (!driver) {
+        throw new TypeError('Provide AnnotationDriver')
+    }
     return {
         /* eslint-disable no-unused-vars */
         klass(...deps: Array<DepItem>): <P: Object>(target: Class<P>) => Class<P> {

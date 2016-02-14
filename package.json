@@ -6,8 +6,8 @@
     "registry": "https://registry.npmjs.org"
   },
   "main": "lib/index.js",
-  "options": {
-    "builddir": "lib"
+  "config": {
+    "builddir": "."
   },
   "scripts": {
     "postinstall": "test -d conf && conf/resources/postinstall.sh $npm_package_name || exit 0",
@@ -17,9 +17,9 @@
     "postversion": "git push && git push --tags",
     "precommit": "exit 0",
     "update": "ncu -ua && npm install",
-    "clean": "rm -rf $npm_package_options_builddir coverage interfaces",
-    "build": "npm run clean && babel src --source-maps --out-dir $npm_package_options_builddir && cp -rf src/interfaces ./ && rm -rf lib/__tests__ interfaces/annotation* interfaces/node* interfaces/plugin*",
-    "build.dev": "npm run build -- --watch",
+    "clean": "rm -rf $npm_package_config_builddir/lib coverage interfaces",
+    "build": "npm run clean && cp -rf src/interfaces ./ && rm -rf lib/__tests__ interfaces/annotation* interfaces/node* interfaces/plugin* && babel src --source-maps --out-dir $npm_package_config_builddir/lib",
+    "build.dev": "babel src --source-maps --out-dir $npm_package_config_builddir/lib --watch",
     "lint": "exit 0 && eslint src",
     "check": "flow check",
     "testonly": "mocha",

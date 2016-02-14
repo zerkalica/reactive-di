@@ -40,6 +40,7 @@ export default class ModelDepImpl<V: Object> {
     ) {
         this.kind = 'model'
         this.base = new DepBaseImpl(id, info)
+        this.base.relations.push(id)
         this._cursor = cursor
         this._fromJS = fromJS
 

@@ -40,12 +40,12 @@ describe('DiStateTest', () => {
         bSet(321)
         assert.deepEqual(di.get(MyDep), {
             b:{
-                v:321
+                v: 321
             },
             c:{
                 v:'test'
             },
-            v:123
+            v: 123
         })
     })
 

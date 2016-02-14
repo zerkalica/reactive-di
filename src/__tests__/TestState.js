@@ -1,7 +1,7 @@
 /* @flow */
 
 import annotations from './annotations'
-
+import merge from '../utils/merge'
 const {
     model,
     setter
@@ -17,61 +17,53 @@ export function createState(): {
     cSetter: Function
 } {
     class C {
-        v: string = 'test';
-        copy(rec: {v?: string}): C {
-            const next = new C()
-            next.v = rec.v || this.v
-            return next
+        v: string;
+        constructor(rec: {v?: string} = {}) {
+            this.v = rec.v || 'test'
         }
     }
     model(C)
 
     class B {
-        v: number = 123;
-        copy(rec: {v?: number}): B {
-            const next = new B()
-            next.v = rec.v || this.v
-            return next
+        v: number;
+        constructor(rec: {v?: number} = {}) {
+            this.v = rec.v || 123
         }
     }
     model(B)
 
     class A {
-        b: B = new B();
-        c: C = new C();
+        b: B;
+        c: C;
         v: number = 123;
-        copy(rec: {b?: B, c?: C, v?: number}): A {
-            const next = new A()
-            next.b = rec.b || this.b
-            next.c = rec.c || this.c
-            next.v = rec.v || this.v
-            return next
+        constructor(rec: {b?: B, c?: C, v?: number} = {}) {
+            this.b = rec.b || new B()
+            this.c = rec.c || new C()
+            this.v = rec.v || 123
         }
     }
     model(A)
 
     class AppState {
         a: A = new A();
-        copy(rec: {a?: A}): AppState {
-            const next = new AppState()
-            next.a = rec.a || this.a
-            return next
+        constructor(rec: {a?: A} = {}) {
+            this.a = rec.a || new A()
         }
     }
     model(AppState)
 
     function aSetter(a: A, b: B): A {
-        return a.copy({b})
+        return merge(a, {b})
     }
     setter(A)(aSetter)
 
     function bSetter(b: B, v: number): B {
-        return b.copy({v})
+        return merge(b, {v})
     }
     setter(B)(bSetter)
 
     function cSetter(c: C, v: string): C {
-        return c.copy({v})
+        return merge(c, {v})
     }
     setter(C)(cSetter)
 

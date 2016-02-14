@@ -3,6 +3,7 @@
 /* eslint-disable no-unused-vars */
 import type {Cursor} from '../../../interfaces/modelInterfaces'
 /* eslint-enable no-unused-vars */
+import merge from '../../../utils/merge'
 
 function setInPath<V: Object, S: Object>(
     newModel: V,
@@ -18,7 +19,7 @@ function setInPath<V: Object, S: Object>(
     const prop: string = path[index];
     rec[prop] = setInPath(newModel, state[prop], path, index + 1)
 
-    return state.copy(rec)
+    return merge(state, rec)
 }
 
 type Selector<T: Object, P: Object> = (state: T) => P;
