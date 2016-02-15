@@ -88,17 +88,15 @@ export default class SetterDepImpl<V: Object, E> {
         info: Info,
         notify: () => void,
         model: AnyModelDep<V, E>,
-        meta: MetaDep<E>
+        meta: MetaDep<E>,
+        invoker: Invoker
     ) {
         this.kind = 'setter'
         this._notify = notify
         this._model = model
         this._meta = meta
-        this.base = new DepBaseImpl(id, info)
-    }
-
-    init(invoker: Invoker): void {
         this._invoker = invoker
+        this.base = new DepBaseImpl(id, info)
     }
 
     unsubscribe(): void {

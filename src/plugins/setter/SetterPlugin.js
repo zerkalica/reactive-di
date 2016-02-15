@@ -39,11 +39,10 @@ export default class SetterPlugin {
             base.info,
             acc.notify,
             model,
-            meta
+            meta,
+            new InvokerImpl(target, newAcc.getDeps(annotation.deps, target, info.tags))
         );
         acc.begin(dep)
-        const invoker = new InvokerImpl(target, newAcc.getDeps(annotation.deps, target, info.tags));
-        dep.init(invoker)
         acc.end(dep)
     }
 
