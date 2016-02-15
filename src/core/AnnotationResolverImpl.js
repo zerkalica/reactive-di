@@ -16,10 +16,12 @@ import type {
 import type {
     AnyDep,
     DepArgs,
-    AnnotationResolver
+    AnnotationResolver,
+    ListenerManager
 } from '../interfaces/nodeInterfaces'
 import type {FinalizeFn} from '../interfaces/pluginInterfaces'
 import type {Plugin} from '../interfaces/pluginInterfaces'
+import type {Subscription} from '../interfaces/observableInterfaces'
 
 // implements DepArgs
 export class DepArgsImpl<M> {
@@ -38,6 +40,38 @@ export class DepArgsImpl<M> {
     }
 }
 
+// implements ListenerManager
+class ListenerManagerImpl {
+    _listeners: Array<AnyDep>;
+
+    notify: Notify;
+
+    constructor() {
+        this._listeners = []
+        const self = this
+        this.notify = function notify(): void {
+            const {_listeners: listeners} = self
+            for (let i = 0, l = listeners.length; i < l; i++) {
+                listeners[i].resolve();
+            }
+        }
+    }
+
+    add(target: AnyDep): Subscription {
+        const self = this
+        this._listeners.push(target)
+        function listenersFilter(dep: AnyDep): boolean {
+            return dep !== target
+        }
+
+        function unsubscribe(): void {
+            self._listeners = self._listeners.filter(listenersFilter)
+        }
+
+        return {unsubscribe}
+    }
+}
+
 // implements AnnotationResolver
 export default class AnnotationResolverImpl {
     _driver: AnnotationDriver;
@@ -49,25 +83,25 @@ export default class AnnotationResolverImpl {
     _overrides: Map<Dependency, Dependency>;
 
     createCursor: CursorCreator;
-    notify: Notify;
+    listeners: ListenerManager;
 
     constructor(
         driver: AnnotationDriver,
         middlewares: Map<Dependency|Tag, Array<Dependency>>,
         overrides: Map<Dependency, Dependency>,
         createCursor: CursorCreator,
-        notify: Notify,
         plugins: SimpleMap<string, Plugin>,
+        listeners?: ListenerManager,
         cache?: SimpleMap<DepId, AnyDep>
     ) {
         this._driver = driver
         this._middlewares = middlewares
         this._overrides = overrides
         this.createCursor = createCursor
-        this.notify = notify
         this._parents = []
         this._plugins = plugins
         this._cache = cache || Object.create(null)
+        this.listeners = listeners || new ListenerManagerImpl()
     }
 
     newRoot(): AnnotationResolver {
@@ -76,8 +110,8 @@ export default class AnnotationResolverImpl {
             this._middlewares,
             this._overrides,
             this.createCursor,
-            this.notify,
             this._plugins,
+            this.listeners,
             this._cache
         )
     }
@@ -102,7 +136,7 @@ export default class AnnotationResolverImpl {
     }
 
     addRelation(id: DepId): void {
-        const {_cache: cache, _parents: parents} = this
+        const {_parents: parents} = this
         for (let i = 0, l = parents.length; i < l; i++) {
             parents[i].add(id)
         }

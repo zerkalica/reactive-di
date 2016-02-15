@@ -37,7 +37,7 @@ export default class SetterPlugin {
         const dep: SetterDepImpl<V, E> = new SetterDepImpl(
             id,
             base.info,
-            acc.notify,
+            acc.listeners.notify,
             model,
             meta,
             new InvokerImpl(target, newAcc.getDeps(annotation.deps, target, info.tags))
