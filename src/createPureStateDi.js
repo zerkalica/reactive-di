@@ -19,7 +19,6 @@ import type {
     Tag
 } from './interfaces/annotationInterfaces'
 import type {ReactiveDi} from './interfaces/diInterfaces'
-import type {Notify} from './interfaces/modelInterfaces'
 import type {AnnotationResolver} from './interfaces/nodeInterfaces'
 import type {FactoryAnnotator} from './plugins/factory/factoryInterfaces'
 
@@ -29,7 +28,7 @@ export default function createPureStateDi<T: Object>(
     middlewares?: Map<Dependency|Tag, Array<Dependency>>,
     overrides?: Map<Dependency, Dependency>
 ): ReactiveDi {
-    function createResolver(notify: Notify): AnnotationResolver {
+    function createResolver(): AnnotationResolver {
         const driver: AnnotationDriver = new SymbolMetaDriver();
 
         const resolver: AnnotationResolver = new AnnotationResolverImpl(
@@ -37,7 +36,6 @@ export default function createPureStateDi<T: Object>(
             middlewares || new Map(),
             overrides || new Map(),
             createPureCursorCreator(driver, state),
-            notify,
             {
                 class: new ClassPlugin(),
                 factory: new FactoryPlugin(),

@@ -4,7 +4,10 @@ import type {AsyncModelDep} from '../plugins/asyncmodel/asyncmodelInterfaces'
 import type {ClassDep} from '../plugins/class/classInterfaces'
 import type {FactoryDep} from '../plugins/factory/factoryInterfaces'
 import type {GetterDep} from '../plugins/getter/getterInterfaces'
-import type {LoaderDep, ResetDep} from '../plugins/loader/loaderInterfaces'
+import type {
+    LoaderDep,
+    ResetDep
+} from '../plugins/loader/loaderInterfaces'
 import type {MetaDep} from '../plugins/meta/metaInterfaces'
 import type {ModelDep} from '../plugins/model/modelInterfaces'
 import type {SetterDep} from '../plugins/setter/setterInterfaces'
@@ -15,7 +18,11 @@ import type {
     Deps,
     AnyAnnotation
 } from './annotationInterfaces'
-import type {CursorCreator, Notify} from './modelInterfaces'
+import type {
+    CursorCreator,
+    Notify
+} from './modelInterfaces'
+import type {Subscription} from './observableInterfaces'
 
 export type AnyDep =
     ClassDep
@@ -52,9 +59,14 @@ export type DepArgs<M> = {
     middlewares: ?Array<M>;
 }
 
+export type ListenerManager = {
+    notify: Notify;
+    add(target: AnyDep): Subscription;
+}
+
 export type AnnotationResolver = {
     createCursor: CursorCreator;
-    notify: Notify;
+    listeners: ListenerManager;
     getDeps(deps: ?Deps, dep: Dependency, tags: Array<string>): DepArgs;
     resolveAnnotation(annotation: AnyAnnotation): AnyDep;
     resolve(annotatedDep: Dependency): AnyDep;
