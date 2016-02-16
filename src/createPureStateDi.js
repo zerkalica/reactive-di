@@ -19,8 +19,7 @@ import type {
     Tag
 } from 'reactive-di/i/annotationInterfaces'
 import type {AnnotationResolver} from 'reactive-di/i/nodeInterfaces'
-
-type GetDep<V> = (annotatedDep: Dependency<V>) => V;
+import type {GetDep} from 'reactive-di/i/diInterfaces'
 
 export default function createPureStateDi<T: Object>(
     state: T,
