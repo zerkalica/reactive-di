@@ -1,12 +1,12 @@
 /* @flow */
 
-import PureDataCursor from '~/model/pure/impl/PureDataCursor'
+import PureDataCursor from 'reactive-di/model/pure/impl/PureDataCursor'
 import type {AnnotationDriver} from 'reactive-di/i/annotationInterfaces'
 import type {
     Cursor,
     CursorCreator
 } from 'reactive-di/i/modelInterfaces'
-import setupStateAnnotations from '~/model/pure/impl/setupStateAnnotations'
+import setupStateAnnotations from 'reactive-di/model/pure/impl/setupStateAnnotations'
 
 // implements CursorCreator
 export default function createPureCursorCreator<S: Object>(

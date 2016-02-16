@@ -1,12 +1,12 @@
 /* @flow */
 
-import createAnnotations from '~/createAnnotations'
-import createPureStateDi from '~/createPureStateDi'
-import getFunctionName from '~/utils/getFunctionName'
-import merge from '~/utils/merge'
-import BaseCollection from '~/utils/BaseCollection'
-import DefaultIdCreator from '~/core/DefaultIdCreator'
-import SymbolMetaDriver from '~/drivers/SymbolMetaDriver'
+import createAnnotations from 'reactive-di/createAnnotations'
+import createPureStateDi from 'reactive-di/createPureStateDi'
+import getFunctionName from 'reactive-di/utils/getFunctionName'
+import merge from 'reactive-di/utils/merge'
+import BaseCollection from 'reactive-di/utils/BaseCollection'
+import DefaultIdCreator from 'reactive-di/core/DefaultIdCreator'
+import SymbolMetaDriver from 'reactive-di/drivers/SymbolMetaDriver'
 
 export {
     DefaultIdCreator,

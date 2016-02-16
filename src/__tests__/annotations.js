@@ -1,7 +1,7 @@
 /* @flow */
 
-import createAnnotations from '~/createAnnotations'
-import SymbolMetaDriver from '~/drivers/SymbolMetaDriver'
+import createAnnotations from 'reactive-di/createAnnotations'
+import SymbolMetaDriver from 'reactive-di/drivers/SymbolMetaDriver'
 import type {
     Annotations,
     AnnotationDriver

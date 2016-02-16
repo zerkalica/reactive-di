@@ -1,7 +1,7 @@
 /* @flow */
 
-import modelFinalizer from '~/plugins/model/modelFinalizer'
-import AsyncModelDepImpl from '~/plugins/asyncmodel/impl/AsyncModelDepImpl'
+import modelFinalizer from 'reactive-di/plugins/model/modelFinalizer'
+import AsyncModelDepImpl from 'reactive-di/plugins/asyncmodel/impl/AsyncModelDepImpl'
 import type {
     AnyDep,
     AnnotationResolver
@@ -10,7 +10,7 @@ import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-lin
 import type {
     AsyncModelDep,
     AsyncModelAnnotation
-} from '~/plugins/asyncmodel/asyncmodelInterfaces'
+} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
 
 // depends on factory
 // implements Plugin

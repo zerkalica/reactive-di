@@ -1,7 +1,7 @@
 /* @flow */
 
-import resolveDeps from '~/plugins/factory/resolveDeps'
-import {DepBaseImpl} from '~/core/pluginImpls'
+import resolveDeps from 'reactive-di/plugins/factory/resolveDeps'
+import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
 import type {
     DepId,
     Info
@@ -9,15 +9,15 @@ import type {
 import type {
     DepBase
 } from 'reactive-di/i/nodeInterfaces'
-import {fastCall} from '~/utils/fastCall'
-import type {AsyncModelDep} from '~/plugins/asyncmodel/asyncmodelInterfaces'
-import type {Invoker} from '~/plugins/factory/factoryInterfaces'
-import type {ResolveDepsResult} from '~/plugins/factory/resolveDeps'
-import type {MetaDep} from '~/plugins/meta/metaInterfaces'
+import {fastCall} from 'reactive-di/utils/fastCall'
+import type {AsyncModelDep} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+import type {Invoker} from 'reactive-di/plugins/factory/factoryInterfaces'
+import type {ResolveDepsResult} from 'reactive-di/plugins/factory/resolveDeps'
+import type {MetaDep} from 'reactive-di/plugins/meta/metaInterfaces'
 import type {
     AnyModelDep,
     SetFn
-} from '~/plugins/setter/setterInterfaces'
+} from 'reactive-di/plugins/setter/setterInterfaces'
 
 function isObservable(data: Object): boolean {
     return !!(data.subscribe)

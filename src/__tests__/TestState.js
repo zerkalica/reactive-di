@@ -1,7 +1,7 @@
 /* @flow */
 
-import annotations from '~/__tests__/annotations'
-import merge from '~/utils/merge'
+import annotations from 'reactive-di/__tests__/annotations'
+import merge from 'reactive-di/utils/merge'
 const {
     model,
     setter

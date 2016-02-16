@@ -1,12 +1,12 @@
 /* @flow */
 
-import {AnnotationBaseImpl} from '~/core/pluginImpls'
+import {AnnotationBaseImpl} from 'reactive-di/core/pluginImpls'
 import type {
     DepId,
     AnnotationBase
 } from 'reactive-di/i/annotationInterfaces'
-import type {AsyncUpdater} from '~/plugins/asyncmodel/asyncmodelInterfaces'
-import type {ResetAnnotation} from '~/plugins/loader/loaderInterfaces' // eslint-disable-line
+import type {AsyncUpdater} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+import type {ResetAnnotation} from 'reactive-di/plugins/loader/loaderInterfaces' // eslint-disable-line
 
 // implements ResetAnnotation
 export default class ResetAnnotationImpl<V: Object, E> {

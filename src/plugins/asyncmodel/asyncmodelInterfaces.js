@@ -7,7 +7,7 @@ import type {
     DepBase,
     Cacheable
 } from 'reactive-di/i/nodeInterfaces'
-import type {ModelInfo} from '~/plugins/model/modelInterfaces'
+import type {ModelInfo} from 'reactive-di/plugins/model/modelInterfaces'
 
 export type AsyncUpdater<V: Object, E> = (model: V, ...x: any) => Observable<V, E>;
 export type SyncUpdater<V: Object> = (model: V, ...x: any) => V;

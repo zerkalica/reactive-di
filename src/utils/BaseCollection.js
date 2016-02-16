@@ -1,5 +1,5 @@
 /* @flow */
-import merge from '~/utils/merge'
+import merge from 'reactive-di/utils/merge'
 import type {
     Id,
     Collection, // eslint-disable-line

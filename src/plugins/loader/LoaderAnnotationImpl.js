@@ -1,13 +1,13 @@
 /* @flow */
 
-import {AnnotationBaseImpl} from '~/core/pluginImpls'
+import {AnnotationBaseImpl} from 'reactive-di/core/pluginImpls'
 import type {
     DepId,
     AnnotationBase,
     Deps
 } from 'reactive-di/i/annotationInterfaces'
-import type {AsyncUpdater} from '~/plugins/asyncmodel/asyncmodelInterfaces'
-import type {LoaderAnnotation} from '~/plugins/loader/loaderInterfaces' // eslint-disable-line
+import type {AsyncUpdater} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+import type {LoaderAnnotation} from 'reactive-di/plugins/loader/loaderInterfaces' // eslint-disable-line
 
 // implements LoaderAnnotation
 export default class LoaderAnnotationImpl<V: Object, E> {

@@ -8,8 +8,8 @@ import type {DepBase} from 'reactive-di/i/nodeInterfaces'
 import type {
     AnyUpdater,
     AsyncModelDep
-} from '~/plugins/asyncmodel/asyncmodelInterfaces'
-import type {ModelDep} from '~/plugins/model/modelInterfaces'
+} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+import type {ModelDep} from 'reactive-di/plugins/model/modelInterfaces'
 
 export type AnyModelDep<V, E> = ModelDep<V>|AsyncModelDep<V, E>;
 

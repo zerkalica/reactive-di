@@ -6,8 +6,8 @@ import type {
     DepFn,
     AnnotationBase
 } from 'reactive-di/i/annotationInterfaces'
-import {AnnotationBaseImpl} from '~/core/pluginImpls'
-import type {ObservableAnnotation} from '~/plugins/observable/observableInterfaces' // eslint-disable-line
+import {AnnotationBaseImpl} from 'reactive-di/core/pluginImpls'
+import type {ObservableAnnotation} from 'reactive-di/plugins/observable/observableInterfaces' // eslint-disable-line
 
 // implements ObservableAnnotation
 export default class ObservableAnnotationImpl<V> {

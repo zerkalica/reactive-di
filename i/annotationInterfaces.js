@@ -1,16 +1,16 @@
 /* @flow */
 
-import type {SimpleMap} from './modelInterfaces'
+import type {SimpleMap} from 'reactive-di/i/modelInterfaces'
 
-import type {ClassAnnotation} from '~/plugins/class/classInterfaces'
-import type {FactoryAnnotation} from '~/plugins/factory/factoryInterfaces'
-import type {MetaAnnotation} from '~/plugins/meta/metaInterfaces'
-import type {ModelAnnotation} from '~/plugins/model/modelInterfaces'
-import type {AsyncModelAnnotation} from '~/plugins/asyncmodel/asyncmodelInterfaces'
-import type {SetterAnnotation} from '~/plugins/setter/setterInterfaces'
-import type {GetterAnnotation} from '~/plugins/getter/getterInterfaces'
-import type {ObservableAnnotation} from '~/plugins/observable/observableInterfaces'
-import type {LoaderAnnotation, ResetAnnotation} from '~/plugins/loader/loaderInterfaces'
+import type {ClassAnnotation} from 'reactive-di/plugins/class/classInterfaces'
+import type {FactoryAnnotation} from 'reactive-di/plugins/factory/factoryInterfaces'
+import type {MetaAnnotation} from 'reactive-di/plugins/meta/metaInterfaces'
+import type {ModelAnnotation} from 'reactive-di/plugins/model/modelInterfaces'
+import type {AsyncModelAnnotation} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+import type {SetterAnnotation} from 'reactive-di/plugins/setter/setterInterfaces'
+import type {GetterAnnotation} from 'reactive-di/plugins/getter/getterInterfaces'
+import type {ObservableAnnotation} from 'reactive-di/plugins/observable/observableInterfaces'
+import type {LoaderAnnotation, ResetAnnotation} from 'reactive-di/plugins/loader/loaderInterfaces'
 
 export type DepId = string;
 export type Tag = string;

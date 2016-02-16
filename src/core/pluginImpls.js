@@ -1,6 +1,6 @@
 /* @flow */
 
-import getFunctionName from '~/utils/getFunctionName'
+import getFunctionName from 'reactive-di/utils/getFunctionName'
 import type {
     DepId,
     Info,

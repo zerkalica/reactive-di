@@ -4,9 +4,9 @@
 import assert from 'power-assert'
 import sinon from 'sinon'
 
-import annotations from '~/__tests__/annotations'
-import createPureStateDi from '~/createPureStateDi'
-import promiseToObservable from '~/utils/promiseToObservable'
+import annotations from 'reactive-di/__tests__/annotations'
+import createPureStateDi from 'reactive-di/createPureStateDi'
+import promiseToObservable from 'reactive-di/utils/promiseToObservable'
 
 const {
     model,

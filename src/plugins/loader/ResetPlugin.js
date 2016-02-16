@@ -1,7 +1,7 @@
 /* @flow */
 
-import defaultFinalizer from '~/plugins/factory/defaultFinalizer'
-import {DepBaseImpl} from '~/core/pluginImpls'
+import defaultFinalizer from 'reactive-di/plugins/factory/defaultFinalizer'
+import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
 import type {
     DepId,
     Info
@@ -16,7 +16,7 @@ import type {
     ResetDep,
     ResetAnnotation,
     LoaderDep
-} from '~/plugins/loader/loaderInterfaces'
+} from 'reactive-di/plugins/loader/loaderInterfaces'
 
 // implements ResetDep
 class ResetDepImpl<V: () => void> {

@@ -1,13 +1,13 @@
 /* @flow */
 
-import {AnnotationBaseImpl} from '~/core/pluginImpls'
+import {AnnotationBaseImpl} from 'reactive-di/core/pluginImpls'
 import type {
     DepId,
     Deps,
     AnnotationBase
 } from 'reactive-di/i/annotationInterfaces'
-import type {AnyUpdater} from '~/plugins/asyncmodel/asyncmodelInterfaces'
-import type {SetterAnnotation} from '~/plugins/setter/setterInterfaces' // eslint-disable-line
+import type {AnyUpdater} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+import type {SetterAnnotation} from 'reactive-di/plugins/setter/setterInterfaces' // eslint-disable-line
 
 // implements SetterAnnotation
 export default class SetterAnnotationImpl<V: Object, E> {

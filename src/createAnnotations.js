@@ -1,16 +1,16 @@
 /* @flow */
 
-import AsyncModelAnnotationImpl from '~/plugins/asyncmodel/AsyncModelAnnotationImpl'
-import ClassAnnotationImpl from '~/plugins/class/ClassAnnotationImpl'
-import DefaultIdCreator from '~/core/DefaultIdCreator'
-import FactoryAnnotationImpl from '~/plugins/factory/FactoryAnnotationImpl'
-import GetterAnnotationImpl from '~/plugins/getter/GetterAnnotationImpl'
-import LoaderAnnotationImpl from '~/plugins/loader/LoaderAnnotationImpl'
-import MetaAnnotationImpl from '~/plugins/meta/MetaAnnotationImpl'
-import ModelAnnotationImpl from '~/plugins/model/ModelAnnotationImpl'
-import ObservableAnnotationImpl from '~/plugins/observable/ObservableAnnotationImpl'
-import ResetAnnotationImpl from '~/plugins/loader/ResetAnnotationImpl'
-import SetterAnnotationImpl from '~/plugins/setter/SetterAnnotationImpl'
+import AsyncModelAnnotationImpl from 'reactive-di/plugins/asyncmodel/AsyncModelAnnotationImpl'
+import ClassAnnotationImpl from 'reactive-di/plugins/class/ClassAnnotationImpl'
+import DefaultIdCreator from 'reactive-di/core/DefaultIdCreator'
+import FactoryAnnotationImpl from 'reactive-di/plugins/factory/FactoryAnnotationImpl'
+import GetterAnnotationImpl from 'reactive-di/plugins/getter/GetterAnnotationImpl'
+import LoaderAnnotationImpl from 'reactive-di/plugins/loader/LoaderAnnotationImpl'
+import MetaAnnotationImpl from 'reactive-di/plugins/meta/MetaAnnotationImpl'
+import ModelAnnotationImpl from 'reactive-di/plugins/model/ModelAnnotationImpl'
+import ObservableAnnotationImpl from 'reactive-di/plugins/observable/ObservableAnnotationImpl'
+import ResetAnnotationImpl from 'reactive-di/plugins/loader/ResetAnnotationImpl'
+import SetterAnnotationImpl from 'reactive-di/plugins/setter/SetterAnnotationImpl'
 import type {
     IdCreator,
     DepItem,
@@ -22,7 +22,7 @@ import type {
 import type {
     AsyncUpdater,
     AnyUpdater
-} from '~/plugins/asyncmodel/asyncmodelInterfaces'
+} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
 
 /* eslint-disable no-undef */
 

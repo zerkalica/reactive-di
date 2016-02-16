@@ -3,7 +3,7 @@
 /* eslint-disable no-unused-vars */
 import type {Cursor} from 'reactive-di/i/modelInterfaces'
 /* eslint-enable no-unused-vars */
-import merge from '~/utils/merge'
+import merge from 'reactive-di/utils/merge'
 
 function setInPath<V: Object, S: Object>(
     newModel: V,

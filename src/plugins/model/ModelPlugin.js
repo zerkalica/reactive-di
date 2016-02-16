@@ -1,7 +1,7 @@
 /* @flow */
 
-import modelFinalizer from '~/plugins/model/modelFinalizer'
-import ModelDepImpl from '~/plugins/model/impl/ModelDepImpl'
+import modelFinalizer from 'reactive-di/plugins/model/modelFinalizer'
+import ModelDepImpl from 'reactive-di/plugins/model/impl/ModelDepImpl'
 import type {Cursor} from 'reactive-di/i/modelInterfaces'
 import type {
     AnyDep,
@@ -11,7 +11,7 @@ import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-lin
 import type {
     ModelDep,
     ModelAnnotation,
-} from '~/plugins/model/modelInterfaces'
+} from 'reactive-di/plugins/model/modelInterfaces'
 
 // implements Plugin
 

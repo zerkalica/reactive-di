@@ -8,7 +8,7 @@ import type {SimpleMap} from 'reactive-di/i/modelInterfaces'
 import type {
     MiddlewareFn, // eslint-disable-line
     MiddlewareMap // eslint-disable-line
-} from '~/utils/createProxy'
+} from 'reactive-di/utils/createProxy'
 
 export type ResolveDepsResult<A> = {
     deps: Array<any|SimpleMap<string, any>>,

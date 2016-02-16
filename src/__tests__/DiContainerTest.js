@@ -4,8 +4,8 @@
 import assert from 'power-assert'
 import sinon from 'sinon'
 
-import annotations from '~/__tests__/annotations'
-import createPureStateDi from '~/createPureStateDi'
+import annotations from 'reactive-di/__tests__/annotations'
+import createPureStateDi from 'reactive-di/createPureStateDi'
 
 const {
     model,

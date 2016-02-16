@@ -4,10 +4,10 @@ import type {
     DepId,
     AnnotationBase
 } from 'reactive-di/i/annotationInterfaces'
-import {AnnotationBaseImpl} from '~/core/pluginImpls'
-import type {AsyncModelAnnotation} from '~/plugins/asyncmodel/asyncmodelInterfaces' // eslint-disable-line
-import type {ModelInfo} from '~/plugins/model/modelInterfaces'
-import ModelInfoImpl from '~/plugins/model/ModelInfoImpl'
+import {AnnotationBaseImpl} from 'reactive-di/core/pluginImpls'
+import type {AsyncModelAnnotation} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces' // eslint-disable-line
+import type {ModelInfo} from 'reactive-di/plugins/model/modelInterfaces'
+import ModelInfoImpl from 'reactive-di/plugins/model/ModelInfoImpl'
 
 // implements AsyncModelAnnotation
 export default class AsyncModelAnnotationImpl<V: Object> {

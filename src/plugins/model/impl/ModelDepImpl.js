@@ -4,7 +4,7 @@ import type {
     DepId,
     Info
 } from 'reactive-di/i/annotationInterfaces'
-import {DepBaseImpl} from '~/core/pluginImpls'
+import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
 import type {
     Notify,
     Cursor,
@@ -16,7 +16,7 @@ import type {
 } from 'reactive-di/i/nodeInterfaces'
 import type {
     ModelDep // eslint-disable-line
-} from '~/plugins/model/modelInterfaces'
+} from 'reactive-di/plugins/model/modelInterfaces'
 
 // implements ModelDep
 export default class ModelDepImpl<V: Object> {

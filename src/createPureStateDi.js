@@ -1,18 +1,18 @@
 /* @flow */
 
-import createPureCursorCreator from '~/model/pure/createPureCursorCreator'
-import AnnotationResolverImpl from '~/core/AnnotationResolverImpl'
-import AsyncModelPlugin from '~/plugins/asyncmodel/AsyncModelPlugin'
-import ClassPlugin from '~/plugins/class/ClassPlugin'
-import FactoryPlugin from '~/plugins/factory/FactoryPlugin'
-import GetterPlugin from '~/plugins/getter/GetterPlugin'
-import LoaderPlugin from '~/plugins/loader/LoaderPlugin'
-import MetaPlugin from '~/plugins/meta/MetaPlugin'
-import ModelPlugin from '~/plugins/model/ModelPlugin'
-import ObservablePlugin from '~/plugins/observable/ObservablePlugin'
-import ResetPlugin from '~/plugins/loader/ResetPlugin'
-import SetterPlugin from '~/plugins/setter/SetterPlugin'
-import SymbolMetaDriver from '~/drivers/SymbolMetaDriver'
+import createPureCursorCreator from 'reactive-di/model/pure/createPureCursorCreator'
+import AnnotationResolverImpl from 'reactive-di/core/AnnotationResolverImpl'
+import AsyncModelPlugin from 'reactive-di/plugins/asyncmodel/AsyncModelPlugin'
+import ClassPlugin from 'reactive-di/plugins/class/ClassPlugin'
+import FactoryPlugin from 'reactive-di/plugins/factory/FactoryPlugin'
+import GetterPlugin from 'reactive-di/plugins/getter/GetterPlugin'
+import LoaderPlugin from 'reactive-di/plugins/loader/LoaderPlugin'
+import MetaPlugin from 'reactive-di/plugins/meta/MetaPlugin'
+import ModelPlugin from 'reactive-di/plugins/model/ModelPlugin'
+import ObservablePlugin from 'reactive-di/plugins/observable/ObservablePlugin'
+import ResetPlugin from 'reactive-di/plugins/loader/ResetPlugin'
+import SetterPlugin from 'reactive-di/plugins/setter/SetterPlugin'
+import SymbolMetaDriver from 'reactive-di/drivers/SymbolMetaDriver'
 import type {
     AnnotationDriver,
     Dependency,

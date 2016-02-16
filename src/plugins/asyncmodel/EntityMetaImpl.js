@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {EntityMeta} from '~/plugins/asyncmodel/asyncmodelInterfaces'
+import type {EntityMeta} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
 
 type EntityMetaRec<E> = {
     pending?: boolean;

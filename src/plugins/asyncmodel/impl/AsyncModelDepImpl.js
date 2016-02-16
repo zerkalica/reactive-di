@@ -1,8 +1,8 @@
 /* @flow */
 
-import merge from '~/utils/merge'
-import EntityMetaImpl from '~/plugins/asyncmodel/EntityMetaImpl'
-import {DepBaseImpl} from '~/core/pluginImpls'
+import merge from 'reactive-di/utils/merge'
+import EntityMetaImpl from 'reactive-di/plugins/asyncmodel/EntityMetaImpl'
+import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
 import type {
     DepId,
     Info
@@ -18,7 +18,7 @@ import type {
 import type {
     EntityMeta,
     AsyncModelDep // eslint-disable-line
-} from '~/plugins/asyncmodel/asyncmodelInterfaces'
+} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
 
 export function setPending<E>(meta: EntityMeta<E>): EntityMeta<E> {
     return merge(meta, {

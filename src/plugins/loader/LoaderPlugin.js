@@ -1,8 +1,8 @@
 /* @flow */
 
-import defaultFinalizer from '~/plugins/factory/defaultFinalizer'
-import SetterAnnotationImpl from '~/plugins/setter/SetterAnnotationImpl'
-import {DepBaseImpl} from '~/core/pluginImpls'
+import defaultFinalizer from 'reactive-di/plugins/factory/defaultFinalizer'
+import SetterAnnotationImpl from 'reactive-di/plugins/setter/SetterAnnotationImpl'
+import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
 import type {
     DepId,
     Info
@@ -14,15 +14,15 @@ import type {
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
-import type {AsyncModelDep} from '~/plugins/asyncmodel/asyncmodelInterfaces'
+import type {AsyncModelDep} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
 import type {
     SetFn,
     SetterDep
-} from '~/plugins/setter/setterInterfaces'
+} from 'reactive-di/plugins/setter/setterInterfaces'
 import type {
     LoaderAnnotation,
     LoaderDep
-} from '~/plugins/loader/loaderInterfaces'
+} from 'reactive-di/plugins/loader/loaderInterfaces'
 
 // implements LoaderDep
 class LoaderDepImpl<V: Object, E> {
