@@ -50,6 +50,7 @@
   "files": [
     "*.map",
     "*.js",
+    ".flowconfig",
     "README.md",
     "LICENSE",
     "lib",
