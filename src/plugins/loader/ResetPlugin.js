@@ -1,22 +1,22 @@
 /* @flow */
 
-import defaultFinalizer from '../factory/defaultFinalizer'
-import {DepBaseImpl} from '../../core/pluginImpls'
+import defaultFinalizer from '~/plugins/factory/defaultFinalizer'
+import {DepBaseImpl} from '~/core/pluginImpls'
 import type {
     DepId,
     Info
-} from '../../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     AnyDep,
     DepBase,
     AnnotationResolver
-} from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
+} from 'reactive-di/i/nodeInterfaces'
+import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
 import type {
     ResetDep,
     ResetAnnotation,
     LoaderDep
-} from './loaderInterfaces'
+} from '~/plugins/loader/loaderInterfaces'
 
 // implements ResetDep
 class ResetDepImpl<V: () => void> {

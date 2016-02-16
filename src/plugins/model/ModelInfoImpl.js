@@ -1,7 +1,7 @@
 /* @flow */
-import type {Dependency} from '../../interfaces/annotationInterfaces'
-import type ModelInfo from './modelInterfaces' // eslint-disable-line
-import type {FromJS} from '../../interfaces/modelInterfaces'
+import type {Dependency} from 'reactive-di/i/annotationInterfaces'
+import type ModelInfo from '~/plugins/model/modelInterfaces' // eslint-disable-line
+import type {FromJS} from 'reactive-di/i/modelInterfaces'
 
 // implements ModelInfo
 export default class ModelInfoImpl<V> {

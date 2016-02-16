@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 /* @flow */
-import merge from '../merge'
+import merge from '~/utils/merge'
 import assert from 'power-assert'
 
 type ARec = {

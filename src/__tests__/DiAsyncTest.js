@@ -6,7 +6,6 @@ import sinon from 'sinon'
 
 import annotations from '~/__tests__/annotations'
 import createPureStateDi from '~/createPureStateDi'
-import type {Observable} from '~/interfaces/observableInterfaces'
 import promiseToObservable from '~/utils/promiseToObservable'
 
 const {

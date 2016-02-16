@@ -3,12 +3,12 @@
 import type {
     AnyDep,
     DepArgs
-} from '../../interfaces/nodeInterfaces'
-import type {SimpleMap} from '../../interfaces/modelInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
+import type {SimpleMap} from 'reactive-di/i/modelInterfaces'
 import type {
     MiddlewareFn, // eslint-disable-line
     MiddlewareMap // eslint-disable-line
-} from '../../utils/createProxy'
+} from '~/utils/createProxy'
 
 export type ResolveDepsResult<A> = {
     deps: Array<any|SimpleMap<string, any>>,

@@ -1,11 +1,11 @@
 /* @flow */
 
-import type {HooksRec} from '../../interfaces/annotationInterfaces'
-import type {DepArgs} from '../../interfaces/nodeInterfaces'
+import type {HooksRec} from 'reactive-di/i/annotationInterfaces'
+import type {DepArgs} from 'reactive-di/i/nodeInterfaces'
 import type {
     Invoker, // eslint-disable-line
     Hooks
-} from './factoryInterfaces'
+} from '~/plugins/factory/factoryInterfaces'
 
 function defaultFn(): void {}
 

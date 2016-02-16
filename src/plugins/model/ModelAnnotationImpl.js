@@ -1,15 +1,15 @@
 /* @flow */
 
-import ModelInfoImpl from './ModelInfoImpl'
-import {AnnotationBaseImpl} from '../../core/pluginImpls'
+import ModelInfoImpl from '~/plugins/model/ModelInfoImpl'
+import {AnnotationBaseImpl} from '~/core/pluginImpls'
 import type {
     DepId,
     AnnotationBase
-} from '../../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     ModelInfo,
     ModelAnnotation // eslint-disable-line
-} from './modelInterfaces'
+} from '~/plugins/model/modelInterfaces'
 
 // implements ModelAnnotation
 export default class ModelAnnotationImpl<V: Object> {

@@ -4,10 +4,10 @@ import type {
     DepFn,
     Deps,
     AnnotationBase
-} from '../../interfaces/annotationInterfaces'
-import type {DepBase} from '../../interfaces/nodeInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
+import type {DepBase} from 'reactive-di/i/nodeInterfaces'
 
-import type {StatefullObservable} from '!/statefullObservable'
+import type {StatefullObservable} from 'reactive-di/i/statefullObservable'
 
 export type ObservableAnnotation<V> = {
     kind: 'observable';

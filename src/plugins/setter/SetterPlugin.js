@@ -1,19 +1,19 @@
 /* @flow */
 
-import SetterDepImpl from './impl/SetterDepImpl'
-import defaultFinalizer from '../factory/defaultFinalizer'
-import InvokerImpl from '../factory/InvokerImpl'
-import MetaAnnotationImpl from '../meta/MetaAnnotationImpl'
+import SetterDepImpl from '~/plugins/setter/impl/SetterDepImpl'
+import defaultFinalizer from '~/plugins/factory/defaultFinalizer'
+import InvokerImpl from '~/plugins/factory/InvokerImpl'
+import MetaAnnotationImpl from '~/plugins/meta/MetaAnnotationImpl'
 import type {
     AnyDep,
     AnnotationResolver
-} from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
-import type {MetaDep} from '../meta/metaInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
+import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
+import type {MetaDep} from '~/plugins/meta/metaInterfaces'
 import type {
     SetterDep,
     SetterAnnotation
-} from './setterInterfaces'
+} from '~/plugins/setter/setterInterfaces'
 
 // depends on factory, model
 // implements Plugin

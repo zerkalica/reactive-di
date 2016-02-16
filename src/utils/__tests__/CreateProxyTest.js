@@ -2,7 +2,7 @@
 /* eslint-env mocha */
 
 import assert from 'power-assert'
-import {createObjectProxy, createFunctionProxy} from '../createProxy'
+import {createObjectProxy, createFunctionProxy} from '~/utils/createProxy'
 import {spy} from 'sinon'
 
 describe('createProxyTest', () => {

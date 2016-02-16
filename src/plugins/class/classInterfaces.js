@@ -3,9 +3,9 @@
 import type {
     Deps,
     AnnotationBase
-} from '../../interfaces/annotationInterfaces'
-import type {DepBase} from '../../interfaces/nodeInterfaces'
-import type {Invoker} from '../factory/factoryInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
+import type {DepBase} from 'reactive-di/i/nodeInterfaces'
+import type {Invoker} from '~/plugins/factory/factoryInterfaces'
 
 export type ClassAnnotation<V: Object> = {
     kind: 'class';

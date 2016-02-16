@@ -1,24 +1,24 @@
 /* @flow */
 
-import merge from '../../../utils/merge'
-import EntityMetaImpl from '../EntityMetaImpl'
-import {DepBaseImpl} from '../../../core/pluginImpls'
+import merge from '~/utils/merge'
+import EntityMetaImpl from '~/plugins/asyncmodel/EntityMetaImpl'
+import {DepBaseImpl} from '~/core/pluginImpls'
 import type {
     DepId,
     Info
-} from '../../../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     Cursor,
     FromJS
-} from '../../../interfaces/modelInterfaces'
+} from 'reactive-di/i/modelInterfaces'
 import type {
     Cacheable,
     DepBase
-} from '../../../interfaces/nodeInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
 import type {
     EntityMeta,
     AsyncModelDep // eslint-disable-line
-} from '../asyncmodelInterfaces'
+} from '~/plugins/asyncmodel/asyncmodelInterfaces'
 
 export function setPending<E>(meta: EntityMeta<E>): EntityMeta<E> {
     return merge(meta, {

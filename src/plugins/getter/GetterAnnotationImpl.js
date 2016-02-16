@@ -3,9 +3,9 @@
 import type {
     AnnotationBase,
     DepId
-} from '../../interfaces/annotationInterfaces'
-import {AnnotationBaseImpl} from '../../core/pluginImpls'
-import type {GetterAnnotation} from './getterInterfaces' // eslint-disable-line
+} from 'reactive-di/i/annotationInterfaces'
+import {AnnotationBaseImpl} from '~/core/pluginImpls'
+import type {GetterAnnotation} from '~/plugins/getter/getterInterfaces' // eslint-disable-line
 
 // implements GetterAnnotation
 export default class GetterAnnotationImpl<V: Object> {

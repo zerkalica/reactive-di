@@ -5,7 +5,7 @@ import SymbolMetaDriver from '~/drivers/SymbolMetaDriver'
 import type {
     Annotations,
     AnnotationDriver
-} from '~/interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 
 const driver: AnnotationDriver = new SymbolMetaDriver();
 

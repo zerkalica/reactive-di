@@ -1,5 +1,5 @@
 /* @flow */
-import {fastCall, fastCallMethod} from './fastCall'
+import {fastCall, fastCallMethod} from '~/utils/fastCall'
 
 export type MiddlewareFn = (result: any, ...args: Array<any>) => void;
 export type MiddlewareMap = {[method: string]: MiddlewareFn};

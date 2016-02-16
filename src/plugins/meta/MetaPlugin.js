@@ -1,26 +1,26 @@
 /* @flow */
 
-import merge from '../../utils/merge'
-import EntityMetaImpl, {updateMeta} from '../asyncmodel/EntityMetaImpl'
-import {DepBaseImpl} from '../../core/pluginImpls'
+import merge from '~/utils/merge'
+import EntityMetaImpl, {updateMeta} from '~/plugins/asyncmodel/EntityMetaImpl'
+import {DepBaseImpl} from '~/core/pluginImpls'
 import type {
     DepId,
     Info
-} from '../../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     AnyDep,
     DepBase,
     AnnotationResolver
-} from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
+} from 'reactive-di/i/nodeInterfaces'
+import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
 import type {
     EntityMeta,
     MetaSource
-} from '../asyncmodel/asyncmodelInterfaces'
+} from '~/plugins/asyncmodel/asyncmodelInterfaces'
 import type {
     MetaDep,
     MetaAnnotation
-} from './metaInterfaces'
+} from '~/plugins/meta/metaInterfaces'
 
 // implements MetaDep
 class MetaDepImpl<E> {

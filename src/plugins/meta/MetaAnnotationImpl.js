@@ -4,9 +4,9 @@ import type {
     DepId,
     AnnotationBase,
     Dependency
-} from '../../interfaces/annotationInterfaces'
-import {AnnotationBaseImpl} from '../../core/pluginImpls'
-import type {MetaAnnotation} from './metaInterfaces' // eslint-disable-line
+} from 'reactive-di/i/annotationInterfaces'
+import {AnnotationBaseImpl} from '~/core/pluginImpls'
+import type {MetaAnnotation} from '~/plugins/meta/metaInterfaces' // eslint-disable-line
 
 // implements MetaAnnotation
 export default class MetaAnnotationImpl<V> {

@@ -1,8 +1,8 @@
 /* eslint-env mocha */
 /* @flow */
 import assert from 'power-assert'
-import SymbolMetaDriver from '../SymbolMetaDriver'
-import FactoryAnnotationImpl from '../../plugins/factory/FactoryAnnotationImpl'
+import SymbolMetaDriver from '~/drivers/SymbolMetaDriver'
+import FactoryAnnotationImpl from '~/plugins/factory/FactoryAnnotationImpl'
 
 describe('SymbolMetaDriverTest', () => {
     it('shoud set/get DepMeta', () => {

@@ -1,26 +1,26 @@
 /* @flow */
 
-import defaultFinalizer from '../factory/defaultFinalizer'
-import resolveDeps from '../factory/resolveDeps'
-import InvokerImpl from '../factory/InvokerImpl'
-import {DepBaseImpl} from '../../core/pluginImpls'
+import defaultFinalizer from '~/plugins/factory/defaultFinalizer'
+import resolveDeps from '~/plugins/factory/resolveDeps'
+import InvokerImpl from '~/plugins/factory/InvokerImpl'
+import {DepBaseImpl} from '~/core/pluginImpls'
 import type {
     DepId,
     Info
-} from '../../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     AnyDep,
     DepBase
-} from '../../interfaces/nodeInterfaces'
-import type {AnnotationResolver} from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
-import {createObjectProxy} from '../../utils/createProxy'
-import {fastCreateObject} from '../../utils/fastCall'
+} from 'reactive-di/i/nodeInterfaces'
+import type {AnnotationResolver} from 'reactive-di/i/nodeInterfaces'
+import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
+import {createObjectProxy} from '~/utils/createProxy'
+import {fastCreateObject} from '~/utils/fastCall'
 import type {
     ClassDep,
     ClassAnnotation,
     ClassInvoker
-} from './classInterfaces'
+} from '~/plugins/class/classInterfaces'
 
 // implements ClassDep
 export class ClassDepImpl<V: Object> {

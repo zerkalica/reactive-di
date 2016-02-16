@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 /* @flow */
-import getFunctionName from '../getFunctionName'
+import getFunctionName from '~/utils/getFunctionName'
 import assert from 'power-assert'
 
 describe('getFunctionName', () => {

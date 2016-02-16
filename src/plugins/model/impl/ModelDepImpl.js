@@ -3,20 +3,20 @@
 import type {
     DepId,
     Info
-} from '../../../interfaces/annotationInterfaces'
-import {DepBaseImpl} from '../../../core/pluginImpls'
+} from 'reactive-di/i/annotationInterfaces'
+import {DepBaseImpl} from '~/core/pluginImpls'
 import type {
     Notify,
     Cursor,
     FromJS
-} from '../../../interfaces/modelInterfaces'
+} from 'reactive-di/i/modelInterfaces'
 import type {
     Cacheable,
     DepBase
-} from '../../../interfaces/nodeInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
 import type {
     ModelDep // eslint-disable-line
-} from '../modelInterfaces'
+} from '~/plugins/model/modelInterfaces'
 
 // implements ModelDep
 export default class ModelDepImpl<V: Object> {

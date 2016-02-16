@@ -1,28 +1,23 @@
 /* @flow */
 
-import resolveDeps from '../../factory/resolveDeps'
-import {DepBaseImpl} from '../../../core/pluginImpls'
+import resolveDeps from '~/plugins/factory/resolveDeps'
+import {DepBaseImpl} from '~/core/pluginImpls'
 import type {
     DepId,
     Info
-} from '../../../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     DepBase
-} from '../../../interfaces/nodeInterfaces'
-import type {
-    Subscription,
-    Observer,
-    Observable
-} from '../../../interfaces/observableInterfaces'
-import {fastCall} from '../../../utils/fastCall'
-import type {AsyncModelDep} from '../../asyncmodel/asyncmodelInterfaces'
-import type {Invoker} from '../../factory/factoryInterfaces'
-import type {ResolveDepsResult} from '../../factory/resolveDeps'
-import type {MetaDep} from '../../meta/metaInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
+import {fastCall} from '~/utils/fastCall'
+import type {AsyncModelDep} from '~/plugins/asyncmodel/asyncmodelInterfaces'
+import type {Invoker} from '~/plugins/factory/factoryInterfaces'
+import type {ResolveDepsResult} from '~/plugins/factory/resolveDeps'
+import type {MetaDep} from '~/plugins/meta/metaInterfaces'
 import type {
     AnyModelDep,
     SetFn
-} from '../setterInterfaces'
+} from '~/plugins/setter/setterInterfaces'
 
 function isObservable(data: Object): boolean {
     return !!(data.subscribe)
@@ -66,7 +61,7 @@ class AsyncModelObserver<V: Object, E> {
         this.complete()
     }
 
-    complete(): void {
+    complete(v: any): void {
         this._subscription.unsubscribe()
     }
 }

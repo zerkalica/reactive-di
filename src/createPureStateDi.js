@@ -1,24 +1,24 @@
 /* @flow */
 
-import createPureCursorCreator from './model/pure/createPureCursorCreator'
-import AnnotationResolverImpl from './core/AnnotationResolverImpl'
-import AsyncModelPlugin from './plugins/asyncmodel/AsyncModelPlugin'
-import ClassPlugin from './plugins/class/ClassPlugin'
-import FactoryPlugin from './plugins/factory/FactoryPlugin'
-import GetterPlugin from './plugins/getter/GetterPlugin'
-import LoaderPlugin from './plugins/loader/LoaderPlugin'
-import MetaPlugin from './plugins/meta/MetaPlugin'
-import ModelPlugin from './plugins/model/ModelPlugin'
-import ObservablePlugin from './plugins/observable/ObservablePlugin'
-import ResetPlugin from './plugins/loader/ResetPlugin'
-import SetterPlugin from './plugins/setter/SetterPlugin'
-import SymbolMetaDriver from './drivers/SymbolMetaDriver'
+import createPureCursorCreator from '~/model/pure/createPureCursorCreator'
+import AnnotationResolverImpl from '~/core/AnnotationResolverImpl'
+import AsyncModelPlugin from '~/plugins/asyncmodel/AsyncModelPlugin'
+import ClassPlugin from '~/plugins/class/ClassPlugin'
+import FactoryPlugin from '~/plugins/factory/FactoryPlugin'
+import GetterPlugin from '~/plugins/getter/GetterPlugin'
+import LoaderPlugin from '~/plugins/loader/LoaderPlugin'
+import MetaPlugin from '~/plugins/meta/MetaPlugin'
+import ModelPlugin from '~/plugins/model/ModelPlugin'
+import ObservablePlugin from '~/plugins/observable/ObservablePlugin'
+import ResetPlugin from '~/plugins/loader/ResetPlugin'
+import SetterPlugin from '~/plugins/setter/SetterPlugin'
+import SymbolMetaDriver from '~/drivers/SymbolMetaDriver'
 import type {
     AnnotationDriver,
     Dependency,
     Tag
-} from './interfaces/annotationInterfaces'
-import type {AnnotationResolver} from './interfaces/nodeInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
+import type {AnnotationResolver} from 'reactive-di/i/nodeInterfaces'
 
 type GetDep<V> = (annotatedDep: Dependency<V>) => V;
 

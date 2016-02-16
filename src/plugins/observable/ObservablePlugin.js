@@ -1,22 +1,22 @@
 /* @flow */
 /* eslint-disable no-undef */
-import FactoryAnnotationImpl from '../factory/FactoryAnnotationImpl'
-import {DepBaseImpl} from '../../core/pluginImpls'
+import FactoryAnnotationImpl from '~/plugins/factory/FactoryAnnotationImpl'
+import {DepBaseImpl} from '~/core/pluginImpls'
 import type {
     DepId,
     Info
-} from '../../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     AnyDep,
     DepBase,
     AnnotationResolver
-} from '../../interfaces/nodeInterfaces'
-import type {FactoryDep} from '../factory/factoryInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
+import type {FactoryDep} from '~/plugins/factory/factoryInterfaces'
 import type {
     ObservableDep,
     ObservableAnnotation
-} from './observableInterfaces'
-import type {StatefullObservable} from '!/statefullObservable'
+} from '~/plugins/observable/observableInterfaces'
+import type {StatefullObservable} from 'reactive-di/i/statefullObservable'
 
 // implements ObservableDep
 class ObservableDepImpl<V, E> {

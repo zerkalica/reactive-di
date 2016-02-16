@@ -1,16 +1,16 @@
 /* @flow */
 
-import AsyncModelAnnotationImpl from './plugins/asyncmodel/AsyncModelAnnotationImpl'
-import ClassAnnotationImpl from './plugins/class/ClassAnnotationImpl'
-import DefaultIdCreator from './core/DefaultIdCreator'
-import FactoryAnnotationImpl from './plugins/factory/FactoryAnnotationImpl'
-import GetterAnnotationImpl from './plugins/getter/GetterAnnotationImpl'
-import LoaderAnnotationImpl from './plugins/loader/LoaderAnnotationImpl'
-import MetaAnnotationImpl from './plugins/meta/MetaAnnotationImpl'
-import ModelAnnotationImpl from './plugins/model/ModelAnnotationImpl'
-import ObservableAnnotationImpl from './plugins/observable/ObservableAnnotationImpl'
-import ResetAnnotationImpl from './plugins/loader/ResetAnnotationImpl'
-import SetterAnnotationImpl from './plugins/setter/SetterAnnotationImpl'
+import AsyncModelAnnotationImpl from '~/plugins/asyncmodel/AsyncModelAnnotationImpl'
+import ClassAnnotationImpl from '~/plugins/class/ClassAnnotationImpl'
+import DefaultIdCreator from '~/core/DefaultIdCreator'
+import FactoryAnnotationImpl from '~/plugins/factory/FactoryAnnotationImpl'
+import GetterAnnotationImpl from '~/plugins/getter/GetterAnnotationImpl'
+import LoaderAnnotationImpl from '~/plugins/loader/LoaderAnnotationImpl'
+import MetaAnnotationImpl from '~/plugins/meta/MetaAnnotationImpl'
+import ModelAnnotationImpl from '~/plugins/model/ModelAnnotationImpl'
+import ObservableAnnotationImpl from '~/plugins/observable/ObservableAnnotationImpl'
+import ResetAnnotationImpl from '~/plugins/loader/ResetAnnotationImpl'
+import SetterAnnotationImpl from '~/plugins/setter/SetterAnnotationImpl'
 import type {
     IdCreator,
     DepItem,
@@ -18,11 +18,11 @@ import type {
     Dependency,
     AnnotationDriver,
     AnyAnnotation
-} from './interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     AsyncUpdater,
     AnyUpdater
-} from './plugins/asyncmodel/asyncmodelInterfaces'
+} from '~/plugins/asyncmodel/asyncmodelInterfaces'
 
 /* eslint-disable no-undef */
 

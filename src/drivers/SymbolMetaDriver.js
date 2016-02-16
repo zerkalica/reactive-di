@@ -4,7 +4,7 @@ import type {
     AnnotationDriver,
     AnyAnnotation,
     Dependency
-} from '../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 
 const metaSymbol = typeof Symbol !== 'undefined' ? Symbol('__rdi__meta') : '__rdi__meta'
 

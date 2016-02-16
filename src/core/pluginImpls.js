@@ -1,12 +1,12 @@
 /* @flow */
 
-import getFunctionName from '../utils/getFunctionName'
+import getFunctionName from '~/utils/getFunctionName'
 import type {
     DepId,
     Info,
     Tag
-} from '../interfaces/annotationInterfaces'
-import type {AsyncSubscription} from '../interfaces/nodeInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
+import type {AsyncSubscription} from 'reactive-di/i/nodeInterfaces'
 
 // implements DepBase
 export class DepBaseImpl<V> {

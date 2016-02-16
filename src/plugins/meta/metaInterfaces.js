@@ -1,8 +1,8 @@
 /* @flow */
 
-import type {AnnotationBase, Dependency} from '../../interfaces/annotationInterfaces'
-import type {DepBase} from '../../interfaces/nodeInterfaces'
-import type {EntityMeta, MetaSource} from '../asyncmodel/asyncmodelInterfaces'
+import type {AnnotationBase, Dependency} from 'reactive-di/i/annotationInterfaces'
+import type {DepBase} from 'reactive-di/i/nodeInterfaces'
+import type {EntityMeta, MetaSource} from '~/plugins/asyncmodel/asyncmodelInterfaces'
 
 export type MetaAnnotation<V> = {
     kind: 'meta';

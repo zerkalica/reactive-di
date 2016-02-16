@@ -4,7 +4,7 @@ import type {
     Cacheable,
     AnyDep,
     AsyncSubscription
-} from '../../interfaces/nodeInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
 
 export default function defaultFinalizer(dep: AnyDep, target: AnyDep): void {
     const {base} = dep

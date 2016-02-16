@@ -1,13 +1,13 @@
 /* @flow */
 
-import {AnnotationBaseImpl} from '../../core/pluginImpls'
+import {AnnotationBaseImpl} from '~/core/pluginImpls'
 import type {
     Deps,
     DepId,
     AnnotationBase,
     DepFn
-} from '../../interfaces/annotationInterfaces'
-import type {FactoryAnnotation} from './factoryInterfaces' // eslint-disable-line
+} from 'reactive-di/i/annotationInterfaces'
+import type {FactoryAnnotation} from '~/plugins/factory/factoryInterfaces' // eslint-disable-line
 
 // implements FactoryAnnotation
 export default class FactoryAnnotationImpl<V> {

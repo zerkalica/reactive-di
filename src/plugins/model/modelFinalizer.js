@@ -1,11 +1,11 @@
 /* @flow */
-import type {AsyncModelDep} from '../asyncmodel/asyncmodelInterfaces'
-import type {ModelDep} from '../model/modelInterfaces'
+import type {AsyncModelDep} from '~/plugins/asyncmodel/asyncmodelInterfaces'
+import type {ModelDep} from '~/plugins/model/modelInterfaces'
 
 import type {
     Cacheable,
     AnyDep
-} from '../../interfaces/nodeInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
 
 type AnyModelDep<V, E> = ModelDep<V> | AsyncModelDep<V, E>;
 

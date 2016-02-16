@@ -9,21 +9,21 @@ import type {
     Deps,
     AnyAnnotation,
     Tag
-} from '../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     Notify,
     SimpleMap,
     CursorCreator
-} from '../interfaces/modelInterfaces'
+} from 'reactive-di/i/modelInterfaces'
 import type {
     AnyDep,
     DepArgs,
     AnnotationResolver,
     ListenerManager,
     ResolvableDep
-} from '../interfaces/nodeInterfaces'
-import type {FinalizeFn} from '../interfaces/pluginInterfaces'
-import type {Plugin} from '../interfaces/pluginInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
+import type {FinalizeFn} from 'reactive-di/i/pluginInterfaces'
+import type {Plugin} from 'reactive-di/i/pluginInterfaces'
 
 // implements DepArgs
 export class DepArgsImpl<M> {

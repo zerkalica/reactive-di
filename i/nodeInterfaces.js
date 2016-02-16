@@ -1,29 +1,28 @@
 /* @flow */
 
-import type {AsyncModelDep} from '../plugins/asyncmodel/asyncmodelInterfaces'
-import type {ClassDep} from '../plugins/class/classInterfaces'
-import type {FactoryDep} from '../plugins/factory/factoryInterfaces'
-import type {GetterDep} from '../plugins/getter/getterInterfaces'
+import type {AsyncModelDep} from '~/plugins/asyncmodel/asyncmodelInterfaces'
+import type {ClassDep} from '~/plugins/class/classInterfaces'
+import type {FactoryDep} from '~/plugins/factory/factoryInterfaces'
+import type {GetterDep} from '~/plugins/getter/getterInterfaces'
 import type {
     LoaderDep,
     ResetDep
-} from '../plugins/loader/loaderInterfaces'
-import type {MetaDep} from '../plugins/meta/metaInterfaces'
-import type {ModelDep} from '../plugins/model/modelInterfaces'
-import type {ObservableDep} from '../plugins/observable/observableInterfaces'
-import type {SetterDep} from '../plugins/setter/setterInterfaces'
+} from '~/plugins/loader/loaderInterfaces'
+import type {MetaDep} from '~/plugins/meta/metaInterfaces'
+import type {ModelDep} from '~/plugins/model/modelInterfaces'
+import type {ObservableDep} from '~/plugins/observable/observableInterfaces'
+import type {SetterDep} from '~/plugins/setter/setterInterfaces'
 import type {
     Info,
     DepId,
     Dependency,
     Deps,
     AnyAnnotation
-} from './annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     CursorCreator,
     Notify
-} from './modelInterfaces'
-import type {Subscription} from './observableInterfaces'
+} from 'reactive-di/i/modelInterfaces'
 
 export type AnyDep =
     ClassDep

@@ -2,13 +2,12 @@
 
 import type {
     AnnotationBase
-} from '../../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     DepBase,
     Cacheable
-} from '../../interfaces/nodeInterfaces'
-import type {Observable} from '../../interfaces/observableInterfaces'
-import type {ModelInfo} from '../model/modelInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
+import type {ModelInfo} from '~/plugins/model/modelInterfaces'
 
 export type AsyncUpdater<V: Object, E> = (model: V, ...x: any) => Observable<V, E>;
 export type SyncUpdater<V: Object> = (model: V, ...x: any) => V;

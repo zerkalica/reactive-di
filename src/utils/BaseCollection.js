@@ -10,7 +10,7 @@ import type {
     UpdateFn,
     FindFn,
     FilterFn
-} from '!/collection'
+} from 'reactive-di/i/collection'
 
 type DeletedItems<T> = {[id: Id]: [T, number]};
 

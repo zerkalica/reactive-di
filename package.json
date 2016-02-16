@@ -18,8 +18,8 @@
     "precommit": "exit 0",
     "update": "ncu -ua && npm install",
     "clean": "rm -rf $npm_package_config_builddir/lib coverage interfaces",
-    "build": "npm run clean && cp -rf src/interfaces ./ && rm -rf dist/__tests__ interfaces/annotation* interfaces/node* interfaces/plugin* && babel src --source-maps --out-dir $npm_package_config_builddir/lib",
-    "build.dev": "babel src --source-maps --out-dir $npm_package_config_builddir/lib --watch",
+    "build": "npm run clean && babel src --source-maps --out-dir $npm_package_config_builddir/lib",
+    "build.dev": "babel src --source-maps --out-dir $npm_package_config_builddir/dist --watch",
     "lint": "exit 0 && eslint src",
     "check": "flow check",
     "testonly": "mocha",
@@ -53,7 +53,7 @@
     "README.md",
     "LICENSE",
     "lib",
-    "interfaces"
+    "i"
   ],
   "devDependencies": {
     "babel": "^6.5.2",
@@ -69,7 +69,7 @@
     "babel-preset-stage-0": "^6.5.0",
     "babel-root-import": "^3.1.0",
     "babel-runtime": "5.x.x",
-    "eslint": "^2.0.0",
+    "eslint": "^1.x.x",
     "eslint-config-airbnb": "5.0.0",
     "eslint-config-airplus": "^1.1.1",
     "eslint-plugin-react": "^3.16.1",

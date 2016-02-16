@@ -8,7 +8,7 @@ export type Id = string;
 export type UpdateFn<V> = (oldItem: V) => V;
 export type ItemRec = {};
 
-export type CollectionItem = {
+export interface CollectionItem {
     id: Id;
 }
 

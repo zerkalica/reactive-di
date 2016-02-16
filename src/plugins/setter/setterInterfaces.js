@@ -3,13 +3,13 @@
 import type {
     Deps,
     AnnotationBase
-} from '../../interfaces/annotationInterfaces'
-import type {DepBase} from '../../interfaces/nodeInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
+import type {DepBase} from 'reactive-di/i/nodeInterfaces'
 import type {
     AnyUpdater,
     AsyncModelDep
-} from '../asyncmodel/asyncmodelInterfaces'
-import type {ModelDep} from '../model/modelInterfaces'
+} from '~/plugins/asyncmodel/asyncmodelInterfaces'
+import type {ModelDep} from '~/plugins/model/modelInterfaces'
 
 export type AnyModelDep<V, E> = ModelDep<V>|AsyncModelDep<V, E>;
 

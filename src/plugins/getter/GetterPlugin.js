@@ -1,23 +1,23 @@
 /* @flow */
 
-import {DepBaseImpl} from '../../core/pluginImpls'
+import {DepBaseImpl} from '~/core/pluginImpls'
 import type {
     DepId,
     Info
-} from '../../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     AnyDep,
     DepBase,
     AnnotationResolver
-} from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
-import type {AsyncModelDep} from '../asyncmodel/asyncmodelInterfaces'
-import type {ModelDep} from '../model/modelInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
+import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
+import type {AsyncModelDep} from '~/plugins/asyncmodel/asyncmodelInterfaces'
+import type {ModelDep} from '~/plugins/model/modelInterfaces'
 import type {
     Getter,
     GetterDep,
     GetterAnnotation
-} from './getterInterfaces'
+} from '~/plugins/getter/getterInterfaces'
 
 type AnyModelDep<V, E> = ModelDep<V>|AsyncModelDep<V, E>;
 type Resolvable<V> = {

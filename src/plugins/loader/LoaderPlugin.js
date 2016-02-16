@@ -1,28 +1,28 @@
 /* @flow */
 
-import defaultFinalizer from '../factory/defaultFinalizer'
-import SetterAnnotationImpl from '../setter/SetterAnnotationImpl'
-import {DepBaseImpl} from '../../core/pluginImpls'
+import defaultFinalizer from '~/plugins/factory/defaultFinalizer'
+import SetterAnnotationImpl from '~/plugins/setter/SetterAnnotationImpl'
+import {DepBaseImpl} from '~/core/pluginImpls'
 import type {
     DepId,
     Info
-} from '../../interfaces/annotationInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     AnyDep,
     Cacheable,
     DepBase,
     AnnotationResolver
-} from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
-import type {AsyncModelDep} from '../asyncmodel/asyncmodelInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
+import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
+import type {AsyncModelDep} from '~/plugins/asyncmodel/asyncmodelInterfaces'
 import type {
     SetFn,
     SetterDep
-} from '../setter/setterInterfaces'
+} from '~/plugins/setter/setterInterfaces'
 import type {
     LoaderAnnotation,
     LoaderDep
-} from './loaderInterfaces'
+} from '~/plugins/loader/loaderInterfaces'
 
 // implements LoaderDep
 class LoaderDepImpl<V: Object, E> {

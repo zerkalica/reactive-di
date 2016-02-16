@@ -1,11 +1,11 @@
 /* @flow */
 
-import type {AnnotationDriver} from '../../../interfaces/annotationInterfaces'
+import type {AnnotationDriver} from 'reactive-di/i/annotationInterfaces'
 import type {
     FromJS,
     SimpleMap
-} from '../../../interfaces/modelInterfaces'
-import type {ModelAnnotation} from '../../../plugins/model/modelInterfaces'
+} from 'reactive-di/i/modelInterfaces'
+import type {ModelAnnotation} from '~/plugins/model/modelInterfaces'
 
 type PropCreator<V: Object, N: Object> = (value: V) => N;
 type PropCreatorMap = SimpleMap<string, PropCreator>;

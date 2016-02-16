@@ -3,12 +3,12 @@
 import type {
     AnnotationBase,
     Dependency
-} from '../../interfaces/annotationInterfaces'
-import type {FromJS} from '../../interfaces/modelInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
+import type {FromJS} from 'reactive-di/i/modelInterfaces'
 import type {
     DepBase,
     Cacheable
-} from '../../interfaces/nodeInterfaces'
+} from 'reactive-di/i/nodeInterfaces'
 
 export type ModelInfo<V> = {
     childs: Array<Dependency>;

@@ -1,19 +1,20 @@
 /* @flow */
 
-import modelFinalizer from './modelFinalizer'
-import ModelDepImpl from './impl/ModelDepImpl'
-import type {Cursor} from '../../interfaces/modelInterfaces'
+import modelFinalizer from '~/plugins/model/modelFinalizer'
+import ModelDepImpl from '~/plugins/model/impl/ModelDepImpl'
+import type {Cursor} from 'reactive-di/i/modelInterfaces'
 import type {
     AnyDep,
     AnnotationResolver
-} from '../../interfaces/nodeInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces' // eslint-disable-line
+} from 'reactive-di/i/nodeInterfaces'
+import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
 import type {
     ModelDep,
     ModelAnnotation,
-} from './modelInterfaces'
+} from '~/plugins/model/modelInterfaces'
 
 // implements Plugin
+
 export default class ModelPlugin {
     create<V: Object, E>(annotation: ModelAnnotation<V>, acc: AnnotationResolver): void {
         const {base, info} = annotation

@@ -1,8 +1,8 @@
 /* @flow */
 /* eslint-env mocha */
 import assert from 'power-assert'
-import BaseCollection from '../BaseCollection'
-import merge from '../merge'
+import BaseCollection from '~/utils/BaseCollection'
+import merge from '~/utils/merge'
 
 // import {spy} from 'sinon'
 

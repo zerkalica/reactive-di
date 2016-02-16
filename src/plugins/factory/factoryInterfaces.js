@@ -5,9 +5,9 @@ import type {
     DepItem,
     DepFn,
     Deps
-} from '../../interfaces/annotationInterfaces'
-import type {DepBase} from '../../interfaces/nodeInterfaces'
-import type {DepArgs} from '../../interfaces/nodeInterfaces'
+} from 'reactive-di/i/annotationInterfaces'
+import type {DepBase} from 'reactive-di/i/nodeInterfaces'
+import type {DepArgs} from 'reactive-di/i/nodeInterfaces'
 
 export type Hooks<T> = {
     onUnmount: () => void;
