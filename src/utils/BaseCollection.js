@@ -1,16 +1,16 @@
 /* @flow */
-import merge from './merge'
+import merge from '~/utils/merge'
 import type {
-    Collection,
     Id,
-    ItemRec,
+    Collection, // eslint-disable-line
     CollectionItem, // eslint-disable-line
+    ItemRec,
     MapFn,
     SortFn,
     UpdateFn,
     FindFn,
     FilterFn
-} from '../interfaces/collectionInterfaces'
+} from '!/collection'
 
 type DeletedItems<T> = {[id: Id]: [T, number]};
 
@@ -22,8 +22,7 @@ type CollectionRec<T> = {
 type ItemsMap<Item> = {
     [id: Id]: Item;
 }
-
-// implements Collection<Item>
+// implements Collection
 export default class BaseCollection<Item: CollectionItem> {
     items: Array<Item>;
     deleted: DeletedItems<Item>;
@@ -42,7 +41,7 @@ export default class BaseCollection<Item: CollectionItem> {
         this.length = this.items.length
     }
 
-    _copy(rec: CollectionRec<Item>): Collection<Item> {
+    _copy(rec: CollectionRec<Item>): BaseCollection<Item> {
         return merge(this, rec)
     }
 
@@ -85,32 +84,32 @@ export default class BaseCollection<Item: CollectionItem> {
         return JSON.stringify(this.toJS())
     }
 
-    fromArray(recs: Array<ItemRec>): Collection<Item> {
+    fromArray(recs: Array<ItemRec>): BaseCollection<Item> {
         return this._copy({
             items: this._recsToItems(recs),
             deleted: {}
         })
     }
 
-    add(item: Item): Collection<Item> {
+    add(item: Item): BaseCollection<Item> {
         return this._copy({
             items: this.items.concat([item])
         })
     }
 
-    remove(id: Id): Collection<Item> {
+    remove(id: Id): BaseCollection<Item> {
         return this._copy({
             items: this._getDeleted(id).items
         })
     }
 
-    softRemove(id: Id): Collection<Item> {
+    softRemove(id: Id): BaseCollection<Item> {
         return this._copy({
             ...this._getDeleted(id)
         })
     }
 
-    restore(id: Id): Collection<Item> {
+    restore(id: Id): BaseCollection<Item> {
         if (!this.deleted[id]) {
             throw new Error('Can\'t restore: element doesn\'t exists in collection: ' + id)
         }
@@ -131,7 +130,7 @@ export default class BaseCollection<Item: CollectionItem> {
         throw new Error('Can\'t get: element doesn\'t exists in collection: ' + id)
     }
 
-    update(id: Id, updateFn: UpdateFn<Item>): Collection<Item> {
+    update(id: Id, updateFn: UpdateFn<Item>): BaseCollection<Item> {
         const oldItems: Array<Item> = this.items;
         const items: Array<Item> = [];
         let isFound: boolean = false;
@@ -156,7 +155,7 @@ export default class BaseCollection<Item: CollectionItem> {
         return isChanged ? this._copy({items}) : this
     }
 
-    set(id: Id, newItem: Item): Collection<Item> {
+    set(id: Id, newItem: Item): BaseCollection<Item> {
         return this.update(id, () => newItem)
     }
 
@@ -168,7 +167,7 @@ export default class BaseCollection<Item: CollectionItem> {
         return this.items.map(mapFn)
     }
 
-    filter(filterFn: FilterFn<Item>): Collection<Item> {
+    filter(filterFn: FilterFn<Item>): BaseCollection<Item> {
         const items = this.items.filter(filterFn)
 
         return items.length !== this.length
@@ -176,7 +175,7 @@ export default class BaseCollection<Item: CollectionItem> {
             : this
     }
 
-    sort(sortFn: SortFn<Item>): Collection<Item> {
+    sort(sortFn: SortFn<Item>): BaseCollection<Item> {
         const oldItems = this.items
         const items = oldItems.sort(sortFn)
 

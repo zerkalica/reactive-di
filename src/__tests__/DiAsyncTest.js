@@ -4,10 +4,10 @@
 import assert from 'power-assert'
 import sinon from 'sinon'
 
-import annotations from './annotations'
-import createPureStateDi from '../createPureStateDi'
-import type {Observable} from '../interfaces/observableInterfaces'
-import promiseToObservable from '../utils/promiseToObservable'
+import annotations from '~/__tests__/annotations'
+import createPureStateDi from '~/createPureStateDi'
+import type {Observable} from '~/interfaces/observableInterfaces'
+import promiseToObservable from '~/utils/promiseToObservable'
 
 const {
     model,

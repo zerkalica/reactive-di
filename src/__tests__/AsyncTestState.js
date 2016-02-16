@@ -1,8 +1,7 @@
 /* @flow */
 
-import annotations from './annotations'
-import type {Observable} from '../interfaces/observableInterfaces'
-import promiseToObservable from '../utils/promiseToObservable'
+import annotations from '~/__tests__/annotations'
+import promiseToObservable from '~/utils/promiseToObservable'
 
 const {
     model,

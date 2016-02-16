@@ -1,7 +1,7 @@
 /* @flow */
 
-import annotations from './annotations'
-import merge from '../utils/merge'
+import annotations from '~/__tests__/annotations'
+import merge from '~/utils/merge'
 const {
     model,
     setter

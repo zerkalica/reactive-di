@@ -7,6 +7,8 @@ import type {
 } from '../../interfaces/annotationInterfaces'
 import type {DepBase} from '../../interfaces/nodeInterfaces'
 
+import type {StatefullObservable} from '!/statefullObservable'
+
 export type ObservableAnnotation<V> = {
     kind: 'observable';
     base: AnnotationBase<DepFn<V>>;

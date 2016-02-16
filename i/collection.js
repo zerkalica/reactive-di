@@ -4,16 +4,16 @@ export type MapFn<T, V> = (v: T, index?: number) => V;
 export type FilterFn<T> = (v: T, index?: number) => boolean;
 export type SortFn<T> = (a: T, b: T) => number;
 export type FindFn<T> = (element: T, index?: number, arr?: Array<T>, thisArg?: Object) => boolean;
-
 export type Id = string;
+export type UpdateFn<V> = (oldItem: V) => V;
+export type ItemRec = {};
+
 export type CollectionItem = {
     id: Id;
 }
-export type UpdateFn<V> = (oldItem: V) => V;
 
-export type ItemRec = {};
-
-export type Collection<Item: CollectionItem> = {
+export interface Collection<Item: CollectionItem> {
+    @@iterator(): Iterator<Item>;
     length: number;
     createItem(rec: ItemRec): Item;
     fromArray(items: Array<ItemRec>): Collection<Item>;

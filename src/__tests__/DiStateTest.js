@@ -4,9 +4,9 @@
 import assert from 'power-assert'
 import sinon from 'sinon'
 
-import annotations from './annotations'
-import createPureStateDi from '../createPureStateDi'
-import {createState} from './TestState'
+import annotations from '~/__tests__/annotations'
+import createPureStateDi from '~/createPureStateDi'
+import {createState} from '~/__tests__/TestState'
 
 const {
     getter,
@@ -15,7 +15,7 @@ const {
     factory
 } = annotations
 
-import type {Getter} from '../plugins/getter/getterInterfaces'
+import type {Getter} from '~/plugins/getter/getterInterfaces'
 
 describe('DiStateTest', () => {
     it('should handle a.b, if a changed', () => {

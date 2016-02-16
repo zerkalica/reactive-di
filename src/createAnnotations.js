@@ -15,7 +15,6 @@ import type {
     IdCreator,
     DepItem,
     DepFn,
-    Deps,
     Dependency,
     AnnotationDriver,
     AnyAnnotation
@@ -34,7 +33,7 @@ export type Annotations = {
     meta<T: Dependency>(target: T): () => void;
     model<V: Object>(target: Class<V>): Class<V>;
     asyncmodel<V: Object>(target: Class<V>): Class<V>;
-    observable<V>(deps: Deps): (target: Dependency<V>) => Dependency<V>;
+    observable<V>(...deps: Array<DepItem>): (target: Dependency<V>) => Dependency<V>;
     setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
         : (target: AnyUpdater<V, E>) => AnyUpdater<V, E>;
     loader<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)

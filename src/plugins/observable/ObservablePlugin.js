@@ -16,6 +16,7 @@ import type {
     ObservableDep,
     ObservableAnnotation
 } from './observableInterfaces'
+import type {StatefullObservable} from '!/statefullObservable'
 
 // implements ObservableDep
 class ObservableDepImpl<V, E> {
@@ -73,5 +74,5 @@ export default class ObservablePlugin {
         acc.end(dep)
     }
 
-    finalize(): void {}
+    finalize(dep: ObservableAnnotation, target: AnyDep): void {} // eslint-disable-line
 }

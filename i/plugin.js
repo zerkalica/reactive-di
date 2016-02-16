@@ -1,15 +1,15 @@
 /* @flow */
 
-declare class RdiAnnotationResolver {
+export interface RdiAnnotationResolver {
 
 }
 
-declare class RdiPlugin<Annotation, Dep> {
+export interface RdiPlugin<Annotation, Dep> {
     create(annotation: Annotation, acc: RdiAnnotationResolver): void;
     finalize<AnyDep>(dep: Dep, target: AnyDep): void;
 }
 
-declare class RdiDep {
+export interface RdiDep {
     kind: string;
     // base: RdiDepBase;
 }

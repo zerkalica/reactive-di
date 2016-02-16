@@ -1,51 +1,37 @@
 /* @flow */
 
-import type {Observer, Observable, Subscription} from '../interfaces/observableInterfaces'
+import Observable from 'zen-observable'
 
-type Cancelable = {
-    cancel(): void;
-}
+export default function promiseToObservable<V, E>(promise: Promise<V>): Observable<V, E> {
+    if (typeof promise.then !== 'function') {
+        throw new TypeError('promise argument is not a Promise')
+    }
 
-// implements Observable<T, E>
-class PromiseObservable<T, E> {
-    subscribe: (observer: Observer) => Subscription;
+    let isSubscribed: boolean = true;
 
-    constructor(promise: Promise<T>) {
-        let isSubscribed: boolean = true;
+    function subscriberFn(observer: SubscriptionObserver): Subscription { // eslint-disable-line
         function unsubscribe(): void {
             // todo: memory leak
             isSubscribed = false
             if (typeof promise.cancel === 'function') {
-                ((promise: any): Cancelable).cancel();
+                promise.cancel()
+            }
+        }
+        function success(data: V): void {
+            if (isSubscribed) {
+                observer.next(data)
+                observer.complete()
+            }
+        }
+        function error(e: E): void {
+            if (isSubscribed) {
+                observer.error(e)
             }
         }
 
-        this.subscribe = function subscribe(observer: Observer): Subscription {
-            function success(data: T): void {
-                if (isSubscribed) {
-                    observer.next(data)
-                    observer.complete()
-                }
-            }
-            function error(e: E): void {
-                if (isSubscribed) {
-                    observer.error(e)
-                }
-            }
-
-            promise.then(success).catch(error)
-
-            return {unsubscribe}
-        }
-    }
-}
-
-export default function promiseToObservable<V, E>(
-    resolver: Promise<V>
-): Observable<V, E> {
-    if (typeof resolver.then !== 'function') {
-        throw new TypeError('resolver argument is not a Promise')
+        promise.then(success).catch(error)
+        return {unsubscribe}
     }
 
-    return new PromiseObservable(resolver)
+    return new Observable(subscriberFn)
 }
