@@ -42,7 +42,7 @@ export class DepArgsImpl<M> {
 
 // implements ListenerManager
 class ListenerManagerImpl {
-    _listeners: Array<AnyDep>;
+    _listeners: Array<Function>;
 
     notify: Notify;
 
@@ -52,23 +52,29 @@ class ListenerManagerImpl {
         this.notify = function notify(): void {
             const {_listeners: listeners} = self
             for (let i = 0, l = listeners.length; i < l; i++) {
-                listeners[i].resolve();
+                listeners[i]();
             }
         }
     }
 
-    add(target: AnyDep): Subscription {
+    add(target: AnyDep): Observable {
         const self = this
-        this._listeners.push(target)
-        function listenersFilter(dep: AnyDep): boolean {
-            return dep !== target
+        function subscriberFn(observer: SubscrptionObserver): Subscription {
+            function next(): void {
+                observer.next(target.resolve())
+            }
+            function listenersFilter(dep: Function): boolean {
+                return dep !== next
+            }
+            function unsubscribe(): void {
+                self._listeners = self._listeners.filter(listenersFilter)
+                observer.complete()
+            }
+            self._listeners.push(next)
+            return {unsubscribe}
         }
 
-        function unsubscribe(): void {
-            self._listeners = self._listeners.filter(listenersFilter)
-        }
-
-        return {unsubscribe}
+        return new Observable(subscriberFn)
     }
 }
 

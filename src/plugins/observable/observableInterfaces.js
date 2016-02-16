@@ -1,17 +1,23 @@
 /* @flow */
 
-import type {AnnotationBase, Dependency} from '../../interfaces/annotationInterfaces'
-import type {DepBase} from '../../interfaces/nodeInterfaces'
+import type {
+    DepFn,
+    Deps,
+    AnnotationBase,
+    Dependency
+} from '../../interfaces/annotationInterfaces'
 import type {SimpleMap} from '../../interfaces/modelInterfaces'
+import type {DepBase} from '../../interfaces/nodeInterfaces'
 import type {StatefullObservable} from '../../interfaces/observableInterfaces'
 
-export type ObservableAnnotation<V: SimpleMap<string, Dependency>> = {
+export type ObservableAnnotation<V> = {
     kind: 'observable';
-    base: AnnotationBase<V>;
+    base: AnnotationBase<DepFn<V>>;
+    deps: ?Deps;
 }
 
-export type ObservableDep<E> = {
+export type ObservableDep<V, E> = {
     kind: 'observable';
     base: DepBase;
-    resolve: () => EntityMeta<E>;
+    resolve(): StatefullObservable<V, E>;
 }

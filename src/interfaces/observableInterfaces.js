@@ -6,6 +6,12 @@ export type Observer<V, E> = {
     complete(completeValue?: V): void;
 }
 
+export type SubscriptionObserver<V, E> = {
+    next(value: V): void;
+    error(errorValue: E): void;
+    complete(completeValue?: V): void;
+}
+
 export type Subscription = {
     unsubscribe() : void;
 }
