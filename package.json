@@ -56,9 +56,10 @@
     "i"
   ],
   "devDependencies": {
-    "babel": "^6.5.2",
+    "babel-cli": "^6.5.1",
+    "babel-core": "^6.5.2",
     "babel-eslint": "^5.0.0-0",
-    "babel-plugin-espower": "^2.1.1",
+    "babel-plugin-espower": "^2.1.2",
     "babel-plugin-flow-comments": "^6.3.19",
     "babel-plugin-syntax-decorators": "^6.5.0",
     "babel-plugin-syntax-flow": "^6.5.0",
@@ -70,7 +71,7 @@
     "babel-root-import": "^3.1.0",
     "babel-runtime": "5.x.x",
     "eslint": "^1.x.x",
-    "eslint-config-airbnb": "5.0.0",
+    "eslint-config-airbnb": "5.0.1",
     "eslint-config-airplus": "^1.1.1",
     "eslint-plugin-react": "^3.16.1",
     "glob": "^7.0.0",
