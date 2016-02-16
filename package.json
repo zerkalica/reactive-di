@@ -53,6 +53,7 @@
     "README.md",
     "LICENSE",
     "lib",
+    "dist",
     "i"
   ],
   "devDependencies": {
