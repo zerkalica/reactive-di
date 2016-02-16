@@ -16,11 +16,11 @@ import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-lin
 import type {
     EntityMeta,
     MetaSource
-} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+} from 'reactive-di/i/plugins/asyncmodelInterfaces'
 import type {
     MetaDep,
     MetaAnnotation
-} from 'reactive-di/plugins/meta/metaInterfaces'
+} from 'reactive-di/i/plugins/metaInterfaces'
 
 // implements MetaDep
 class MetaDepImpl<E> {

@@ -5,7 +5,7 @@ import type {
     AnnotationBase
 } from 'reactive-di/i/annotationInterfaces'
 import type {DepBase} from 'reactive-di/i/nodeInterfaces'
-import type {AsyncUpdater} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+import type {AsyncUpdater} from 'reactive-di/i/plugins/asyncmodelInterfaces'
 
 export type LoaderDep<V: Object> = {
     kind: 'loader';

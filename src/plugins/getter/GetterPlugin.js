@@ -11,13 +11,13 @@ import type {
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
-import type {AsyncModelDep} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
-import type {ModelDep} from 'reactive-di/plugins/model/modelInterfaces'
+import type {AsyncModelDep} from 'reactive-di/i/plugins/asyncmodelInterfaces'
+import type {ModelDep} from 'reactive-di/i/plugins/modelInterfaces'
 import type {
     Getter,
     GetterDep,
     GetterAnnotation
-} from 'reactive-di/plugins/getter/getterInterfaces'
+} from 'reactive-di/i/plugins/getterInterfaces'
 
 type AnyModelDep<V, E> = ModelDep<V>|AsyncModelDep<V, E>;
 type Resolvable<V> = {

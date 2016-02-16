@@ -10,7 +10,7 @@ import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-lin
 import type {
     AsyncModelDep,
     AsyncModelAnnotation
-} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+} from 'reactive-di/i/plugins/asyncmodelInterfaces'
 
 // depends on factory
 // implements Plugin

@@ -6,8 +6,8 @@ import type {
     Deps,
     AnnotationBase
 } from 'reactive-di/i/annotationInterfaces'
-import type {AnyUpdater} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
-import type {SetterAnnotation} from 'reactive-di/plugins/setter/setterInterfaces' // eslint-disable-line
+import type {AnyUpdater} from 'reactive-di/i/plugins/asyncmodelInterfaces'
+import type {SetterAnnotation} from 'reactive-di/i/plugins/setterInterfaces' // eslint-disable-line
 
 // implements SetterAnnotation
 export default class SetterAnnotationImpl<V: Object, E> {

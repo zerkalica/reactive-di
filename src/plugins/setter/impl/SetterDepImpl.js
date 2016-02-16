@@ -10,14 +10,14 @@ import type {
     DepBase
 } from 'reactive-di/i/nodeInterfaces'
 import {fastCall} from 'reactive-di/utils/fastCall'
-import type {AsyncModelDep} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
-import type {Invoker} from 'reactive-di/plugins/factory/factoryInterfaces'
+import type {AsyncModelDep} from 'reactive-di/i/plugins/asyncmodelInterfaces'
+import type {Invoker} from 'reactive-di/i/plugins/factoryInterfaces'
 import type {ResolveDepsResult} from 'reactive-di/plugins/factory/resolveDeps'
-import type {MetaDep} from 'reactive-di/plugins/meta/metaInterfaces'
+import type {MetaDep} from 'reactive-di/i/plugins/metaInterfaces'
 import type {
     AnyModelDep,
     SetFn
-} from 'reactive-di/plugins/setter/setterInterfaces'
+} from 'reactive-di/i/plugins/setterInterfaces'
 
 function isObservable(data: Object): boolean {
     return !!(data.subscribe)

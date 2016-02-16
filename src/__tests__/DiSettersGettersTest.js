@@ -16,7 +16,7 @@ const {
     factory
 } = annotations
 
-import type {Getter} from 'reactive-di/plugins/getter/getterInterfaces'
+import type {Getter} from 'reactive-di/i/plugins/getterInterfaces'
 
 describe('DiSettersGettersTest', () => {
     describe('getter', () => {

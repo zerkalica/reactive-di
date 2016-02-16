@@ -1,6 +1,6 @@
 /* @flow */
-import type {AsyncModelDep} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
-import type {ModelDep} from 'reactive-di/plugins/model/modelInterfaces'
+import type {AsyncModelDep} from 'reactive-di/i/plugins/asyncmodelInterfaces'
+import type {ModelDep} from 'reactive-di/i/plugins/modelInterfaces'
 
 import type {
     Cacheable,

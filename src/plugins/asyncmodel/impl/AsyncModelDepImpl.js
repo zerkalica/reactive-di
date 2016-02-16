@@ -18,7 +18,7 @@ import type {
 import type {
     EntityMeta,
     AsyncModelDep // eslint-disable-line
-} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+} from 'reactive-di/i/plugins/asyncmodelInterfaces'
 
 export function setPending<E>(meta: EntityMeta<E>): EntityMeta<E> {
     return merge(meta, {

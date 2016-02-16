@@ -11,7 +11,7 @@ import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-lin
 import type {
     ModelDep,
     ModelAnnotation,
-} from 'reactive-di/plugins/model/modelInterfaces'
+} from 'reactive-di/i/plugins/modelInterfaces'
 
 // implements Plugin
 

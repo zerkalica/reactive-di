@@ -2,7 +2,7 @@
 
 import type {AnnotationBase, Dependency} from 'reactive-di/i/annotationInterfaces'
 import type {DepBase} from 'reactive-di/i/nodeInterfaces'
-import type {EntityMeta, MetaSource} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+import type {EntityMeta, MetaSource} from 'reactive-di/i/plugins/asyncmodelInterfaces'
 
 export type MetaAnnotation<V> = {
     kind: 'meta';

@@ -16,7 +16,7 @@ import type {
 } from 'reactive-di/i/nodeInterfaces'
 import type {
     ModelDep // eslint-disable-line
-} from 'reactive-di/plugins/model/modelInterfaces'
+} from 'reactive-di/i/plugins/modelInterfaces'
 
 // implements ModelDep
 export default class ModelDepImpl<V: Object> {

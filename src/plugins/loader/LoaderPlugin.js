@@ -14,15 +14,15 @@ import type {
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
-import type {AsyncModelDep} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+import type {AsyncModelDep} from 'reactive-di/i/plugins/asyncmodelInterfaces'
 import type {
     SetFn,
     SetterDep
-} from 'reactive-di/plugins/setter/setterInterfaces'
+} from 'reactive-di/i/plugins/setterInterfaces'
 import type {
     LoaderAnnotation,
     LoaderDep
-} from 'reactive-di/plugins/loader/loaderInterfaces'
+} from 'reactive-di/i/plugins/loaderInterfaces'
 
 // implements LoaderDep
 class LoaderDepImpl<V: Object, E> {

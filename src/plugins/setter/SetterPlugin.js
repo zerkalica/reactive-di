@@ -9,11 +9,11 @@ import type {
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
-import type {MetaDep} from 'reactive-di/plugins/meta/metaInterfaces'
+import type {MetaDep} from 'reactive-di/i/plugins/metaInterfaces'
 import type {
     SetterDep,
     SetterAnnotation
-} from 'reactive-di/plugins/setter/setterInterfaces'
+} from 'reactive-di/i/plugins/setterInterfaces'
 
 // depends on factory, model
 // implements Plugin

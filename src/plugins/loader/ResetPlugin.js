@@ -16,7 +16,7 @@ import type {
     ResetDep,
     ResetAnnotation,
     LoaderDep
-} from 'reactive-di/plugins/loader/loaderInterfaces'
+} from 'reactive-di/i/plugins/loaderInterfaces'
 
 // implements ResetDep
 class ResetDepImpl<V: () => void> {

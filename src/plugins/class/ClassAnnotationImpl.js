@@ -6,7 +6,7 @@ import type {
     AnnotationBase
 } from 'reactive-di/i/annotationInterfaces'
 import type {Deps} from 'reactive-di/i/annotationInterfaces'
-import type {ClassAnnotation} from 'reactive-di/plugins/class/classInterfaces' // eslint-disable-line
+import type {ClassAnnotation} from 'reactive-di/i/plugins/classInterfaces' // eslint-disable-line
 
 // implements ClassAnnotation
 export default class ClassAnnotationImpl<V: Object> {

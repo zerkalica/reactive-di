@@ -22,7 +22,7 @@ import type {
 import type {
     AsyncUpdater,
     AnyUpdater
-} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
+} from 'reactive-di/i/plugins/asyncmodelInterfaces'
 
 /* eslint-disable no-undef */
 

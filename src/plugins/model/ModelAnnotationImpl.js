@@ -9,7 +9,7 @@ import type {
 import type {
     ModelInfo,
     ModelAnnotation // eslint-disable-line
-} from 'reactive-di/plugins/model/modelInterfaces'
+} from 'reactive-di/i/plugins/modelInterfaces'
 
 // implements ModelAnnotation
 export default class ModelAnnotationImpl<V: Object> {

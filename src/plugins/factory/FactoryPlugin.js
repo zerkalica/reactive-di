@@ -20,7 +20,7 @@ import type {
     FactoryDep,
     FactoryAnnotation,
     FactoryInvoker
-} from 'reactive-di/plugins/factory/factoryInterfaces'
+} from 'reactive-di/i/plugins/factoryInterfaces'
 
 // implements FactoryDep
 export class FactoryDepImpl<V: any> {

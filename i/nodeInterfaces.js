@@ -1,17 +1,17 @@
 /* @flow */
 
-import type {AsyncModelDep} from 'reactive-di/plugins/asyncmodel/asyncmodelInterfaces'
-import type {ClassDep} from 'reactive-di/plugins/class/classInterfaces'
-import type {FactoryDep} from 'reactive-di/plugins/factory/factoryInterfaces'
-import type {GetterDep} from 'reactive-di/plugins/getter/getterInterfaces'
+import type {AsyncModelDep} from 'reactive-di/i/plugins/asyncmodelInterfaces'
+import type {ClassDep} from 'reactive-di/i/plugins/classInterfaces'
+import type {FactoryDep} from 'reactive-di/i/plugins/factoryInterfaces'
+import type {GetterDep} from 'reactive-di/i/plugins/getterInterfaces'
 import type {
     LoaderDep,
     ResetDep
-} from 'reactive-di/plugins/loader/loaderInterfaces'
-import type {MetaDep} from 'reactive-di/plugins/meta/metaInterfaces'
-import type {ModelDep} from 'reactive-di/plugins/model/modelInterfaces'
-import type {ObservableDep} from 'reactive-di/plugins/observable/observableInterfaces'
-import type {SetterDep} from 'reactive-di/plugins/setter/setterInterfaces'
+} from 'reactive-di/i/plugins/loaderInterfaces'
+import type {MetaDep} from 'reactive-di/i/plugins/metaInterfaces'
+import type {ModelDep} from 'reactive-di/i/plugins/modelInterfaces'
+import type {ObservableDep} from 'reactive-di/i/plugins/observableInterfaces'
+import type {SetterDep} from 'reactive-di/i/plugins/setterInterfaces'
 import type {
     Info,
     DepId,

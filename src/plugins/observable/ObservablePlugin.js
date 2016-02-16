@@ -11,11 +11,11 @@ import type {
     DepBase,
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
-import type {FactoryDep} from 'reactive-di/plugins/factory/factoryInterfaces'
+import type {FactoryDep} from 'reactive-di/i/plugins/factoryInterfaces'
 import type {
     ObservableDep,
     ObservableAnnotation
-} from 'reactive-di/plugins/observable/observableInterfaces'
+} from 'reactive-di/i/plugins/observableInterfaces'
 import type {StatefullObservable} from 'reactive-di/i/statefullObservable'
 
 // implements ObservableDep

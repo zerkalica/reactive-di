@@ -20,7 +20,7 @@ import type {
     ClassDep,
     ClassAnnotation,
     ClassInvoker
-} from 'reactive-di/plugins/class/classInterfaces'
+} from 'reactive-di/i/plugins/classInterfaces'
 
 // implements ClassDep
 export class ClassDepImpl<V: Object> {

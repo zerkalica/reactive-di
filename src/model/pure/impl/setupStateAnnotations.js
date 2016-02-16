@@ -5,7 +5,7 @@ import type {
     FromJS,
     SimpleMap
 } from 'reactive-di/i/modelInterfaces'
-import type {ModelAnnotation} from 'reactive-di/plugins/model/modelInterfaces'
+import type {ModelAnnotation} from 'reactive-di/i/plugins/modelInterfaces'
 
 type PropCreator<V: Object, N: Object> = (value: V) => N;
 type PropCreatorMap = SimpleMap<string, PropCreator>;

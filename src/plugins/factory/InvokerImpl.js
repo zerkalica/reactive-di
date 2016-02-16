@@ -5,7 +5,7 @@ import type {DepArgs} from 'reactive-di/i/nodeInterfaces'
 import type {
     Invoker, // eslint-disable-line
     Hooks
-} from 'reactive-di/plugins/factory/factoryInterfaces'
+} from 'reactive-di/i/plugins/factoryInterfaces'
 
 function defaultFn(): void {}
 
