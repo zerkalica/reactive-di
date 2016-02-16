@@ -34,5 +34,5 @@ tags
 /*.js
 /*.sh
 /dist
-/lib
+/dist
 /interfaces

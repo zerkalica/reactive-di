@@ -3,17 +3,14 @@
 import type {
     DepFn,
     Deps,
-    AnnotationBase,
-    Dependency
+    AnnotationBase
 } from '../../interfaces/annotationInterfaces'
-import type {SimpleMap} from '../../interfaces/modelInterfaces'
 import type {DepBase} from '../../interfaces/nodeInterfaces'
-import type {StatefullObservable} from '../../interfaces/observableInterfaces'
 
 export type ObservableAnnotation<V> = {
     kind: 'observable';
     base: AnnotationBase<DepFn<V>>;
-    deps: ?Deps;
+    deps: Deps;
 }
 
 export type ObservableDep<V, E> = {

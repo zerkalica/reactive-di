@@ -21,24 +21,24 @@ describe('DiStateTest', () => {
     it('should handle a.b, if a changed', () => {
         const {A, B, C, AppState, aSetter} = createState()
         const di = createPureStateDi(new AppState())
-        const aSet = di.get(aSetter)
+        const aSet = di(aSetter)
         const MyDep = factory(B)(v => v)
-        di.get(MyDep)
+        di(MyDep)
         const b = new B()
         b.v = 321
         aSet(b)
-        assert.deepEqual(di.get(MyDep), {v: 321})
+        assert.deepEqual(di(MyDep), {v: 321})
     })
 
     it('should handle a, if a.b changed', () => {
         const {A, B, C, AppState, bSetter} = createState()
 
         const di = createPureStateDi(new AppState())
-        const bSet = di.get(bSetter)
+        const bSet = di(bSetter)
         const MyDep = factory(A)(v => v)
-        di.get(MyDep)
+        di(MyDep)
         bSet(321)
-        assert.deepEqual(di.get(MyDep), {
+        assert.deepEqual(di(MyDep), {
             b:{
                 v: 321
             },
@@ -53,23 +53,23 @@ describe('DiStateTest', () => {
         const {A, B, C, AppState, bSetter} = createState()
 
         const di = createPureStateDi(new AppState())
-        const bSet = di.get(bSetter)
+        const bSet = di(bSetter)
 
         const MyDep = factory(C)(v => v)
-        di.get(MyDep)
+        di(MyDep)
         bSet(321)
-        assert.deepEqual(di.get(MyDep), {v: 'test'})
+        assert.deepEqual(di(MyDep), {v: 'test'})
     })
 
     it('should handle a.b, if a.b changed', () => {
         const {A, B, C, AppState, bSetter} = createState()
 
         const di = createPureStateDi(new AppState())
-        const bSet = di.get(bSetter)
+        const bSet = di(bSetter)
 
         const MyDep = factory(B)(v => v)
-        di.get(MyDep)
+        di(MyDep)
         bSet(321)
-        assert.deepEqual(di.get(MyDep), {v: 321})
+        assert.deepEqual(di(MyDep), {v: 321})
     })
 })

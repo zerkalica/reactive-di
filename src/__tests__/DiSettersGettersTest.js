@@ -27,10 +27,10 @@ describe('DiSettersGettersTest', () => {
             factory(getter(B))(fn)
 
             const di = createPureStateDi(new AppState())
-            const bSet = di.get(bSetter)
-            di.get(fn)
+            const bSet = di(bSetter)
+            di(fn)
             bSet(321)
-            di.get(fn)
+            di(fn)
             assert(fn.calledOnce)
         })
 
@@ -41,10 +41,10 @@ describe('DiSettersGettersTest', () => {
             factory(getter(B))(fn)
 
             const di = createPureStateDi(new AppState())
-            const bSet = di.get(bSetter)
-            assert(di.get(fn)().v === 123)
+            const bSet = di(bSetter)
+            assert(di(fn)().v === 123)
             bSet(321)
-            assert(di.get(fn)().v === 321)
+            assert(di(fn)().v === 321)
         })
     })
 })

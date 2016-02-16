@@ -23,8 +23,3 @@ export type Observable<V, E> = {
 export type SubscriptionSource = {
     subscription: Subscription;
 }
-
-export type StatefullObservable<V, E> = {
-    observable: Observable<V, E>;
-    initialData: V;
-}

@@ -28,7 +28,7 @@ describe('DiContainerTest', () => {
             const di = createPureStateDi(new AppState())
             function WrongDep() {}
 
-            assert.throws(() => di.get(WrongDep), /not annotated dependency/)
+            assert.throws(() => di(WrongDep), /not annotated dependency/)
         })
 
         /* eslint-disable padded-blocks */
@@ -36,7 +36,7 @@ describe('DiContainerTest', () => {
             const di = createPureStateDi(new AppState())
             class Test {}
             klass()(Test)
-            const instance = di.get(Test)
+            const instance = di(Test)
             assert(instance instanceof Test)
         })
         /* eslint-enable padded-blocks */
@@ -46,8 +46,8 @@ describe('DiContainerTest', () => {
             const di = createPureStateDi(new AppState())
             const Test = sinon.spy(class TestBase {})
             klass()(Test)
-            const instance1 = di.get(Test)
-            const instance2 = di.get(Test)
+            const instance1 = di(Test)
+            const instance2 = di(Test)
             assert(instance1 === instance2)
             assert(Test.calledOnce)
         })
@@ -61,8 +61,8 @@ describe('DiContainerTest', () => {
             const test = sinon.spy(testBase)
             factory()(test)
 
-            di.get(test)
-            const instance1 = di.get(test)
+            di(test)
+            const instance1 = di(test)
             assert(instance1 === 123)
             assert(test.calledOnce)
         })
@@ -77,7 +77,7 @@ describe('DiContainerTest', () => {
             const TestFake = sinon.spy(class Test {})
             klass(MyDep)(TestFake)
 
-            di.get(TestFake)
+            di(TestFake)
             assert(TestFake.calledWith(123))
         })
 
@@ -91,7 +91,7 @@ describe('DiContainerTest', () => {
             const TestFake = sinon.spy(class Test {})
             klass({fac: MyDep})(TestFake)
 
-            di.get(TestFake)
+            di(TestFake)
             assert(TestFake.calledWith({fac: 123}))
         })
     })

@@ -1,0 +1,5 @@
+**/lib/*
+**/dist/*
+**/conf/*
+**/node_modules/*
+**/src/interfaces/*

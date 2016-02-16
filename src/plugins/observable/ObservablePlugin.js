@@ -1,6 +1,5 @@
 /* @flow */
-
-import merge from '../../utils/merge'
+/* eslint-disable no-undef */
 import FactoryAnnotationImpl from '../factory/FactoryAnnotationImpl'
 import {DepBaseImpl} from '../../core/pluginImpls'
 import type {
@@ -10,26 +9,13 @@ import type {
 import type {
     AnyDep,
     DepBase,
-    AnnotationResolver,
-    ListenerManager
+    AnnotationResolver
 } from '../../interfaces/nodeInterfaces'
-import type {StatefullObservable} from '../../interfaces/observableInterfaces'
-import type {Plugin} from '../../interfaces/pluginInterfaces'
+import type {FactoryDep} from '../factory/factoryInterfaces'
 import type {
     ObservableDep,
     ObservableAnnotation
 } from './observableInterfaces'
-
-import type {
-    Subscription,
-    Observable,
-    SubscriptionObserver
-} from '../../interfaces/observableInterfaces'
-
-import type {
-    FactoryDep
-} from '../factory/factoryInterfaces'
-// eslint-disable-line
 
 // implements ObservableDep
 class ObservableDepImpl<V, E> {
@@ -59,13 +45,13 @@ class ObservableDepImpl<V, E> {
 }
 
 // depends on factory
-// implements Plugin
+// implements RdiPlugin
 export default class ObservablePlugin {
     create<V, E>(annotation: ObservableAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
 
-        const factoryDep: AnyDep = acc.resolveAnnotation(new FactoryAnnotationImpl(
-            base.id,
+        const factoryDep: AnyDep = acc.newRoot().resolveAnnotation(new FactoryAnnotationImpl(
+            `${base.id}.factory`,
             base.target,
             annotation.deps,
             base.info.tags
@@ -87,6 +73,5 @@ export default class ObservablePlugin {
         acc.end(dep)
     }
 
-    finalize<E>(dep: ObservableDep<E>, target: AnyDep): void {
-    }
+    finalize(): void {}
 }

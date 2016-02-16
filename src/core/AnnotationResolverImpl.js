@@ -1,5 +1,7 @@
 /* @flow */
 
+import Observable from 'zen-observable'
+
 import type {
     AnnotationDriver,
     DepId,
@@ -17,11 +19,11 @@ import type {
     AnyDep,
     DepArgs,
     AnnotationResolver,
-    ListenerManager
+    ListenerManager,
+    ResolvableDep
 } from '../interfaces/nodeInterfaces'
 import type {FinalizeFn} from '../interfaces/pluginInterfaces'
 import type {Plugin} from '../interfaces/pluginInterfaces'
-import type {Subscription} from '../interfaces/observableInterfaces'
 
 // implements DepArgs
 export class DepArgsImpl<M> {
@@ -57,18 +59,22 @@ class ListenerManagerImpl {
         }
     }
 
-    add(target: AnyDep): Observable {
+    add<V, E>(target: ResolvableDep<V>): Observable<V, E> {
         const self = this
-        function subscriberFn(observer: SubscrptionObserver): Subscription {
+        const {base} = target
+        /* eslint-disable no-undef */
+        function subscriberFn(observer: SubscriptionObserver): Subscription {
+        /* eslint-enable */
             function next(): void {
-                observer.next(target.resolve())
+                if (base.isRecalculate) {
+                    observer.next(target.resolve())
+                }
             }
             function listenersFilter(dep: Function): boolean {
                 return dep !== next
             }
             function unsubscribe(): void {
                 self._listeners = self._listeners.filter(listenersFilter)
-                observer.complete()
             }
             self._listeners.push(next)
             return {unsubscribe}

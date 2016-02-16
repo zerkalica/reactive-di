@@ -6,14 +6,16 @@ import DefaultIdCreator from './core/DefaultIdCreator'
 import FactoryAnnotationImpl from './plugins/factory/FactoryAnnotationImpl'
 import GetterAnnotationImpl from './plugins/getter/GetterAnnotationImpl'
 import LoaderAnnotationImpl from './plugins/loader/LoaderAnnotationImpl'
-import ResetAnnotationImpl from './plugins/loader/ResetAnnotationImpl'
 import MetaAnnotationImpl from './plugins/meta/MetaAnnotationImpl'
 import ModelAnnotationImpl from './plugins/model/ModelAnnotationImpl'
+import ObservableAnnotationImpl from './plugins/observable/ObservableAnnotationImpl'
+import ResetAnnotationImpl from './plugins/loader/ResetAnnotationImpl'
 import SetterAnnotationImpl from './plugins/setter/SetterAnnotationImpl'
 import type {
     IdCreator,
     DepItem,
     DepFn,
+    Deps,
     Dependency,
     AnnotationDriver,
     AnyAnnotation
@@ -32,6 +34,7 @@ export type Annotations = {
     meta<T: Dependency>(target: T): () => void;
     model<V: Object>(target: Class<V>): Class<V>;
     asyncmodel<V: Object>(target: Class<V>): Class<V>;
+    observable<V>(deps: Deps): (target: Dependency<V>) => Dependency<V>;
     setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
         : (target: AnyUpdater<V, E>) => AnyUpdater<V, E>;
     loader<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
@@ -78,6 +81,20 @@ export default function createAnnotations(
                 target,
                 tags
             ))
+        },
+
+        observable<V>(...deps: Array<DepItem>): (target: Dependency<V>) => Dependency<V> {
+            return function _observable(target: Dependency<V>): Dependency<V> {
+                function pass<P: any>(v: P): P {
+                    return v
+                }
+                return driver.annotate(target, new ObservableAnnotationImpl(
+                    ids.createId(),
+                    pass,
+                    deps,
+                    tags
+                ))
+            }
         },
 
         getter<V: Object>(target: Class<V>): Class<V> {

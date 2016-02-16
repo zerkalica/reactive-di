@@ -4,16 +4,10 @@ import type {
     DepId,
     Deps,
     DepFn,
-    AnnotationBase,
-    Dependency
+    AnnotationBase
 } from '../../interfaces/annotationInterfaces'
 import {AnnotationBaseImpl} from '../../core/pluginImpls'
 import type {ObservableAnnotation} from './observableInterfaces' // eslint-disable-line
-import type {SimpleMap} from '../../interfaces/modelInterfaces'
-
-function pass<V>(deps: V): V {
-    return deps
-}
 
 // implements ObservableAnnotation
 export default class ObservableAnnotationImpl<V> {
@@ -23,11 +17,12 @@ export default class ObservableAnnotationImpl<V> {
 
     constructor(
         id: DepId,
+        target: DepFn<V>,
         deps: Deps,
         tags: Array<string>
     ) {
         this.kind = 'observable'
-        this.base = new AnnotationBaseImpl(id, this.kind, tags, pass)
+        this.base = new AnnotationBaseImpl(id, this.kind, tags, target)
         this.deps = deps
     }
 }

@@ -10,6 +10,7 @@ import type {
 } from '../plugins/loader/loaderInterfaces'
 import type {MetaDep} from '../plugins/meta/metaInterfaces'
 import type {ModelDep} from '../plugins/model/modelInterfaces'
+import type {ObservableDep} from '../plugins/observable/observableInterfaces'
 import type {SetterDep} from '../plugins/setter/setterInterfaces'
 import type {
     Info,
@@ -31,6 +32,7 @@ export type AnyDep =
     | AsyncModelDep
     | ModelDep
     | LoaderDep
+    | ObservableDep
     | ResetDep
     | SetterDep
     | GetterDep;
@@ -45,8 +47,8 @@ export type AsyncSubscription = {
 };
 
 export type DepBase = {
-    isRecalculate: boolean;
     id: DepId;
+    isRecalculate: boolean;
 
     info: Info;
     relations: Array<DepId>;
@@ -59,9 +61,14 @@ export type DepArgs<M> = {
     middlewares: ?Array<M>;
 }
 
+export type ResolvableDep<V> = {
+    base: DepBase;
+    resolve(): V;
+}
+
 export type ListenerManager = {
     notify: Notify;
-    add(target: AnyDep): Subscription;
+    add<V, E>(target: ResolvableDep<V>): Observable<V, E>;
 }
 
 export type AnnotationResolver = {

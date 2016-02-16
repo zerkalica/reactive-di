@@ -5,7 +5,7 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
-  "main": "lib/index.js",
+  "main": "dist/index.js",
   "config": {
     "builddir": "."
   },
@@ -18,7 +18,7 @@
     "precommit": "exit 0",
     "update": "ncu -ua && npm install",
     "clean": "rm -rf $npm_package_config_builddir/lib coverage interfaces",
-    "build": "npm run clean && cp -rf src/interfaces ./ && rm -rf lib/__tests__ interfaces/annotation* interfaces/node* interfaces/plugin* && babel src --source-maps --out-dir $npm_package_config_builddir/lib",
+    "build": "npm run clean && cp -rf src/interfaces ./ && rm -rf dist/__tests__ interfaces/annotation* interfaces/node* interfaces/plugin* && babel src --source-maps --out-dir $npm_package_config_builddir/lib",
     "build.dev": "babel src --source-maps --out-dir $npm_package_config_builddir/lib --watch",
     "lint": "exit 0 && eslint src",
     "check": "flow check",
@@ -78,5 +78,7 @@
     "power-assert": "^1.2.0",
     "sinon": "^1.17.3"
   },
-  "dependencies": {}
+  "dependencies": {
+    "zen-observable": "^0.1.11"
+  }
 }

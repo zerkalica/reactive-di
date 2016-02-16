@@ -49,7 +49,7 @@ describe('DiAsyncTest', () => {
             const MyDep = sinon.spy((c: C, meta: EntityMeta) => ({v: c.v, meta}))
             factory(cLoader, meta(cLoader))(MyDep)
 
-            assert.deepEqual(di.get(MyDep), {
+            assert.deepEqual(di(MyDep), {
                 v: 'test1',
                 meta: {
                     fulfilled: false,
@@ -60,7 +60,7 @@ describe('DiAsyncTest', () => {
             })
 
             return dataSource.then(() => {
-                assert.deepEqual(di.get(MyDep), {
+                assert.deepEqual(di(MyDep), {
                     v: 'test2',
                     meta: {
                         fulfilled: true,
