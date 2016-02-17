@@ -23,7 +23,6 @@ import type {
     CursorCreator,
     Notify
 } from 'reactive-di/i/modelInterfaces'
-
 export type AnyDep =
     ClassDep
     | FactoryDep
