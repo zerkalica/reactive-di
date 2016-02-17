@@ -10,9 +10,7 @@ import type {ModelAnnotation} from 'reactive-di/i/plugins/modelInterfaces'
 type PropCreator<V: Object, N: Object> = (value: V) => N;
 type PropCreatorMap = SimpleMap<string, PropCreator>;
 
-/* eslint-disable no-undef */
 function createFromJS<T: Object>(Proto: Class<T>, propCreators: PropCreatorMap): FromJS<T> {
-/* eslint-enable no-undef */
     return function fromJS<R: Object>(data: R): T {
         const keys = Object.keys(data)
         const props = {}

@@ -31,7 +31,6 @@ describe('DiContainerTest', () => {
             assert.throws(() => di(WrongDep), /not annotated dependency/)
         })
 
-        /* eslint-disable padded-blocks */
         it('should return class instance', () => {
             const di = createPureStateDi(new AppState())
             class Test {}
@@ -39,9 +38,7 @@ describe('DiContainerTest', () => {
             const instance = di(Test)
             assert(instance instanceof Test)
         })
-        /* eslint-enable padded-blocks */
 
-        /* eslint-disable padded-blocks */
         it('should cache class instance', () => {
             const di = createPureStateDi(new AppState())
             class TestBase {}
@@ -52,7 +49,6 @@ describe('DiContainerTest', () => {
             assert(instance1 === instance2)
             assert(Test.calledOnce)
         })
-        /* eslint-enable padded-blocks */
 
         it('should cache factory return value', () => {
             const di = createPureStateDi(new AppState())

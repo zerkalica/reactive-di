@@ -191,7 +191,7 @@ export default class BaseCollection<Item: CollectionItem> {
     }
 }
 
-(BaseCollection.prototype: Object)[Symbol.iterator] = function iterator() { // eslint-disable-line
+(BaseCollection.prototype: Object)[Symbol.iterator] = function iterator() {
     return {
         next() {
             let rec

@@ -14,11 +14,11 @@ export default class SetterAnnotationImpl<V: Object, E> {
     kind: 'setter';
     base: AnnotationBase<AnyUpdater<V, E>>;
     deps: ?Deps;
-    model: Class<V>; // eslint-disable-line
+    model: Class<V>;
 
     constructor(
         id: DepId,
-        model: Class<V>, // eslint-disable-line
+        model: Class<V>,
         target: AnyUpdater<V, E>,
         deps: ?Deps,
         tags: Array<string>

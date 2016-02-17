@@ -13,13 +13,13 @@ import type {LoaderAnnotation} from 'reactive-di/i/plugins/loaderInterfaces' // 
 export default class LoaderAnnotationImpl<V: Object, E> {
     kind: 'loader';
     base: AnnotationBase<AsyncUpdater<V, E>>;
-    model: Class<V>; // eslint-disable-line
+    model: Class<V>;
     deps: ?Deps;
 
     constructor(
         id: DepId,
         target: AsyncUpdater<V, E>,
-        model: Class<V>, // eslint-disable-line
+        model: Class<V>,
         deps: ?Deps,
         tags: Array<string>
     ) {

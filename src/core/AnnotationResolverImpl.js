@@ -62,9 +62,7 @@ class ListenerManagerImpl {
     add<V, E>(target: ResolvableDep<V>): Observable<V, E> {
         const self = this
         const {base} = target
-        /* eslint-disable no-undef */
         function subscriberFn(observer: SubscriptionObserver): Subscription {
-        /* eslint-enable */
             function next(): void {
                 if (base.isRecalculate) {
                     observer.next(target.resolve())

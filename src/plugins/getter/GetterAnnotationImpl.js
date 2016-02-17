@@ -10,11 +10,11 @@ import type {GetterAnnotation} from 'reactive-di/i/plugins/getterInterfaces' // 
 // implements GetterAnnotation
 export default class GetterAnnotationImpl<V: Object> {
     kind: 'getter';
-    base: AnnotationBase<Class<V>>; // eslint-disable-line
+    base: AnnotationBase<Class<V>>;
 
     constructor(
         id: DepId,
-        target: Class<V>, // eslint-disable-line
+        target: Class<V>,
         tags: Array<string>
     ) {
         this.kind = 'getter'

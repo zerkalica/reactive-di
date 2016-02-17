@@ -1,5 +1,4 @@
 /* @flow */
-/* eslint-disable no-undef */
 import FactoryAnnotationImpl from 'reactive-di/plugins/factory/FactoryAnnotationImpl'
 import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
 import type {

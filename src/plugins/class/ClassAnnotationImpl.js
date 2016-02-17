@@ -11,12 +11,12 @@ import type {ClassAnnotation} from 'reactive-di/i/plugins/classInterfaces' // es
 // implements ClassAnnotation
 export default class ClassAnnotationImpl<V: Object> {
     kind: 'class';
-    base: AnnotationBase<Class<V>>; // eslint-disable-line
+    base: AnnotationBase<Class<V>>;
     deps: ?Deps;
 
     constructor(
         id: DepId,
-        target: Class<V>, // eslint-disable-line
+        target: Class<V>,
         deps: ?Deps,
         tags: Array<string>
     ) {

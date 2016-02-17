@@ -12,12 +12,12 @@ import ModelInfoImpl from 'reactive-di/plugins/model/ModelInfoImpl'
 // implements AsyncModelAnnotation
 export default class AsyncModelAnnotationImpl<V: Object> {
     kind: 'asyncmodel';
-    base: AnnotationBase<Class<V>>; // eslint-disable-line
+    base: AnnotationBase<Class<V>>;
     info: ModelInfo<V>;
 
     constructor(
         id: DepId,
-        target: Class<V>, // eslint-disable-line
+        target: Class<V>,
         tags: Array<string>
     ) {
         this.kind = 'asyncmodel'

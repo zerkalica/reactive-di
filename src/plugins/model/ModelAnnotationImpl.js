@@ -14,12 +14,12 @@ import type {
 // implements ModelAnnotation
 export default class ModelAnnotationImpl<V: Object> {
     kind: 'model';
-    base: AnnotationBase<Class<V>>; // eslint-disable-line
+    base: AnnotationBase<Class<V>>;
     info: ModelInfo<V>;
 
     constructor(
         id: DepId,
-        target: Class<V>, // eslint-disable-line
+        target: Class<V>,
         tags: Array<string>
     ) {
         this.kind = 'model'

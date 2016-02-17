@@ -24,8 +24,6 @@ import type {
     AnyUpdater
 } from 'reactive-di/i/plugins/asyncmodelInterfaces'
 
-/* eslint-disable no-undef */
-
 export type Annotations = {
     klass(...deps: Array<DepItem>): <P: Object>(target: Class<P>) => Class<P>;
     factory(...deps: Array<DepItem>): <T: DepFn>(target: T) => T;

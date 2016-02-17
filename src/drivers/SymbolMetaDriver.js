@@ -1,7 +1,6 @@
 /* @flow */
-/* eslint-disable no-unused-vars */
 import type {
-    AnnotationDriver,
+    AnnotationDriver, // eslint-disable-line
     AnyAnnotation,
     Dependency
 } from 'reactive-di/i/annotationInterfaces'
@@ -10,7 +9,7 @@ const metaSymbol = typeof Symbol !== 'undefined' ? Symbol('__rdi__meta') : '__rd
 
 // implements AnnotationDriver
 export default class SymbolMetaDriver {
-    annotate<V, T: Dependency<V>, A: AnyAnnotation>(dep: T, annotation: A): T {
+    annotate<V, T: Dependency<V>, A: AnyAnnotation>(dep: T, annotation: A): T { // eslint-disable-line
         if ((dep: Function)[metaSymbol]) {
             throw new Error(
                 'Annotation already defined for ' + ((dep: Function).displayName || String(dep))

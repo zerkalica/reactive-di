@@ -9,7 +9,7 @@ export default function promiseToObservable<V, E>(promise: Promise<V>): Observab
 
     let isSubscribed: boolean = true;
 
-    function subscriberFn(observer: SubscriptionObserver): Subscription { // eslint-disable-line
+    function subscriberFn(observer: SubscriptionObserver): Subscription {
         function unsubscribe(): void {
             // todo: memory leak
             isSubscribed = false

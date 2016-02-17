@@ -1,7 +1,6 @@
 /* @flow */
 
 export function fastCreateObject<T>(target: Class<T>, args: Array<any>): T {
-    /* eslint-disable new-cap */
     switch (args.length) {
     case 0:
         return new (target: any)
@@ -22,11 +21,9 @@ export function fastCreateObject<T>(target: Class<T>, args: Array<any>): T {
     default:
         return new (target: any)(...args)
     }
-    /* eslint-enable new-cap */
 }
 
 export function fastCallMethod<T>(obj: Object, fn: Function, args: Array<any>): T {
-    /* eslint-disable new-cap */
     switch (args.length) {
     case 0:
         return fn.call(obj)
@@ -47,11 +44,9 @@ export function fastCallMethod<T>(obj: Object, fn: Function, args: Array<any>): 
     default:
         return fn.apply(obj, args)
     }
-    /* eslint-enable new-cap */
 }
 
 export function fastCall<T>(fn: Function, args: Array<any>): T {
-    /* eslint-disable new-cap */
     switch (args.length) {
     case 0:
         return fn()
@@ -72,5 +67,4 @@ export function fastCall<T>(fn: Function, args: Array<any>): T {
     default:
         return fn(...args)
     }
-    /* eslint-enable new-cap */
 }

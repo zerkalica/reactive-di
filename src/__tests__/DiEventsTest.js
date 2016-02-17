@@ -17,7 +17,7 @@ describe('DiEventsTest', () => {
         const di = createPureStateDi(new AppState())
         const fn = sinon.spy((v) => v)
         const bSet = di(bSetter)
-        const observable: Observable = di(observableProps); //eslint-disable-line
+        di(observableProps)
         bSet(321)
         assert(fn.notCalled)
     })
@@ -25,7 +25,7 @@ describe('DiEventsTest', () => {
     it('should update mounted listener', () => {
         const {B, AppState, bSetter} = createState()
         const di = createPureStateDi(new AppState())
-        const observer: Observer = { //eslint-disable-line
+        const observer: Observer = {
             next: sinon.spy(),
             complete: sinon.spy(),
             error: sinon.spy()
@@ -46,7 +46,7 @@ describe('DiEventsTest', () => {
         const {C, AppState, bSetter} = createState()
 
         const di = createPureStateDi(new AppState())
-        const observer: Observer = { //eslint-disable-line
+        const observer: Observer = {
             next: sinon.spy(),
             complete: sinon.spy(),
             error: sinon.spy()
@@ -64,7 +64,7 @@ describe('DiEventsTest', () => {
     it('should not update unsubscribed listener', () => {
         const {B, AppState, bSetter} = createState()
         const di = createPureStateDi(new AppState())
-        const observer: Observer = { //eslint-disable-line
+        const observer: Observer = {
             next: sinon.spy(),
             complete: sinon.spy(),
             error: sinon.spy()
@@ -83,7 +83,7 @@ describe('DiEventsTest', () => {
     it('should update resubscribed listener', () => {
         const {B, AppState, bSetter} = createState()
         const di = createPureStateDi(new AppState())
-        const observer: Observer = { //eslint-disable-line
+        const observer: Observer = {
             next: sinon.spy(),
             complete: sinon.spy(),
             error: sinon.spy()
@@ -105,12 +105,12 @@ describe('DiEventsTest', () => {
     it('should handle one of two subscribed listener', () => {
         const {C, B, AppState, bSetter} = createState()
         const di = createPureStateDi(new AppState())
-        const observerB: Observer = { //eslint-disable-line
+        const observerB: Observer = {
             next: sinon.spy(),
             complete: sinon.spy(),
             error: sinon.spy()
         };
-        const observerC: Observer = { //eslint-disable-line
+        const observerC: Observer = {
             next: sinon.spy(),
             complete: sinon.spy(),
             error: sinon.spy()
