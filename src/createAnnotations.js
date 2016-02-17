@@ -49,7 +49,7 @@ export default function createAnnotations(
         throw new TypeError('Provide AnnotationDriver')
     }
     return {
-        /* eslint-disable no-unused-vars */
+        /* eslint-disable no-shadow */
         klass(...deps: Array<DepItem>): <P: Object>(target: Class<P>) => Class<P> {
             return function _klass<P: Object>(target: Class<P>): Class<P> {
                 return driver.annotate(target, new ClassAnnotationImpl(
@@ -166,6 +166,6 @@ export default function createAnnotations(
                 tags
             ))
         }
-        /* eslint-enable no-undef */
+        /* eslint-enable */
     }
 }

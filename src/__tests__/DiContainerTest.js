@@ -10,7 +10,7 @@ import createPureStateDi from 'reactive-di/createPureStateDi'
 const {
     model,
     klass,
-    factory,
+    factory
 } = annotations
 
 class AppState {}
@@ -44,7 +44,8 @@ describe('DiContainerTest', () => {
         /* eslint-disable padded-blocks */
         it('should cache class instance', () => {
             const di = createPureStateDi(new AppState())
-            const Test = sinon.spy(class TestBase {})
+            class TestBase {}
+            const Test = sinon.spy(TestBase)
             klass()(Test)
             const instance1 = di(Test)
             const instance2 = di(Test)
@@ -73,8 +74,8 @@ describe('DiContainerTest', () => {
                 return 123
             }
             factory()(MyDep)
-
-            const TestFake = sinon.spy(class Test {})
+            class Test {}
+            const TestFake = sinon.spy(Test)
             klass(MyDep)(TestFake)
 
             di(TestFake)
@@ -87,8 +88,8 @@ describe('DiContainerTest', () => {
                 return 123
             }
             factory()(MyDep)
-
-            const TestFake = sinon.spy(class Test {})
+            class Test {}
+            const TestFake = sinon.spy(Test)
             klass({fac: MyDep})(TestFake)
 
             di(TestFake)

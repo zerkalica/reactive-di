@@ -11,19 +11,16 @@ import {createState} from 'reactive-di/__tests__/TestState'
 
 const {
     getter,
-    setter,
-    model,
     factory
 } = annotations
 
-import type {Getter} from 'reactive-di/i/plugins/getterInterfaces'
 
 describe('DiSettersGettersTest', () => {
     describe('getter', () => {
         it('should detached from state updates', () => {
-            const {B, C, AppState, bSetter} = createState()
+            const {B, AppState, bSetter} = createState()
 
-            const fn = sinon.spy(v => v)
+            const fn = sinon.spy((v) => v)
             factory(getter(B))(fn)
 
             const di = createPureStateDi(new AppState())
@@ -35,9 +32,9 @@ describe('DiSettersGettersTest', () => {
         })
 
         it('should get state in run-time', () => {
-            const {A, B, C, AppState, bSetter} = createState()
+            const {B, AppState, bSetter} = createState()
 
-            const fn = sinon.spy(v => v)
+            const fn = sinon.spy((v) => v)
             factory(getter(B))(fn)
 
             const di = createPureStateDi(new AppState())

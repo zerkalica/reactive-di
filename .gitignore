@@ -15,4 +15,4 @@ tags
 *.map
 /*.js
 /*.sh
-__tests__
+/__tests__

@@ -61,7 +61,7 @@ class AsyncModelObserver<V: Object, E> {
         this.complete()
     }
 
-    complete(v: any): void {
+    complete(v: any): void { // eslint-disable-line
         this._subscription.unsubscribe()
     }
 }
@@ -103,7 +103,7 @@ export default class SetterDepImpl<V: Object, E> {
 
     _setterResolver(args: Array<any>): void {
         const {base, _model: model, _notify: notify, _invoker: invoker} = this
-        const {deps, middlewares}: ResolveDepsResult = resolveDeps(invoker.depArgs);
+        const {deps, middlewares}: ResolveDepsResult = resolveDeps(invoker.depArgs); // eslint-disable-line
         const result: V = fastCall(invoker.target, [model.resolve()].concat(deps, args));
         if (middlewares) {
             const middleareArgs = [result].concat(args)
@@ -140,7 +140,7 @@ export default class SetterDepImpl<V: Object, E> {
             return this._value
         }
         const self = this
-        const {_meta: meta, _invoker: invoker} = this
+        const {_meta: meta} = this
 
         this._value = function setValue(...args: any): void {
             function success(): void {

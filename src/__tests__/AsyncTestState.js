@@ -19,7 +19,6 @@ export function createState(): {
     bSetter: Function,
     cLoader: Function
 } {
-
     class C {
         v: string = 'test';
         copy(rec: {v?: string}): C {

@@ -2,27 +2,21 @@
 /* @flow */
 
 import assert from 'power-assert'
-import sinon from 'sinon'
 
 import annotations from 'reactive-di/__tests__/annotations'
 import createPureStateDi from 'reactive-di/createPureStateDi'
 import {createState} from 'reactive-di/__tests__/TestState'
 
 const {
-    getter,
-    setter,
-    model,
     factory
 } = annotations
 
-import type {Getter} from 'reactive-di/i/plugins/getterInterfaces'
-
 describe('DiStateTest', () => {
     it('should handle a.b, if a changed', () => {
-        const {A, B, C, AppState, aSetter} = createState()
+        const {B, AppState, aSetter} = createState()
         const di = createPureStateDi(new AppState())
         const aSet = di(aSetter)
-        const MyDep = factory(B)(v => v)
+        const MyDep = factory(B)((v) => v)
         di(MyDep)
         const b = new B()
         b.v = 321
@@ -31,43 +25,43 @@ describe('DiStateTest', () => {
     })
 
     it('should handle a, if a.b changed', () => {
-        const {A, B, C, AppState, bSetter} = createState()
+        const {A, AppState, bSetter} = createState()
 
         const di = createPureStateDi(new AppState())
         const bSet = di(bSetter)
-        const MyDep = factory(A)(v => v)
+        const MyDep = factory(A)((v) => v)
         di(MyDep)
         bSet(321)
         assert.deepEqual(di(MyDep), {
-            b:{
+            b: {
                 v: 321
             },
-            c:{
-                v:'test'
+            c: {
+                v: 'test'
             },
             v: 123
         })
     })
 
     it('should not handle a.c, if a.b changed', () => {
-        const {A, B, C, AppState, bSetter} = createState()
+        const {C, AppState, bSetter} = createState()
 
         const di = createPureStateDi(new AppState())
         const bSet = di(bSetter)
 
-        const MyDep = factory(C)(v => v)
+        const MyDep = factory(C)((v) => v)
         di(MyDep)
         bSet(321)
         assert.deepEqual(di(MyDep), {v: 'test'})
     })
 
     it('should handle a.b, if a.b changed', () => {
-        const {A, B, C, AppState, bSetter} = createState()
+        const {B, AppState, bSetter} = createState()
 
         const di = createPureStateDi(new AppState())
         const bSet = di(bSetter)
 
-        const MyDep = factory(B)(v => v)
+        const MyDep = factory(B)((v) => v)
         di(MyDep)
         bSet(321)
         assert.deepEqual(di(MyDep), {v: 321})

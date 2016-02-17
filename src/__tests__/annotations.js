@@ -3,7 +3,6 @@
 import createAnnotations from 'reactive-di/createAnnotations'
 import SymbolMetaDriver from 'reactive-di/drivers/SymbolMetaDriver'
 import type {
-    Annotations,
     AnnotationDriver
 } from 'reactive-di/i/annotationInterfaces'
 

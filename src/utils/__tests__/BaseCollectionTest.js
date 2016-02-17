@@ -64,10 +64,10 @@ describe('BaseCollectionTest', () => {
 
     it('should find element', () => {
         const testColl = createTestColl()
-        const item = testColl.find(el => el.id === '3')
+        const item = testColl.find((el) => el.id === '3')
         assert(item instanceof TestEl)
         assert(item.name === 'test3')
-        assert(testColl.find(el => el.id === '3123') === undefined)
+        assert(testColl.find((el) => el.id === '3123') === undefined)
     })
 
     it('should get element', () => {
@@ -93,7 +93,7 @@ describe('BaseCollectionTest', () => {
     it('should remove element', () => {
         const testColl = createTestColl()
         const newColl = testColl.remove('3')
-        const item = newColl.find(el => el.id === '3')
+        const item = newColl.find((el) => el.id === '3')
         assert(newColl instanceof TestColl)
         assert(item === undefined)
         assert(newColl.length === 2)
@@ -103,7 +103,7 @@ describe('BaseCollectionTest', () => {
     it('should soft remove element', () => {
         const testColl = createTestColl()
         const newColl = testColl.softRemove('3')
-        const item = newColl.find(el => el.id === '3')
+        const item = newColl.find((el) => el.id === '3')
         assert(newColl instanceof TestColl)
         assert(item === undefined)
         assert(newColl.length === 2)
@@ -127,7 +127,7 @@ describe('BaseCollectionTest', () => {
 
     it('should update element', () => {
         const testColl = createTestColl()
-        const newColl = testColl.update('3', el => el.copy({name: 'test4New'}))
+        const newColl = testColl.update('3', (el) => el.copy({name: 'test4New'}))
         const item = newColl.get('3')
         assert(newColl !== testColl)
         assert(item.name === 'test4New')
@@ -135,33 +135,33 @@ describe('BaseCollectionTest', () => {
 
     it('should return same collection instance, if update element with same content', () => {
         const testColl = createTestColl()
-        const newColl = testColl.update('3', el => el.copy({name: 'test3'}))
+        const newColl = testColl.update('3', (el) => el.copy({name: 'test3'}))
         assert(newColl === testColl)
     })
 
     it('should throw exception of update element not exists', () => {
         const testColl = createTestColl()
-        assert.throws(() => testColl.update('4', el => el.copy({name: 'test4New'})))
+        assert.throws(() => testColl.update('4', (el) => el.copy({name: 'test4New'})))
     })
 
     it('should map collection', () => {
         const testColl = createTestColl()
-        const strings = testColl.map(el => el.name)
+        const strings = testColl.map((el) => el.name)
         assert.deepEqual(strings, ['test1', 'test2', 'test3'])
     })
 
     it('should filter collection', () => {
         const testColl = createTestColl()
-        const newColl = testColl.filter(el => el.id !== '2')
+        const newColl = testColl.filter((el) => el.id !== '2')
         assert(newColl instanceof TestColl)
         assert(newColl.length === 2)
-        const items = newColl.map(item => item.id)
+        const items = newColl.map((item) => item.id)
         assert.deepEqual(items, ['1', '3'])
     })
 
     it('should return same collection instance, if filter not found collection items', () => {
         const testColl = createTestColl()
-        const newColl = testColl.filter(el => el.id !== 'not-present-id')
+        const newColl = testColl.filter((el) => el.id !== 'not-present-id')
         assert(newColl === testColl)
     })
 
@@ -170,7 +170,7 @@ describe('BaseCollectionTest', () => {
         const newColl = testColl.sort((a, b) => (a.w > b.w ? -1 : Number(a.w !== b.w)))
         assert(newColl instanceof TestColl)
         assert(newColl.length === 3)
-        const items = newColl.map(item => item.id)
+        const items = newColl.map((item) => item.id)
         assert.deepEqual(items, ['3', '2', '1'])
     })
 

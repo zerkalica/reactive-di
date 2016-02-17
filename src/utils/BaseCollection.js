@@ -3,7 +3,7 @@ import merge from 'reactive-di/utils/merge'
 import type {
     Id,
     Collection, // eslint-disable-line
-    CollectionItem, // eslint-disable-line
+    CollectionItem,
     ItemRec,
     MapFn,
     SortFn,

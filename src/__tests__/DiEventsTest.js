@@ -15,7 +15,7 @@ describe('DiEventsTest', () => {
         annotations.observable({b: B})(observableProps)
 
         const di = createPureStateDi(new AppState())
-        const fn = sinon.spy(v => v)
+        const fn = sinon.spy((v) => v)
         const bSet = di(bSetter)
         const observable: Observable = di(observableProps); //eslint-disable-line
         bSet(321)
@@ -103,7 +103,7 @@ describe('DiEventsTest', () => {
     })
 
     it('should handle one of two subscribed listener', () => {
-        const {C, B, AppState, bSetter, cSetter} = createState()
+        const {C, B, AppState, bSetter} = createState()
         const di = createPureStateDi(new AppState())
         const observerB: Observer = { //eslint-disable-line
             next: sinon.spy(),
@@ -116,7 +116,6 @@ describe('DiEventsTest', () => {
             error: sinon.spy()
         };
         const bSet = di(bSetter)
-        const cSet = di(cSetter)
 
         function observablePropsB() {}
         annotations.observable({b: B})(observablePropsB);

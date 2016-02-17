@@ -10,13 +10,13 @@ import type {
 import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
 import type {
     ModelDep,
-    ModelAnnotation,
+    ModelAnnotation
 } from 'reactive-di/i/plugins/modelInterfaces'
 
 // implements Plugin
 
 export default class ModelPlugin {
-    create<V: Object, E>(annotation: ModelAnnotation<V>, acc: AnnotationResolver): void {
+    create<V: Object>(annotation: ModelAnnotation<V>, acc: AnnotationResolver): void {
         const {base, info} = annotation
         const cursor: Cursor<V> = acc.createCursor(info.statePath);
 

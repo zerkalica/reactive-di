@@ -1,7 +1,7 @@
 [ignore]
-.*/dist/.*
-.*/build/.*
-.*/examples/.*
+dist/.*
+build/.*
+examples/.*
 .*/node_modules/bab.*
 .*/node_modules/lodash.*
 .*/node_modules/array.*
@@ -10,7 +10,7 @@
 .*/node_modules/acorn.*
 
 [libs]
-lib/
+lib
 
 [options]
 munge_underscores=true
