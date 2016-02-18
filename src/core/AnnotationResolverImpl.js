@@ -58,9 +58,11 @@ class ListenerManagerImpl {
         this.notify = function notify(): void {
             const {_listeners: listeners} = self
             for (let i = 0, l = listeners.length; i < l; i++) {
-                const {observer, target} = listeners[i]
+                const {observers, target} = listeners[i]
                 if (target.base.isRecalculate) {
-                    observers.next(target.resolve())
+                    for (let j = 0, k = observers.length; j < k; j++) {
+                        observers[j].next(target.resolve())
+                    }
                 }
             }
         }
@@ -69,23 +71,20 @@ class ListenerManagerImpl {
     add<V, E>(target: ResolvableDep<V>): Observable<V, E> {
         const self = this
         const observers: Array<Observer<V, E>> = [];
-        self._listeners.push({
+        const listener: Listener = {
             observers,
             target
-        })
+        }
+        self._listeners.push(listener)
 
         function subscriberFn(observer: SubscriptionObserver): Subscription {
-            const listener: Listener = {
-                observer,
-                target
-            };
-            function listenersFilter(dep: Listener): boolean {
-                return dep !== listener
+            function listenersFilter(dep: SubscriptionObserver): boolean {
+                return dep !== observer
             }
             function unsubscribe(): void {
-                self._listeners = self._listeners.filter(listenersFilter)
+                listener.observers = listener.observers.filter(listenersFilter)
             }
-            self._listeners.push(listener)
+            listener.observers.push(observer)
             return {unsubscribe}
         }
 

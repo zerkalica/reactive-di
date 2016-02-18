@@ -23,7 +23,7 @@ describe('DiEventsTest', () => {
         assert(fn.notCalled)
     })
 
-    it('should send data to all subscribers', (done: () => void) => {
+    it('should send data to all subscribers', () => {
         const {B, AppState, bSetter} = createState()
         const di = createPureStateDi(new AppState());
         class Observer1 {
@@ -48,14 +48,11 @@ describe('DiEventsTest', () => {
 
         bSet(321)
 
-        setTimeout(() => {
-            assert(observer1.next.calledOnce)
-            assert(observer1.next.firstCall.calledWith({b: {v: 321}}))
+        assert(observer1.next.calledOnce)
+        assert(observer1.next.firstCall.calledWith({b: {v: 321}}))
 
-            assert(observer2.next.calledOnce)
-            assert(observer2.next.firstCall.calledWith({b: {v: 321}}))
-            done()
-        }, 50)
+        assert(observer2.next.calledOnce)
+        assert(observer2.next.firstCall.calledWith({b: {v: 321}}))
     })
 
     it('should update mounted listener', () => {
