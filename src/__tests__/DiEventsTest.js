@@ -7,6 +7,7 @@ import sinon from 'sinon'
 import annotations from 'reactive-di/__tests__/annotations'
 import createPureStateDi from 'reactive-di/createPureStateDi'
 import {createState} from 'reactive-di/__tests__/TestState'
+import Observable from 'zen-observable'
 
 describe('DiEventsTest', () => {
     it('should not update non-mounted listener', () => {
@@ -20,6 +21,41 @@ describe('DiEventsTest', () => {
         di(observableProps)
         bSet(321)
         assert(fn.notCalled)
+    })
+
+    it('should send data to all subscribers', (done: () => void) => {
+        const {B, AppState, bSetter} = createState()
+        const di = createPureStateDi(new AppState());
+        class Observer1 {
+            next = sinon.spy();
+            complete = sinon.spy();
+            error = sinon.spy();
+        }
+
+        class Observer2 extends Observer1 {
+        }
+
+        const observer1: Observer = new Observer1();
+        const observer2: Observer = new Observer2();
+        let observable: Observable;
+        const bSet = di(bSetter)
+        function observableProps() {}
+        annotations.observable({b: B})(observableProps)
+        observable = di(observableProps).observable
+
+        observable.subscribe(observer1)
+        observable.subscribe(observer2)
+
+        bSet(321)
+
+        setTimeout(() => {
+            assert(observer1.next.calledOnce)
+            assert(observer1.next.firstCall.calledWith({b: {v: 321}}))
+
+            assert(observer2.next.calledOnce)
+            assert(observer2.next.firstCall.calledWith({b: {v: 321}}))
+            done()
+        }, 50)
     })
 
     it('should update mounted listener', () => {

@@ -42,9 +42,13 @@ export class DepArgsImpl<M> {
     }
 }
 
+type Listener<V, E> = {
+    observers: Array<Observer<V, E>>;
+    target: ResolvableDep<V>;
+};
 // implements ListenerManager
 class ListenerManagerImpl {
-    _listeners: Array<Function>;
+    _listeners: Array<Listener>;
 
     notify: Notify;
 
@@ -54,27 +58,34 @@ class ListenerManagerImpl {
         this.notify = function notify(): void {
             const {_listeners: listeners} = self
             for (let i = 0, l = listeners.length; i < l; i++) {
-                listeners[i]();
+                const {observer, target} = listeners[i]
+                if (target.base.isRecalculate) {
+                    observers.next(target.resolve())
+                }
             }
         }
     }
 
     add<V, E>(target: ResolvableDep<V>): Observable<V, E> {
         const self = this
-        const {base} = target
+        const observers: Array<Observer<V, E>> = [];
+        self._listeners.push({
+            observers,
+            target
+        })
+
         function subscriberFn(observer: SubscriptionObserver): Subscription {
-            function next(): void {
-                if (base.isRecalculate) {
-                    observer.next(target.resolve())
-                }
-            }
-            function listenersFilter(dep: Function): boolean {
-                return dep !== next
+            const listener: Listener = {
+                observer,
+                target
+            };
+            function listenersFilter(dep: Listener): boolean {
+                return dep !== listener
             }
             function unsubscribe(): void {
                 self._listeners = self._listeners.filter(listenersFilter)
             }
-            self._listeners.push(next)
+            self._listeners.push(listener)
             return {unsubscribe}
         }
 
