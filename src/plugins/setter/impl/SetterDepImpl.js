@@ -119,12 +119,15 @@ export default class SetterDepImpl<V: Object, E> {
                 model.set(result)
                 break
             case 'asyncmodel':
-                assertAsync(result, base.info)
-                model.pending()
-                if (this._observer) {
-                    this._observer.complete()
+                if (isObservable(result)) {
+                    model.pending()
+                    if (this._observer) {
+                        this._observer.complete()
+                    }
+                    this._observer = new AsyncModelObserver(result, model, notify);
+                } else {
+                    model.next(result)
                 }
-                this._observer = new AsyncModelObserver(result, model, notify);
                 break
             default:
                 throw new Error(
