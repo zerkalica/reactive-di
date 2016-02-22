@@ -13,7 +13,7 @@
     "postinstall": "test -d conf && conf/resources/postinstall.sh $npm_package_name || exit 0",
     "prepush": "exit 0 && npm test",
     "prepublish": "conf/resources/prepublish.sh",
-    "preversion": "conf/resources/checkgit.sh && npm test",
+    "preversion": "conf/resources/checkgit.sh && npm test && npm run build",
     "postversion": "git push && git push --tags",
     "precommit": "exit 0",
     "update": "ncu -ua && npm install",
