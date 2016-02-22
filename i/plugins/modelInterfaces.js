@@ -25,8 +25,9 @@ export type ModelAnnotation<V: Object> = {
 export type ModelDep<V: Object> = {
     kind: 'model';
     base: DepBase;
+    reset(): void;
     resolve(): V;
     setFromJS(value: Object): void;
-    set(value: V): void;
+    set(value: V): boolean;
     dataOwners: Array<Cacheable>;
 }

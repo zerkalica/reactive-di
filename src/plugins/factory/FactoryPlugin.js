@@ -1,61 +1,65 @@
 /* @flow */
 
-import defaultFinalizer from 'reactive-di/plugins/factory/defaultFinalizer'
-import resolveDeps from 'reactive-di/plugins/factory/resolveDeps'
-import InvokerImpl from 'reactive-di/plugins/factory/InvokerImpl'
-import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
+import defaultFinalizer from 'reactive-di/pluginsCommon/defaultFinalizer'
+import resolveDeps from 'reactive-di/pluginsCommon/resolveDeps'
+import DepsResolverImpl from 'reactive-di/pluginsCommon/DepsResolverImpl'
+import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
+    DepFn,
     DepId,
     Info
 } from 'reactive-di/i/annotationInterfaces'
 import type {
+    DepArgs,
     AnyDep,
     DepBase,
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
-import {createFunctionProxy} from 'reactive-di/utils/createProxy'
-import {fastCall} from 'reactive-di/utils/fastCall'
 import type {
     FactoryDep,
-    FactoryAnnotation,
-    FactoryInvoker
+    FactoryAnnotation
 } from 'reactive-di/i/plugins/factoryInterfaces'
+import {createFunctionProxy} from 'reactive-di/utils/createProxy'
+import {fastCall} from 'reactive-di/utils/fastCall'
 
 // implements FactoryDep
 export class FactoryDepImpl<V: any> {
     kind: 'factory';
     base: DepBase;
-    _invoker: FactoryInvoker<V>;
+
     _value :V;
+    _target: DepFn<V>;
+    _depArgs: DepArgs;
 
     constructor(
         id: DepId,
-        info: Info
+        info: Info,
+        target: DepFn<V>
     ) {
         this.kind = 'factory'
         this.base = new DepBaseImpl(id, info)
+        this._target = target
     }
 
-    init(invoker: FactoryInvoker<V>): void {
-        this._invoker = invoker
+    init(depArgs: DepArgs): void {
+        this._depArgs = depArgs
     }
 
     resolve(): V {
-        const {base, _invoker: invoker} = this
-        if (!base.isRecalculate) {
+        if (!this.base.isRecalculate) {
             return this._value
         }
-        const {deps, middlewares} = resolveDeps(invoker.depArgs)
-        let fn: V = fastCall(invoker.target, deps);
+        const {deps, middlewares} = resolveDeps(this._depArgs)
+        let fn: V = fastCall(this._target, deps);
         if (middlewares) {
             if (typeof fn !== 'function') {
-                throw new Error('No callable returns from dep ' + base.info.displayName)
+                throw new Error(`No callable returns from ${this.base.info.displayName}`)
             }
             fn = createFunctionProxy(fn, middlewares)
         }
         this._value = fn
-        base.isRecalculate = false
+        this.base.isRecalculate = false
 
         return this._value
     }
@@ -67,11 +71,9 @@ export default class FactoryPlugin {
     create<V>(annotation: FactoryAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
         const dep: FactoryDepImpl<V> = new FactoryDepImpl(base.id, base.info, base.target);
+        const resolver = new DepsResolverImpl(acc)
         acc.begin(dep)
-        dep.init(new InvokerImpl(
-            base.target,
-            acc.getDeps(annotation.deps, base.target, base.info.tags)
-        ))
+        dep.init(resolver.getDeps(annotation.deps, base.target, base.info.tags))
         acc.end(dep)
     }
 

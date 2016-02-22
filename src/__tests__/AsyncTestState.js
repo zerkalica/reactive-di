@@ -2,12 +2,13 @@
 
 import annotations from 'reactive-di/__tests__/annotations'
 import promiseToObservable from 'reactive-di/utils/promiseToObservable'
+import type {AsyncResult} from 'reactive-di/i/plugins/setterInterfaces'
 
 const {
     model,
-    asyncmodel,
     loader,
-    setter
+    syncsetter,
+    asyncsetter
 } = annotations
 
 export function createState(): {
@@ -27,10 +28,10 @@ export function createState(): {
             return next
         }
     }
-    asyncmodel(C)
+    model(C)
 
-    function cLoader(c: C): Observable<C, Error> {
-        return promiseToObservable(Promise.resolve(c.copy({v: 'test2'})))
+    function cLoader(c: C): AsyncResult<C, Error> {
+        return [c, Promise.resolve(c.copy({v: 'test2'}))]
     }
     loader(C)(cLoader)
 
@@ -56,7 +57,7 @@ export function createState(): {
             return next
         }
     }
-    asyncmodel(A)
+    model(A)
 
     class AppState {
         a: A = new A();
@@ -68,15 +69,15 @@ export function createState(): {
     }
     model(AppState)
 
-    function aSetter(a: A, v: number): Observable<A, Error> {
-        return promiseToObservable(Promise.resolve(a.copy({v})))
+    function aSetter(a: A, v: number): AsyncResult<A, Error> {
+        return [a, promiseToObservable(Promise.resolve(a.copy({v})))]
     }
-    setter(A)(aSetter)
+    asyncsetter(A)(aSetter)
 
     function bSetter(b: B, v: number): B {
         return b.copy({v})
     }
-    setter(B)(bSetter)
+    syncsetter(B)(bSetter)
 
     return {
         A,

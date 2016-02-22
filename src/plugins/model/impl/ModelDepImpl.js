@@ -4,7 +4,7 @@ import type {
     DepId,
     Info
 } from 'reactive-di/i/annotationInterfaces'
-import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
+import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
     Notify,
     Cursor,
@@ -47,18 +47,21 @@ export default class ModelDepImpl<V: Object> {
         this.dataOwners = []
     }
 
-    _notifyData(): void {
+    reset(): void {
         const {dataOwners} = this
         for (let i = 0, l = dataOwners.length; i < l; i++) {
             dataOwners[i].isRecalculate = true
         }
     }
 
-    set(value: V): void {
-        if (this._cursor.set(value)) {
+    set(value: V): boolean {
+        const isChanged: boolean = this._cursor.set(value);
+        if (isChanged) {
             this._value = value
-            this._notifyData()
+            this.reset()
         }
+
+        return isChanged
     }
 
     setFromJS(data: Object): void {

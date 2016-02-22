@@ -2,7 +2,6 @@
 
 import createPureCursorCreator from 'reactive-di/model/pure/createPureCursorCreator'
 import AnnotationResolverImpl from 'reactive-di/core/AnnotationResolverImpl'
-import AsyncModelPlugin from 'reactive-di/plugins/asyncmodel/AsyncModelPlugin'
 import ClassPlugin from 'reactive-di/plugins/class/ClassPlugin'
 import FactoryPlugin from 'reactive-di/plugins/factory/FactoryPlugin'
 import GetterPlugin from 'reactive-di/plugins/getter/GetterPlugin'
@@ -11,7 +10,8 @@ import MetaPlugin from 'reactive-di/plugins/meta/MetaPlugin'
 import ModelPlugin from 'reactive-di/plugins/model/ModelPlugin'
 import ObservablePlugin from 'reactive-di/plugins/observable/ObservablePlugin'
 import ResetPlugin from 'reactive-di/plugins/loader/ResetPlugin'
-import SetterPlugin from 'reactive-di/plugins/setter/SetterPlugin'
+import SyncSetterPlugin from 'reactive-di/plugins/setter/SyncSetterPlugin'
+import AsyncSetterPlugin from 'reactive-di/plugins/setter/AsyncSetterPlugin'
 import SymbolMetaDriver from 'reactive-di/drivers/SymbolMetaDriver'
 import type {
     AnnotationDriver,
@@ -36,12 +36,12 @@ export default function createPureStateDi<T: Object>(
         {
             class: new ClassPlugin(),
             factory: new FactoryPlugin(),
-            setter: new SetterPlugin(),
+            asyncsetter: new AsyncSetterPlugin(),
+            syncsetter: new SyncSetterPlugin(),
             getter: new GetterPlugin(),
             model: new ModelPlugin(),
             loader: new LoaderPlugin(),
             reset: new ResetPlugin(),
-            asyncmodel: new AsyncModelPlugin(),
             observable: new ObservablePlugin(),
             meta: new MetaPlugin()
         }

@@ -1,37 +1,35 @@
 /* @flow */
 
-import defaultFinalizer from 'reactive-di/plugins/factory/defaultFinalizer'
-import SetterAnnotationImpl from 'reactive-di/plugins/setter/SetterAnnotationImpl'
-import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
+import defaultFinalizer from 'reactive-di/pluginsCommon/defaultFinalizer'
+import AsyncSetterAnnotationImpl from 'reactive-di/plugins/setter/AsyncSetterAnnotationImpl'
+import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
     DepId,
     Info
 } from 'reactive-di/i/annotationInterfaces'
 import type {
     AnyDep,
-    Cacheable,
     DepBase,
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
-import type {AsyncModelDep} from 'reactive-di/i/plugins/asyncmodelInterfaces'
 import type {
     SetFn,
-    SetterDep
+    AsyncSetterDep
 } from 'reactive-di/i/plugins/setterInterfaces'
 import type {
     LoaderAnnotation,
     LoaderDep
 } from 'reactive-di/i/plugins/loaderInterfaces'
+import type {ModelDep} from 'reactive-di/i/plugins/modelInterfaces'
 
 // implements LoaderDep
-class LoaderDepImpl<V: Object, E> {
+class LoaderDepImpl<V: Object> {
     kind: 'loader';
     base: DepBase;
-    dataOwners: Array<Cacheable>;
 
-    _setterDep: SetterDep;
-    _model: AsyncModelDep<V, E>;
+    _setterDep: AsyncSetterDep<V>;
+    _model: ModelDep<V>;
     _value: V;
     _setter: ?SetFn;
 
@@ -41,14 +39,13 @@ class LoaderDepImpl<V: Object, E> {
         this._setter = null
     }
 
-    init(setterDep: SetterDep, model: AsyncModelDep<V, E>): void {
+    init(setterDep: AsyncSetterDep<V>, model: ModelDep<V>): void {
         this._setterDep = setterDep
         this._model = model
     }
 
     reset(): void {
-        this._setterDep.unsubscribe()
-        this._model.reset()
+        this._setterDep.reset()
         this._setter = null
     }
 
@@ -57,15 +54,14 @@ class LoaderDepImpl<V: Object, E> {
             return this._value
         }
 
-        const {base, _model: model, _setterDep: setterDep} = this
-        const setter: SetFn = setterDep.resolve();
+        const setter: SetFn = this._setterDep.resolve();
         if (this._setter !== setter) {
             this._setter = setter
             setter()
         }
 
-        base.isRecalculate = false
-        this._value = model.resolve()
+        this.base.isRecalculate = false
+        this._value = this._model.resolve()
         return this._value
     }
 }
@@ -75,22 +71,23 @@ class LoaderDepImpl<V: Object, E> {
 export default class LoaderPlugin {
     create<V: Object, E>(annotation: LoaderAnnotation<V, E>, acc: AnnotationResolver): void {
         const {base} = annotation
-        const dep: LoaderDepImpl<V, E> = new LoaderDepImpl(base.id, base.info);
+        const dep: LoaderDepImpl<V> = new LoaderDepImpl(base.id, base.info);
         acc.begin(dep)
         const model: AnyDep = acc.resolve(annotation.model);
-        if (model.kind !== 'asyncmodel') {
+        if (model.kind !== 'model') {
             throw new Error(
-                `Not an asyncmodel ${model.base.info.displayName} in ${base.info.displayName}`
+                `Not an model ${model.base.info.displayName} in ${base.info.displayName}`
             )
         }
-        const setterDep: AnyDep = acc.resolveAnnotation(new SetterAnnotationImpl(
+
+        const setterDep: AnyDep = acc.resolveAnnotation(new AsyncSetterAnnotationImpl(
             `${base.id}.setter`,
             annotation.model,
             base.target,
             annotation.deps,
             base.info.tags
         ));
-        if (setterDep.kind !== 'setter') {
+        if (setterDep.kind !== 'asyncsetter') {
             throw new Error(
                 `Not a setter: ${setterDep.base.info.displayName} in ${base.info.displayName}`
             )

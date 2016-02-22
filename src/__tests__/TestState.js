@@ -4,7 +4,7 @@ import annotations from 'reactive-di/__tests__/annotations'
 import merge from 'reactive-di/utils/merge'
 const {
     model,
-    setter
+    syncsetter
 } = annotations
 
 export function createState(): {
@@ -55,17 +55,17 @@ export function createState(): {
     function aSetter(a: A, b: B): A {
         return merge(a, {b})
     }
-    setter(A)(aSetter)
+    syncsetter(A)(aSetter)
 
     function bSetter(b: B, v: number): B {
         return merge(b, {v})
     }
-    setter(B)(bSetter)
+    syncsetter(B)(bSetter)
 
     function cSetter(c: C, v: string): C {
         return merge(c, {v})
     }
-    setter(C)(cSetter)
+    syncsetter(C)(cSetter)
 
     return {
         A,

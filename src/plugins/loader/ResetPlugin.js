@@ -1,7 +1,6 @@
 /* @flow */
 
-import defaultFinalizer from 'reactive-di/plugins/factory/defaultFinalizer'
-import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
+import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
     DepId,
     Info
@@ -62,7 +61,5 @@ export default class ResetPlugin {
         acc.end(dep)
     }
 
-    finalize(dep: ResetDep, target: AnyDep): void {
-        defaultFinalizer(dep, target)
-    }
+    finalize(dep: ResetDep, target: AnyDep): void {} // eslint-disable-line
 }

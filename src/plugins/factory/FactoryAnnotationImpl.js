@@ -1,6 +1,6 @@
 /* @flow */
 
-import {AnnotationBaseImpl} from 'reactive-di/core/pluginImpls'
+import {AnnotationBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
     Deps,
     DepId,

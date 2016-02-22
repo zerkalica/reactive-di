@@ -6,7 +6,6 @@ import type {
     AnnotationDriver,
     DepId,
     Dependency,
-    Deps,
     AnyAnnotation,
     Tag
 } from 'reactive-di/i/annotationInterfaces'
@@ -17,30 +16,12 @@ import type {
 } from 'reactive-di/i/modelInterfaces'
 import type {
     AnyDep,
-    DepArgs,
     AnnotationResolver,
     ListenerManager,
     ResolvableDep
 } from 'reactive-di/i/nodeInterfaces'
 import type {FinalizeFn} from 'reactive-di/i/pluginInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces'
-
-// implements DepArgs
-export class DepArgsImpl<M> {
-    deps: Array<AnyDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<M>;
-
-    constructor(
-        deps: Array<AnyDep>,
-        depNames: ?Array<string>,
-        middlewares: ?Array<M>
-    ) {
-        this.deps = deps
-        this.depNames = depNames
-        this.middlewares = middlewares
-    }
-}
 
 type Listener<V, E> = {
     observers: Array<Observer<V, E>>;
@@ -99,9 +80,9 @@ export default class AnnotationResolverImpl {
     _cache: SimpleMap<DepId, AnyDep>;
     _plugins: SimpleMap<string, Plugin>;
 
-    _middlewares: Map<Dependency|Tag, Array<Dependency>>;
     _overrides: Map<Dependency, Dependency>;
 
+    middlewares: Map<Dependency|Tag, Array<Dependency>>;
     createCursor: CursorCreator;
     listeners: ListenerManager;
 
@@ -115,7 +96,7 @@ export default class AnnotationResolverImpl {
         cache?: SimpleMap<DepId, AnyDep>
     ) {
         this._driver = driver
-        this._middlewares = middlewares
+        this.middlewares = middlewares
         this._overrides = overrides
         this.createCursor = createCursor
         this._parents = []
@@ -127,7 +108,7 @@ export default class AnnotationResolverImpl {
     newRoot(): AnnotationResolver {
         return new AnnotationResolverImpl(
             this._driver,
-            this._middlewares,
+            this.middlewares,
             this._overrides,
             this.createCursor,
             this._plugins,
@@ -179,6 +160,11 @@ export default class AnnotationResolverImpl {
                 annotation.base.id = base.id
             }
             const plugin: Plugin = this._plugins[annotation.kind];
+            if (!plugin) {
+                throw new Error(
+                    `Plugin not found for annotation ${annotation.base.info.displayName}`
+                )
+            }
             plugin.create(annotation, (this: AnnotationResolver))
             dep = this._cache[base.id]
         } else if (parents.length) {
@@ -192,45 +178,5 @@ export default class AnnotationResolverImpl {
         }
 
         return dep
-    }
-
-    _resolveMiddlewares(annotatedDep: Dependency, tags: Array<Tag>): ?Array<AnyDep> {
-        const {_middlewares: middlewares} = this
-        const ids: Array<Dependency|Tag> = [annotatedDep].concat(tags);
-        const middlewareDeps: Array<AnyDep> = [];
-        for (let i = 0, l = ids.length; i < l; i++) {
-            const depMiddlewares: ?Array<Dependency> = middlewares.get(ids[i]);
-            if (depMiddlewares) {
-                for (let j = 0, k = depMiddlewares.length; j < k; j++) {
-                    middlewareDeps.push(this.resolve(depMiddlewares[j]))
-                }
-            }
-        }
-
-        return middlewareDeps.length ? middlewareDeps : null
-    }
-
-    getDeps(deps: ?Deps, annotatedDep: Dependency, tags: Array<Tag>): DepArgs {
-        let depNames: ?Array<string> = null;
-        const resolvedDeps: Array<AnyDep> = [];
-        if (deps && deps.length) {
-            if (typeof deps[0] === 'object' && deps.length === 1) {
-                depNames = []
-                const argsObject: SimpleMap<string, Dependency> =
-                    ((deps[0]: any): SimpleMap<string, Dependency>);
-                for (let key in argsObject) { // eslint-disable-line
-                    resolvedDeps.push(this.resolve(argsObject[key]))
-                    depNames.push(key)
-                }
-            } else {
-                for (let i = 0, l = deps.length; i < l; i++) {
-                    const dep: AnyDep = this.resolve(((deps: any): Array<Dependency>)[i]);
-                    resolvedDeps.push(dep)
-                }
-            }
-        }
-        const middlewares: ?Array<AnyDep> = this._resolveMiddlewares(annotatedDep, tags);
-
-        return new DepArgsImpl(resolvedDeps, depNames, middlewares)
     }
 }

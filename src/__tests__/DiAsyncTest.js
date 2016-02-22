@@ -7,11 +7,13 @@ import sinon from 'sinon'
 import annotations from 'reactive-di/__tests__/annotations'
 import createPureStateDi from 'reactive-di/createPureStateDi'
 import promiseToObservable from 'reactive-di/utils/promiseToObservable'
-import type {EntityMeta} from 'reactive-di/i/plugins/asyncmodel/asyncmodelInterfaces'
+import type {
+    AsyncResult,
+    EntityMeta
+} from 'reactive-di/i/plugins/setterInterfaces'
 const {
     model,
     meta,
-    asyncmodel,
     factory,
     loader
 } = annotations
@@ -25,12 +27,15 @@ describe('DiAsyncTest', () => {
                     this.v = v
                 }
             }
-            asyncmodel(C)
+            model(C)
+            let resolveData: Function;
+            const dataSource = new Promise((resolve) => {
+                resolveData = resolve
+            })
+            const observable = promiseToObservable(dataSource)
 
-            const dataSource = Promise.resolve(new C('test2'))
-
-            function cLoader(c: C): Observable<C, Error> { // eslint-disable-line
-                return promiseToObservable(dataSource)
+            function cLoader(c: C): AsyncResult<C, Error> {
+                return [c, observable]
             }
             loader(C)(cLoader)
 
@@ -47,7 +52,6 @@ describe('DiAsyncTest', () => {
             const di = createPureStateDi(new AppState())
             const MyDep = sinon.spy((c: C, m: EntityMeta) => ({v: c.v, meta: m}))
             factory(cLoader, meta(cLoader))(MyDep)
-
             assert.deepEqual(di(MyDep), {
                 v: 'test1',
                 meta: {
@@ -58,6 +62,7 @@ describe('DiAsyncTest', () => {
                 }
             })
 
+            resolveData(new C('test2'))
             return dataSource.then(() => {
                 assert.deepEqual(di(MyDep), {
                     v: 'test2',

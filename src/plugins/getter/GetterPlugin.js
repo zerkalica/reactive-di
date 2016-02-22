@@ -1,6 +1,6 @@
 /* @flow */
 
-import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
+import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
     DepId,
     Info
@@ -11,7 +11,6 @@ import type {
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
-import type {AsyncModelDep} from 'reactive-di/i/plugins/asyncmodelInterfaces'
 import type {ModelDep} from 'reactive-di/i/plugins/modelInterfaces'
 import type {
     Getter,
@@ -19,7 +18,6 @@ import type {
     GetterAnnotation
 } from 'reactive-di/i/plugins/getterInterfaces'
 
-type AnyModelDep<V, E> = ModelDep<V>|AsyncModelDep<V, E>;
 type Resolvable<V> = {
     resolve: () => V;
 };
@@ -52,10 +50,10 @@ class GetterDepImpl<V: Object> {
 // depends on model, asyncmodel
 // implements Plugin
 export default class GetterPlugin {
-    create<V: Object, E>(annotation: GetterAnnotation<V>, acc: AnnotationResolver): void {
+    create<V: Object>(annotation: GetterAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
-        const modelDep: AnyModelDep<V, E> = (acc.newRoot().resolve(base.target): any);
-        if (modelDep.kind !== 'model' && modelDep.kind !== 'asyncmodel') {
+        const modelDep: ModelDep<V> = (acc.newRoot().resolve(base.target): any);
+        if (modelDep.kind !== 'model') {
             throw new Error(
                 `Not a model dep type: ${modelDep.kind} in ${modelDep.base.info.displayName}`
             )

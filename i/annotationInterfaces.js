@@ -1,16 +1,17 @@
 /* @flow */
 
 import type {SimpleMap} from 'reactive-di/i/modelInterfaces'
-
 import type {ClassAnnotation} from 'reactive-di/i/plugins/classInterfaces'
 import type {FactoryAnnotation} from 'reactive-di/i/plugins/factoryInterfaces'
+import type {GetterAnnotation} from 'reactive-di/i/plugins/getterInterfaces'
+import type {LoaderAnnotation, ResetAnnotation} from 'reactive-di/i/plugins/loaderInterfaces'
 import type {MetaAnnotation} from 'reactive-di/i/plugins/metaInterfaces'
 import type {ModelAnnotation} from 'reactive-di/i/plugins/modelInterfaces'
-import type {AsyncModelAnnotation} from 'reactive-di/i/plugins/asyncmodelInterfaces'
-import type {SetterAnnotation} from 'reactive-di/i/plugins/setterInterfaces'
-import type {GetterAnnotation} from 'reactive-di/i/plugins/getterInterfaces'
 import type {ObservableAnnotation} from 'reactive-di/i/plugins/observableInterfaces'
-import type {LoaderAnnotation, ResetAnnotation} from 'reactive-di/i/plugins/loaderInterfaces'
+import type {
+    AsyncSetterAnnotation,
+    SyncSetterAnnotation
+} from 'reactive-di/i/plugins/setterInterfaces'
 
 export type DepId = string;
 export type Tag = string;
@@ -57,7 +58,7 @@ export type AnyAnnotation =
     | ModelAnnotation
     | GetterAnnotation
     | ObservableAnnotation
-    | AsyncModelAnnotation
     | LoaderAnnotation
     | ResetAnnotation
-    | SetterAnnotation;
+    | AsyncSetterAnnotation
+    | SyncSetterAnnotation;

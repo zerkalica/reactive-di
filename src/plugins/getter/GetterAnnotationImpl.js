@@ -4,7 +4,7 @@ import type {
     AnnotationBase,
     DepId
 } from 'reactive-di/i/annotationInterfaces'
-import {AnnotationBaseImpl} from 'reactive-di/core/pluginImpls'
+import {AnnotationBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {GetterAnnotation} from 'reactive-di/i/plugins/getterInterfaces' // eslint-disable-line
 
 // implements GetterAnnotation

@@ -3,29 +3,29 @@
 import {AnnotationBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
     DepId,
-    AnnotationBase,
-    Deps
+    Deps,
+    AnnotationBase
 } from 'reactive-di/i/annotationInterfaces'
 import type {AsyncUpdater} from 'reactive-di/i/plugins/setterInterfaces'
-import type {LoaderAnnotation} from 'reactive-di/i/plugins/loaderInterfaces' // eslint-disable-line
+import type {AsyncSetterAnnotation} from 'reactive-di/i/plugins/setterInterfaces' // eslint-disable-line
 
-// implements LoaderAnnotation
-export default class LoaderAnnotationImpl<V: Object, E> {
-    kind: 'loader';
+// implements AsyncSetterAnnotation
+export default class AsyncSetterAnnotationImpl<V: Object, E> {
+    kind: 'asyncsetter';
     base: AnnotationBase<AsyncUpdater<V, E>>;
-    model: Class<V>;
     deps: ?Deps;
+    model: Class<V>;
 
     constructor(
         id: DepId,
-        target: AsyncUpdater<V, E>,
         model: Class<V>,
+        target: AsyncUpdater<V, E>,
         deps: ?Deps,
         tags: Array<string>
     ) {
-        this.kind = 'loader'
+        this.kind = 'asyncsetter'
         this.base = new AnnotationBaseImpl(id, this.kind, tags, target)
-        this.model = model
         this.deps = deps
+        this.model = model
     }
 }

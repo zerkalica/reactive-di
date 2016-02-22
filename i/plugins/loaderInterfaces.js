@@ -5,7 +5,7 @@ import type {
     AnnotationBase
 } from 'reactive-di/i/annotationInterfaces'
 import type {DepBase} from 'reactive-di/i/nodeInterfaces'
-import type {AsyncUpdater} from 'reactive-di/i/plugins/asyncmodelInterfaces'
+import type {AsyncUpdater} from 'reactive-di/i/plugins/setterInterfaces'
 
 export type LoaderDep<V: Object> = {
     kind: 'loader';
@@ -24,7 +24,7 @@ export type LoaderAnnotation<V: Object, E> = {
     kind: 'loader';
     base: AnnotationBase<AsyncUpdater<V, E>>;
     deps: ?Deps;
-    model: Class<V>; // eslint-disable-line
+    model: Class<V>;
 }
 
 export type ResetAnnotation<V: Object, E> = {

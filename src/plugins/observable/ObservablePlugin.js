@@ -1,6 +1,6 @@
 /* @flow */
 import FactoryAnnotationImpl from 'reactive-di/plugins/factory/FactoryAnnotationImpl'
-import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
+import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
     DepId,
     Info

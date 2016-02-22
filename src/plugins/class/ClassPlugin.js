@@ -1,14 +1,15 @@
 /* @flow */
 
-import defaultFinalizer from 'reactive-di/plugins/factory/defaultFinalizer'
-import resolveDeps from 'reactive-di/plugins/factory/resolveDeps'
-import InvokerImpl from 'reactive-di/plugins/factory/InvokerImpl'
-import {DepBaseImpl} from 'reactive-di/core/pluginImpls'
+import defaultFinalizer from 'reactive-di/pluginsCommon/defaultFinalizer'
+import resolveDeps from 'reactive-di/pluginsCommon/resolveDeps'
+import DepsResolverImpl from 'reactive-di/pluginsCommon/DepsResolverImpl'
+import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
     DepId,
     Info
 } from 'reactive-di/i/annotationInterfaces'
 import type {
+    DepArgs,
     AnyDep,
     DepBase
 } from 'reactive-di/i/nodeInterfaces'
@@ -18,47 +19,46 @@ import {createObjectProxy} from 'reactive-di/utils/createProxy'
 import {fastCreateObject} from 'reactive-di/utils/fastCall'
 import type {
     ClassDep,
-    ClassAnnotation,
-    ClassInvoker
+    ClassAnnotation
 } from 'reactive-di/i/plugins/classInterfaces'
 
 // implements ClassDep
 export class ClassDepImpl<V: Object> {
     kind: 'class';
     base: DepBase;
-    _invoker: ClassInvoker<V>;
+    _depArgs: DepArgs;
     _value: V;
+    _target: Class<V>;
 
     constructor(
         id: DepId,
         info: Info,
-        target: Class<V> // eslint-disable-line
+        target: Class<V>
     ) {
         this.kind = 'class'
         this.base = new DepBaseImpl(id, info)
+        this._target = target
     }
 
     resolve(): V {
-        const {base, _invoker: invoker} = this
-        if (!base.isRecalculate) {
+        if (!this.base.isRecalculate) {
             return this._value
         }
-        const args = resolveDeps(invoker.depArgs)
-        let obj: V = fastCreateObject(invoker.target, args.deps);
+        const args = resolveDeps(this._depArgs)
+        let obj: V = fastCreateObject(this._target, args.deps);
         if (args.middlewares) {
             obj = createObjectProxy(obj, args.middlewares)
         }
-        base.isRecalculate = false
+        this.base.isRecalculate = false
         this._value = obj
 
         return this._value
     }
 
-    setInvoker(invoker: ClassInvoker<V>): void {
-        this._invoker = invoker
+    init(depArgs: DepArgs): void {
+        this._depArgs = depArgs
     }
 }
-
 
 // depends on factory
 // implements Plugin
@@ -66,11 +66,9 @@ export default class ClassPlugin {
     create<V: Object>(annotation: ClassAnnotation<V>, acc: AnnotationResolver): void {
         const {base} = annotation
         const dep: ClassDepImpl<V> = new ClassDepImpl(base.id, base.info, base.target);
+        const resolver = new DepsResolverImpl(acc)
         acc.begin(dep)
-        dep.setInvoker(new InvokerImpl(
-            base.target,
-            acc.getDeps(annotation.deps, base.target, base.info.tags)
-        ))
+        dep.init(resolver.getDeps(annotation.deps, base.target, base.info.tags))
         acc.end(dep)
     }
 

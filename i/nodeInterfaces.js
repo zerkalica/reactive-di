@@ -1,6 +1,5 @@
 /* @flow */
 
-import type {AsyncModelDep} from 'reactive-di/i/plugins/asyncmodelInterfaces'
 import type {ClassDep} from 'reactive-di/i/plugins/classInterfaces'
 import type {FactoryDep} from 'reactive-di/i/plugins/factoryInterfaces'
 import type {GetterDep} from 'reactive-di/i/plugins/getterInterfaces'
@@ -11,12 +10,14 @@ import type {
 import type {MetaDep} from 'reactive-di/i/plugins/metaInterfaces'
 import type {ModelDep} from 'reactive-di/i/plugins/modelInterfaces'
 import type {ObservableDep} from 'reactive-di/i/plugins/observableInterfaces'
-import type {SetterDep} from 'reactive-di/i/plugins/setterInterfaces'
+import type {SyncSetterDep} from 'reactive-di/i/plugins/setterInterfaces'
+import type {AsyncSetterDep} from 'reactive-di/i/plugins/setterInterfaces'
 import type {
     Info,
     DepId,
     Dependency,
     Deps,
+    Tag,
     AnyAnnotation
 } from 'reactive-di/i/annotationInterfaces'
 import type {
@@ -27,21 +28,23 @@ export type AnyDep =
     ClassDep
     | FactoryDep
     | MetaDep
-    | AsyncModelDep
     | ModelDep
     | LoaderDep
     | ObservableDep
     | ResetDep
-    | SetterDep
+    | SyncSetterDep
+    | AsyncSetterDep
     | GetterDep;
+
+export type EntityMeta<E> = {
+    pending: boolean;
+    rejected: boolean;
+    fulfilled: boolean;
+    reason: ?E;
+}
 
 export type Cacheable = {
     isRecalculate: boolean;
-};
-
-export type AsyncSubscription = {
-    refCount: number;
-    unsubscribe: () => void;
 };
 
 export type DepBase = {
@@ -50,13 +53,6 @@ export type DepBase = {
 
     info: Info;
     relations: Array<DepId>;
-    subscriptions: Array<AsyncSubscription>;
-}
-
-export type DepArgs<M> = {
-    deps: Array<AnyDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<M>;
 }
 
 export type ResolvableDep<V> = {
@@ -72,11 +68,26 @@ export type ListenerManager = {
 export type AnnotationResolver = {
     createCursor: CursorCreator;
     listeners: ListenerManager;
-    getDeps(deps: ?Deps, dep: Dependency, tags: Array<string>): DepArgs;
+    middlewares: Map<Dependency|Tag, Array<Dependency>>;
+
     resolveAnnotation(annotation: AnyAnnotation): AnyDep;
     resolve(annotatedDep: Dependency): AnyDep;
     addRelation(id: DepId): void;
     begin(dep: AnyDep): void;
-    end<T: AnyDep>(dep: T): void; // eslint-disable-line
+    end(dep: AnyDep): void;
     newRoot(): AnnotationResolver;
+}
+
+export type DepArgs = {
+    deps: Array<AnyDep>;
+    depNames: ?Array<string>;
+    middlewares: ?Array<AnyDep>;
+}
+
+export type Invoker<V> = {
+    invoke(args: Array<any>): V;
+}
+
+export type DepsResolver = {
+    getDeps(deps: ?Deps, annotatedDep: Dependency, tags: Array<Tag>): DepArgs;
 }

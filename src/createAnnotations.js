@@ -1,6 +1,5 @@
 /* @flow */
 
-import AsyncModelAnnotationImpl from 'reactive-di/plugins/asyncmodel/AsyncModelAnnotationImpl'
 import ClassAnnotationImpl from 'reactive-di/plugins/class/ClassAnnotationImpl'
 import DefaultIdCreator from 'reactive-di/core/DefaultIdCreator'
 import FactoryAnnotationImpl from 'reactive-di/plugins/factory/FactoryAnnotationImpl'
@@ -10,7 +9,9 @@ import MetaAnnotationImpl from 'reactive-di/plugins/meta/MetaAnnotationImpl'
 import ModelAnnotationImpl from 'reactive-di/plugins/model/ModelAnnotationImpl'
 import ObservableAnnotationImpl from 'reactive-di/plugins/observable/ObservableAnnotationImpl'
 import ResetAnnotationImpl from 'reactive-di/plugins/loader/ResetAnnotationImpl'
-import SetterAnnotationImpl from 'reactive-di/plugins/setter/SetterAnnotationImpl'
+import AsyncSetterAnnotationImpl from 'reactive-di/plugins/setter/AsyncSetterAnnotationImpl'
+import SyncSetterAnnotationImpl from 'reactive-di/plugins/setter/SyncSetterAnnotationImpl'
+
 import type {
     IdCreator,
     DepItem,
@@ -21,19 +22,28 @@ import type {
 } from 'reactive-di/i/annotationInterfaces'
 import type {
     AsyncUpdater,
-    AnyUpdater
-} from 'reactive-di/i/plugins/asyncmodelInterfaces'
+    SyncUpdater
+} from 'reactive-di/i/plugins/setterInterfaces'
 
 export type Annotations = {
     klass(...deps: Array<DepItem>): <P: Object>(target: Class<P>) => Class<P>;
+
     factory(...deps: Array<DepItem>): <T: DepFn>(target: T) => T;
+
     getter<V: Object>(target: Class<V>): Class<V>;
+
     meta<T: Dependency>(target: T): () => void;
+
     model<V: Object>(target: Class<V>): Class<V>;
-    asyncmodel<V: Object>(target: Class<V>): Class<V>;
+
     observable<V>(...deps: Array<DepItem>): (target: Dependency<V>) => Dependency<V>;
-    setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
-        : (target: AnyUpdater<V, E>) => AnyUpdater<V, E>;
+
+    asyncsetter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
+        : (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E>;
+
+    syncsetter<V: Object>(model: Class<V>, ...deps: Array<DepItem>)
+        : (target: SyncUpdater<V>) => SyncUpdater<V>;
+
     loader<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
         : (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E>;
 }
@@ -121,18 +131,23 @@ export default function createAnnotations(
             ))
         },
 
-        asyncmodel<V: Object>(target: Class<V>): Class<V> {
-            return driver.annotate(target, new AsyncModelAnnotationImpl(
-                ids.createId(),
-                target,
-                tags
-            ))
+        asyncsetter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
+            : (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E> {
+            return function _asyncsetter(target: AsyncUpdater<V, E>): AsyncUpdater<V, E> {
+                return driver.annotate(target, new AsyncSetterAnnotationImpl(
+                    ids.createId(),
+                    model,
+                    target,
+                    deps,
+                    tags
+                ))
+            };
         },
 
-        setter<V: Object, E>(model: Class<V>, ...deps: Array<DepItem>)
-            : (target: AnyUpdater<V, E>) => AnyUpdater<V, E> {
-            return function _setter(target: AnyUpdater<V, E>): AnyUpdater<V, E> {
-                return driver.annotate(target, new SetterAnnotationImpl(
+        syncsetter<V: Object>(model: Class<V>, ...deps: Array<DepItem>)
+            : (target: SyncUpdater<V>) => SyncUpdater<V> {
+            return function _syncsetter(target: SyncUpdater<V>): SyncUpdater<V> {
+                return driver.annotate(target, new SyncSetterAnnotationImpl(
                     ids.createId(),
                     model,
                     target,
@@ -164,6 +179,5 @@ export default function createAnnotations(
                 tags
             ))
         }
-        /* eslint-enable */
     }
 }

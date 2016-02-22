@@ -6,7 +6,7 @@ import type {
     Info,
     Tag
 } from 'reactive-di/i/annotationInterfaces'
-import type {AsyncSubscription} from 'reactive-di/i/nodeInterfaces'
+import type {EntityMeta} from 'reactive-di/i/nodeInterfaces' // eslint-disable-line
 
 // implements DepBase
 export class DepBaseImpl<V> {
@@ -15,7 +15,6 @@ export class DepBaseImpl<V> {
     relations: Array<DepId>;
     id: DepId;
     info: Info;
-    subscriptions: Array<AsyncSubscription>;
 
     constructor(
         id: DepId,
@@ -26,7 +25,6 @@ export class DepBaseImpl<V> {
         this.info = info
         this.isRecalculate = value === undefined
         this.relations = []
-        this.subscriptions = []
         if (value !== undefined) {
             this.value = value
         }
@@ -34,7 +32,7 @@ export class DepBaseImpl<V> {
 }
 
 // implements Info
-export class InfoImpl {
+class InfoImpl {
     tags: Array<Tag>;
     displayName: string;
 
@@ -64,5 +62,26 @@ export class AnnotationBaseImpl<T: Function> {
         this.id = id
         this.info = new InfoImpl(kind, name, tags)
         this.target = target
+    }
+}
+
+
+// implements EntityMeta
+export class EntityMetaImpl<E> {
+    pending: boolean;
+    rejected: boolean;
+    fulfilled: boolean;
+    reason: ?E;
+
+    constructor(rec: {
+        pending?: boolean,
+        rejected?: boolean,
+        fulfilled?: boolean,
+        reason?: ?E
+    } = {}) {
+        this.pending = rec.pending || false
+        this.rejected = rec.rejected || false
+        this.fulfilled = rec.fulfilled || false
+        this.reason = rec.reason || null
     }
 }

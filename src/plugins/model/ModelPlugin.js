@@ -1,10 +1,10 @@
 /* @flow */
 
-import modelFinalizer from 'reactive-di/plugins/model/modelFinalizer'
 import ModelDepImpl from 'reactive-di/plugins/model/impl/ModelDepImpl'
 import type {Cursor} from 'reactive-di/i/modelInterfaces'
 import type {
     AnyDep,
+    Cacheable,
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
@@ -14,7 +14,6 @@ import type {
 } from 'reactive-di/i/plugins/modelInterfaces'
 
 // implements Plugin
-
 export default class ModelPlugin {
     create<V: Object>(annotation: ModelAnnotation<V>, acc: AnnotationResolver): void {
         const {base, info} = annotation
@@ -37,6 +36,17 @@ export default class ModelPlugin {
     }
 
     finalize(dep: ModelDep, child: AnyDep): void {
-        modelFinalizer(dep, child)
+        const {base} = dep
+        switch (child.kind) {
+            case 'model': {
+                const {base: childBase, dataOwners: childOwners} = child
+                dep.dataOwners.push(childBase)
+                childOwners.push((base: Cacheable))
+                childBase.relations.push(base.id)
+                break
+            }
+            default:
+                throw new TypeError('Unhandlered dep type: ' + child.kind)
+        }
     }
 }
