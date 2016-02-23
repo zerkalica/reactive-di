@@ -34,6 +34,36 @@ const defaultSubscription: Subscription = {
     unsubscribe() {}
 };
 
+class RollbackObserver<V: Object, E> {
+    _observer: Observer<?V, E>;
+    _model: ModelDep<V>;
+    _oldValue: V;
+
+    constructor(
+        observer: Observer<?V, E>,
+        model: ModelDep<V>,
+        oldValue: V
+    ) {
+        this._observer = observer
+        this._model = model
+
+        this._oldValue = oldValue
+    }
+
+    next(value: ?V): void {
+        this._observer.next(value)
+    }
+
+    error(err: E): void {
+        this._model.set(this._oldValue)
+        this._observer.error(err)
+    }
+
+    complete(): void {
+        this._observer.complete()
+    }
+}
+
 // implements AsyncSetterDep
 export default class AsyncSetterDepImpl<V: Object, E> {
     kind: 'asyncsetter';
@@ -50,7 +80,7 @@ export default class AsyncSetterDepImpl<V: Object, E> {
     _model: ModelDep<V>;
     _subscription: Subscription;
 
-    _exposed: ExposedPromise<void, void>;
+    _exposed: ?ExposedPromise<void, void>;
 
     constructor(
         id: DepId,
@@ -61,9 +91,7 @@ export default class AsyncSetterDepImpl<V: Object, E> {
         this.kind = 'asyncsetter'
         this.base = new DepBaseImpl(id, info)
         this.metaOwners = []
-        this.meta = new EntityMetaImpl({
-            pending: true
-        })
+        this.meta = new EntityMetaImpl({fulfilled: true})
         const childSetters: Array<PromiseSource> = this.childSetters = [];
 
         this._notify = notify
@@ -73,7 +101,7 @@ export default class AsyncSetterDepImpl<V: Object, E> {
 
         const self = this
 
-        this._value = function setValue(...args: any): void {
+        this._value = function setValue(...args: Array<any>): void {
             function success(): void {
                 self._setterResolver(args)
             }
@@ -117,23 +145,39 @@ export default class AsyncSetterDepImpl<V: Object, E> {
     }
 
     _setterResolver(args: Array<any>): void {
+        const oldValue: V = this._model.resolve()
         const result: AsyncResult<V, E> = this._invoker.invoke(args);
-        const [initial, async] = result
-        let observable: Observable<V, E>;
-        if (typeof async.then === 'function') {
-            observable = promiseToObservable(((async: any): Promise<V>))
-        } else if (typeof async.subscribe === 'function') {
-            observable = ((async: any): Observable<V, E>);
+        let initial: ?V;
+        let asyncResult: Promise<V>|Observable<V, E>;
+        if (Array.isArray(result)) {
+            initial = result[0]
+            asyncResult = result[1]
         } else {
-            throw new Error(`${this.base.info.displayName} must return Promise or Observable`)
+            asyncResult = result
+        }
+
+        let observable: Observable<V, E>;
+        if (typeof asyncResult.then === 'function') {
+            observable = promiseToObservable(((asyncResult: any): Promise<V>))
+        } else if (typeof asyncResult.subscribe === 'function') {
+            observable = ((asyncResult: any): Observable<V, E>);
+        } else {
+            throw new Error(
+                `${this.base.info.displayName} must return Promise or Observable in AsyncResult`
+            )
         }
 
         this._createPromise()
         this._subscription.unsubscribe()
-        this._subscription = observable.subscribe((this: Observer<V, E>))
+
+        this._subscription = observable.subscribe(
+            new RollbackObserver((this: Observer<?V, E>), this._model, oldValue)
+        )
+        this._setMeta(setPending(this.meta))
         if (initial) {
             this._model.set(initial)
         }
+        this._notify()
     }
 
     _createPromise(): void {
@@ -145,21 +189,27 @@ export default class AsyncSetterDepImpl<V: Object, E> {
         this._exposed = exposed
     }
 
-    next(value: V): void {
+    next(value: ?V): void {
         const newMeta = setSuccess(this.meta)
         const isMetaChanged = this._setMeta(newMeta)
-        const isDataChanged = this._model.set(value)
+        const isDataChanged = !value || this._model.set(value)
         if (isMetaChanged || isDataChanged) {
             this._notify()
         }
-        this._exposed.success()
+        if (this._exposed) {
+            this._exposed.success()
+            this._exposed = null
+        }
     }
 
     error(err: E): void {
         if (this._setMeta(setError(this.meta, err))) {
             this._notify()
         }
-        this._exposed.error()
+        if (this._exposed) {
+            this._exposed.error()
+            this._exposed = null
+        }
     }
 
     complete(): void {

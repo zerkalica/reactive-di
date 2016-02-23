@@ -30,7 +30,7 @@ export function createState(): {
     }
     model(C)
 
-    function cLoader(c: C): AsyncResult<C, Error> {
+    function cLoader(c: C): AsyncResult<C, any> {
         return [c, Promise.resolve(c.copy({v: 'test2'}))]
     }
     loader(C)(cLoader)

@@ -32,6 +32,7 @@ export function setError<E>(meta: EntityMeta<E>, reason: E): EntityMeta<E> {
 export type ExposedPromise<V, E> = {
     success(value: V): void;
     error(error: E): void;
+    cancel(): void;
 }
 
 export type PromiseHandlers<V, E> = {
@@ -44,21 +45,25 @@ function noop() {}
 export function createPromiseHandlers<V, E>(): PromiseHandlers<V, E> {
     const exposed: ExposedPromise = {
         success: noop,
-        error: noop
+        error: noop,
+        cancel: noop
     };
 
     function handler(resolve, reject): void {
-        function onTimeout(): void {
-            reject(new Error('Timeout error'))
+        let isCanceled = false;
+        exposed.cancel = function cancel(): void {
+            isCanceled = true
         }
-        const timerId: number = setTimeout(onTimeout, 10000);
+
         exposed.success = function successHandler(data: V): void {
-            clearTimeout(timerId)
-            resolve(data)
+            if (!isCanceled) {
+                resolve(data)
+            }
         }
         exposed.error = function errorHandler(err: E): void {
-            clearTimeout(timerId)
-            reject(err)
+            if (!isCanceled) {
+                reject(err)
+            }
         }
     }
 

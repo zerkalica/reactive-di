@@ -7,6 +7,7 @@ import type {
     ItemRec,
     MapFn,
     SortFn,
+    SelectorFn,
     UpdateFn,
     FindFn,
     FilterFn
@@ -134,14 +135,24 @@ export default class BaseCollection<Item: CollectionItem> {
         throw new Error(`Can't get: element doesn't exists in collection: ${id}`)
     }
 
-    update(id: Id, updateFn: UpdateFn<Item>): Collection<Item> {
+    update(id: ?Id|SelectorFn<Item>, updateFn: UpdateFn<Item>): Collection<Item> {
         const oldItems: Array<Item> = this.items;
         const items: Array<Item> = [];
         let isFound: boolean = false;
         let isChanged: boolean = false;
         for (let i = 0, l = oldItems.length; i < l; i++) {
             const item = oldItems[i]
-            if (item.id !== id) {
+
+            let isMatch: boolean;
+            if (id === null) {
+                isMatch = true
+            } else if (typeof id === 'function') {
+                isMatch = (id: SelectorFn<Item>)(item)
+            } else {
+                isMatch = item.id === id
+            }
+
+            if (!isMatch) {
                 items.push(item)
             } else {
                 isFound = true

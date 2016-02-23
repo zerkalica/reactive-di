@@ -18,7 +18,9 @@ export type PromiseSource = {
     base: DepBase;
 }
 
-export type AsyncResult<V: Object, E> = [V, Promise<V>|Observable<V, E>];
+export type AsyncResult<V: Object, E> =
+    [V, Promise<V>|Observable<V, E>]
+    | Promise<V>|Observable<V, E>;
 
 export type SyncSetterDep = {
     kind: 'syncsetter';

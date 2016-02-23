@@ -35,12 +35,19 @@ export default class PureDataCursor<S: Object, V: Object> {
             ((new Function('s', 'return ' + ['s'].concat(path).join('.'))): Function);
         /* eslint-enable no-new-func */
         this.get = function get(): V {
-            return selector(stateRef.state)
+            const data = selector(stateRef.state)
+            if (!data) {
+                throw new Error(`Get empty data in ${path}`)
+            }
+            return data
         }
         this.set = function set(newModel: V): boolean {
             const state = stateRef.state
             const isChanged = newModel !== selector(state)
             if (isChanged) {
+                if (!newModel) {
+                    throw new Error(`Set empty data in ${path}`)
+                }
                 /* eslint-disable no-param-reassign */
                 stateRef.state = ((setInPath(newModel, state, path, 0): any): S)
             }

@@ -59,7 +59,7 @@ class MetaDepImpl<E> {
         this.base = new DepBaseImpl(id, info)
         this.sources = []
         this._value = new EntityMetaImpl({
-            pending: true
+            pending: false
         })
     }
 
