@@ -80,7 +80,7 @@ export default class AsyncSetterDepImpl<V: Object, E> {
     _model: ModelDep<V>;
     _subscription: Subscription;
 
-    _exposed: ?ExposedPromise<void, void>;
+    _exposed: ?ExposedPromise<void, E>;
 
     constructor(
         id: DepId,
@@ -193,22 +193,22 @@ export default class AsyncSetterDepImpl<V: Object, E> {
         const newMeta = setSuccess(this.meta)
         const isMetaChanged = this._setMeta(newMeta)
         const isDataChanged = !value || this._model.set(value)
-        if (isMetaChanged || isDataChanged) {
-            this._notify()
-        }
         if (this._exposed) {
             this._exposed.success()
             this._exposed = null
         }
+        if (isMetaChanged || isDataChanged) {
+            this._notify()
+        }
     }
 
     error(err: E): void {
+        if (this._exposed) {
+            this._exposed.error(err)
+            this._exposed = null
+        }
         if (this._setMeta(setError(this.meta, err))) {
             this._notify()
-        }
-        if (this._exposed) {
-            this._exposed.error()
-            this._exposed = null
         }
     }
 
