@@ -1,70 +1,36 @@
 /* @flow */
 
-import getFunctionName from 'reactive-di/utils/getFunctionName'
 import type {
     DepId,
-    Info,
     Tag
 } from 'reactive-di/i/annotationInterfaces'
 import type {EntityMeta} from 'reactive-di/i/nodeInterfaces' // eslint-disable-line
+import getFunctionName from 'reactive-di/utils/getFunctionName'
 
 // implements DepBase
-export class DepBaseImpl<V> {
+export class DepBaseImpl {
     isRecalculate: boolean;
-    value: V;
     relations: Array<DepId>;
+
     id: DepId;
-    info: Info;
-
-    constructor(
-        id: DepId,
-        info: Info,
-        value?: V
-    ) {
-        this.id = id
-        this.info = info
-        this.isRecalculate = value === undefined
-        this.relations = []
-        if (value !== undefined) {
-            this.value = value
-        }
-    }
-}
-
-// implements Info
-class InfoImpl {
-    tags: Array<Tag>;
     displayName: string;
+    tags: Array<Tag>;
 
     constructor(
-        kind: string,
-        name: string,
-        tags: Array<Tag>
+        annotation: {
+            kind: string,
+            id: DepId,
+            target: Function
+        },
+        isRecalculate: boolean = false
     ) {
-        this.displayName = kind + '@' + name
-        this.tags = tags.concat([kind, name])
+        this.id = annotation.id
+        this.displayName = annotation.kind + '@' + getFunctionName(annotation.target)
+        this.tags = [annotation.kind]
+        this.isRecalculate = isRecalculate
+        this.relations = []
     }
 }
-
-// implements AnnotationBase
-export class AnnotationBaseImpl<T: Function> {
-    id: DepId;
-    info: Info;
-    target: T;
-
-    constructor(
-        id: DepId,
-        kind: string,
-        tags: Array<string>,
-        target: T
-    ) {
-        const name: string = getFunctionName(target);
-        this.id = id
-        this.info = new InfoImpl(kind, name, tags)
-        this.target = target
-    }
-}
-
 
 // implements EntityMeta
 export class EntityMetaImpl<E> {

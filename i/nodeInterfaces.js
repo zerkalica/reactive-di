@@ -1,19 +1,7 @@
 /* @flow */
 
-import type {ClassDep} from 'reactive-di/i/plugins/classInterfaces'
-import type {FactoryDep} from 'reactive-di/i/plugins/factoryInterfaces'
-import type {GetterDep} from 'reactive-di/i/plugins/getterInterfaces'
 import type {
-    LoaderDep,
-    ResetDep
-} from 'reactive-di/i/plugins/loaderInterfaces'
-import type {MetaDep} from 'reactive-di/i/plugins/metaInterfaces'
-import type {ModelDep} from 'reactive-di/i/plugins/modelInterfaces'
-import type {ObservableDep} from 'reactive-di/i/plugins/observableInterfaces'
-import type {SyncSetterDep} from 'reactive-di/i/plugins/setterInterfaces'
-import type {AsyncSetterDep} from 'reactive-di/i/plugins/setterInterfaces'
-import type {
-    Info,
+    Annotation,
     DepId,
     Dependency,
     Deps,
@@ -24,17 +12,6 @@ import type {
     CursorCreator,
     Notify
 } from 'reactive-di/i/modelInterfaces'
-export type AnyDep =
-    ClassDep
-    | FactoryDep
-    | MetaDep
-    | ModelDep
-    | LoaderDep
-    | ObservableDep
-    | ResetDep
-    | SyncSetterDep
-    | AsyncSetterDep
-    | GetterDep;
 
 export type EntityMeta<E> = {
     pending: boolean;
@@ -51,11 +28,13 @@ export type DepBase = {
     id: DepId;
     isRecalculate: boolean;
 
-    info: Info;
+    displayName: string;
+    tags: Array<Tag>;
     relations: Array<DepId>;
 }
 
 export type ResolvableDep<V> = {
+    kind: string;
     base: DepBase;
     resolve(): V;
 }
@@ -70,18 +49,19 @@ export type AnnotationResolver = {
     listeners: ListenerManager;
     middlewares: Map<Dependency|Tag, Array<Dependency>>;
 
-    resolveAnnotation(annotation: AnyAnnotation): AnyDep;
-    resolve(annotatedDep: Dependency): AnyDep;
+    resolveAnnotation<AnyDep: Object>(annotation: Annotation): AnyDep;
+    resolve<AnyDep: Object>(annotatedDep: Dependency): AnyDep;
+    createId(): DepId;
     addRelation(id: DepId): void;
-    begin(dep: AnyDep): void;
-    end(dep: AnyDep): void;
+    begin<AnyDep: Object>(dep: AnyDep): void;
+    end<AnyDep: Object>(dep: AnyDep): void;
     newRoot(): AnnotationResolver;
 }
 
 export type DepArgs = {
-    deps: Array<AnyDep>;
+    deps: Array<ResolvableDep>;
     depNames: ?Array<string>;
-    middlewares: ?Array<AnyDep>;
+    middlewares: ?Array<ResolvableDep>;
 }
 
 export type Invoker<V> = {

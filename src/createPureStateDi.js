@@ -2,49 +2,41 @@
 
 import createPureCursorCreator from 'reactive-di/model/pure/createPureCursorCreator'
 import AnnotationResolverImpl from 'reactive-di/core/AnnotationResolverImpl'
-import ClassPlugin from 'reactive-di/plugins/class/ClassPlugin'
-import FactoryPlugin from 'reactive-di/plugins/factory/FactoryPlugin'
-import GetterPlugin from 'reactive-di/plugins/getter/GetterPlugin'
-import LoaderPlugin from 'reactive-di/plugins/loader/LoaderPlugin'
-import MetaPlugin from 'reactive-di/plugins/meta/MetaPlugin'
-import ModelPlugin from 'reactive-di/plugins/model/ModelPlugin'
-import ObservablePlugin from 'reactive-di/plugins/observable/ObservablePlugin'
-import ResetPlugin from 'reactive-di/plugins/loader/ResetPlugin'
-import SyncSetterPlugin from 'reactive-di/plugins/setter/SyncSetterPlugin'
-import AsyncSetterPlugin from 'reactive-di/plugins/setter/AsyncSetterPlugin'
+
 import SymbolMetaDriver from 'reactive-di/drivers/SymbolMetaDriver'
+
 import type {
+    Annotation,
     AnnotationDriver,
     Dependency,
     Tag
 } from 'reactive-di/i/annotationInterfaces'
 import type {AnnotationResolver} from 'reactive-di/i/nodeInterfaces'
 import type {GetDep} from 'reactive-di/i/diInterfaces'
+import type {SimpleMap} from 'reactive-di/i/modelInterfaces'
+import type {Plugin} from 'reactive-di/i/pluginInterfaces'
+
+function createPluginsMap(plugins: Array<Plugin>): SimpleMap<string, Plugin> {
+    const pluginMap = {}
+    for (let i = 0, l = plugins.length; i < l; i++) {
+        pluginMap[plugins[i].kind] = plugins[i]
+    }
+    return pluginMap
+}
 
 export default function createPureStateDi<T: Object>(
     state: T,
-    plugins?: Map<string, Object>,
-    middlewares?: Map<Dependency|Tag, Array<Dependency>>,
-    overrides?: Map<Dependency, Dependency>
+    deps: Array<Annotation>,
+    plugins: Array<Plugin>,
+    middlewares?: Map<Dependency|Tag, Array<Dependency>>
 ): GetDep {
     const driver: AnnotationDriver = new SymbolMetaDriver();
     const resolver: AnnotationResolver = new AnnotationResolverImpl(
         driver,
         middlewares || new Map(),
-        overrides || new Map(),
+        new Map(deps.map((dep: Annotation) => ([dep.target, dep]))),
         createPureCursorCreator(driver, state),
-        {
-            class: new ClassPlugin(),
-            factory: new FactoryPlugin(),
-            asyncsetter: new AsyncSetterPlugin(),
-            syncsetter: new SyncSetterPlugin(),
-            getter: new GetterPlugin(),
-            model: new ModelPlugin(),
-            loader: new LoaderPlugin(),
-            reset: new ResetPlugin(),
-            observable: new ObservablePlugin(),
-            meta: new MetaPlugin()
-        }
+        createPluginsMap(plugins)
     );
     resolver.resolve(state.constructor)
 

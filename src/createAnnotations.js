@@ -50,7 +50,6 @@ export type Annotations = {
 
 export default function createAnnotations(
     driver: AnnotationDriver,
-    ids: IdCreator = new DefaultIdCreator(),
     tags: Array<string> = []
 ): Annotations {
     if (!driver) {
@@ -61,7 +60,6 @@ export default function createAnnotations(
         klass(...deps: Array<DepItem>): <P: Object>(target: Class<P>) => Class<P> {
             return function _klass<P: Object>(target: Class<P>): Class<P> {
                 return driver.annotate(target, new ClassAnnotationImpl(
-                    ids.createId(),
                     target,
                     deps,
                     tags
@@ -72,7 +70,6 @@ export default function createAnnotations(
         factory(...deps: Array<DepItem>): <T: DepFn>(target: T) => T {
             return function _factory<T: DepFn>(target: T): T {
                 return driver.annotate(target, new FactoryAnnotationImpl(
-                    ids.createId(),
                     target,
                     deps,
                     tags
@@ -84,7 +81,6 @@ export default function createAnnotations(
             function dummyTargetId(): void {}
             const anyAnnotation: AnyAnnotation = driver.getAnnotation(target);
             return driver.annotate((dummyTargetId: any), new MetaAnnotationImpl(
-                anyAnnotation.base.id + '.meta',
                 target,
                 tags
             ))
@@ -96,7 +92,6 @@ export default function createAnnotations(
                     return v
                 }
                 return driver.annotate(target, new ObservableAnnotationImpl(
-                    ids.createId(),
                     pass,
                     deps,
                     tags
@@ -135,7 +130,6 @@ export default function createAnnotations(
             : (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E> {
             return function _asyncsetter(target: AsyncUpdater<V, E>): AsyncUpdater<V, E> {
                 return driver.annotate(target, new AsyncSetterAnnotationImpl(
-                    ids.createId(),
                     model,
                     target,
                     deps,
@@ -148,7 +142,6 @@ export default function createAnnotations(
             : (target: SyncUpdater<V>) => SyncUpdater<V> {
             return function _syncsetter(target: SyncUpdater<V>): SyncUpdater<V> {
                 return driver.annotate(target, new SyncSetterAnnotationImpl(
-                    ids.createId(),
                     model,
                     target,
                     deps,
@@ -161,7 +154,6 @@ export default function createAnnotations(
             : (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E> {
             return function _loader(target: AsyncUpdater<V, E>): AsyncUpdater<V, E> {
                 return driver.annotate(target, new LoaderAnnotationImpl(
-                    ids.createId(),
                     target,
                     model,
                     deps,
@@ -174,7 +166,6 @@ export default function createAnnotations(
             function dummyTargetId(): void {}
             const loaderAnnotation: AnyAnnotation = driver.getAnnotation(target);
             return driver.annotate((dummyTargetId: any), new ResetAnnotationImpl(
-                loaderAnnotation.base.id + '.reset',
                 target,
                 tags
             ))

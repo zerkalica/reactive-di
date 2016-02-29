@@ -1,6 +1,9 @@
 /* @flow */
 
-import type {AnnotationBase, Dependency} from 'reactive-di/i/annotationInterfaces'
+import type {
+    Annotation,
+    Dependency
+} from 'reactive-di/i/annotationInterfaces'
 import type {
     DepBase,
     EntityMeta,
@@ -12,9 +15,8 @@ export type MetaSource<E> = {
     metaOwners: Array<Cacheable>;
 }
 
-export type MetaAnnotation<V> = {
+export type MetaAnnotation<V> = Annotation<Dependency<V>> & {
     kind: 'meta';
-    base: AnnotationBase<Dependency<V>>;
 }
 
 export type MetaDep<E> = {

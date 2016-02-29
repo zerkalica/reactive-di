@@ -1,7 +1,7 @@
 /* @flow */
 
 import type {
-    AnnotationBase,
+    Annotation,
     Dependency
 } from 'reactive-di/i/annotationInterfaces'
 import type {FromJS} from 'reactive-di/i/modelInterfaces'
@@ -10,16 +10,11 @@ import type {
     Cacheable
 } from 'reactive-di/i/nodeInterfaces'
 
-export type ModelInfo<V> = {
-    childs: Array<Dependency>;
+export type ModelAnnotation<V: Object> = Annotation<Class<V>> & {
+    kind: 'model';
+    childs: Array<Class<*>>;
     statePath: Array<string>;
     fromJS: FromJS<V>;
-}
-
-export type ModelAnnotation<V: Object> = {
-    kind: 'model';
-    base: AnnotationBase<Class<V>>; // eslint-disable-line
-    info: ModelInfo<V>;
 }
 
 export type ModelDep<V: Object> = {

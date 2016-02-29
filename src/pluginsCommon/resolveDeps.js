@@ -36,7 +36,7 @@ export default function resolveDeps<A: MiddlewareFn|MiddlewareMap>(
         for (let i = 0, j = middlewares.length; i < j; i++) {
             const mdl: AnyDep = middlewares[i];
             if (mdl.kind !== 'factory' || mdl.kind !== 'class') {
-                throw new Error(`Not an factor or class: ${mdl.base.info.displayName}`)
+                throw new Error(`Not an factor or class: ${mdl.base.displayName}`)
             }
             resolvedMiddlewares.push(mdl.resolve())
         }

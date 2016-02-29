@@ -5,22 +5,15 @@ import resolveDeps from 'reactive-di/pluginsCommon/resolveDeps'
 import DepsResolverImpl from 'reactive-di/pluginsCommon/DepsResolverImpl'
 import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
-    DepId,
-    Info
-} from 'reactive-di/i/annotationInterfaces'
-import type {
     DepArgs,
-    AnyDep,
     DepBase
 } from 'reactive-di/i/nodeInterfaces'
 import type {AnnotationResolver} from 'reactive-di/i/nodeInterfaces'
+import type {ClassAnnotation} from 'reactive-di/i/plugins/classInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
 import {createObjectProxy} from 'reactive-di/utils/createProxy'
 import {fastCreateObject} from 'reactive-di/utils/fastCall'
-import type {
-    ClassDep,
-    ClassAnnotation
-} from 'reactive-di/i/plugins/classInterfaces'
+import type {ClassDep} from 'reactive-di/i/plugins/classInterfaces'
 
 // implements ClassDep
 export class ClassDepImpl<V: Object> {
@@ -30,14 +23,10 @@ export class ClassDepImpl<V: Object> {
     _value: V;
     _target: Class<V>;
 
-    constructor(
-        id: DepId,
-        info: Info,
-        target: Class<V>
-    ) {
+    constructor(annotation: ClassAnnotation<V>) {
         this.kind = 'class'
-        this.base = new DepBaseImpl(id, info)
-        this._target = target
+        this.base = new DepBaseImpl(annotation)
+        this._target = annotation.target
     }
 
     resolve(): V {
@@ -63,16 +52,18 @@ export class ClassDepImpl<V: Object> {
 // depends on factory
 // implements Plugin
 export default class ClassPlugin {
+    kind: 'class' = 'class';
+
     create<V: Object>(annotation: ClassAnnotation<V>, acc: AnnotationResolver): void {
-        const {base} = annotation
-        const dep: ClassDepImpl<V> = new ClassDepImpl(base.id, base.info, base.target);
+        annotation.id = acc.createId() // eslint-disable-line
+        const dep: ClassDepImpl<V> = new ClassDepImpl(annotation);
         const resolver = new DepsResolverImpl(acc)
         acc.begin(dep)
-        dep.init(resolver.getDeps(annotation.deps, base.target, base.info.tags))
+        dep.init(resolver.getDeps(annotation.deps, annotation.target, dep.base.tags))
         acc.end(dep)
     }
 
-    finalize(dep: ClassDep, target: AnyDep): void {
-        defaultFinalizer(dep, target)
+    finalize<Dep: Object>(dep: ClassDep, target: Dep): void {
+        defaultFinalizer(dep.base, target)
     }
 }

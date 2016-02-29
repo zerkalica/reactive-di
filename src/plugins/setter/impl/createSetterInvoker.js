@@ -5,7 +5,7 @@ import DepsResolverImpl from 'reactive-di/pluginsCommon/DepsResolverImpl'
 import type {
     Dependency,
     Tag,
-    Deps
+    DepItem
 } from 'reactive-di/i/annotationInterfaces'
 import type {
     DepArgs,
@@ -48,7 +48,7 @@ class SetterInvoker<Result> {
 
 export default function createSetterInvoker<V: Object, I>(
     target: Dependency,
-    deps: ?Deps,
+    deps: Array<DepItem>,
     tags: Array<Tag>,
     model: ModelDep<V>,
     acc: AnnotationResolver

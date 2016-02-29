@@ -2,7 +2,8 @@
 
 import type {
     Deps,
-    AnnotationBase
+    DepItem,
+    DepAnnotation
 } from 'reactive-di/i/annotationInterfaces'
 import type {
     EntityMeta,
@@ -43,16 +44,12 @@ export type AsyncSetterDep<E> = {
 export type AsyncUpdater<V: Object, E> = (model: V, ...x: Array<any>) => AsyncResult<V, E>;
 export type SyncUpdater<V: Object> = (model: V, ...x: Array<any>) => V;
 
-export type SyncSetterAnnotation<V: Object> = {
+export type SyncSetterAnnotation<V: Object> = DepAnnotation<SyncUpdater<V>> & {
     kind: 'syncsetter';
-    base: AnnotationBase<SyncUpdater<V>>;
-    deps: ?Deps;
     model: Class<V>;
 }
 
-export type AsyncSetterAnnotation<V: Object, E> = {
+export type AsyncSetterAnnotation<V: Object, E> = DepAnnotation<AsyncUpdater<V, E>> & {
     kind: 'asyncsetter';
-    base: AnnotationBase<AsyncUpdater<V, E>>;
-    deps: ?Deps;
     model: Class<V>;
 }

@@ -1,9 +1,5 @@
 /* @flow */
 
-import type {
-    DepId,
-    Info
-} from 'reactive-di/i/annotationInterfaces'
 import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
     Notify,
@@ -15,6 +11,7 @@ import type {
     DepBase
 } from 'reactive-di/i/nodeInterfaces'
 import type {
+    ModelAnnotation,
     ModelDep // eslint-disable-line
 } from 'reactive-di/i/plugins/modelInterfaces'
 
@@ -33,16 +30,14 @@ export default class ModelDepImpl<V: Object> {
     _value: V;
 
     constructor(
-        id: DepId,
-        info: Info,
+        annotation: ModelAnnotation<V>,
         cursor: Cursor<V>,
-        fromJS: FromJS<V>
     ) {
         this.kind = 'model'
-        this.base = new DepBaseImpl(id, info)
-        this.base.relations.push(id)
+        this.base = new DepBaseImpl(annotation)
+        this.base.relations.push(annotation.id)
         this._cursor = cursor
-        this._fromJS = fromJS
+        this._fromJS = annotation.fromJS
 
         this.dataOwners = []
     }

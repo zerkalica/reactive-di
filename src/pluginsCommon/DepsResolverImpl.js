@@ -2,13 +2,13 @@
 import type {
     Tag,
     Dependency,
-    Deps
+    DepItem
 } from 'reactive-di/i/annotationInterfaces'
 
 import type {SimpleMap} from 'reactive-di/i/modelInterfaces'
 
 import type {
-    AnyDep,
+    ResolvableDep,
     AnnotationResolver,
     DepsResolver, // eslint-disable-line
     DepArgs
@@ -27,11 +27,11 @@ export default class DepsResolverImpl {
         this._acc = acc
     }
 
-    _getMiddlewares(annotatedDep: Dependency, tags: Array<Tag>): ?Array<AnyDep> {
+    _getMiddlewares(annotatedDep: Dependency, tags: Array<Tag>): ?Array<ResolvableDep> {
         const {_acc: acc} = this
         const {middlewares} = acc
         const ids: Array<Dependency|Tag> = [annotatedDep].concat(tags);
-        const middlewareDeps: Array<AnyDep> = [];
+        const middlewareDeps: Array<ResolvableDep> = [];
         for (let i = 0, l = ids.length; i < l; i++) {
             const depMiddlewares: ?Array<Dependency> = middlewares.get(ids[i]);
             if (depMiddlewares) {
@@ -45,14 +45,14 @@ export default class DepsResolverImpl {
     }
 
     getDeps(
-        deps: ?Deps,
-        annotatedDep: Dependency,
+        deps: Array<DepItem>,
+        target: Dependency,
         tags: Array<Tag>
     ): DepArgs {
         const {_acc: acc} = this
         let depNames: ?Array<string> = null;
-        const resolvedDeps: Array<AnyDep> = [];
-        if (deps && deps.length) {
+        const resolvedDeps: Array<ResolvableDep> = [];
+        if (deps.length) {
             if (
                 typeof deps[0] === 'object'
                 && deps.length === 1
@@ -66,7 +66,7 @@ export default class DepsResolverImpl {
                 }
             } else {
                 for (let i = 0, l = deps.length; i < l; i++) {
-                    const dep: AnyDep = acc.resolve(((deps: any): Array<Dependency>)[i]);
+                    const dep: ResolvableDep = acc.resolve(((deps: any): Array<Dependency>)[i]);
                     resolvedDeps.push(dep)
                 }
             }
@@ -75,7 +75,7 @@ export default class DepsResolverImpl {
         return {
             deps: resolvedDeps,
             depNames,
-            middlewares: this._getMiddlewares(annotatedDep, tags)
+            middlewares: this._getMiddlewares(target, tags)
         }
     }
 }

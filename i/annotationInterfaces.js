@@ -31,15 +31,14 @@ export type HooksRec<T> = {
     onUpdate?: (currentValue: T, nextValue: T) => void;
 }
 
-export type Info = {
-    tags: Array<Tag>;
-    displayName: string;
+export type Annotation<T> = {
+    kind: any;
+    target: T;
+    id: DepId;
 }
 
-export type AnnotationBase<T> = {
-    id: DepId;
-    info: Info;
-    target: T;
+export type DepAnnotation<T> = Annotation<T> & {
+    deps: Array<DepItem>;
 }
 
 export type AnnotationDriver = {

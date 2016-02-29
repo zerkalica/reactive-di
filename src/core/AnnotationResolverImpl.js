@@ -1,12 +1,14 @@
 /* @flow */
 
 import Observable from 'zen-observable'
+import getFunctionName from 'reactive-di/utils/getFunctionName'
 
 import type {
+    IdCreator,
+    Annotation,
     AnnotationDriver,
     DepId,
     Dependency,
-    AnyAnnotation,
     Tag
 } from 'reactive-di/i/annotationInterfaces'
 import type {
@@ -15,18 +17,17 @@ import type {
     CursorCreator
 } from 'reactive-di/i/modelInterfaces'
 import type {
-    AnyDep,
     AnnotationResolver,
     ListenerManager,
     ResolvableDep
 } from 'reactive-di/i/nodeInterfaces'
-import type {FinalizeFn} from 'reactive-di/i/pluginInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces'
 
 type Listener<V, E> = {
     observers: Array<Observer<V, E>>;
     target: ResolvableDep<V>;
 };
+
 // implements ListenerManager
 class ListenerManagerImpl {
     _listeners: Array<Listener>;
@@ -55,7 +56,7 @@ class ListenerManagerImpl {
         const listener: Listener = {
             observers,
             target
-        }
+        };
         self._listeners.push(listener)
 
         function subscriberFn(observer: SubscriptionObserver): Subscription {
@@ -73,14 +74,16 @@ class ListenerManagerImpl {
     }
 }
 
+type CacheMap<Dep> = SimpleMap<DepId, Dep>;
+
 // implements AnnotationResolver
 export default class AnnotationResolverImpl {
     _driver: AnnotationDriver;
     _parents: Array<Set<DepId>>;
-    _cache: SimpleMap<DepId, AnyDep>;
+    _cache: CacheMap;
     _plugins: SimpleMap<string, Plugin>;
-
-    _overrides: Map<Dependency, Dependency>;
+    _idCreator: IdCreator;
+    _deps: Map<Dependency, Annotation>;
 
     middlewares: Map<Dependency|Tag, Array<Dependency>>;
     createCursor: CursorCreator;
@@ -89,19 +92,21 @@ export default class AnnotationResolverImpl {
     constructor(
         driver: AnnotationDriver,
         middlewares: Map<Dependency|Tag, Array<Dependency>>,
-        overrides: Map<Dependency, Dependency>,
+        deps: Map<Dependency, Annotation>,
         createCursor: CursorCreator,
         plugins: SimpleMap<string, Plugin>,
+        idCreator: IdCreator,
         listeners?: ListenerManager,
-        cache?: SimpleMap<DepId, AnyDep>
+        cache?: CacheMap
     ) {
         this._driver = driver
         this.middlewares = middlewares
-        this._overrides = overrides
+        this._deps = deps
         this.createCursor = createCursor
         this._parents = []
         this._plugins = plugins
-        this._cache = cache || Object.create(null)
+        this._idCreator = idCreator
+        this._cache = cache || {}
         this.listeners = listeners || new ListenerManagerImpl()
     }
 
@@ -109,29 +114,30 @@ export default class AnnotationResolverImpl {
         return new AnnotationResolverImpl(
             this._driver,
             this.middlewares,
-            this._overrides,
+            this._deps,
             this.createCursor,
             this._plugins,
+            this._idCreator,
             this.listeners,
             this._cache
         )
     }
 
-    begin(dep: AnyDep): void {
+    begin<Dep: ResolvableDep>(dep: Dep): void {
         this._parents.push(new Set())
         this._cache[dep.base.id] = dep
     }
 
-    end<T: AnyDep>(dep: T): void {
+    end<T: ResolvableDep>(dep: T): void {
         const {_parents: parents, _cache: cache} = this
         const depSet: Set<DepId> = parents.pop();
         const {relations} = dep.base
-        const iterateFn: FinalizeFn<T> = this._plugins[dep.kind].finalize;
+        const plugin: Plugin = this._plugins[dep.kind];
 
         function iteratePathSet(relationId: DepId): void {
-            const target: AnyDep = cache[relationId];
+            const target: ResolvableDep = cache[relationId];
             relations.push(relationId)
-            iterateFn(dep, target)
+            plugin.finalize(dep, target)
         }
         depSet.forEach(iteratePathSet)
     }
@@ -143,31 +149,23 @@ export default class AnnotationResolverImpl {
         }
     }
 
-    resolveAnnotation(annotation: AnyAnnotation): AnyDep {
-        function dummyDependency(): void {}
-        return this.resolve(this._driver.annotate(dummyDependency, annotation))
+    createId(): string {
+        return this._idCreator.createId()
     }
 
-    resolve(annotatedDep: Dependency): AnyDep {
-        const {_parents: parents} = this
-        let annotation: AnyAnnotation = this._driver.getAnnotation(annotatedDep);
-        const {base} = annotation
-        let dep: AnyDep = this._cache[base.id];
+    resolveAnnotation<Dep: ResolvableDep>(annotation: Annotation): Dep {
+        let dep: ?Dep = this._cache[annotation.id];
         if (!dep) {
-            const overridedDep: ?Dependency = this._overrides.get(annotatedDep);
-            if (overridedDep) {
-                annotation = this._driver.getAnnotation(overridedDep)
-                annotation.base.id = base.id
-            }
-            const plugin: Plugin = this._plugins[annotation.kind];
+            const plugin: ?Plugin = this._plugins[annotation.kind];
             if (!plugin) {
                 throw new Error(
-                    `Plugin not found for annotation ${annotation.base.info.displayName}`
+                    `Plugin not found for annotation ${getFunctionName(annotation.target)}`
                 )
             }
             plugin.create(annotation, (this: AnnotationResolver))
-            dep = this._cache[base.id]
-        } else if (parents.length) {
+            dep = this._cache[annotation.id]
+        } else if (this._parents.length) {
+            const {_parents: parents} = this
             const {relations} = dep.base
             for (let j = 0, k = parents.length; j < k; j++) {
                 const parent: Set<DepId> = parents[j];
@@ -178,5 +176,22 @@ export default class AnnotationResolverImpl {
         }
 
         return dep
+    }
+
+    _getAnnotation(annotatedDep: Dependency): Annotation {
+        let annotation: ?Annotation = this._deps.get(annotatedDep);
+        if (!annotation) {
+            annotation = this._driver.getAnnotation(annotatedDep);
+            if (!annotation) {
+                throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)
+            }
+            this._deps.set(annotatedDep, annotation)
+        }
+
+        return annotation
+    }
+
+    resolve<Dep: Object>(annotatedDep: Dependency): Dep {
+        return this.resolveAnnotation(this._getAnnotation(annotatedDep))
     }
 }

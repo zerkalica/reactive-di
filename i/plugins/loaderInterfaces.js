@@ -2,7 +2,8 @@
 
 import type {
     Deps,
-    AnnotationBase
+    DepAnnotation,
+    Annotation
 } from 'reactive-di/i/annotationInterfaces'
 import type {DepBase} from 'reactive-di/i/nodeInterfaces'
 import type {AsyncUpdater} from 'reactive-di/i/plugins/setterInterfaces'
@@ -20,14 +21,11 @@ export type ResetDep = {
     resolve(): () => void;
 }
 
-export type LoaderAnnotation<V: Object, E> = {
+export type LoaderAnnotation<V: Object, E> = DepAnnotation<AsyncUpdater<V, E>> & {
     kind: 'loader';
-    base: AnnotationBase<AsyncUpdater<V, E>>;
-    deps: ?Deps;
     model: Class<V>;
 }
 
-export type ResetAnnotation<V: Object, E> = {
+export type ResetAnnotation<V: Object, E> = Annotation<AsyncUpdater<V, E>> & {
     kind: 'reset';
-    base: AnnotationBase<AsyncUpdater<V, E>>;
 }

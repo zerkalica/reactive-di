@@ -1,14 +1,8 @@
 /* @flow */
 
 import defaultFinalizer from 'reactive-di/pluginsCommon/defaultFinalizer'
-import AsyncSetterAnnotationImpl from 'reactive-di/plugins/setter/AsyncSetterAnnotationImpl'
 import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
-    DepId,
-    Info
-} from 'reactive-di/i/annotationInterfaces'
-import type {
-    AnyDep,
     DepBase,
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
@@ -22,6 +16,7 @@ import type {
     LoaderDep
 } from 'reactive-di/i/plugins/loaderInterfaces'
 import type {ModelDep} from 'reactive-di/i/plugins/modelInterfaces'
+import type {AsyncSetterAnnotation} from 'reactive-di/i/plugins/setterInterfaces'
 
 // implements LoaderDep
 class LoaderDepImpl<V: Object> {
@@ -33,9 +28,9 @@ class LoaderDepImpl<V: Object> {
     _value: V;
     _setter: ?SetFn;
 
-    constructor(id: DepId, info: Info) {
+    constructor<E>(annotation: LoaderAnnotation<V, E>) {
         this.kind = 'loader'
-        this.base = new DepBaseImpl(id, info)
+        this.base = new DepBaseImpl(annotation)
         this._setter = null
     }
 
@@ -69,27 +64,31 @@ class LoaderDepImpl<V: Object> {
 // depends on setter
 // implements Plugin
 export default class LoaderPlugin {
+    kind: 'loader' = 'loader';
+
     create<V: Object, E>(annotation: LoaderAnnotation<V, E>, acc: AnnotationResolver): void {
-        const {base} = annotation
-        const dep: LoaderDepImpl<V> = new LoaderDepImpl(base.id, base.info);
+        const id = annotation.id = acc.createId() // eslint-disable-line
+        const dep: LoaderDepImpl<V> = new LoaderDepImpl(annotation);
         acc.begin(dep)
-        const model: AnyDep = acc.resolve(annotation.model);
+        const model: ModelDep = acc.resolve(annotation.model);
         if (model.kind !== 'model') {
             throw new Error(
-                `Not an model ${model.base.info.displayName} in ${base.info.displayName}`
+                `Not an model ${model.base.displayName} in ${dep.base.displayName}`
             )
         }
 
-        const setterDep: AnyDep = acc.resolveAnnotation(new AsyncSetterAnnotationImpl(
-            `${base.id}.setter`,
-            annotation.model,
-            base.target,
-            annotation.deps,
-            base.info.tags
-        ));
+        const asyncSetterAnnotation: AsyncSetterAnnotation<V, E> = {
+            kind: 'asyncsetter',
+            id: model.base.id + '.asyncsetter',
+            model: annotation.model,
+            deps: annotation.deps,
+            target: annotation.target
+        };
+
+        const setterDep: AsyncSetterDep = acc.resolveAnnotation(asyncSetterAnnotation);
         if (setterDep.kind !== 'asyncsetter') {
             throw new Error(
-                `Not a setter: ${setterDep.base.info.displayName} in ${base.info.displayName}`
+                `Not a setter: ${setterDep.base.displayName} in ${dep.base.displayName}`
             )
         }
 
@@ -98,7 +97,7 @@ export default class LoaderPlugin {
         acc.end(dep)
     }
 
-    finalize(dep: LoaderDep, target: AnyDep): void {
-        defaultFinalizer(dep, target)
+    finalize<Dep: Object>(dep: LoaderDep, target: Dep): void {
+        defaultFinalizer(dep.base, target)
     }
 }

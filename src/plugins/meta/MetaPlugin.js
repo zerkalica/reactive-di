@@ -3,11 +3,9 @@
 import merge from 'reactive-di/utils/merge'
 import {DepBaseImpl, EntityMetaImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
-    DepId,
-    Info
+    DepId
 } from 'reactive-di/i/annotationInterfaces'
 import type {
-    AnyDep,
     DepBase,
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
@@ -18,6 +16,7 @@ import type {
     MetaSource,
     MetaAnnotation
 } from 'reactive-di/i/plugins/metaInterfaces'
+import type {AsyncSetterDep} from 'reactive-di/i/plugins/setterInterfaces'
 
 function updateMeta<E>(meta: EntityMeta<E>, src: EntityMeta<E>): boolean {
     const {pending, rejected, fulfilled, reason} = src
@@ -51,12 +50,9 @@ class MetaDepImpl<E> {
     sources: Array<MetaSource>;
     _value: EntityMeta<E>;
 
-    constructor(
-        id: DepId,
-        info: Info
-    ) {
+    constructor(annotation: MetaAnnotation<E>) {
         this.kind = 'meta'
-        this.base = new DepBaseImpl(id, info)
+        this.base = new DepBaseImpl(annotation)
         this.sources = []
         this._value = new EntityMetaImpl({
             pending: false
@@ -85,17 +81,17 @@ class MetaDepImpl<E> {
 // implements Plugin
 export default class MetaPlugin {
     create<E>(annotation: MetaAnnotation<E>, acc: AnnotationResolver): void {
-        const {base} = annotation
-        const dep: MetaDep<E> = new MetaDepImpl(base.id, base.info);
+        const id: DepId = annotation.id = acc.createId(); // eslint-disable-line
+        const dep: MetaDep<E> = new MetaDepImpl(annotation);
 
-        acc.addRelation(base.id)
+        acc.addRelation(id)
         const newAcc: AnnotationResolver = acc.newRoot();
         newAcc.begin(dep)
-        newAcc.resolve(base.target)
+        newAcc.resolve(annotation.target)
         newAcc.end(dep)
     }
 
-    finalize<E>(dep: MetaDep<E>, target: AnyDep): void {
+    finalize<Dep: Object, E>(dep: MetaDep<E>, target: Dep|AsyncSetterDep): void {
         if (target.kind === 'asyncsetter') {
             target.metaOwners.push(dep.base)
             dep.sources.push((target: MetaSource))

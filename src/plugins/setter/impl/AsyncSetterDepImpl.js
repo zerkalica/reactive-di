@@ -12,10 +12,6 @@ import {
     DepBaseImpl
 } from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
-    DepId,
-    Info
-} from 'reactive-di/i/annotationInterfaces'
-import type {
     EntityMeta,
     DepBase,
     Cacheable,
@@ -29,6 +25,7 @@ import type {
     AsyncResult
 } from 'reactive-di/i/plugins/setterInterfaces'
 import type {ExposedPromise} from 'reactive-di/plugins/setter/impl/asyncHelpers'
+import type {AsyncSetterAnnotation} from 'reactive-di/i/plugins/setterInterfaces'
 
 const defaultSubscription: Subscription = {
     unsubscribe() {}
@@ -83,13 +80,12 @@ export default class AsyncSetterDepImpl<V: Object, E> {
     _exposed: ?ExposedPromise<void, E>;
 
     constructor(
-        id: DepId,
-        info: Info,
+        annotation: AsyncSetterAnnotation<V, E>,
         notify: () => void,
         model: ModelDep<V>
     ) {
         this.kind = 'asyncsetter'
-        this.base = new DepBaseImpl(id, info)
+        this.base = new DepBaseImpl(annotation)
         this.metaOwners = []
         this.meta = new EntityMetaImpl({fulfilled: true})
         const childSetters: Array<PromiseSource> = this.childSetters = [];
@@ -116,7 +112,7 @@ export default class AsyncSetterDepImpl<V: Object, E> {
                 Promise.all(promises).then(success).catch(success)
             }
         }
-        this._value.displayName = this.base.info.displayName + '@setValue'
+        this._value.displayName = this.base.displayName + '@setValue'
     }
 
     setInvoker(invoker: Invoker<AsyncResult<V, E>>): void {
@@ -163,7 +159,7 @@ export default class AsyncSetterDepImpl<V: Object, E> {
             observable = ((asyncResult: any): Observable<V, E>);
         } else {
             throw new Error(
-                `${this.base.info.displayName} must return Promise or Observable in AsyncResult`
+                `${this.base.displayName} must return Promise or Observable in AsyncResult`
             )
         }
 

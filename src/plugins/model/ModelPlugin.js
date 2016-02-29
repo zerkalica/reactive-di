@@ -3,7 +3,6 @@
 import ModelDepImpl from 'reactive-di/plugins/model/impl/ModelDepImpl'
 import type {Cursor} from 'reactive-di/i/modelInterfaces'
 import type {
-    AnyDep,
     Cacheable,
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
@@ -15,19 +14,16 @@ import type {
 
 // implements Plugin
 export default class ModelPlugin {
+    kind: 'model' = 'model';
+
     create<V: Object>(annotation: ModelAnnotation<V>, acc: AnnotationResolver): void {
-        const {base, info} = annotation
-        const cursor: Cursor<V> = acc.createCursor(info.statePath);
+        const id: string = annotation.id = acc.createId(); // eslint-disable-line
+        const cursor: Cursor<V> = acc.createCursor(annotation.statePath);
 
-        const dep: ModelDep<V> = new ModelDepImpl(
-            base.id,
-            base.info,
-            cursor,
-            info.fromJS
-        );
-        acc.addRelation(base.id)
+        const dep: ModelDep<V> = new ModelDepImpl(annotation, cursor);
+        acc.addRelation(id)
 
-        const {childs} = info
+        const {childs} = annotation
         acc.begin(dep)
         for (let i = 0, l = childs.length; i < l; i++) {
             acc.resolve(childs[i])
@@ -35,7 +31,7 @@ export default class ModelPlugin {
         acc.end(dep)
     }
 
-    finalize(dep: ModelDep, child: AnyDep): void {
+    finalize<Dep: Object>(dep: ModelDep, child: Dep|ModelDep): void {
         const {base} = dep
         switch (child.kind) {
             case 'model': {

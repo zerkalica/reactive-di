@@ -2,14 +2,12 @@
 
 import type {
     Deps,
-    AnnotationBase
+    DepAnnotation
 } from 'reactive-di/i/annotationInterfaces'
 import type {DepBase} from 'reactive-di/i/nodeInterfaces'
 
-export type ClassAnnotation<V: Object> = {
+export type ClassAnnotation<V: Object> = DepAnnotation<Class<V>> & {
     kind: 'class';
-    base: AnnotationBase<Class<V>>;
-    deps: ?Deps;
 }
 
 export type ClassDep<V: Object> = {

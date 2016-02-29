@@ -1,12 +1,6 @@
 /* @flow */
-import FactoryAnnotationImpl from 'reactive-di/plugins/factory/FactoryAnnotationImpl'
 import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
-    DepId,
-    Info
-} from 'reactive-di/i/annotationInterfaces'
-import type {
-    AnyDep,
     DepBase,
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
@@ -16,22 +10,32 @@ import type {
     ObservableAnnotation
 } from 'reactive-di/i/plugins/observableInterfaces'
 import type {StatefullObservable} from 'reactive-di/i/statefullObservable'
+import type {
+    FactoryAnnotation
+} from 'reactive-di/i/plugins/factoryInterfaces'
+
+function getObservableParams<V: Object>(value: V): V {
+    return value
+}
 
 // implements ObservableDep
-class ObservableDepImpl<V, E> {
+class ObservableDepImpl<V: Object, E> {
     kind: 'observable';
     base: DepBase;
     _observable: Observable<V, E>;
     _factory: FactoryDep<V>;
 
     constructor(
-        id: DepId,
-        info: Info,
-        observable: Observable<V, E>,
-        factory: FactoryDep<V>
+        annotation: ObservableAnnotation<V>,
+        factory: FactoryDep<V>,
+        observable: Observable<V, E>
     ) {
         this.kind = 'observable'
-        this.base = new DepBaseImpl(id, info)
+        this.base = new DepBaseImpl({
+            kind: annotation.kind,
+            id: annotation.id,
+            target: getObservableParams
+        })
         this._observable = observable
         this._factory = factory
     }
@@ -47,31 +51,30 @@ class ObservableDepImpl<V, E> {
 // depends on factory
 // implements RdiPlugin
 export default class ObservablePlugin {
-    create<V, E>(annotation: ObservableAnnotation<V>, acc: AnnotationResolver): void {
-        const {base} = annotation
-
-        const factoryDep: AnyDep = acc.newRoot().resolveAnnotation(new FactoryAnnotationImpl(
-            `${base.id}.factory`,
-            base.target,
-            annotation.deps,
-            base.info.tags
-        ));
+    create<V: Object, E>(annotation: ObservableAnnotation<V>, acc: AnnotationResolver): void {
+        const id = annotation.id = acc.createId(); // eslint-disable-line
+        const factoryAnnotation: FactoryAnnotation<V> = {
+            kind: 'factory',
+            id: id + '.factory',
+            target: getObservableParams,
+            deps: [annotation.target]
+        };
+        const factoryDep: FactoryDep<V> = acc.newRoot().resolveAnnotation(factoryAnnotation);
         if (factoryDep.kind !== 'factory') {
             throw new Error(
-                `Not a factory: ${factoryDep.base.info.displayName} in ${base.info.displayName}`
+                `Not a factory: ${factoryDep.base.displayName} in ${annotation.kind}`
             )
         }
         const observable: Observable<V, E> = acc.listeners.add(factoryDep);
 
         const dep: ObservableDep<V, E> = new ObservableDepImpl(
-            base.id,
-            base.info,
-            observable,
-            factoryDep
+            annotation,
+            factoryDep,
+            observable
         );
         acc.begin(dep)
         acc.end(dep)
     }
 
-    finalize(dep: ObservableAnnotation, target: AnyDep): void {} // eslint-disable-line
+    finalize(dep: ObservableAnnotation, target: Object): void {} // eslint-disable-line
 }

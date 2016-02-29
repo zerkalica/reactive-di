@@ -5,13 +5,10 @@ import resolveDeps from 'reactive-di/pluginsCommon/resolveDeps'
 import DepsResolverImpl from 'reactive-di/pluginsCommon/DepsResolverImpl'
 import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
-    DepFn,
-    DepId,
-    Info
+    DepFn
 } from 'reactive-di/i/annotationInterfaces'
 import type {
     DepArgs,
-    AnyDep,
     DepBase,
     AnnotationResolver
 } from 'reactive-di/i/nodeInterfaces'
@@ -32,14 +29,10 @@ export class FactoryDepImpl<V: any> {
     _target: DepFn<V>;
     _depArgs: DepArgs;
 
-    constructor(
-        id: DepId,
-        info: Info,
-        target: DepFn<V>
-    ) {
+    constructor(annotation: FactoryAnnotation<V>) {
         this.kind = 'factory'
-        this.base = new DepBaseImpl(id, info)
-        this._target = target
+        this.base = new DepBaseImpl(annotation)
+        this._target = annotation.target
     }
 
     init(depArgs: DepArgs): void {
@@ -54,7 +47,7 @@ export class FactoryDepImpl<V: any> {
         let fn: V = fastCall(this._target, deps);
         if (middlewares) {
             if (typeof fn !== 'function') {
-                throw new Error(`No callable returns from ${this.base.info.displayName}`)
+                throw new Error(`No callable returns from ${this.base.displayName}`)
             }
             fn = createFunctionProxy(fn, middlewares)
         }
@@ -68,16 +61,18 @@ export class FactoryDepImpl<V: any> {
 // depends on meta
 // implements Plugin
 export default class FactoryPlugin {
+    kind: 'factory' = 'factory';
+
     create<V>(annotation: FactoryAnnotation<V>, acc: AnnotationResolver): void {
-        const {base} = annotation
-        const dep: FactoryDepImpl<V> = new FactoryDepImpl(base.id, base.info, base.target);
+        annotation.id = acc.createId() // eslint-disable-line
+        const dep: FactoryDepImpl<V> = new FactoryDepImpl(annotation);
         const resolver = new DepsResolverImpl(acc)
         acc.begin(dep)
-        dep.init(resolver.getDeps(annotation.deps, base.target, base.info.tags))
+        dep.init(resolver.getDeps(annotation.deps, annotation.target, dep.base.tags))
         acc.end(dep)
     }
 
-    finalize(dep: FactoryDep, target: AnyDep): void {
-        defaultFinalizer(dep, target)
+    finalize<AnyDep: Object>(dep: FactoryDep, target: AnyDep): void {
+        defaultFinalizer(dep.base, target)
     }
 }
