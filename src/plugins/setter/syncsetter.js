@@ -5,8 +5,8 @@ import type {SyncUpdater} from 'reactive-di/i/plugins/setterInterfaces'
 import type {SyncSetterAnnotation} from 'reactive-di/i/plugins/setterInterfaces'
 
 export default function syncsetter<V: Object>(
-    model: Class<V>,
     target: SyncUpdater<V>,
+    model: Class<V>,
     ...deps: Array<DepItem>
 ): SyncSetterAnnotation<V> {
     return {

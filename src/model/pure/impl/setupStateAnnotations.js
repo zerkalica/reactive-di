@@ -26,20 +26,20 @@ function createFromJS<T: Object>(Proto: Class<T>, propCreators: PropCreatorMap):
 
 export default function setupStateAnnotations<T: Object>(
     driver: AnnotationDriver,
+    annotationMap: Map<Function, Annotation>,
     obj: T,
     statePath: Array<string> = []
 ): FromJS<T> {
-    let annotation: ModelAnnotation;
-    try {
+    let annotation: ?ModelAnnotation = annotationMap.get(obj.constructor);
+    if (!annotation) {
         annotation = driver.getAnnotation(obj.constructor);
-    } catch (e) {
-        e.message = `${e.message}, path: ${statePath.join('.')}`
-        throw e
+        if (!annotation) {
+            throw new Error(`Annotation not found for path: ${statePath.join('.')}`)
+        }
     }
 
-    const {info} = annotation
-    if (!info.statePath.length) {
-        info.statePath = statePath
+    if (!annotation.statePath.length) {
+        annotation.statePath = statePath
         const keys: Array<string> = Object.keys(obj);
         const propCreators: PropCreatorMap = {};
         for (let i = 0, j = keys.length; i < j; i++) {
@@ -48,19 +48,23 @@ export default function setupStateAnnotations<T: Object>(
             if (
                 prop !== null
                 && typeof prop === 'object'
-                && driver.hasAnnotation(prop.constructor)
+                && (
+                    annotationMap.has(prop.constructor)
+                    || driver.hasAnnotation(prop.constructor)
+                )
             ) {
-                info.childs.push(prop.constructor)
+                annotation.childs.push(prop.constructor)
                 propCreators[key] = setupStateAnnotations(
                     driver,
+                    annotationMap,
                     prop,
                     statePath.concat(key)
                 )
             }
         }
         const fromJS: FromJS<T> = createFromJS(obj.constructor, propCreators);
-        info.fromJS = fromJS
+        annotation.fromJS = fromJS
     }
 
-    return info.fromJS
+    return annotation.fromJS
 }
