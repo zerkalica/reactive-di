@@ -5,8 +5,7 @@ import type {
     DepId,
     Dependency,
     Deps,
-    Tag,
-    AnyAnnotation
+    Tag
 } from 'reactive-di/i/annotationInterfaces'
 import type {
     CursorCreator,
@@ -34,7 +33,7 @@ export type DepBase = {
 }
 
 export type ResolvableDep<V> = {
-    kind: string;
+    kind: any;
     base: DepBase;
     resolve(): V;
 }

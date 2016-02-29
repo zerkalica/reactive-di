@@ -22,7 +22,7 @@ export class DepBaseImpl {
             id: DepId,
             target: Function
         },
-        isRecalculate: boolean = false
+        isRecalculate: boolean = true
     ) {
         this.id = annotation.id
         this.displayName = annotation.kind + '@' + getFunctionName(annotation.target)

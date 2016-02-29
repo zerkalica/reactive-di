@@ -4,7 +4,6 @@
 import assert from 'power-assert'
 
 import annotations from 'reactive-di/__tests__/annotations'
-import createPureStateDi from 'reactive-di/createPureStateDi'
 import {createState} from 'reactive-di/__tests__/TestState'
 
 const {
@@ -13,8 +12,7 @@ const {
 
 describe('DiStateTest', () => {
     it('should handle a.b, if a changed', () => {
-        const {B, AppState, aSetter} = createState()
-        const di = createPureStateDi(new AppState())
+        const {B, di, aSetter} = createState()
         const aSet = di(aSetter)
         const MyDep = factory(B)((v) => v)
         di(MyDep)
@@ -25,9 +23,7 @@ describe('DiStateTest', () => {
     })
 
     it('should handle a, if a.b changed', () => {
-        const {A, AppState, bSetter} = createState()
-
-        const di = createPureStateDi(new AppState())
+        const {A, di, bSetter} = createState()
         const bSet = di(bSetter)
         const MyDep = factory(A)((v) => v)
         di(MyDep)
@@ -44,9 +40,7 @@ describe('DiStateTest', () => {
     })
 
     it('should not handle a.c, if a.b changed', () => {
-        const {C, AppState, bSetter} = createState()
-
-        const di = createPureStateDi(new AppState())
+        const {C, di, bSetter} = createState()
         const bSet = di(bSetter)
 
         const MyDep = factory(C)((v) => v)
@@ -56,9 +50,7 @@ describe('DiStateTest', () => {
     })
 
     it('should handle a.b, if a.b changed', () => {
-        const {B, AppState, bSetter} = createState()
-
-        const di = createPureStateDi(new AppState())
+        const {B, di, bSetter} = createState()
         const bSet = di(bSetter)
 
         const MyDep = factory(B)((v) => v)

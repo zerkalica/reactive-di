@@ -19,7 +19,6 @@ export default class ModelPlugin {
     create<V: Object>(annotation: ModelAnnotation<V>, acc: AnnotationResolver): void {
         const id: string = annotation.id = acc.createId(); // eslint-disable-line
         const cursor: Cursor<V> = acc.createCursor(annotation.statePath);
-
         const dep: ModelDep<V> = new ModelDepImpl(annotation, cursor);
         acc.addRelation(id)
 

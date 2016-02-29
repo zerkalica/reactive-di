@@ -1,6 +1,15 @@
 /* @flow */
 
-import createAnnotations from 'reactive-di/createAnnotations'
+import {
+    createFactory,
+    createKlass,
+    createModel,
+    createLoader,
+    createMeta,
+    createObservable,
+    createAsyncSetter,
+    createSyncSetter
+} from 'reactive-di/annotations'
 import SymbolMetaDriver from 'reactive-di/drivers/SymbolMetaDriver'
 import type {
     AnnotationDriver
@@ -8,6 +17,13 @@ import type {
 
 const driver: AnnotationDriver = new SymbolMetaDriver();
 
-const annotations = createAnnotations(driver);
-
-export default annotations
+export default {
+    loader: createLoader(driver),
+    factory: createFactory(driver),
+    klass: createKlass(driver),
+    model: createModel(driver),
+    meta: createMeta(driver),
+    observable: createObservable(driver),
+    asyncsetter: createAsyncSetter(driver),
+    syncsetter: createSyncSetter(driver)
+}

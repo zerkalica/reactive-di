@@ -1,6 +1,6 @@
 /* @flow */
 
-import type {AnnotationDriver} from 'reactive-di/i/annotationInterfaces'
+import type {AnnotationMap} from 'reactive-di/i/annotationInterfaces'
 import type {
     FromJS,
     SimpleMap
@@ -25,17 +25,13 @@ function createFromJS<T: Object>(Proto: Class<T>, propCreators: PropCreatorMap):
 }
 
 export default function setupStateAnnotations<T: Object>(
-    driver: AnnotationDriver,
-    annotationMap: Map<Function, Annotation>,
+    annotationMap: AnnotationMap,
     obj: T,
     statePath: Array<string> = []
 ): FromJS<T> {
-    let annotation: ?ModelAnnotation = annotationMap.get(obj.constructor);
+    const annotation: ?ModelAnnotation = annotationMap.get(obj.constructor);
     if (!annotation) {
-        annotation = driver.getAnnotation(obj.constructor);
-        if (!annotation) {
-            throw new Error(`Annotation not found for path: ${statePath.join('.')}`)
-        }
+        throw new Error(`Annotation not found for path: ${statePath.join('.')}`)
     }
 
     if (!annotation.statePath.length) {
@@ -48,14 +44,10 @@ export default function setupStateAnnotations<T: Object>(
             if (
                 prop !== null
                 && typeof prop === 'object'
-                && (
-                    annotationMap.has(prop.constructor)
-                    || driver.hasAnnotation(prop.constructor)
-                )
+                && annotationMap.has(prop.constructor)
             ) {
                 annotation.childs.push(prop.constructor)
                 propCreators[key] = setupStateAnnotations(
-                    driver,
                     annotationMap,
                     prop,
                     statePath.concat(key)

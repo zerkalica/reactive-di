@@ -13,12 +13,6 @@ export type IdCreator = {
     createId(): string;
 }
 
-export type HooksRec<T> = {
-    onUnmount?: () => void;
-    onMount?: () => void;
-    onUpdate?: (currentValue: T, nextValue: T) => void;
-}
-
 export type Annotation<T> = {
     kind: any;
     target: T;
@@ -29,11 +23,10 @@ export type DepAnnotation<T> = Annotation<T> & {
     deps: Array<DepItem>;
 }
 
+export type AnnotationMap<A: Annotation> = Map<Function, A>;
+
 export type AnnotationDriver = {
     hasAnnotation(dep: Dependency): boolean;
     getAnnotation<V, A: Annotation>(dep: Dependency<V>): A; // eslint-disable-line
     annotate<V, T: Dependency<V>, A: Annotation>(dep: T, annotation: A): T; // eslint-disable-line
 };
-
-export type Annotations = {
-}

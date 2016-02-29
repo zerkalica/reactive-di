@@ -5,17 +5,14 @@ import assert from 'power-assert'
 import sinon from 'sinon'
 
 import annotations from 'reactive-di/__tests__/annotations'
-import createPureStateDi from 'reactive-di/createPureStateDi'
 import {createState} from 'reactive-di/__tests__/TestState'
 import Observable from 'zen-observable'
 
 describe('DiEventsTest', () => {
     it('should not update non-mounted listener', () => {
-        const {B, AppState, bSetter} = createState()
-        function observableProps() {}
-        annotations.observable({b: B})(observableProps)
+        const {B, di, bSetter} = createState()
+        const observableProps = annotations.observable({b: B})
 
-        const di = createPureStateDi(new AppState())
         const fn = sinon.spy((v) => v)
         const bSet = di(bSetter)
         di(observableProps)
@@ -24,8 +21,7 @@ describe('DiEventsTest', () => {
     })
 
     it('should send data to all subscribers', () => {
-        const {B, AppState, bSetter} = createState()
-        const di = createPureStateDi(new AppState());
+        const {B, di, bSetter} = createState()
         class Observer1 {
             next = sinon.spy();
             complete = sinon.spy();
@@ -39,8 +35,7 @@ describe('DiEventsTest', () => {
         const observer2: Observer = new Observer2();
         let observable: Observable;
         const bSet = di(bSetter)
-        function observableProps() {}
-        annotations.observable({b: B})(observableProps)
+        const observableProps = annotations.observable({b: B});
         observable = di(observableProps).observable
 
         observable.subscribe(observer1)
@@ -56,16 +51,14 @@ describe('DiEventsTest', () => {
     })
 
     it('should update mounted listener', () => {
-        const {B, AppState, bSetter} = createState()
-        const di = createPureStateDi(new AppState())
+        const {B, di, bSetter} = createState()
         const observer: Observer = {
             next: sinon.spy(),
             complete: sinon.spy(),
             error: sinon.spy()
-        }
+        };
         const bSet = di(bSetter)
-        function observableProps() {}
-        annotations.observable({b: B})(observableProps)
+        const observableProps = annotations.observable({b: B})
         di(observableProps).observable.subscribe(observer)
         bSet(321)
         bSet(333)
@@ -76,16 +69,14 @@ describe('DiEventsTest', () => {
     })
 
     it('should not update listener, if changed another path', () => {
-        const {C, AppState, bSetter} = createState()
+        const {C, di, bSetter} = createState()
 
-        const di = createPureStateDi(new AppState())
         const observer: Observer = {
             next: sinon.spy(),
             complete: sinon.spy(),
             error: sinon.spy()
-        }
-        function observableProps() {}
-        annotations.observable({c: C})(observableProps);
+        };
+        const observableProps = annotations.observable({c: C})
 
         di(observableProps).observable.subscribe(observer)
 
@@ -95,16 +86,14 @@ describe('DiEventsTest', () => {
     })
 
     it('should not update unsubscribed listener', () => {
-        const {B, AppState, bSetter} = createState()
-        const di = createPureStateDi(new AppState())
+        const {B, di, bSetter} = createState()
         const observer: Observer = {
             next: sinon.spy(),
             complete: sinon.spy(),
             error: sinon.spy()
-        }
+        };
         const bSet = di(bSetter)
-        function observableProps() {}
-        annotations.observable({b: B})(observableProps);
+        const observableProps = annotations.observable({b: B})
         const subscription = di(observableProps).observable.subscribe(observer);
         bSet(321)
         subscription.unsubscribe()
@@ -114,16 +103,14 @@ describe('DiEventsTest', () => {
     })
 
     it('should update resubscribed listener', () => {
-        const {B, AppState, bSetter} = createState()
-        const di = createPureStateDi(new AppState())
+        const {B, di, bSetter} = createState()
         const observer: Observer = {
             next: sinon.spy(),
             complete: sinon.spy(),
             error: sinon.spy()
-        }
+        };
         const bSet = di(bSetter)
-        function observableProps() {}
-        annotations.observable({b: B})(observableProps);
+        const observableProps = annotations.observable({b: B})
         const observable = di(observableProps).observable
         let subscription = observable.subscribe(observer);
         bSet(321)
@@ -136,8 +123,7 @@ describe('DiEventsTest', () => {
     })
 
     it('should handle one of two subscribed listener', () => {
-        const {C, B, AppState, bSetter} = createState()
-        const di = createPureStateDi(new AppState())
+        const {C, B, di, bSetter} = createState()
         const observerB: Observer = {
             next: sinon.spy(),
             complete: sinon.spy(),
@@ -150,11 +136,8 @@ describe('DiEventsTest', () => {
         };
         const bSet = di(bSetter)
 
-        function observablePropsB() {}
-        annotations.observable({b: B})(observablePropsB);
-
-        function observablePropsC() {}
-        annotations.observable({c: C})(observablePropsC);
+        const observablePropsB = annotations.observable({b: B})
+        const observablePropsC = annotations.observable({c: C})
 
         const observableB = di(observablePropsB).observable
         const observableC = di(observablePropsC).observable

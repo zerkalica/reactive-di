@@ -5,7 +5,6 @@ import assert from 'power-assert'
 import sinon from 'sinon'
 
 import annotations from 'reactive-di/__tests__/annotations'
-import createPureStateDi from 'reactive-di/createPureStateDi'
 import {createState} from 'reactive-di/__tests__/TestState'
 
 const {
@@ -14,8 +13,7 @@ const {
 
 describe('DiCacheTest', () => {
     it('should hit from cache, if no changes', () => {
-        const {A, AppState} = createState()
-        const di = createPureStateDi(new AppState())
+        const {A, di} = createState()
         const fn = sinon.spy((v) => v)
         const MyDep = factory(A)(fn)
         di(MyDep)
@@ -24,9 +22,8 @@ describe('DiCacheTest', () => {
     })
 
     it('should not hit a, if a.b changed', () => {
-        const {B, AppState, bSetter} = createState()
+        const {B, di, bSetter} = createState()
 
-        const di = createPureStateDi(new AppState())
         const fn = sinon.spy((v) => v)
         factory(B)(fn)
         const bSet = di(bSetter)
@@ -41,8 +38,7 @@ describe('DiCacheTest', () => {
     })
 
     it('should hit, if a.c changed', () => {
-        const {B, AppState, cSetter} = createState()
-        const di = createPureStateDi(new AppState())
+        const {B, di, cSetter} = createState()
         const fn = sinon.spy((v) => v)
         const MyDep = factory(B)(fn)
         const cSet = di(cSetter)
@@ -53,8 +49,7 @@ describe('DiCacheTest', () => {
     })
 
     it('should not hit, if a changed', () => {
-        const {A, C, B, AppState, aSetter} = createState()
-        const di = createPureStateDi(new AppState())
+        const {A, C, B, di, aSetter} = createState()
         const fn = sinon.spy((v) => v)
         const aSet = di(aSetter)
         factory(A)(fn)

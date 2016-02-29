@@ -6,6 +6,7 @@ import sinon from 'sinon'
 
 import annotations from 'reactive-di/__tests__/annotations'
 import createPureStateDi from 'reactive-di/createPureStateDi'
+import defaultPlugins from 'reactive-di/defaultPlugins'
 
 const {
     model,
@@ -19,20 +20,20 @@ model(AppState)
 describe('DiContainerTest', () => {
     describe('basics', () => {
         it('should throws exception if incorrect data passed to constructor', () => {
-            assert.throws(() => createPureStateDi({}), /not annotated/)
+            assert.throws(() => createPureStateDi({}, [], defaultPlugins), /not annotated/)
         })
     })
 
     describe('get', () => {
         it('should throws exception if no decorated function passed', () => {
-            const di = createPureStateDi(new AppState())
+            const di = createPureStateDi(new AppState(), [], defaultPlugins)
             function WrongDep() {}
 
             assert.throws(() => di(WrongDep), /not annotated dependency/)
         })
 
         it('should return class instance', () => {
-            const di = createPureStateDi(new AppState())
+            const di = createPureStateDi(new AppState(), [], defaultPlugins)
             class Test {}
             klass()(Test)
             const instance = di(Test)
@@ -40,7 +41,7 @@ describe('DiContainerTest', () => {
         })
 
         it('should cache class instance', () => {
-            const di = createPureStateDi(new AppState())
+            const di = createPureStateDi(new AppState(), [], defaultPlugins)
             class TestBase {}
             const Test = sinon.spy(TestBase)
             klass()(Test)
@@ -51,7 +52,7 @@ describe('DiContainerTest', () => {
         })
 
         it('should cache factory return value', () => {
-            const di = createPureStateDi(new AppState())
+            const di = createPureStateDi(new AppState(), [], defaultPlugins)
             function testBase() {
                 return 123
             }
@@ -65,7 +66,7 @@ describe('DiContainerTest', () => {
         })
 
         it('should handle simple deps from array definition', () => {
-            const di = createPureStateDi(new AppState())
+            const di = createPureStateDi(new AppState(), [], defaultPlugins)
             function MyDep() {
                 return 123
             }
@@ -79,7 +80,7 @@ describe('DiContainerTest', () => {
         })
 
         it('should handle simple deps from object definition', () => {
-            const di = createPureStateDi(new AppState())
+            const di = createPureStateDi(new AppState(), [], defaultPlugins)
             function MyDep() {
                 return 123
             }

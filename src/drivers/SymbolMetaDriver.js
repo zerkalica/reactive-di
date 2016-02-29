@@ -1,7 +1,7 @@
 /* @flow */
 import type {
     AnnotationDriver, // eslint-disable-line
-    AnyAnnotation,
+    Annotation,
     Dependency
 } from 'reactive-di/i/annotationInterfaces'
 
@@ -9,7 +9,7 @@ const metaSymbol = typeof Symbol !== 'undefined' ? Symbol('__rdi__meta') : '__rd
 
 // implements AnnotationDriver
 export default class SymbolMetaDriver {
-    annotate<V, T: Dependency<V>, A: AnyAnnotation>(dep: T, annotation: A): T { // eslint-disable-line
+    annotate<V, T: Dependency<V>, A: Annotation>(dep: T, annotation: A): T { // eslint-disable-line
         if ((dep: Function)[metaSymbol]) {
             throw new Error(
                 'Annotation already defined for ' + ((dep: Function).displayName || String(dep))
@@ -23,7 +23,7 @@ export default class SymbolMetaDriver {
         return !!(dep: Function)[metaSymbol]
     }
 
-    getAnnotation<V, A: AnyAnnotation>(dep: Dependency<V>): A {
+    getAnnotation<V, A: Annotation>(dep: Dependency<V>): A {
         const annotation: A = (dep: Function)[metaSymbol];
         if (!annotation || !annotation.kind) {
             throw new TypeError('Can\'t get not annotated dependency: '

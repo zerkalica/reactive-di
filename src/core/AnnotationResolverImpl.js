@@ -6,10 +6,10 @@ import getFunctionName from 'reactive-di/utils/getFunctionName'
 import type {
     IdCreator,
     Annotation,
-    AnnotationDriver,
     DepId,
     Dependency,
-    Tag
+    Tag,
+    AnnotationMap
 } from 'reactive-di/i/annotationInterfaces'
 import type {
     Notify,
@@ -78,28 +78,25 @@ type CacheMap<Dep> = SimpleMap<DepId, Dep>;
 
 // implements AnnotationResolver
 export default class AnnotationResolverImpl {
-    _driver: AnnotationDriver;
     _parents: Array<Set<DepId>>;
     _cache: CacheMap;
     _plugins: SimpleMap<string, Plugin>;
     _idCreator: IdCreator;
-    _deps: Map<Dependency, Annotation>;
+    _deps: AnnotationMap;
 
     middlewares: Map<Dependency|Tag, Array<Dependency>>;
     createCursor: CursorCreator;
     listeners: ListenerManager;
 
     constructor(
-        driver: AnnotationDriver,
         middlewares: Map<Dependency|Tag, Array<Dependency>>,
-        deps: Map<Dependency, Annotation>,
+        deps: AnnotationMap,
         createCursor: CursorCreator,
         plugins: SimpleMap<string, Plugin>,
         idCreator: IdCreator,
         listeners?: ListenerManager,
         cache?: CacheMap
     ) {
-        this._driver = driver
         this.middlewares = middlewares
         this._deps = deps
         this.createCursor = createCursor
@@ -112,7 +109,6 @@ export default class AnnotationResolverImpl {
 
     newRoot(): AnnotationResolver {
         return new AnnotationResolverImpl(
-            this._driver,
             this.middlewares,
             this._deps,
             this.createCursor,
@@ -179,13 +175,9 @@ export default class AnnotationResolverImpl {
     }
 
     _getAnnotation(annotatedDep: Dependency): Annotation {
-        let annotation: ?Annotation = this._deps.get(annotatedDep);
+        const annotation: ?Annotation = this._deps.get(annotatedDep);
         if (!annotation) {
-            annotation = this._driver.getAnnotation(annotatedDep);
-            if (!annotation) {
-                throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)
-            }
-            this._deps.set(annotatedDep, annotation)
+            throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)
         }
 
         return annotation

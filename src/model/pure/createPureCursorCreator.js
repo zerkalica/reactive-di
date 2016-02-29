@@ -1,7 +1,7 @@
 /* @flow */
 
 import PureDataCursor from 'reactive-di/model/pure/impl/PureDataCursor'
-import type {AnnotationDriver} from 'reactive-di/i/annotationInterfaces'
+import type {Annotation} from 'reactive-di/i/annotationInterfaces'
 import type {
     Cursor,
     CursorCreator
@@ -10,10 +10,10 @@ import setupStateAnnotations from 'reactive-di/model/pure/impl/setupStateAnnotat
 
 // implements CursorCreator
 export default function createPureCursorCreator<S: Object>(
-    driver: AnnotationDriver,
+    map: Map<Function, Annotation>,
     state: S
 ): CursorCreator {
-    setupStateAnnotations(driver, state)
+    setupStateAnnotations(map, state)
     const stateRef: {state: S} = {state};
     return function createPureCursor<V: Object>(path: Array<string>): Cursor<V> {
         return new PureDataCursor(path, stateRef)

@@ -1,6 +1,9 @@
 /* @flow */
 
 import annotations from 'reactive-di/__tests__/annotations'
+import createPureStateDi from 'reactive-di/createPureStateDi'
+import defaultPlugins from 'reactive-di/defaultPlugins'
+
 import merge from 'reactive-di/utils/merge'
 const {
     model,
@@ -67,10 +70,13 @@ export function createState(): {
     }
     syncsetter(C)(cSetter)
 
+    const di = createPureStateDi(new AppState(), [], defaultPlugins);
+
     return {
         A,
         B,
         C,
+        di,
         AppState,
         aSetter,
         bSetter,

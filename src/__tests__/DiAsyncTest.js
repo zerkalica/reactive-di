@@ -7,6 +7,8 @@ import sinon from 'sinon'
 import annotations from 'reactive-di/__tests__/annotations'
 import createPureStateDi from 'reactive-di/createPureStateDi'
 import promiseToObservable from 'reactive-di/utils/promiseToObservable'
+import defaultPlugins from 'reactive-di/defaultPlugins'
+
 import type {
     AsyncResult,
     EntityMeta
@@ -49,7 +51,7 @@ describe('DiAsyncTest', () => {
             }
             model(AppState)
 
-            const di = createPureStateDi(new AppState())
+            const di = createPureStateDi(new AppState(), [], defaultPlugins)
             const MyDep = sinon.spy((c: C, m: EntityMeta) => ({v: c.v, meta: m}))
             factory(cLoader, meta(cLoader))(MyDep)
             assert.deepEqual(di(MyDep), {

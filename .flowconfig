@@ -8,6 +8,9 @@ examples/.*
 .*/node_modules/is-.*
 .*/node_modules/object.*
 .*/node_modules/acorn.*
+.*/node_modules/js.*
+.*/node_modules/b.*
+.*/node_modules/spdx.*
 
 [libs]
 lib

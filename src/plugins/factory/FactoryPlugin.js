@@ -65,7 +65,7 @@ export default class FactoryPlugin {
 
     create<V>(annotation: FactoryAnnotation<V>, acc: AnnotationResolver): void {
         annotation.id = acc.createId() // eslint-disable-line
-        const dep: FactoryDepImpl<V> = new FactoryDepImpl(annotation);
+        const dep = new FactoryDepImpl(annotation);
         const resolver = new DepsResolverImpl(acc)
         acc.begin(dep)
         dep.init(resolver.getDeps(annotation.deps, annotation.target, dep.base.tags))

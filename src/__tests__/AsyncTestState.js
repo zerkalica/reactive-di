@@ -3,6 +3,8 @@
 import annotations from 'reactive-di/__tests__/annotations'
 import promiseToObservable from 'reactive-di/utils/promiseToObservable'
 import type {AsyncResult} from 'reactive-di/i/plugins/setterInterfaces'
+import createPureStateDi from 'reactive-di/createPureStateDi'
+import defaultPlugins from 'reactive-di/defaultPlugins'
 
 const {
     model,
@@ -79,10 +81,13 @@ export function createState(): {
     }
     syncsetter(B)(bSetter)
 
+    const di = createPureStateDi(new AppState(), [], defaultPlugins);
+
     return {
         A,
         B,
         C,
+        di,
         cLoader,
         AppState,
         aSetter,
