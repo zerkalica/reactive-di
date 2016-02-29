@@ -51,6 +51,7 @@ class ObservableDepImpl<V: Object, E> {
 // depends on factory
 // implements RdiPlugin
 export default class ObservablePlugin {
+    kind: 'observable' = 'observable';
     create<V: Object, E>(annotation: ObservableAnnotation<V>, acc: AnnotationResolver): void {
         const id = annotation.id = acc.createId(); // eslint-disable-line
         const factoryAnnotation: FactoryAnnotation<V> = {

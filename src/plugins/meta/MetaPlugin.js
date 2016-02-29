@@ -80,6 +80,8 @@ class MetaDepImpl<E> {
 // depends on asyncmodel
 // implements Plugin
 export default class MetaPlugin {
+    kind: 'meta' = 'meta';
+
     create<E>(annotation: MetaAnnotation<E>, acc: AnnotationResolver): void {
         const id: DepId = annotation.id = acc.createId(); // eslint-disable-line
         const dep: MetaDep<E> = new MetaDepImpl(annotation);

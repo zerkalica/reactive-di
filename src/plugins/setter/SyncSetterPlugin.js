@@ -13,6 +13,7 @@ import type {ModelDep} from 'reactive-di/i/plugins/modelInterfaces'
 // depends on factory, model
 // implements Plugin
 export default class SyncSetterPlugin {
+    kind: 'syncsetter' = 'syncsetter';
     create<V: Object>(annotation: SyncSetterAnnotation<V>, acc: AnnotationResolver): void {
         const id = annotation.id = acc.createId(); // eslint-disable-line
         const newAcc = acc.newRoot()
