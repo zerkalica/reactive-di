@@ -49,7 +49,7 @@ export type AnnotationResolver = {
     middlewares: Map<Dependency|Tag, Array<Dependency>>;
 
     resolveAnnotation<AnyDep: Object>(annotation: Annotation): AnyDep;
-    resolve<AnyDep: Object>(annotatedDep: Dependency): AnyDep;
+    resolve<AnyDep: Object>(annotatedDep: Dependency|Annotation): AnyDep;
     createId(): DepId;
     addRelation(id: DepId): void;
     begin<AnyDep: Object>(dep: AnyDep): void;

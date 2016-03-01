@@ -183,7 +183,11 @@ export default class AnnotationResolverImpl {
         return annotation
     }
 
-    resolve<Dep: Object>(annotatedDep: Dependency): Dep {
-        return this.resolveAnnotation(this._getAnnotation(annotatedDep))
+    resolve<Dep: Object>(annotatedDep: Dependency|Annotation): Dep {
+        return this.resolveAnnotation(
+            typeof annotatedDep === 'object'
+            ? annotatedDep
+            : this._getAnnotation(annotatedDep)
+        )
     }
 }
