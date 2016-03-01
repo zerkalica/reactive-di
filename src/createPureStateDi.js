@@ -16,6 +16,7 @@ import type {AnnotationResolver} from 'reactive-di/i/nodeInterfaces'
 import type {GetDep} from 'reactive-di/i/diInterfaces'
 import type {SimpleMap} from 'reactive-di/i/modelInterfaces'
 import type {Plugin} from 'reactive-di/i/pluginInterfaces'
+import type {AliasAnnotation} from 'reactive-di/i/plugins/aliasInterfaces'
 
 function createPluginsMap(plugins: Array<Plugin>): SimpleMap<string, Plugin> {
     const pluginMap: SimpleMap<string, Plugin> = {};
@@ -34,8 +35,15 @@ class AnnotationMap<K: Function, A: Annotation> extends Map<K, A> {
     ) {
         super()
         for (let i = 0, l = deps.length; i < l; i++) {
-            const annotation: Annotation = deps[i];
-            this.set(annotation.target, (annotation: any))
+            const annotation: Annotation|AliasAnnotation = deps[i];
+            switch (annotation.kind) {
+                case 'alias':
+                    this.set(((annotation: any): AliasAnnotation).source, annotation.target)
+                    break
+                default:
+                    this.set(annotation.target, (annotation: any))
+                    break
+            }
         }
         this._driver = driver
     }

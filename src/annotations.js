@@ -9,8 +9,10 @@ import {createReset, reset} from 'reactive-di/plugins/loader/reset'
 import {createObservable, observable} from 'reactive-di/plugins/observable/observable'
 import {createAsyncSetter, asyncsetter} from 'reactive-di/plugins/setter/asyncsetter'
 import {createSyncSetter, syncsetter} from 'reactive-di/plugins/setter/syncsetter'
+import {alias} from 'reactive-di/plugins/alias/alias'
 
 export {
+    alias,
     klass,
     createKlass,
     createMeta,
