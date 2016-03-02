@@ -52,7 +52,8 @@ class LoaderDepImpl<V: Object> {
         const setter: SetFn = this._setterDep.resolve();
         if (this._setter !== setter) {
             this._setter = setter
-            setter()
+            // setter()
+            Promise.resolve().then(setter)
         }
 
         this.base.isRecalculate = false
@@ -79,7 +80,7 @@ export default class LoaderPlugin {
 
         const asyncSetterAnnotation: AsyncSetterAnnotation<V, E> = {
             kind: 'asyncsetter',
-            id: model.base.id + '.asyncsetter',
+            id: id + '.asyncsetter',
             model: annotation.model,
             deps: annotation.deps,
             target: annotation.target

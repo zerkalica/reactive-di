@@ -86,6 +86,7 @@ export default class AsyncSetterDepImpl<V: Object, E> {
     ) {
         this.kind = 'asyncsetter'
         this.base = new DepBaseImpl(annotation)
+        this.base.relations.push(annotation.id)
         this.metaOwners = []
         this.meta = new EntityMetaImpl({fulfilled: true})
         const childSetters: Array<PromiseSource> = this.childSetters = [];
@@ -137,6 +138,7 @@ export default class AsyncSetterDepImpl<V: Object, E> {
         for (let i = 0, l = metaOwners.length; i < l; i++) {
             metaOwners[i].isRecalculate = true
         }
+        console.log('asyncsetter: metaowners', metaOwners)
         return true
     }
 
@@ -173,7 +175,10 @@ export default class AsyncSetterDepImpl<V: Object, E> {
         if (initial) {
             this._model.set(initial)
         }
-        this._notify()
+        setTimeout(
+            () => this._notify(),
+            0
+        )
     }
 
     _createPromise(): void {

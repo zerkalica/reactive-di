@@ -1,22 +1,33 @@
 /* @flow */
 
-import type {ObservableAnnotation} from 'reactive-di/i/plugins/observableInterfaces' // eslint-disable-line
-import type {AnnotationDriver} from 'reactive-di/i/annotationInterfaces'
+import type {
+    ObservableAnnotation
+} from 'reactive-di/i/plugins/observableInterfaces' // eslint-disable-line
+import type {
+    DepItem,
+    AnnotationDriver
+} from 'reactive-di/i/annotationInterfaces'
 
-export function observable<V: Object>(
-    target: V
+function getObservableParams<V: Object>(value: V): V {
+    return value
+}
+
+export function observable<V: DepItem>(
+    deps: V,
+    target: (value: V) => V = getObservableParams
 ): ObservableAnnotation<V> {
     return {
         kind: 'observable',
         id: '',
-        target
+        target,
+        deps
     }
 }
 
 export function createObservable<V: Object>(
     driver: AnnotationDriver
-): (target: V) => () => null {
-    return function _observable(target: V): () => null {
-        return driver.annotate(() => null, observable(target))
+): (deps: V) => () => null {
+    return function _observable(deps: V): () => null {
+        return driver.annotate(() => null, observable(deps))
     }
 }

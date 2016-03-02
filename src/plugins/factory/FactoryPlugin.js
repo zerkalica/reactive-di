@@ -40,10 +40,14 @@ export class FactoryDepImpl<V: any> {
     }
 
     resolve(): V {
+        const {base} = this
         if (!this.base.isRecalculate) {
+            console.log('factory-hit', base.displayName, this._value.displayName, base.id)
             return this._value
         }
+        console.log('factory-new1', base.displayName, base.id)
         const {deps, middlewares} = resolveDeps(this._depArgs)
+        // debugger
         let fn: V = fastCall(this._target, deps);
         if (middlewares) {
             if (typeof fn !== 'function') {
@@ -54,6 +58,7 @@ export class FactoryDepImpl<V: any> {
         this._value = fn
         this.base.isRecalculate = false
 
+        console.log('factory-new2', base.displayName, this._value.displayName, base.id)
         return this._value
     }
 }

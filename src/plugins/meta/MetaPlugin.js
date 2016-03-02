@@ -50,13 +50,15 @@ class MetaDepImpl<E> {
     sources: Array<MetaSource>;
     _value: EntityMeta<E>;
 
-    constructor(annotation: MetaAnnotation<E>) {
+    constructor(annotation: MetaAnnotation) {
         this.kind = 'meta'
-        this.base = new DepBaseImpl(annotation)
-        this.sources = []
-        this._value = new EntityMetaImpl({
-            pending: false
+        this.base = new DepBaseImpl({
+            kind: 'meta',
+            target: () => null,
+            id: annotation.id
         })
+        this.sources = []
+        this._value = new EntityMetaImpl()
     }
 
     resolve(): EntityMeta<E> {
@@ -82,14 +84,17 @@ class MetaDepImpl<E> {
 export default class MetaPlugin {
     kind: 'meta' = 'meta';
 
-    create<E>(annotation: MetaAnnotation<E>, acc: AnnotationResolver): void {
+    create<E>(annotation: MetaAnnotation, acc: AnnotationResolver): void {
         const id: DepId = annotation.id = acc.createId(); // eslint-disable-line
         const dep: MetaDep<E> = new MetaDepImpl(annotation);
 
         acc.addRelation(id)
         const newAcc: AnnotationResolver = acc.newRoot();
         newAcc.begin(dep)
-        newAcc.resolve(annotation.target)
+        const deps = annotation.deps
+        for (let i = 0, l = deps.length; i < l; i++) {
+            newAcc.resolve(deps[i])
+        }
         newAcc.end(dep)
     }
 

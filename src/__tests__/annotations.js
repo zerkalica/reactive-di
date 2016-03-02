@@ -5,7 +5,7 @@ import {
     createKlass,
     createModel,
     createLoader,
-    createMeta,
+    meta,
     createObservable,
     createAsyncSetter,
     createSyncSetter
@@ -22,7 +22,7 @@ export default {
     factory: createFactory(driver),
     klass: createKlass(driver),
     model: createModel(driver),
-    meta: createMeta(driver),
+    meta,
     observable: createObservable(driver),
     asyncsetter: createAsyncSetter(driver),
     syncsetter: createSyncSetter(driver)

@@ -14,16 +14,11 @@ import type {
     FactoryAnnotation
 } from 'reactive-di/i/plugins/factoryInterfaces'
 
-function getObservableParams<V: Object>(value: V): V {
-    return value
-}
-
 // implements ObservableDep
 class ObservableDepImpl<V: Object, E> {
     kind: 'observable';
     base: DepBase;
-    _observable: Observable<V, E>;
-    _factory: FactoryDep<V>;
+    _value: StatefullObservable<V, E>;
 
     constructor(
         annotation: ObservableAnnotation<V>,
@@ -31,20 +26,17 @@ class ObservableDepImpl<V: Object, E> {
         observable: Observable<V, E>
     ) {
         this.kind = 'observable'
-        this.base = new DepBaseImpl({
-            kind: annotation.kind,
-            id: annotation.id,
-            target: getObservableParams
-        })
-        this._observable = observable
-        this._factory = factory
+        this.base = new DepBaseImpl(annotation)
+        this._value = {
+            get(): V {
+                return factory.resolve()
+            },
+            observable
+        }
     }
 
     resolve(): StatefullObservable<V, E> {
-        return {
-            initialData: this._factory.resolve(),
-            observable: this._observable
-        }
+        return this._value
     }
 }
 
@@ -57,8 +49,8 @@ export default class ObservablePlugin {
         const factoryAnnotation: FactoryAnnotation<V> = {
             kind: 'factory',
             id: id + '.factory',
-            target: getObservableParams,
-            deps: [annotation.target]
+            target: annotation.target,
+            deps: [annotation.deps]
         };
         const factoryDep: FactoryDep<V> = acc.newRoot().resolveAnnotation(factoryAnnotation);
         if (factoryDep.kind !== 'factory') {
@@ -67,7 +59,7 @@ export default class ObservablePlugin {
             )
         }
         const observable: Observable<V, E> = acc.listeners.add(factoryDep);
-
+        (observable: any).displayName = 'observable@' + factoryDep.base.displayName
         const dep: ObservableDep<V, E> = new ObservableDepImpl(
             annotation,
             factoryDep,

@@ -15,8 +15,10 @@ export type MetaSource<E> = {
     metaOwners: Array<Cacheable>;
 }
 
-export type MetaAnnotation<V> = Annotation<Dependency<V>> & {
+export type MetaAnnotation = {
     kind: 'meta';
+    id: string;
+    deps: Array<Dependency>;
 }
 
 export type MetaDep<E> = {
