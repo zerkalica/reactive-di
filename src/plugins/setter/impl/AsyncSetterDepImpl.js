@@ -138,12 +138,11 @@ export default class AsyncSetterDepImpl<V: Object, E> {
         for (let i = 0, l = metaOwners.length; i < l; i++) {
             metaOwners[i].isRecalculate = true
         }
-        console.log('asyncsetter: metaowners', metaOwners)
         return true
     }
 
     _setterResolver(args: Array<any>): void {
-        const oldValue: V = this._model.resolve()
+        const oldValue: V = this._model.resolve();
         const result: AsyncResult<V, E> = this._invoker.invoke(args);
         let initial: ?V;
         let asyncResult: Promise<V>|Observable<V, E>;
@@ -157,6 +156,7 @@ export default class AsyncSetterDepImpl<V: Object, E> {
         let observable: Observable<V, E>;
         if (typeof asyncResult.then === 'function') {
             observable = promiseToObservable(((asyncResult: any): Promise<V>))
+            this._setMeta(setPending(this.meta))
         } else if (typeof asyncResult.subscribe === 'function') {
             observable = ((asyncResult: any): Observable<V, E>);
         } else {
@@ -171,14 +171,10 @@ export default class AsyncSetterDepImpl<V: Object, E> {
         this._subscription = observable.subscribe(
             new RollbackObserver((this: Observer<?V, E>), this._model, oldValue)
         )
-        this._setMeta(setPending(this.meta))
         if (initial) {
             this._model.set(initial)
         }
-        setTimeout(
-            () => this._notify(),
-            0
-        )
+        this._notify()
     }
 
     _createPromise(): void {

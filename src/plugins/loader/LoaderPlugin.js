@@ -52,7 +52,6 @@ class LoaderDepImpl<V: Object> {
         const setter: SetFn = this._setterDep.resolve();
         if (this._setter !== setter) {
             this._setter = setter
-            // setter()
             Promise.resolve().then(setter)
         }
 
