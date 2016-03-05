@@ -9,8 +9,8 @@ export default function promiseToObservable<V, E>(promise: Promise<V>): Observab
 
     let isSubscribed: boolean = true;
 
-    function subscriberFn(observer: SubscriptionObserver): Subscription {
-        function unsubscribe(): void {
+    function promiseToObservableSubscriber(observer: SubscriptionObserver): () => void {
+        function promiseToObservableUnsubscribe(): void {
             // todo: memory leak
             isSubscribed = false
             if (typeof promise.cancel === 'function') {
@@ -28,10 +28,10 @@ export default function promiseToObservable<V, E>(promise: Promise<V>): Observab
                 observer.error(e)
             }
         }
-
         promise.then(success).catch(error)
-        return {unsubscribe}
+
+        return promiseToObservableUnsubscribe
     }
 
-    return new Observable(subscriberFn)
+    return new Observable(promiseToObservableSubscriber)
 }

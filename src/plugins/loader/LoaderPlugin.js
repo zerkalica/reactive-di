@@ -52,8 +52,12 @@ class LoaderDepImpl<V: Object> {
         const setter: SetFn = this._setterDep.resolve();
         if (this._setter !== setter) {
             this._setter = setter
-            setter()
-            // Promise.resolve().then(setter)
+            if (this.base.displayName !== 'loader@LoadableTodoItemCollection') {
+                // setter()
+                Promise.resolve().then(setter)
+            } else {
+                setter()
+            }
         }
 
         this.base.isRecalculate = false

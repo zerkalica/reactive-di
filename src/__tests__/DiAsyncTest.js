@@ -51,26 +51,41 @@ describe('DiAsyncTest', () => {
             const di = createPureStateDi(new AppState(), [], defaultPlugins)
             const MyDep = sinon.spy((c: C, m: EntityMeta) => ({v: c.v, meta: m}))
             factory(cLoader, meta(cLoader))(MyDep)
-            assert.deepEqual(di(MyDep), {
-                v: 'test1',
-                meta: {
-                    fulfilled: false,
-                    pending: true,
-                    reason: null,
-                    rejected: false
-                }
-            })
 
             resolveData(new C('test2'))
             return dataSource.then(() => {
                 assert.deepEqual(di(MyDep), {
-                    v: 'test2',
+                    v: 'test1',
                     meta: {
                         fulfilled: true,
                         pending: false,
                         reason: null,
                         rejected: false
                     }
+                })
+
+                return Promise.resolve().then(() => {
+                    assert.deepEqual(di(MyDep), {
+                        v: 'test1',
+                        meta: {
+                            fulfilled: false,
+                            pending: true,
+                            reason: null,
+                            rejected: false
+                        }
+                    })
+
+                    return Promise.resolve().then(() => {
+                        assert.deepEqual(di(MyDep), {
+                            v: 'test2',
+                            meta: {
+                                fulfilled: true,
+                                pending: false,
+                                reason: null,
+                                rejected: false
+                            }
+                        })
+                    })
                 })
             })
         })

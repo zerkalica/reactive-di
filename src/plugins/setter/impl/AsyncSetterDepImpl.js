@@ -154,9 +154,11 @@ export default class AsyncSetterDepImpl<V: Object, E> {
         }
 
         let observable: Observable<V, E>;
-        if (typeof asyncResult.then === 'function') {
+        const isPromise = (typeof (asyncResult: Object).then === 'function');
+        if (isPromise) {
             observable = promiseToObservable(((asyncResult: any): Promise<V>))
             this._setMeta(setPending(this.meta))
+            this._notify()
         } else if (typeof asyncResult.subscribe === 'function') {
             observable = ((asyncResult: any): Observable<V, E>);
         } else {
@@ -165,16 +167,18 @@ export default class AsyncSetterDepImpl<V: Object, E> {
             )
         }
 
-        this._createPromise()
         this._subscription.unsubscribe()
 
+        this._createPromise()
         this._subscription = observable.subscribe(
             new RollbackObserver((this: Observer<?V, E>), this._model, oldValue)
         )
         if (initial) {
             this._model.set(initial)
         }
-        this._notify()
+        if (initial || isPromise) {
+            this._notify()
+        }
     }
 
     _createPromise(): void {
