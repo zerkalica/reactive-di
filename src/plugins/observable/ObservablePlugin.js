@@ -58,6 +58,7 @@ export default class ObservablePlugin {
                 `Not a factory: ${factoryDep.base.displayName} in ${annotation.kind}`
             )
         }
+        factoryDep.base.isRecalculate = false
         const observable: Observable<V, E> = acc.listeners.add(factoryDep);
         (observable: any).displayName = 'observable@' + factoryDep.base.displayName
         const dep: ObservableDep<V, E> = new ObservableDepImpl(

@@ -6,7 +6,6 @@ import sinon from 'sinon'
 
 import annotations from 'reactive-di/__tests__/annotations'
 import createPureStateDi from 'reactive-di/createPureStateDi'
-import promiseToObservable from 'reactive-di/utils/promiseToObservable'
 import defaultPlugins from 'reactive-di/defaultPlugins'
 
 import type {
@@ -34,10 +33,8 @@ describe('DiAsyncTest', () => {
             const dataSource = new Promise((resolve) => {
                 resolveData = resolve
             })
-            const observable = promiseToObservable(dataSource)
-
             function cLoader(c: C): AsyncResult<C, Error> {
-                return [c, observable]
+                return [c, dataSource]
             }
             loader(C)(cLoader)
 
