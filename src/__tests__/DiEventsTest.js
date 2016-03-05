@@ -82,7 +82,8 @@ describe('DiEventsTest', () => {
 
         const bSet = di(bSetter)
         bSet(321)
-        assert(observer.next.notCalled)
+        bSet(333)
+        assert(observer.next.calledOnce)
     })
 
     it('should not update unsubscribed listener', () => {
@@ -145,9 +146,10 @@ describe('DiEventsTest', () => {
         observableB.subscribe(observerB);
         observableC.subscribe(observerC);
         bSet(333)
+        bSet(334)
 
-        assert(observerB.next.calledOnce)
+        assert(observerB.next.calledTwice)
         assert(observerB.next.calledWith({b: {v: 333}}))
-        assert(observerC.next.notCalled)
+        assert(observerC.next.calledOnce)
     })
 })
