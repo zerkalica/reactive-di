@@ -24,6 +24,7 @@ export type ResetDep = {
 export type LoaderAnnotation<V: Object, E> = DepAnnotation<AsyncUpdater<V, E>> & {
     kind: 'loader';
     model: Class<V>;
+    isPending: boolean;
 }
 
 export type ResetAnnotation<V: Object, E> = Annotation<AsyncUpdater<V, E>> & {

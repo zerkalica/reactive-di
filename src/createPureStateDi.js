@@ -3,8 +3,8 @@
 import createPureCursorCreator from 'reactive-di/model/pure/createPureCursorCreator'
 import AnnotationResolverImpl from 'reactive-di/core/AnnotationResolverImpl'
 
-import SymbolMetaDriver from 'reactive-di/drivers/SymbolMetaDriver'
 import DefaultIdCreator from 'reactive-di/core/DefaultIdCreator'
+import driver from 'reactive-di/pluginsCommon/driver'
 
 import type {
     Annotation,
@@ -31,7 +31,7 @@ class AnnotationMap<K: Function, A: Annotation> extends Map<K, A> {
 
     constructor(
         deps: Array<Annotation>,
-        driver: AnnotationDriver
+        drv: AnnotationDriver
     ) {
         super()
         for (let i = 0, l = deps.length; i < l; i++) {
@@ -45,7 +45,7 @@ class AnnotationMap<K: Function, A: Annotation> extends Map<K, A> {
                     break
             }
         }
-        this._driver = driver
+        this._driver = drv
     }
 
     has(key: K): boolean {
@@ -74,7 +74,7 @@ export default function createPureStateDi<T: Object>(
     plugins: Array<Plugin>,
     middlewares?: Map<Dependency|Tag, Array<Dependency>>
 ): GetDep {
-    const map: Map<Function, Annotation> = new AnnotationMap(deps, new SymbolMetaDriver());
+    const map: Map<Function, Annotation> = new AnnotationMap(deps, driver);
     const resolver: AnnotationResolver = new AnnotationResolverImpl(
         middlewares || new Map(),
         map,

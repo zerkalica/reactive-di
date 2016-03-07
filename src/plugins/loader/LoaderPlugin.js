@@ -42,6 +42,7 @@ class LoaderDepImpl<V: Object> {
     reset(): void {
         this._setterDep.reset()
         this._setter = null
+        this.base.isRecalculate = true
     }
 
     resolve(): V {
@@ -52,12 +53,7 @@ class LoaderDepImpl<V: Object> {
         const setter: SetFn = this._setterDep.resolve();
         if (this._setter !== setter) {
             this._setter = setter
-            if (this.base.displayName !== 'loader@LoadableTodoItemCollection') {
-                // setter()
-                Promise.resolve().then(setter)
-            } else {
-                setter()
-            }
+            Promise.resolve().then(setter)
         }
 
         this.base.isRecalculate = false
@@ -85,6 +81,7 @@ export default class LoaderPlugin {
         const asyncSetterAnnotation: AsyncSetterAnnotation<V, E> = {
             kind: 'asyncsetter',
             id: id + '.asyncsetter',
+            isPending: annotation.isPending,
             model: annotation.model,
             deps: annotation.deps,
             target: annotation.target

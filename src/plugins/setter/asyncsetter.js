@@ -1,9 +1,9 @@
 /* @flow */
+import driver from 'reactive-di/pluginsCommon/driver'
 
 import type {DepItem} from 'reactive-di/i/annotationInterfaces'
 import type {AsyncUpdater} from 'reactive-di/i/plugins/setterInterfaces'
 import type {AsyncSetterAnnotation} from 'reactive-di/i/plugins/setterInterfaces'
-import type {AnnotationDriver} from 'reactive-di/i/annotationInterfaces'
 
 export function asyncsetter<V: Object, E>(
     target: AsyncUpdater<V, E>,
@@ -13,26 +13,16 @@ export function asyncsetter<V: Object, E>(
     return {
         kind: 'asyncsetter',
         id: '',
+        isPending: false,
         model,
         deps,
         target
     }
 }
 
-export function createAsyncSetter<M: Object, V: AsyncUpdater<M, *>>(
-    driver: AnnotationDriver
-): (
+export function asyncsetterAnnotation<V: Object, M: Object>(
     model: Class<M>,
     ...deps: Array<DepItem>
-) => (target: V) => V {
-    return function _asyncsetter(
-        model: Class<M>,
-        ...deps: Array<DepItem>
-    ): (target: V) => V {
-        return function __asyncsetter(
-            target: V
-        ): V {
-            return driver.annotate(target, asyncsetter(target, model, ...deps))
-        }
-    }
+): (target: V) => V {
+    return (target: V) => driver.annotate(target, asyncsetter(target, model, ...deps))
 }

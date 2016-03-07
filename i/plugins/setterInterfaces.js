@@ -52,4 +52,5 @@ export type SyncSetterAnnotation<V: Object> = DepAnnotation<SyncUpdater<V>> & {
 export type AsyncSetterAnnotation<V: Object, E> = DepAnnotation<AsyncUpdater<V, E>> & {
     kind: 'asyncsetter';
     model: Class<V>;
+    isPending: boolean;
 }

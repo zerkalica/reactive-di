@@ -2,7 +2,7 @@
 
 import type {AsyncUpdater} from 'reactive-di/i/plugins/setterInterfaces'
 import type {ResetAnnotation} from 'reactive-di/i/plugins/loaderInterfaces'
-import type {AnnotationDriver} from 'reactive-di/i/annotationInterfaces'
+import driver from 'reactive-di/pluginsCommon/driver'
 
 export function reset<V: Object, E>(
     target: AsyncUpdater<V, E>
@@ -15,10 +15,8 @@ export function reset<V: Object, E>(
     }
 }
 
-export function createReset<V: Object, E>(
-    driver: AnnotationDriver
-): (target: AsyncUpdater<V, E>) => AsyncUpdater<V, E> {
-    return function _reset(target: AsyncUpdater<V, E>): AsyncUpdater<V, E> {
-        return driver.annotate(target, reset(target))
-    }
+export function resetAnnotation<V: Object, E>(
+    target: AsyncUpdater<V, E>
+): AsyncUpdater<V, E> {
+    return driver.annotate(target, reset(target))
 }

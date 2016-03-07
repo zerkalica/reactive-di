@@ -88,7 +88,10 @@ export default class AsyncSetterDepImpl<V: Object, E> {
         this.base = new DepBaseImpl(annotation)
         this.base.relations.push(annotation.id)
         this.metaOwners = []
-        this.meta = new EntityMetaImpl({fulfilled: true})
+        this.meta = new EntityMetaImpl({
+            fulfilled: !annotation.isPending,
+            pending: annotation.isPending
+        })
         const childSetters: Array<PromiseSource> = this.childSetters = [];
 
         this._notify = notify

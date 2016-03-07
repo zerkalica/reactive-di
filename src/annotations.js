@@ -1,33 +1,40 @@
 /* @flow */
 
-import {createKlass, klass} from 'reactive-di/plugins/class/klass'
-import {createFactory, factory} from 'reactive-di/plugins/factory/factory'
+import {klassAnnotation, klass} from 'reactive-di/plugins/class/klass'
+import {factoryAnnotation, factory} from 'reactive-di/plugins/factory/factory'
 import {meta} from 'reactive-di/plugins/meta/meta'
-import {createModel, model} from 'reactive-di/plugins/model/model'
-import {createLoader, loader} from 'reactive-di/plugins/loader/loader'
-import {createReset, reset} from 'reactive-di/plugins/loader/reset'
-import {createObservable, observable} from 'reactive-di/plugins/observable/observable'
-import {createAsyncSetter, asyncsetter} from 'reactive-di/plugins/setter/asyncsetter'
-import {createSyncSetter, syncsetter} from 'reactive-di/plugins/setter/syncsetter'
+import {modelAnnotation, model} from 'reactive-di/plugins/model/model'
+import {
+    loaderAnnotation,
+    loader,
+    pendingLoader,
+    pendingLoaderAnnotation
+} from 'reactive-di/plugins/loader/loader'
+import {resetAnnotation, reset} from 'reactive-di/plugins/loader/reset'
+import {observableAnnotation, observable} from 'reactive-di/plugins/observable/observable'
+import {asyncsetterAnnotation, asyncsetter} from 'reactive-di/plugins/setter/asyncsetter'
+import {syncsetterAnnotation, syncsetter} from 'reactive-di/plugins/setter/syncsetter'
 import {alias} from 'reactive-di/plugins/alias/alias'
 
 export {
     alias,
     klass,
-    createKlass,
+    klassAnnotation,
     meta,
-    createFactory,
+    factoryAnnotation,
     factory,
-    createModel,
+    modelAnnotation,
     model,
-    createLoader,
+    loaderAnnotation,
     loader,
-    createReset,
+    pendingLoader,
+    pendingLoaderAnnotation,
+    resetAnnotation,
     reset,
-    createObservable,
+    observableAnnotation,
     observable,
-    createAsyncSetter,
+    asyncsetterAnnotation,
     asyncsetter,
-    createSyncSetter,
+    syncsetterAnnotation,
     syncsetter
 }
