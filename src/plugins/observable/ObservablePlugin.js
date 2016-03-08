@@ -50,8 +50,9 @@ export default class ObservablePlugin {
             kind: 'factory',
             id: id + '.factory',
             target: annotation.target,
-            deps: [annotation.deps]
+            deps: annotation.deps ? [annotation.deps] : []
         };
+
         const factoryDep: FactoryDep<V> = acc.newRoot().resolveAnnotation(factoryAnnotation);
         if (factoryDep.kind !== 'factory') {
             throw new Error(
