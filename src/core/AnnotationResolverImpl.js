@@ -42,8 +42,9 @@ class ListenerManagerImpl {
             for (let i = 0, l = listeners.length; i < l; i++) {
                 const {observers, target} = listeners[i]
                 if (target.base.isRecalculate) {
+                    const data = target.resolve()
                     for (let j = 0, k = observers.length; j < k; j++) {
-                        observers[j].next(target.resolve())
+                        observers[j].next(data)
                     }
                 }
             }
@@ -59,7 +60,7 @@ class ListenerManagerImpl {
         };
         self._listeners.push(listener)
 
-        function subscriberFn(observer: SubscriptionObserver): Subscription {
+        function subscriberFn(observer: SubscriptionObserver): () => void {
             function listenersFilter(dep: SubscriptionObserver): boolean {
                 return dep !== observer
             }
@@ -67,7 +68,7 @@ class ListenerManagerImpl {
                 listener.observers = listener.observers.filter(listenersFilter)
             }
             listener.observers.push(observer)
-            return {unsubscribe}
+            return unsubscribe
         }
 
         return new Observable(subscriberFn)

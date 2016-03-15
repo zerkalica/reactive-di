@@ -25,7 +25,7 @@ export class FactoryDepImpl<V: any> {
     kind: 'factory';
     base: DepBase;
 
-    _value :V;
+    _value: V;
     _target: DepFn<V>;
     _depArgs: DepArgs;
 
@@ -45,7 +45,8 @@ export class FactoryDepImpl<V: any> {
         }
         const {deps, middlewares} = resolveDeps(this._depArgs)
         // debugger
-        let fn: V = fastCall(this._target, deps);
+        let fn: V;
+        fn = fastCall(this._target, deps);
         if (middlewares) {
             if (typeof fn !== 'function') {
                 throw new Error(`No callable returns from ${this.base.displayName}`)
