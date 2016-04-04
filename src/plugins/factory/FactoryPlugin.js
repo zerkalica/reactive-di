@@ -1,61 +1,55 @@
 /* @flow */
-
-import defaultFinalizer from 'reactive-di/pluginsCommon/defaultFinalizer'
-import resolveDeps from 'reactive-di/pluginsCommon/resolveDeps'
-import DepsResolverImpl from 'reactive-di/pluginsCommon/DepsResolverImpl'
-import {DepBaseImpl} from 'reactive-di/pluginsCommon/pluginImpls'
 import type {
+    Tag,
     DepFn
 } from 'reactive-di/i/annotationInterfaces'
+import type {FactoryAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
-    DepArgs,
-    DepBase,
-    AnnotationResolver
+    Context,
+    ResolvableDep,
+    ResolveDepsResult
 } from 'reactive-di/i/nodeInterfaces'
-import type {Plugin} from 'reactive-di/i/pluginInterfaces' // eslint-disable-line
-import type {
-    FactoryDep,
-    FactoryAnnotation
-} from 'reactive-di/i/plugins/factoryInterfaces'
+
 import {createFunctionProxy} from 'reactive-di/utils/createProxy'
 import {fastCall} from 'reactive-di/utils/fastCall'
+import getFunctionName from 'reactive-di/utils/getFunctionName'
 
-// implements FactoryDep
-export class FactoryDepImpl<V: any> {
+export class FactoryDep {
     kind: 'factory';
-    base: DepBase;
+    displayName: string;
+    tags: Array<Tag>;
+    isRecalculate: boolean;
 
-    _value: V;
-    _target: DepFn<V>;
-    _depArgs: DepArgs;
+    _value: Function;
+    _resolver: () => ResolveDepsResult;
 
-    constructor(annotation: FactoryAnnotation<V>) {
+    constructor(annotation: FactoryAnnotation) {
         this.kind = 'factory'
-        this.base = new DepBaseImpl(annotation)
-        this._target = annotation.target
+        const fnName: string = getFunctionName(annotation.target);
+        this.displayName = this.kind + '@' + fnName
+        this.tags = [this.kind, fnName]
+
+        this.isRecalculate = false
+        const self = this
+
+        function getValue(...args: Array<any>): any {
+            const {deps, middlewares} = self._resolver()
+
+            const fn: DepFn = middlewares
+                ? createFunctionProxy(annotation.target, middlewares)
+                : annotation.target;
+
+            return fastCall(fn, deps.concat(args));
+        }
+
+        this._value = getValue
     }
 
-    init(depArgs: DepArgs): void {
-        this._depArgs = depArgs
+    init(resolver: () => ResolveDepsResult): void {
+        this._resolver = resolver
     }
 
-    resolve(): V {
-        if (!this.base.isRecalculate) {
-            return this._value
-        }
-        const {deps, middlewares} = resolveDeps(this._depArgs)
-        // debugger
-        let fn: V;
-        fn = fastCall(this._target, deps);
-        if (middlewares) {
-            if (typeof fn !== 'function') {
-                throw new Error(`No callable returns from ${this.base.displayName}`)
-            }
-            fn = createFunctionProxy(fn, middlewares)
-        }
-        this._value = fn
-        this.base.isRecalculate = false
-
+    resolve(): Function {
         return this._value
     }
 }
@@ -65,16 +59,11 @@ export class FactoryDepImpl<V: any> {
 export default class FactoryPlugin {
     kind: 'factory' = 'factory';
 
-    create<V>(annotation: FactoryAnnotation<V>, acc: AnnotationResolver): void {
-        annotation.id = acc.createId() // eslint-disable-line
-        const dep = new FactoryDepImpl(annotation);
-        const resolver = new DepsResolverImpl(acc)
-        acc.begin(dep)
-        dep.init(resolver.getDeps(annotation.deps, annotation.target, dep.base.tags))
-        acc.end(dep)
+    create(annotation: FactoryAnnotation, acc: Context): ResolvableDep { // eslint-disable-line
+        return new FactoryDep(annotation);
     }
 
-    finalize<AnyDep: Object>(dep: FactoryDep, target: AnyDep): void {
-        defaultFinalizer(dep.base, target)
+    finalize(dep: FactoryDep, annotation: FactoryAnnotation, acc: Context): void {
+        dep.init(acc.createDepResolver(annotation, dep.tags))
     }
 }

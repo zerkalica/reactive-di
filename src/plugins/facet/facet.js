@@ -1,25 +1,25 @@
 /* @flow */
 
 import type {DepItem} from 'reactive-di/i/annotationInterfaces'
-import type {FactoryAnnotation} from 'reactive-di/i/pluginsInterfaces'
+import type {FacetAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import annotationSingleton from 'reactive-di/core/annotationSingleton'
 
-export function factory(
+export function facet(
     target: Function,
     ...deps: Array<DepItem>
-): FactoryAnnotation {
+): FacetAnnotation {
     return {
-        kind: 'factory',
+        kind: 'facet',
         target,
         deps
     }
 }
 
-export function factoryAnn<V: Function>(
+export function facetAnn<V: Function>(
     ...deps: Array<DepItem>
 ): (target: V) => V {
-    return function __factory(target: V): V {
-        annotationSingleton.push(factory(target, ...deps))
+    return function __facet(target: V): V {
+        annotationSingleton.push(facet(target, ...deps))
         return target
     }
 }

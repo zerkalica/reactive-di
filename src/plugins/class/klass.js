@@ -1,27 +1,25 @@
 /* @flow */
 
 import type {DepItem} from 'reactive-di/i/annotationInterfaces'
-import type {ClassAnnotation} from 'reactive-di/i/plugins/classInterfaces'
-import driver from 'reactive-di/pluginsCommon/driver'
+import type {ClassAnnotation} from 'reactive-di/i/pluginsInterfaces'
+import annotationSingleton from 'reactive-di/core/annotationSingleton'
 
-export function klass<V: Object>(
-    target: Class<V>,
+export function klass(
+    target: Function,
     ...deps: Array<DepItem>
-): ClassAnnotation<V> {
+): ClassAnnotation {
     return {
-        kind: 'class',
-        id: '',
+        kind: 'klass',
         target,
         deps
     }
 }
 
-export function klassAnnotation<V: Function>(
+export function klassAnn<V: Function>(
     ...deps: Array<DepItem>
 ): (target: V) => V {
-    return function __klass(
-        target: V
-    ): V {
-        return driver.annotate(target, klass(target, ...deps))
+    return function __klass(target: V): V {
+        annotationSingleton.push(klass(target, ...deps))
+        return target
     }
 }

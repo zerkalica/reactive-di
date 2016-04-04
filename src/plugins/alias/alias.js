@@ -1,13 +1,17 @@
 /* @flow */
-import type {AliasAnnotation} from 'reactive-di/i/plugins/aliasInterfaces'
 
-export function alias<Source: Function, Target: Function>(
-    source: Source,
-    target: Target
-): AliasAnnotation<Source, Target> {
+import type {AliasAnnotation} from 'reactive-di/i/pluginsInterfaces'
+import annotationSingleton from 'reactive-di/core/annotationSingleton'
+
+export function alias(target: Function, aliasTarget: Function): AliasAnnotation {
     return {
         kind: 'alias',
-        source,
-        target
+        target,
+        alias: aliasTarget
     }
+}
+
+export function aliasAnn<V: Function>(target: V, aliasTarget: Function): V {
+    annotationSingleton.push(alias(target, aliasTarget))
+    return target
 }

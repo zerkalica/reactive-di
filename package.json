@@ -77,6 +77,7 @@
     "sinon": "^1.17.3"
   },
   "dependencies": {
+    "mobx": "^2.0.5",
     "zen-observable": "^0.x.x"
   }
 }

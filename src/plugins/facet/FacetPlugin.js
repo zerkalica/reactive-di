@@ -3,19 +3,19 @@ import type {
     Tag,
     DepFn
 } from 'reactive-di/i/annotationInterfaces'
-import type {ClassAnnotation} from 'reactive-di/i/pluginsInterfaces'
+import type {FacetAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Context,
     ResolvableDep,
     ResolveDepsResult
 } from 'reactive-di/i/nodeInterfaces'
 
-import {createObjectProxy} from 'reactive-di/utils/createProxy'
-import {fastCreateObject} from 'reactive-di/utils/fastCall'
+import {createFunctionProxy} from 'reactive-di/utils/createProxy'
+import {fastCall} from 'reactive-di/utils/fastCall'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 
-export class ClassDep<V: Object> {
-    kind: 'klass';
+export class FacetDep<V: any> {
+    kind: 'facet';
     displayName: string;
     tags: Array<Tag>;
     isRecalculate: boolean;
@@ -24,8 +24,8 @@ export class ClassDep<V: Object> {
     _target: DepFn<V>;
     _resolver: () => ResolveDepsResult;
 
-    constructor(annotation: ClassAnnotation) {
-        this.kind = 'klass'
+    constructor(annotation: FacetAnnotation) {
+        this.kind = 'facet'
         const fnName: string = getFunctionName(annotation.target);
         this.displayName = this.kind + '@' + fnName
         this.tags = [this.kind, fnName]
@@ -42,30 +42,31 @@ export class ClassDep<V: Object> {
             return this._value
         }
         const {deps, middlewares} = this._resolver()
-        let object: V;
-        object = fastCreateObject(this._target, deps);
+        let fn: V;
+        fn = fastCall(this._target, deps);
         if (middlewares) {
-            if (typeof object !== 'object') {
-                throw new Error(`No object returns from ${this.displayName}`)
+            if (typeof fn !== 'function') {
+                throw new Error(`No callable returns from ${this.displayName}`)
             }
-            object = createObjectProxy(object, middlewares)
+            fn = createFunctionProxy(fn, middlewares)
         }
-        this._value = object
+        this._value = fn
         this.isRecalculate = false
 
         return this._value
     }
 }
 
+// depends on meta
 // implements Plugin
-export default class ClassPlugin {
-    kind: 'klass' = 'klass';
+export default class FacetPlugin {
+    kind: 'facet' = 'facet';
 
-    create(annotation: ClassAnnotation, acc: Context): ResolvableDep { // eslint-disable-line
-        return new ClassDep(annotation);
+    create(annotation: FacetAnnotation, acc: Context): ResolvableDep { // eslint-disable-line
+        return new FacetDep(annotation);
     }
 
-    finalize(dep: ClassDep, annotation: ClassAnnotation, acc: Context): void {
+    finalize(dep: FacetDep, annotation: FacetAnnotation, acc: Context): void {
         dep.init(acc.createDepResolver(annotation, dep.tags))
     }
 }

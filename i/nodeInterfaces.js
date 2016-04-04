@@ -1,16 +1,12 @@
 /* @flow */
 
 import type {
+    DepItem,
+    SimpleMap,
     Annotation,
-    DepId,
     Dependency,
-    Deps,
     Tag
 } from 'reactive-di/i/annotationInterfaces'
-import type {
-    CursorCreator,
-    Notify
-} from 'reactive-di/i/modelInterfaces'
 
 export type EntityMeta<E> = {
     pending: boolean;
@@ -19,54 +15,35 @@ export type EntityMeta<E> = {
     reason: ?E;
 }
 
-export type Cacheable = {
-    isRecalculate: boolean;
-};
-
-export type DepBase = {
-    id: DepId;
-    isRecalculate: boolean;
-
-    displayName: string;
-    tags: Array<Tag>;
-    relations: Array<DepId>;
-}
-
 export type ResolvableDep<V> = {
     kind: any;
-    base: DepBase;
+    isRecalculate: boolean;
+    displayName: string;
+    tags: Array<Tag>;
     resolve(): V;
 }
 
-export type ListenerManager = {
-    notify: Notify;
-    add<V, E>(target: ResolvableDep<V>): Observable<V, E>;
+export type GetResolvableDep<V: ResolvableDep> = (annotatedDep: Dependency<V>) => V;
+
+export type ResolveDepsResult<A> = {
+    deps: Array<any|SimpleMap<string, any>>,
+    middlewares: ?Array<A>
 }
 
-export type AnnotationResolver = {
-    createCursor: CursorCreator;
-    listeners: ListenerManager;
-    middlewares: Map<Dependency|Tag, Array<Dependency>>;
-
-    resolveAnnotation<AnyDep: Object>(annotation: Annotation): AnyDep;
-    resolve<AnyDep: Object>(annotatedDep: Dependency|Annotation): AnyDep;
-    createId(): DepId;
-    addRelation(id: DepId): void;
-    begin<AnyDep: Object>(dep: AnyDep): void;
-    end<AnyDep: Object>(dep: AnyDep): void;
-    newRoot(): AnnotationResolver;
+export type CreateResolverOptions = {
+    deps: Array<DepItem>;
+    target: Dependency;
 }
 
-export type DepArgs = {
-    deps: Array<ResolvableDep>;
-    depNames: ?Array<string>;
-    middlewares: ?Array<ResolvableDep>;
+export type Context = {
+    parents: Array<ResolvableDep>;
+    resolve(annotatedDep: Dependency): ResolvableDep;
+    create(config: Array<Annotation>): Context;
+    createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
 }
 
-export type Invoker<V> = {
-    invoke(args: Array<any>): V;
-}
-
-export type DepsResolver = {
-    getDeps(deps: ?Deps, annotatedDep: Dependency, tags: Array<Tag>): DepArgs;
+export type Plugin<Ann: Annotation, Dep: ResolvableDep> = {
+    kind: any;
+    create(annotation: Ann, acc: Context): Dep;
+    finalize(dep: Dep, annotation: Ann, acc: Context): void;
 }

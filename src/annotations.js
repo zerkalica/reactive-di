@@ -1,40 +1,17 @@
 /* @flow */
 
-import {klassAnnotation, klass} from 'reactive-di/plugins/class/klass'
-import {factoryAnnotation, factory} from 'reactive-di/plugins/factory/factory'
-import {meta} from 'reactive-di/plugins/meta/meta'
-import {modelAnnotation, model} from 'reactive-di/plugins/model/model'
-import {
-    loaderAnnotation,
-    loader,
-    pendingLoader,
-    pendingLoaderAnnotation
-} from 'reactive-di/plugins/loader/loader'
-import {resetAnnotation, reset} from 'reactive-di/plugins/loader/reset'
-import {observableAnnotation, observable} from 'reactive-di/plugins/observable/observable'
-import {asyncsetterAnnotation, asyncsetter} from 'reactive-di/plugins/setter/asyncsetter'
-import {syncsetterAnnotation, syncsetter} from 'reactive-di/plugins/setter/syncsetter'
-import {alias} from 'reactive-di/plugins/alias/alias'
+import {facetAnn as facet} from 'reactive-di/plugins/facet/facet'
+import {factoryAnn as factory} from 'reactive-di/plugins/factory/factory'
+import {klassAnn as klass} from 'reactive-di/plugins/class/klass'
+import {valueAnn as value} from 'reactive-di/plugins/value/value'
+import {aliasAnn as alias} from 'reactive-di/plugins/alias/alias'
+import {middlewareAnn as middleware} from 'reactive-di/plugins/middleware/middleware'
 
 export {
     alias,
-    klass,
-    klassAnnotation,
-    meta,
-    factoryAnnotation,
+    value,
+    facet,
     factory,
-    modelAnnotation,
-    model,
-    loaderAnnotation,
-    loader,
-    pendingLoader,
-    pendingLoaderAnnotation,
-    resetAnnotation,
-    reset,
-    observableAnnotation,
-    observable,
-    asyncsetterAnnotation,
-    asyncsetter,
-    syncsetterAnnotation,
-    syncsetter
+    middleware,
+    klass
 }
