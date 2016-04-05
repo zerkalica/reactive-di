@@ -5,40 +5,41 @@ import type {
 } from 'reactive-di/i/annotationInterfaces'
 import type {ClassAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
+    Resolver,
     Context,
-    ResolvableDep,
+    ResolverCreator,
     ResolveDepsResult
 } from 'reactive-di/i/nodeInterfaces'
 
 import {createObjectProxy} from 'reactive-di/utils/createProxy'
 import {fastCreateObject} from 'reactive-di/utils/fastCall'
-import getFunctionName from 'reactive-di/utils/getFunctionName'
+import BaseResolverCreator from 'reactive-di/core/BaseResolverCreator'
 
-export class ClassDep<V: Object> {
-    kind: 'klass';
+class ClassResolver<V: Object> {
     displayName: string;
-    tags: Array<Tag>;
-    isRecalculate: boolean;
 
-    _value: V;
-    _target: DepFn<V>;
+    _isCached: boolean;
     _resolver: () => ResolveDepsResult;
+    _target: Class<V>;
+    _value: any;
 
-    constructor(annotation: ClassAnnotation) {
-        this.kind = 'klass'
-        const fnName: string = getFunctionName(annotation.target);
-        this.displayName = this.kind + '@' + fnName
-        this.tags = [this.kind, fnName]
-
-        this._target = annotation.target
+    constructor(
+        creator: ResolverCreator,
+        resolver: () => ResolveDepsResult,
+        target: Class<V>
+    ) {
+        this.displayName = creator.displayName
+        this._isCached = false
+        this._resolver = resolver
+        this._target = target
     }
 
-    init(resolver: () => ResolveDepsResult): void {
-        this._resolver = resolver
+    reset(): void {
+        this._isCached = false
     }
 
     resolve(): V {
-        if (!this.isRecalculate) {
+        if (this._isCached) {
             return this._value
         }
         const {deps, middlewares} = this._resolver()
@@ -51,9 +52,35 @@ export class ClassDep<V: Object> {
             object = createObjectProxy(object, middlewares)
         }
         this._value = object
-        this.isRecalculate = false
+        this._isCached = true
 
         return this._value
+    }
+}
+
+export class ClassResolverCreator<V: Object> extends BaseResolverCreator {
+    kind: 'klass';
+    displayName: string;
+    tags: Array<Tag>;
+
+    _target: DepFn<V>;
+    _resolver: () => ResolveDepsResult;
+
+    constructor(annotation: ClassAnnotation) {
+        super(annotation)
+        this._target = annotation.target
+    }
+
+    init(resolver: () => ResolveDepsResult): void {
+        this._resolver = resolver
+    }
+
+    createResolver(): Resolver {
+        return new ClassResolver(
+            this,
+            this._resolver,
+            this._target
+        )
     }
 }
 
@@ -61,11 +88,13 @@ export class ClassDep<V: Object> {
 export default class ClassPlugin {
     kind: 'klass' = 'klass';
 
-    create(annotation: ClassAnnotation, acc: Context): ResolvableDep { // eslint-disable-line
-        return new ClassDep(annotation);
+    create(annotation: ClassAnnotation, acc: Context): ResolverCreator { // eslint-disable-line
+        const dep = new ClassResolverCreator(annotation)
+        acc.addRelation(dep)
+        return dep;
     }
 
-    finalize(dep: ClassDep, annotation: ClassAnnotation, acc: Context): void {
+    finalize(dep: ClassResolverCreator, annotation: ClassAnnotation, acc: Context): void {
         dep.init(acc.createDepResolver(annotation, dep.tags))
     }
 }

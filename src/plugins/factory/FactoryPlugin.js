@@ -6,64 +6,78 @@ import type {
 import type {FactoryAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Context,
-    ResolvableDep,
+    Resolver,
+    ResolverCreator,
     ResolveDepsResult
 } from 'reactive-di/i/nodeInterfaces'
 
 import {createFunctionProxy} from 'reactive-di/utils/createProxy'
 import {fastCall} from 'reactive-di/utils/fastCall'
-import getFunctionName from 'reactive-di/utils/getFunctionName'
+import BaseResolverCreator from 'reactive-di/core/BaseResolverCreator'
 
-export class FactoryDep {
-    kind: 'factory';
+class FactoryResolver {
     displayName: string;
-    tags: Array<Tag>;
-    isRecalculate: boolean;
+    _value: any;
 
-    _value: Function;
-    _resolver: () => ResolveDepsResult;
-
-    constructor(annotation: FactoryAnnotation) {
-        this.kind = 'factory'
-        const fnName: string = getFunctionName(annotation.target);
-        this.displayName = this.kind + '@' + fnName
-        this.tags = [this.kind, fnName]
-
-        this.isRecalculate = false
-        const self = this
-
-        function getValue(...args: Array<any>): any {
-            const {deps, middlewares} = self._resolver()
-
+    constructor(
+        creator: ResolverCreator,
+        resolver: () => ResolveDepsResult,
+        target: DepFn
+    ) {
+        this.displayName = creator.displayName
+        this._value = function getValue(...args: Array<any>): any {
+            const {deps, middlewares} = resolver()
             const fn: DepFn = middlewares
-                ? createFunctionProxy(annotation.target, middlewares)
-                : annotation.target;
+                ? createFunctionProxy(target, middlewares)
+                : target;
 
             return fastCall(fn, deps.concat(args));
         }
+    }
 
-        this._value = getValue
+    reset(): void {
+    }
+
+    resolve(): any {
+        return this._value
+    }
+}
+
+class FactoryResolverCreator extends BaseResolverCreator {
+    kind: 'factory';
+    displayName: string;
+    tags: Array<Tag>;
+    _resolver: () => ResolveDepsResult;
+    _target: DepFn;
+
+    constructor(annotation: FactoryAnnotation) {
+        super(annotation)
+        this._target = annotation.target
     }
 
     init(resolver: () => ResolveDepsResult): void {
         this._resolver = resolver
     }
 
-    resolve(): Function {
-        return this._value
+    createResolver(): Resolver {
+        return new FactoryResolver(
+            this,
+            this._resolver,
+            this._target
+        )
     }
 }
 
-// depends on meta
 // implements Plugin
 export default class FactoryPlugin {
     kind: 'factory' = 'factory';
 
-    create(annotation: FactoryAnnotation, acc: Context): ResolvableDep { // eslint-disable-line
-        return new FactoryDep(annotation);
+    create(annotation: FactoryAnnotation, acc: Context): ResolverCreator { // eslint-disable-line
+        const dep = new FactoryResolverCreator(annotation);
+        return dep
     }
 
-    finalize(dep: FactoryDep, annotation: FactoryAnnotation, acc: Context): void {
+    finalize(dep: FactoryResolverCreator, annotation: FactoryAnnotation, acc: Context): void {
         dep.init(acc.createDepResolver(annotation, dep.tags))
     }
 }

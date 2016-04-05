@@ -15,15 +15,21 @@ export type EntityMeta<E> = {
     reason: ?E;
 }
 
-export type ResolvableDep<V> = {
+export type ResolverCreator = {
     kind: any;
-    isRecalculate: boolean;
     displayName: string;
     tags: Array<Tag>;
-    resolve(): V;
+    target: Dependency;
+    childs: Set<ResolverCreator>;
+
+    createResolver(): Resolver;
 }
 
-export type GetResolvableDep<V: ResolvableDep> = (annotatedDep: Dependency<V>) => V;
+export type Resolver = {
+    displayName: string;
+    resolve(): any;
+    reset(): void;
+}
 
 export type ResolveDepsResult<A> = {
     deps: Array<any|SimpleMap<string, any>>,
@@ -36,13 +42,15 @@ export type CreateResolverOptions = {
 }
 
 export type Context = {
-    parents: Array<ResolvableDep>;
-    resolve(annotatedDep: Dependency): ResolvableDep;
+    parents: Array<ResolverCreator>;
+    addRelation(dep: ResolverCreator): void;
+    getResolverCreator(annotatedDep: Dependency): ResolverCreator;
+    getResolver(annotatedDep: Dependency): Resolver;
     create(config: Array<Annotation>): Context;
     createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
 }
 
-export type Plugin<Ann: Annotation, Dep: ResolvableDep> = {
+export type Plugin<Ann: Annotation, Dep: ResolverCreator> = {
     kind: any;
     create(annotation: Ann, acc: Context): Dep;
     finalize(dep: Dep, annotation: Ann, acc: Context): void;

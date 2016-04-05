@@ -7,35 +7,35 @@ import type {
 } from 'reactive-di/i/annotationInterfaces'
 
 import type {
-    ResolvableDep,
-    GetResolvableDep
+    Resolver,
+    Context
 } from 'reactive-di/i/nodeInterfaces'
 
 export default class ResolveHelper {
     _middlewares: Map<Tag|Dependency, Array<Dependency>>;
-    _resolve: GetResolvableDep;
+    _context: Context;
 
     constructor(
         middlewares: Map<Tag|Dependency, Array<Dependency>>,
-        resolve: GetResolvableDep
+        context: Context
     ) {
         this._middlewares = middlewares
-        this._resolve = resolve
+        this._context = context
     }
 
     getMiddlewares(
         annotatedDep: Dependency,
         tags: Array<Tag>
-    ): ?Array<ResolvableDep> {
-        const {_middlewares: middlewares, _resolve: resolve} = this
+    ): ?Array<Resolver> {
+        const {_middlewares: middlewares, _context: context} = this
 
         const ids: Array<Dependency|Tag> = [annotatedDep].concat(tags);
-        const middlewareDeps: Array<ResolvableDep> = [];
+        const middlewareDeps: Array<Resolver> = [];
         for (let i = 0, l = ids.length; i < l; i++) {
             const depMiddlewares: ?Array<Dependency> = middlewares.get(ids[i]);
             if (depMiddlewares) {
                 for (let j = 0, k = depMiddlewares.length; j < k; j++) {
-                    middlewareDeps.push(resolve(depMiddlewares[j]))
+                    middlewareDeps.push(context.getResolver(depMiddlewares[j]))
                 }
             }
         }
@@ -44,13 +44,13 @@ export default class ResolveHelper {
     }
 
     getDeps(deps: Array<DepItem>): {
-        deps: Array<ResolvableDep>;
+        deps: Array<Resolver>;
         depNames: ?Array<string>;
     } {
-        const {_resolve: resolve} = this
+        const {_context: context} = this
 
         let depNames: ?Array<string> = null;
-        const resolvedDeps: Array<ResolvableDep> = [];
+        const resolvedDeps: Array<Resolver> = [];
         if (deps.length) {
             if (
                 typeof deps[0] === 'object'
@@ -60,12 +60,12 @@ export default class ResolveHelper {
                 const argsObject: SimpleMap<string, Dependency> =
                     ((deps[0]: any): SimpleMap<string, Dependency>);
                 for (let key in argsObject) { // eslint-disable-line
-                    resolvedDeps.push(resolve(argsObject[key]))
+                    resolvedDeps.push(context.getResolver(argsObject[key]))
                     depNames.push(key)
                 }
             } else {
                 for (let i = 0, l = deps.length; i < l; i++) {
-                    const dep: ResolvableDep = resolve(((deps: any): Array<Dependency>)[i]);
+                    const dep: Resolver = context.getResolver(((deps: any): Array<Dependency>)[i]);
                     resolvedDeps.push(dep)
                 }
             }

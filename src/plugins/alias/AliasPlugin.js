@@ -2,7 +2,7 @@
 import type {AliasAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Context,
-    ResolvableDep
+    ResolverCreator
 } from 'reactive-di/i/nodeInterfaces'
 
 // depends on meta
@@ -10,10 +10,10 @@ import type {
 export default class AliasPlugin {
     kind: 'alias' = 'alias';
 
-    create(annotation: AliasAnnotation, acc: Context): ResolvableDep { // eslint-disable-line
-        return acc.resolve(annotation.alias)
+    create(annotation: AliasAnnotation, acc: Context): ResolverCreator { // eslint-disable-line
+        return acc.getResolverCreator(annotation.alias)
     }
 
-    finalize(dep: ResolvableDep, annotation: AliasAnnotation, acc: Context): void { // eslint-disable-line
+    finalize(dep: ResolverCreator, annotation: AliasAnnotation, acc: Context): void { // eslint-disable-line
     }
 }

@@ -6,39 +6,40 @@ import type {
 import type {FacetAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Context,
-    ResolvableDep,
+    ResolverCreator,
+    Resolver,
     ResolveDepsResult
 } from 'reactive-di/i/nodeInterfaces'
 
 import {createFunctionProxy} from 'reactive-di/utils/createProxy'
 import {fastCall} from 'reactive-di/utils/fastCall'
-import getFunctionName from 'reactive-di/utils/getFunctionName'
+import BaseResolverCreator from 'reactive-di/core/BaseResolverCreator'
 
-export class FacetDep<V: any> {
-    kind: 'facet';
+class FacetResolver {
     displayName: string;
-    tags: Array<Tag>;
-    isRecalculate: boolean;
 
-    _value: V;
-    _target: DepFn<V>;
+    _isCached: boolean;
     _resolver: () => ResolveDepsResult;
+    _target: DepFn;
+    _value: any;
 
-    constructor(annotation: FacetAnnotation) {
-        this.kind = 'facet'
-        const fnName: string = getFunctionName(annotation.target);
-        this.displayName = this.kind + '@' + fnName
-        this.tags = [this.kind, fnName]
-
-        this._target = annotation.target
-    }
-
-    init(resolver: () => ResolveDepsResult): void {
+    constructor(
+        creator: ResolverCreator,
+        resolver: () => ResolveDepsResult,
+        target: DepFn
+    ) {
+        this.displayName = creator.displayName
+        this._isCached = false
         this._resolver = resolver
+        this._target = target
     }
 
-    resolve(): V {
-        if (!this.isRecalculate) {
+    reset(): void {
+        this._isCached = false
+    }
+
+    resolve():any {
+        if (this._isCached) {
             return this._value
         }
         const {deps, middlewares} = this._resolver()
@@ -51,22 +52,49 @@ export class FacetDep<V: any> {
             fn = createFunctionProxy(fn, middlewares)
         }
         this._value = fn
-        this.isRecalculate = false
+        this._isCached = true
 
         return this._value
     }
 }
 
-// depends on meta
+export class FacetResolverCreator extends BaseResolverCreator {
+    kind: 'facet';
+    displayName: string;
+    tags: Array<Tag>;
+
+    _target: DepFn;
+    _resolver: () => ResolveDepsResult;
+
+    constructor(annotation: FacetAnnotation) {
+        super(annotation)
+        this._target = annotation.target
+    }
+
+    init(resolver: () => ResolveDepsResult): void {
+        this._resolver = resolver
+    }
+
+    createResolver(): Resolver {
+        return new FacetResolver(
+            this,
+            this._resolver,
+            this._target
+        )
+    }
+}
+
 // implements Plugin
 export default class FacetPlugin {
     kind: 'facet' = 'facet';
 
-    create(annotation: FacetAnnotation, acc: Context): ResolvableDep { // eslint-disable-line
-        return new FacetDep(annotation);
+    create(annotation: FacetAnnotation, acc: Context): ResolverCreator { // eslint-disable-line
+        const dep = new FacetResolverCreator(annotation)
+        acc.addRelation(dep)
+        return dep;
     }
 
-    finalize(dep: FacetDep, annotation: FacetAnnotation, acc: Context): void {
+    finalize(dep: FacetResolverCreator, annotation: FacetAnnotation, acc: Context): void {
         dep.init(acc.createDepResolver(annotation, dep.tags))
     }
 }

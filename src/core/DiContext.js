@@ -7,9 +7,10 @@ import type {
 } from 'reactive-di/i/annotationInterfaces'
 
 import type {
+    Resolver,
     Context,
     Plugin,
-    ResolvableDep,
+    ResolverCreator,
     ResolveDepsResult,
     CreateResolverOptions
 } from 'reactive-di/i/nodeInterfaces'
@@ -22,21 +23,22 @@ import annotationSingleton from 'reactive-di/core/annotationSingleton'
 export default class DiContext {
     _helper: ResolveHelper;
 
-    _cache: Map<Dependency, ResolvableDep>;
+    _resolverCache: Map<Dependency, Resolver>;
+    _cache: Map<Dependency, ResolverCreator>;
     _plugins: SimpleMap<string, Plugin>;
     _annotations: Map<Dependency, Annotation>;
     _parent: ?DiContext;
 
-    parents: Array<ResolvableDep>;
+    parents: Array<ResolverCreator>;
 
     constructor(
         plugins: SimpleMap<string, Plugin>,
         parent?: DiContext,
         config?: Array<Annotation>
     ) {
+        this._resolverCache = new Map()
         this._cache = new Map()
         this.parents = []
-
         this._plugins = plugins;
 
         this._parent = parent
@@ -45,7 +47,7 @@ export default class DiContext {
 
         this._helper = new ResolveHelper(
             rec.middlewares,
-            (annotatedDep) => this.resolve(annotatedDep)
+            this
         )
     }
 
@@ -57,36 +59,82 @@ export default class DiContext {
         )
     }
 
-    hasDep(annotatedDep: Dependency): boolean {
-        return this._annotations.has(annotatedDep)
-    }
-
-    resolve(annotatedDep: Dependency): ResolvableDep {
+    replace(annotatedDep: Dependency, annotation?: Annotation): void {
+        if (this._parent) {
+            this._parent.replace(annotatedDep, annotation)
+        }
+        if (!this._annotations.has(annotatedDep)) {
+            return
+        }
         const {_cache: cache} = this
-        let dep: ?ResolvableDep = cache.get(annotatedDep);
-        if (!dep) {
-            if (this._parent && this._parent.hasDep(annotatedDep)) {
-                dep = this._parent.resolve(annotatedDep)
-            } else {
-                const annotation: ?Annotation = this._annotations.get(annotatedDep);
-                if (!annotation) {
-                    throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)
-                }
-                const plugin: ?Plugin = this._plugins[annotation.kind];
-                if (!plugin) {
-                    throw new Error(
-                        `Plugin not found for annotation ${getFunctionName(annotation.target)}`
-                    )
-                }
-                dep = plugin.create(annotation, this)
-                cache.set(annotatedDep, dep)
-                this.parents.push(dep)
-                plugin.finalize(dep, annotation, this)
-                this.parents.pop()
-            }
+        const dep = cache.get(annotatedDep)
+        if (dep) {
+            cache.clear(annotatedDep)
+            dep.childs.forEach((childDep) => {
+                cache.clear(childDep.target)
+            })
         }
 
+        if (annotation) {
+            this._annotations.set(annotatedDep, annotation)
+        }
+    }
+
+    addRelation(dep: ResolverCreator): void {
+        const parents = this.parents
+        for (let i = 0, l = parents.length; i < l; i++) {
+            parents[i].childs.add(dep)
+        }
+    }
+
+    _invokePlugin(annotation: Annotation): ResolverCreator {
+        let dep: ?ResolverCreator;
+        const plugin: ?Plugin = this._plugins[annotation.kind];
+        if (!plugin) {
+            throw new Error(
+                `Plugin not found for annotation ${getFunctionName(annotation.target)}`
+            )
+        }
+        const parents = this.parents
+        dep = plugin.create(annotation, this)
+        this._cache.set(annotation.target, dep)
+        parents.push(dep)
+        plugin.finalize(dep, annotation, this)
+        parents.pop()
+
         return dep
+    }
+
+    getResolverCreator(annotatedDep: Dependency): ResolverCreator {
+        let dep: ?ResolverCreator;
+        let annotation: ?Annotation;
+        dep = this._cache.get(annotatedDep)
+        if (dep) {
+            return dep
+        }
+
+        annotation = this._annotations.get(annotatedDep);
+
+        if (annotation) {
+            return this._invokePlugin(annotation)
+        }
+
+        if (this._parent) {
+            return this._parent.getResolverCreator(annotatedDep)
+        }
+
+        throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)
+    }
+
+    getResolver(annotatedDep: Dependency): Resolver {
+        let resolver: ?Resolver;
+        resolver = this._resolverCache.get(annotatedDep);
+        if (!resolver) {
+            resolver = this.getResolverCreator(annotatedDep).createResolver()
+            this._resolverCache.set(annotatedDep, resolver)
+        }
+
+        return resolver
     }
 
     createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult {

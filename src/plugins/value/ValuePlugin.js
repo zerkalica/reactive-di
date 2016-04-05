@@ -5,43 +5,62 @@ import type {
 import type {ValueAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Context,
-    ResolvableDep
+    Resolver,
+    ResolverCreator
 } from 'reactive-di/i/nodeInterfaces'
 
-import getFunctionName from 'reactive-di/utils/getFunctionName'
+import BaseResolverCreator from 'reactive-di/core/BaseResolverCreator'
 
-export class ValueDep<V: any> {
-    kind: 'value';
+class ValueResolver {
     displayName: string;
-    tags: Array<Tag>;
-    isRecalculate: boolean;
+    _value: any;
 
-    _value: V;
-
-    constructor(annotation: ValueAnnotation) {
-        this.kind = 'value'
-        const fnName: string = getFunctionName(annotation.target);
-        this.displayName = this.kind + '@' + fnName
-        this.tags = [this.kind, fnName]
-
-        this.isRecalculate = false
-        this._value = annotation.value
+    constructor(
+        creator: ResolverCreator,
+        value: any
+    ) {
+        this.displayName = creator.displayName
+        this._value = value
     }
 
-    resolve(): Function {
+    reset(): void {
+    }
+
+    resolve(): any {
         return this._value
     }
 }
 
-// depends on meta
+export class ValueResolverCreator<V: any> extends BaseResolverCreator {
+    kind: 'value';
+    displayName: string;
+    tags: Array<Tag>;
+
+    _value: V;
+
+    constructor(annotation: ValueAnnotation) {
+        super(annotation)
+        this._value = annotation.value
+    }
+
+    createResolver(): Resolver {
+        return new ValueResolver(
+            this,
+            this._value
+        )
+    }
+}
+
 // implements Plugin
 export default class ValuePlugin {
     kind: 'value' = 'value';
 
-    create(annotation: ValueAnnotation, acc: Context): ResolvableDep { // eslint-disable-line
-        return new ValueDep(annotation);
+    create(annotation: ValueAnnotation, acc: Context): ResolverCreator { // eslint-disable-line
+        const dep = new ValueResolverCreator(annotation)
+        acc.addRelation(dep)
+        return dep
     }
 
-    finalize(dep: ValueDep, annotation: ValueAnnotation, acc: Context): void { // eslint-disable-line
+    finalize(dep: ValueResolverCreator, annotation: ValueAnnotation, acc: Context): void { // eslint-disable-line
     }
 }

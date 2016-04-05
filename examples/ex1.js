@@ -132,3 +132,4 @@ const srv: SomeService = newDi.get(SomeService);
 console.log(srv.getString())
 console.log(srv.summ(1))
 console.log(newDi.get(facet1))
+console.log(newDi.get(AbstractService) instanceof ConcreteService)
