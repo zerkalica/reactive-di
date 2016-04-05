@@ -27,11 +27,15 @@ class FactoryResolver {
         this.displayName = creator.displayName
         this._value = function getValue(...args: Array<any>): any {
             const {deps, middlewares} = resolver()
-            const fn: DepFn = middlewares
-                ? createFunctionProxy(target, middlewares)
-                : target;
-
-            return fastCall(fn, deps.concat(args));
+            const props = deps.concat(args)
+            const result = fastCall(target, props);
+            if (middlewares) {
+                const middlewareProps = [result].concat(props)
+                for (let i = 0, l = middlewares.length; i < l; i++) {
+                    fastCall(middlewares[i], middlewareProps)
+                }
+            }
+            return result
         }
     }
 
@@ -47,12 +51,12 @@ class FactoryResolverCreator extends BaseResolverCreator {
     kind: 'factory';
     displayName: string;
     tags: Array<Tag>;
+    target: Dependency;
+
     _resolver: () => ResolveDepsResult;
-    _target: DepFn;
 
     constructor(annotation: FactoryAnnotation) {
         super(annotation)
-        this._target = annotation.target
     }
 
     init(resolver: () => ResolveDepsResult): void {
@@ -63,7 +67,7 @@ class FactoryResolverCreator extends BaseResolverCreator {
         return new FactoryResolver(
             this,
             this._resolver,
-            this._target
+            this.target
         )
     }
 }

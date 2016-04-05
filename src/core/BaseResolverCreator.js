@@ -18,11 +18,13 @@ export default class BaseResolverCreator {
     tags: Array<Tag>;
     childs: Set<ResolverCreator>;
     target: Dependency;
+    key: any;
 
     constructor(annotation: Annotation) {
         this.kind = annotation.kind
         this.childs = new Set()
         this.target = annotation.target
+        this.key = annotation.key || annotation.target
         const fnName: string = getFunctionName(annotation.target);
         this.displayName = this.kind + '@' + fnName
         this.tags = [this.kind, fnName]

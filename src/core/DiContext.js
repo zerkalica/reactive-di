@@ -34,9 +34,10 @@ export default class DiContext {
     constructor(
         plugins: SimpleMap<string, Plugin>,
         parent?: DiContext,
-        config?: Array<Annotation>
+        config?: Array<Annotation>,
+        resolverCache?: Map<Dependency, Resolver>
     ) {
-        this._resolverCache = new Map()
+        this._resolverCache = resolverCache || new Map()
         this._cache = new Map()
         this.parents = []
         this._plugins = plugins;

@@ -28,7 +28,6 @@ export default class ResolveHelper {
         tags: Array<Tag>
     ): ?Array<Resolver> {
         const {_middlewares: middlewares, _context: context} = this
-
         const ids: Array<Dependency|Tag> = [annotatedDep].concat(tags);
         const middlewareDeps: Array<Resolver> = [];
         for (let i = 0, l = ids.length; i < l; i++) {
