@@ -51,6 +51,7 @@ export type CreateResolverOptions = {
 }
 
 export type Context = {
+    replace(annotatedDep: Dependency, annotation?: Annotation): void;
     getProvider(annotatedDep: Dependency): Provider;
     getResolver(annotatedDep: Dependency): Resolver;
     create(config: Array<Annotation>): Context;

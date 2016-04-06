@@ -33,6 +33,10 @@ export default class ReactiveDi {
         }
     }
 
+    replace(annotatedDep: Dependency, annotation?: Annotation): void {
+        this._context.replace(annotatedDep, annotation)
+    }
+
     create(config: Array<Annotation>): ReactiveDi {
         return new ReactiveDi(
             null,

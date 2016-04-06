@@ -25,7 +25,7 @@ export default class DiContext {
     _helper: ResolveHelper;
 
     _resolverCache: Map<Dependency, Resolver>;
-    _cache: Map<Dependency, Provider>;
+    _providerCache: Map<Dependency, Provider>;
     _plugins: Map<string, Plugin>;
     _annotations: Map<Dependency, Annotation>;
     _parent: ?DiContext;
@@ -39,7 +39,7 @@ export default class DiContext {
         resolverCache?: Map<Dependency, Resolver>
     ) {
         this._resolverCache = resolverCache || new Map()
-        this._cache = new Map()
+        this._providerCache = new Map()
         this._parents = []
         this._plugins = plugins;
 
@@ -61,6 +61,22 @@ export default class DiContext {
         )
     }
 
+    resetCache(annotatedDep: Dependency): void {
+        const {_providerCache: providerCache, _resolverCache: resolverCache} = this
+        function childIterate(childDep: Provider): void {
+            const target: Dependency = childDep.annotation.target;
+            providerCache.clear(target)
+            resolverCache.clear(target)
+        }
+
+        const provider: ?Provider = providerCache.get(annotatedDep);
+        if (provider) {
+            providerCache.clear(annotatedDep)
+            resolverCache.clear(annotatedDep)
+            provider.getChilds().forEach(childIterate)
+        }
+    }
+
     replace(annotatedDep: Dependency, annotation?: Annotation): void {
         if (this._parent) {
             this._parent.replace(annotatedDep, annotation)
@@ -68,15 +84,7 @@ export default class DiContext {
         if (!this._annotations.has(annotatedDep)) {
             return
         }
-        const {_cache: cache} = this
-        const dep = cache.get(annotatedDep)
-        if (dep) {
-            cache.clear(annotatedDep)
-            dep.getChilds().forEach((childDep) => {
-                cache.clear(childDep.annotation.target)
-            })
-        }
-
+        this.resetCache(annotatedDep)
         if (annotation) {
             this._annotations.set(annotatedDep, annotation)
         }
@@ -91,7 +99,7 @@ export default class DiContext {
         }
         const parents = this._parents
         const provider: Provider = plugin.create(annotation, this);
-        this._cache.set(annotation.target, provider)
+        this._providerCache.set(annotation.target, provider)
 
         for (let i = 0, l = parents.length; i < l; i++) {
             const parent: ParentRec = parents[i];
@@ -119,9 +127,8 @@ export default class DiContext {
     }
 
     getProvider(annotatedDep: Dependency): Provider {
-        let dep: ?Provider;
         let annotation: ?Annotation;
-        dep = this._cache.get(annotatedDep)
+        const dep: ?Provider = this._providerCache.get(annotatedDep);
         if (dep) {
             return dep
         }
