@@ -11,15 +11,14 @@ import type {
     Provider,
     Plugin,
     ResolveDepsResult,
-    CreateResolverOptions
+    CreateResolverOptions,
+    ProviderInitializer
 } from 'reactive-di/i/nodeInterfaces'
 
 import ResolveHelper from 'reactive-di/core/ResolveHelper'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 import normalizeConfiguration from 'reactive-di/core/normalizeConfiguration'
 import driver from 'reactive-di/core/annotationDriver'
-
-type ParentRec = [Provider, Map<Provider, boolean>];
 
 export default class DiContext {
     _helper: ResolveHelper;
@@ -30,19 +29,19 @@ export default class DiContext {
     _annotations: Map<Dependency, Annotation>;
     _parent: ?DiContext;
 
-    _parents: Array<ParentRec>;
+    _initializer: ProviderInitializer;
 
     constructor(
         plugins: Map<string, Plugin>,
+        initializer: ProviderInitializer,
         parent?: DiContext,
         config?: Array<Annotation>,
         resolverCache?: Map<Dependency, Resolver>
     ) {
         this._resolverCache = resolverCache || new Map()
         this._providerCache = new Map()
-        this._parents = []
         this._plugins = plugins;
-
+        this._initializer = initializer
         this._parent = parent
         const rec = normalizeConfiguration(config || [])
         this._annotations = rec.annotations
@@ -56,6 +55,7 @@ export default class DiContext {
     create(config: Array<Annotation>): Context {
         return new DiContext(
             this._plugins,
+            this._initializer,
             this,
             config
         )
@@ -63,17 +63,14 @@ export default class DiContext {
 
     resetCache(annotatedDep: Dependency): void {
         const {_providerCache: providerCache, _resolverCache: resolverCache} = this
-        function childIterate(childDep: Provider): void {
-            const target: Dependency = childDep.annotation.target;
-            providerCache.clear(target)
-            resolverCache.clear(target)
-        }
-
         const provider: ?Provider = providerCache.get(annotatedDep);
         if (provider) {
-            providerCache.clear(annotatedDep)
-            resolverCache.clear(annotatedDep)
-            provider.getChilds().forEach(childIterate)
+            const parents = provider.getParents()
+            for (let i = 0, l = parents.length; i < l; i++) {
+                const target = parents[i].annotation.target
+                providerCache.clear(target)
+                resolverCache.clear(target)
+            }
         }
     }
 
@@ -97,53 +94,41 @@ export default class DiContext {
                 `Provider not found for annotation ${getFunctionName(annotation.target)}`
             )
         }
-        const parents = this._parents
+
         const provider: Provider = plugin.create(annotation, this);
         this._providerCache.set(annotation.target, provider)
 
-        for (let i = 0, l = parents.length; i < l; i++) {
-            const parent: ParentRec = parents[i];
-            if (provider.canAddToParent(parent[0])) {
-                parent[1].set(provider, true)
-            }
-        }
-
-        const rec: ParentRec = [
-            provider,
-            new Map()
-        ];
-
-        parents.push(rec)
+        this._initializer.begin(provider)
         provider.init(this)
-        parents.pop()
-
-        function iterateSet(val: boolean, childDep: Provider): void {
-            provider.addChild(childDep)
-        }
-
-        rec[1].forEach(iterateSet)
+        this._initializer.end(provider)
 
         return provider
     }
 
     getProvider(annotatedDep: Dependency): Provider {
         let annotation: ?Annotation;
-        const dep: ?Provider = this._providerCache.get(annotatedDep);
-        if (dep) {
-            return dep
+        let provider: ?Provider = this._providerCache.get(annotatedDep);
+        if (provider) {
+            this._initializer.inheritRelations(provider)
+            return provider
         }
 
         annotation = this._annotations.get(annotatedDep);
         if (annotation) {
-            return this._createProvider(annotation)
+            provider = this._createProvider(annotation)
+            return provider
         }
 
         if (this._parent) {
-            return this._parent.getProvider(annotatedDep)
+            provider = this._parent.getProvider(annotatedDep)
+            this._providerCache.get(annotatedDep, provider)
+            return provider
         }
+
         annotation = driver.get(annotatedDep)
         if (annotation) {
-            return this._createProvider(annotation)
+            provider = this._createProvider(annotation)
+            return provider
         }
 
         throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)

@@ -23,7 +23,9 @@ export type Provider<Ann: Annotation> = {
 
     getChilds(): Array<Provider>;
     addChild(child: Provider): void;
-    canAddToParent(parent: Provider): boolean;
+
+    getParents(): Array<Provider>;
+    addParent(parent: Provider): void;
 
     init(context: Context): void;
     createResolver(): Resolver;
@@ -56,4 +58,11 @@ export type Context = {
     getResolver(annotatedDep: Dependency): Resolver;
     create(config: Array<Annotation>): Context;
     createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
+}
+
+
+export type ProviderInitializer = {
+    begin(provider: Provider): void;
+    end(provider: Provider): void;
+    inheritRelations(provider: Provider): void;
 }

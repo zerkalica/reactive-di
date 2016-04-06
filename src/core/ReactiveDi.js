@@ -14,16 +14,23 @@ import type {
 import createPluginsMap from 'reactive-di/core/createPluginsMap'
 import DiContext from 'reactive-di/core/DiContext'
 
+import HotProviderInitializer from 'reactive-di/core/initializers/HotProviderInitializer'
+import NormalProviderInitializer from 'reactive-di/core/initializers/NormalProviderInitializer'
+
 export default class ReactiveDi {
     _context: Context;
 
     constructor(
         pluginsConfig: ?Array<Plugin>,
+        isHotReload?: boolean,
         context?: Context
     ) {
         if (pluginsConfig) {
             this._context = new DiContext(
-                createPluginsMap(pluginsConfig)
+                createPluginsMap(pluginsConfig),
+                isHotReload
+                    ? new HotProviderInitializer()
+                    : new NormalProviderInitializer()
             )
         } else {
             if (!context) {
@@ -39,6 +46,7 @@ export default class ReactiveDi {
 
     create(config: Array<Annotation>): ReactiveDi {
         return new ReactiveDi(
+            null,
             null,
             this._context.create(config)
         )

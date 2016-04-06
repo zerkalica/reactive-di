@@ -20,11 +20,13 @@ export default class BaseProvider<Ann: Annotation> {
     annotation: Ann;
 
     _childs: Array<Provider>;
+    _parents: Array<Provider>;
 
     constructor(annotation: Ann) {
         this.kind = annotation.kind
         this.annotation = annotation
-        this._childs = []
+        this._childs = [this]
+        this._parents = [this]
         // this.key = annotation.key || annotation.target
         const fnName: string = getFunctionName(annotation.target);
         this.displayName = this.kind + '@' + fnName
@@ -34,18 +36,22 @@ export default class BaseProvider<Ann: Annotation> {
         }
     }
 
+    init(context: Context): void {} // eslint-disable-line
+
     getChilds(): Array<Provider> {
         return this._childs
     }
 
-    canAddToParent(parent: Provider): boolean { // eslint-disable-line
-        return true
-    }
-
-    init(context: Context): void {} // eslint-disable-line
-
     addChild(child: Provider): void {
         this._childs.push(child)
+    }
+
+    getParents(): Array<Provider> {
+        return this._parents
+    }
+
+    addParent(parent: Provider): void {
+        this._parents.push(parent)
     }
 
     createResolver(): Resolver {
