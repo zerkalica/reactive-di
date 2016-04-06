@@ -6,25 +6,24 @@ import type {
 import type {FactoryAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Context,
+    Provider,
     Resolver,
-    ResolverCreator,
     ResolveDepsResult
 } from 'reactive-di/i/nodeInterfaces'
 
-import {createFunctionProxy} from 'reactive-di/utils/createProxy'
 import {fastCall} from 'reactive-di/utils/fastCall'
-import BaseResolverCreator from 'reactive-di/core/BaseResolverCreator'
+import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class FactoryResolver {
     displayName: string;
     _value: any;
 
     constructor(
-        creator: ResolverCreator,
+        displayName: string,
         resolver: () => ResolveDepsResult,
         target: DepFn
     ) {
-        this.displayName = creator.displayName
+        this.displayName = displayName
         this._value = function getValue(...args: Array<any>): any {
             const {deps, middlewares} = resolver()
             const props = deps.concat(args)
@@ -47,41 +46,37 @@ class FactoryResolver {
     }
 }
 
-class FactoryResolverCreator extends BaseResolverCreator {
+class FactoryProvider extends BaseProvider<FactoryAnnotation> {
     kind: 'factory';
     displayName: string;
     tags: Array<Tag>;
-    target: Dependency;
+    annotation: FactoryAnnotation;
 
     _resolver: () => ResolveDepsResult;
 
-    constructor(annotation: FactoryAnnotation) {
-        super(annotation)
+    init(acc: Context): void {
+        this._resolver = acc.createDepResolver(
+            this.annotation,
+            this.tags
+        )
     }
 
-    init(resolver: () => ResolveDepsResult): void {
-        this._resolver = resolver
+    canAddToParent(context: Provider): boolean { // eslint-disable-line
+        return false
     }
 
     createResolver(): Resolver {
         return new FactoryResolver(
-            this,
+            this.displayName,
             this._resolver,
-            this.target
+            this.annotation.target
         )
     }
 }
 
-// implements Plugin
-export default class FactoryPlugin {
-    kind: 'factory' = 'factory';
-
-    create(annotation: FactoryAnnotation, acc: Context): ResolverCreator { // eslint-disable-line
-        const dep = new FactoryResolverCreator(annotation);
-        return dep
-    }
-
-    finalize(dep: FactoryResolverCreator, annotation: FactoryAnnotation, acc: Context): void {
-        dep.init(acc.createDepResolver(annotation, dep.tags))
+export default {
+    kind: 'factory',
+    create(annotation: FactoryAnnotation): Provider<FactoryAnnotation> {
+        return new FactoryProvider(annotation)
     }
 }

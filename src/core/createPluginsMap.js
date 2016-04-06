@@ -1,12 +1,14 @@
 /* @flow */
 
 import type {Plugin} from 'reactive-di/i/nodeInterfaces'
-import type {SimpleMap} from 'reactive-di/i/annotationInterfaces'
 
-export default function createPluginsMap(plugins: Array<Plugin>): SimpleMap<string, Plugin> {
-    const pluginMap: SimpleMap<string, Plugin> = {};
+export default function createProvidersMap(
+    plugins: Array<Plugin>
+): Map<string, Plugin> {
+    const pluginMap: Map<string, Plugin> = new Map();
     for (let i = 0, l = plugins.length; i < l; i++) {
-        pluginMap[plugins[i].kind] = plugins[i]
+        const plugin: Plugin = plugins[i];
+        pluginMap.set(plugin.kind, plugin)
     }
     return pluginMap
 }

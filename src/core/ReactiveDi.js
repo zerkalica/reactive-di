@@ -1,6 +1,5 @@
 /* @flow */
 import type {
-    SimpleMap,
     Dependency,
     Annotation
 } from 'reactive-di/i/annotationInterfaces'
@@ -22,11 +21,16 @@ export default class ReactiveDi {
         pluginsConfig: ?Array<Plugin>,
         context?: Context
     ) {
-        let plugins: SimpleMap<string, Plugin> = {};
         if (pluginsConfig) {
-            plugins = createPluginsMap(pluginsConfig)
+            this._context = new DiContext(
+                createPluginsMap(pluginsConfig)
+            )
+        } else {
+            if (!context) {
+                throw new Error('Context not passed to constructor of ReactiveDi')
+            }
+            this._context = context
         }
-        this._context = context || new DiContext(plugins)
     }
 
     create(config: Array<Annotation>): ReactiveDi {

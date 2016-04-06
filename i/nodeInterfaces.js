@@ -2,8 +2,8 @@
 
 import type {
     DepItem,
-    SimpleMap,
     Annotation,
+    ArgsObject,
     Dependency,
     Tag
 } from 'reactive-di/i/annotationInterfaces'
@@ -15,14 +15,23 @@ export type EntityMeta<E> = {
     reason: ?E;
 }
 
-export type ResolverCreator = {
+export type Provider<Ann: Annotation> = {
     kind: any;
     displayName: string;
     tags: Array<Tag>;
-    target: Dependency;
-    childs: Set<ResolverCreator>;
+    annotation: Ann;
 
+    getChilds(): Array<Provider>;
+    addChild(child: Provider): void;
+    canAddToParent(parent: Provider): boolean;
+
+    init(context: Context): void;
     createResolver(): Resolver;
+}
+
+export type Plugin<Ann: Annotation, P: Provider> = {
+    kind: any;
+    create(annotation: Ann, acc: Context): P;
 }
 
 export type Resolver = {
@@ -32,7 +41,7 @@ export type Resolver = {
 }
 
 export type ResolveDepsResult<A> = {
-    deps: Array<any|SimpleMap<string, any>>,
+    deps: Array<any|ArgsObject<string, any>>,
     middlewares: ?Array<A>
 }
 
@@ -42,16 +51,8 @@ export type CreateResolverOptions = {
 }
 
 export type Context = {
-    parents: Array<ResolverCreator>;
-    addRelation(dep: ResolverCreator): void;
-    getResolverCreator(annotatedDep: Dependency): ResolverCreator;
+    getProvider(annotatedDep: Dependency): Provider;
     getResolver(annotatedDep: Dependency): Resolver;
     create(config: Array<Annotation>): Context;
     createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
-}
-
-export type Plugin<Ann: Annotation, Dep: ResolverCreator> = {
-    kind: any;
-    create(annotation: Ann, acc: Context): Dep;
-    finalize(dep: Dep, annotation: Ann, acc: Context): void;
 }

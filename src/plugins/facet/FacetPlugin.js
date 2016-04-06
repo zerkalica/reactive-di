@@ -6,14 +6,14 @@ import type {
 import type {FacetAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Context,
-    ResolverCreator,
+    Provider,
     Resolver,
     ResolveDepsResult
 } from 'reactive-di/i/nodeInterfaces'
 
 import {createFunctionProxy} from 'reactive-di/utils/createProxy'
 import {fastCall} from 'reactive-di/utils/fastCall'
-import BaseResolverCreator from 'reactive-di/core/BaseResolverCreator'
+import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class FacetResolver {
     displayName: string;
@@ -24,11 +24,11 @@ class FacetResolver {
     _value: any;
 
     constructor(
-        creator: ResolverCreator,
+        displayName: string,
         resolver: () => ResolveDepsResult,
         target: DepFn
     ) {
-        this.displayName = creator.displayName
+        this.displayName = displayName
         this._isCached = false
         this._resolver = resolver
         this._target = target
@@ -43,7 +43,7 @@ class FacetResolver {
             return this._value
         }
         const {deps, middlewares} = this._resolver()
-        let fn: V;
+        let fn: any;
         fn = fastCall(this._target, deps);
         if (middlewares) {
             if (typeof fn !== 'function') {
@@ -58,43 +58,33 @@ class FacetResolver {
     }
 }
 
-export class FacetResolverCreator extends BaseResolverCreator {
+class FacetProvider extends BaseProvider {
     kind: 'facet';
     displayName: string;
     tags: Array<Tag>;
+    annotation: FacetAnnotation;
 
-    _target: DepFn;
     _resolver: () => ResolveDepsResult;
 
-    constructor(annotation: FacetAnnotation) {
-        super(annotation)
-        this._target = annotation.target
-    }
-
-    init(resolver: () => ResolveDepsResult): void {
-        this._resolver = resolver
+    init(acc: Context): void {
+        this._resolver = acc.createDepResolver(
+            this.annotation,
+            this.tags
+        )
     }
 
     createResolver(): Resolver {
         return new FacetResolver(
-            this,
+            this.displayName,
             this._resolver,
-            this._target
+            this.annotation.target
         )
     }
 }
 
-// implements Plugin
-export default class FacetPlugin {
-    kind: 'facet' = 'facet';
-
-    create(annotation: FacetAnnotation, acc: Context): ResolverCreator { // eslint-disable-line
-        const dep = new FacetResolverCreator(annotation)
-        acc.addRelation(dep)
-        return dep;
-    }
-
-    finalize(dep: FacetResolverCreator, annotation: FacetAnnotation, acc: Context): void {
-        dep.init(acc.createDepResolver(annotation, dep.tags))
+export default {
+    kind: 'facet',
+    create(annotation: FacetAnnotation): Provider<FacetAnnotation> {
+        return new FacetProvider(annotation)
     }
 }

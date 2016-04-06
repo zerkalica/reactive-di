@@ -1,7 +1,6 @@
 /* @flow */
 import type {
     Tag,
-    SimpleMap,
     Dependency,
     Annotation
 } from 'reactive-di/i/annotationInterfaces'
@@ -9,8 +8,8 @@ import type {
 import type {
     Resolver,
     Context,
+    Provider,
     Plugin,
-    ResolverCreator,
     ResolveDepsResult,
     CreateResolverOptions
 } from 'reactive-di/i/nodeInterfaces'
@@ -20,26 +19,28 @@ import getFunctionName from 'reactive-di/utils/getFunctionName'
 import normalizeConfiguration from 'reactive-di/core/normalizeConfiguration'
 import driver from 'reactive-di/core/annotationDriver'
 
+type ParentRec = [Provider, Map<Provider, boolean>];
+
 export default class DiContext {
     _helper: ResolveHelper;
 
     _resolverCache: Map<Dependency, Resolver>;
-    _cache: Map<Dependency, ResolverCreator>;
-    _plugins: SimpleMap<string, Plugin>;
+    _cache: Map<Dependency, Provider>;
+    _plugins: Map<string, Plugin>;
     _annotations: Map<Dependency, Annotation>;
     _parent: ?DiContext;
 
-    parents: Array<ResolverCreator>;
+    _parents: Array<ParentRec>;
 
     constructor(
-        plugins: SimpleMap<string, Plugin>,
+        plugins: Map<string, Plugin>,
         parent?: DiContext,
         config?: Array<Annotation>,
         resolverCache?: Map<Dependency, Resolver>
     ) {
         this._resolverCache = resolverCache || new Map()
         this._cache = new Map()
-        this.parents = []
+        this._parents = []
         this._plugins = plugins;
 
         this._parent = parent
@@ -71,8 +72,8 @@ export default class DiContext {
         const dep = cache.get(annotatedDep)
         if (dep) {
             cache.clear(annotatedDep)
-            dep.childs.forEach((childDep) => {
-                cache.clear(childDep.target)
+            dep.getChilds().forEach((childDep) => {
+                cache.clear(childDep.annotation.target)
             })
         }
 
@@ -81,33 +82,44 @@ export default class DiContext {
         }
     }
 
-    addRelation(dep: ResolverCreator): void {
-        const parents = this.parents
-        for (let i = 0, l = parents.length; i < l; i++) {
-            parents[i].childs.add(dep)
-        }
-    }
-
-    _invokePlugin(annotation: Annotation): ResolverCreator {
-        let dep: ?ResolverCreator;
-        const plugin: ?Plugin = this._plugins[annotation.kind];
+    _createProvider(annotation: Annotation): Provider {
+        const plugin: ?Plugin = this._plugins.get(annotation.kind);
         if (!plugin) {
             throw new Error(
-                `Plugin not found for annotation ${getFunctionName(annotation.target)}`
+                `Provider not found for annotation ${getFunctionName(annotation.target)}`
             )
         }
-        const parents = this.parents
-        dep = plugin.create(annotation, this)
-        this._cache.set(annotation.target, dep)
-        parents.push(dep)
-        plugin.finalize(dep, annotation, this)
+        const parents = this._parents
+        const provider: Provider = plugin.create(annotation, this);
+        this._cache.set(annotation.target, provider)
+
+        for (let i = 0, l = parents.length; i < l; i++) {
+            const parent: ParentRec = parents[i];
+            if (provider.canAddToParent(parent[0])) {
+                parent[1].set(provider, true)
+            }
+        }
+
+        const rec: ParentRec = [
+            provider,
+            new Map()
+        ];
+
+        parents.push(rec)
+        provider.init(this)
         parents.pop()
 
-        return dep
+        function iterateSet(val: boolean, childDep: Provider): void {
+            provider.addChild(childDep)
+        }
+
+        rec[1].forEach(iterateSet)
+
+        return provider
     }
 
-    getResolverCreator(annotatedDep: Dependency): ResolverCreator {
-        let dep: ?ResolverCreator;
+    getProvider(annotatedDep: Dependency): Provider {
+        let dep: ?Provider;
         let annotation: ?Annotation;
         dep = this._cache.get(annotatedDep)
         if (dep) {
@@ -116,15 +128,15 @@ export default class DiContext {
 
         annotation = this._annotations.get(annotatedDep);
         if (annotation) {
-            return this._invokePlugin(annotation)
+            return this._createProvider(annotation)
         }
 
         if (this._parent) {
-            return this._parent.getResolverCreator(annotatedDep)
+            return this._parent.getProvider(annotatedDep)
         }
         annotation = driver.get(annotatedDep)
         if (annotation) {
-            return this._invokePlugin(annotation)
+            return this._createProvider(annotation)
         }
 
         throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)
@@ -134,7 +146,7 @@ export default class DiContext {
         let resolver: ?Resolver;
         resolver = this._resolverCache.get(annotatedDep);
         if (!resolver) {
-            resolver = this.getResolverCreator(annotatedDep).createResolver()
+            resolver = this.getProvider(annotatedDep).createResolver()
             this._resolverCache.set(annotatedDep, resolver)
         }
 

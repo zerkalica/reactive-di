@@ -10,18 +10,11 @@ import {
 } from 'reactive-di/index'
 
 import {
-    alias,
     factory,
     facet,
     klass,
-    value,
-    middleware
+    value
 } from 'reactive-di/providers'
-
-import {
-    klass as klassAnn
-} from 'reactive-di/annotations'
-
 
 describe('ReactiveDiFacetTest', () => {
     let di: ReactiveDi;

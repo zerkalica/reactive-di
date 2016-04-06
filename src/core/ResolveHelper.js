@@ -1,8 +1,8 @@
 /* @flow */
 import type {
+    ArgsObject,
     Dependency,
     Tag,
-    SimpleMap,
     DepItem
 } from 'reactive-di/i/annotationInterfaces'
 
@@ -56,8 +56,7 @@ export default class ResolveHelper {
                 && deps.length === 1
             ) {
                 depNames = []
-                const argsObject: SimpleMap<string, Dependency> =
-                    ((deps[0]: any): SimpleMap<string, Dependency>);
+                const argsObject: ArgsObject = (deps[0]: any);
                 for (let key in argsObject) { // eslint-disable-line
                     resolvedDeps.push(context.getResolver(argsObject[key]))
                     depNames.push(key)
@@ -75,5 +74,4 @@ export default class ResolveHelper {
             depNames
         }
     }
-
 }

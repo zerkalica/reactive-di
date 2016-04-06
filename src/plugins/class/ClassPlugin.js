@@ -1,19 +1,18 @@
 /* @flow */
 import type {
-    Tag,
-    DepFn
+    Tag
 } from 'reactive-di/i/annotationInterfaces'
 import type {ClassAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
+    Provider,
     Resolver,
     Context,
-    ResolverCreator,
     ResolveDepsResult
 } from 'reactive-di/i/nodeInterfaces'
 
 import {createObjectProxy} from 'reactive-di/utils/createProxy'
 import {fastCreateObject} from 'reactive-di/utils/fastCall'
-import BaseResolverCreator from 'reactive-di/core/BaseResolverCreator'
+import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class ClassResolver<V: Object> {
     displayName: string;
@@ -24,11 +23,11 @@ class ClassResolver<V: Object> {
     _value: any;
 
     constructor(
-        creator: ResolverCreator,
+        displayName: string,
         resolver: () => ResolveDepsResult,
         target: Class<V>
     ) {
-        this.displayName = creator.displayName
+        this.displayName = displayName
         this._isCached = false
         this._resolver = resolver
         this._target = target
@@ -58,43 +57,33 @@ class ClassResolver<V: Object> {
     }
 }
 
-export class ClassResolverCreator<V: Object> extends BaseResolverCreator {
+class ClassProvider extends BaseProvider<ClassAnnotation> {
     kind: 'klass';
     displayName: string;
     tags: Array<Tag>;
+    annotation: ClassAnnotation;
 
-    _target: DepFn<V>;
     _resolver: () => ResolveDepsResult;
 
-    constructor(annotation: ClassAnnotation) {
-        super(annotation)
-        this._target = annotation.target
-    }
-
-    init(resolver: () => ResolveDepsResult): void {
-        this._resolver = resolver
+    init(acc: Context): void {
+        this._resolver = acc.createDepResolver(
+            this.annotation,
+            this.tags
+        )
     }
 
     createResolver(): Resolver {
         return new ClassResolver(
-            this,
+            this.displayName,
             this._resolver,
-            this._target
+            this.annotation.target
         )
     }
 }
 
-// implements Plugin
-export default class ClassPlugin {
-    kind: 'klass' = 'klass';
-
-    create(annotation: ClassAnnotation, acc: Context): ResolverCreator { // eslint-disable-line
-        const dep = new ClassResolverCreator(annotation)
-        acc.addRelation(dep)
-        return dep;
-    }
-
-    finalize(dep: ClassResolverCreator, annotation: ClassAnnotation, acc: Context): void {
-        dep.init(acc.createDepResolver(annotation, dep.tags))
+export default {
+    kind: 'klass',
+    create(annotation: ClassAnnotation): Provider<ClassAnnotation> {
+        return new ClassProvider(annotation)
     }
 }

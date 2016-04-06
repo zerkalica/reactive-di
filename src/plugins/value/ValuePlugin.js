@@ -4,22 +4,21 @@ import type {
 } from 'reactive-di/i/annotationInterfaces'
 import type {ValueAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
-    Context,
     Resolver,
-    ResolverCreator
+    Provider
 } from 'reactive-di/i/nodeInterfaces'
 
-import BaseResolverCreator from 'reactive-di/core/BaseResolverCreator'
+import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class ValueResolver {
     displayName: string;
     _value: any;
 
     constructor(
-        creator: ResolverCreator,
+        displayName: string,
         value: any
     ) {
-        this.displayName = creator.displayName
+        this.displayName = displayName
         this._value = value
     }
 
@@ -31,36 +30,23 @@ class ValueResolver {
     }
 }
 
-export class ValueResolverCreator<V: any> extends BaseResolverCreator {
+export class ValueProvider extends BaseProvider<ValueAnnotation> {
     kind: 'value';
     displayName: string;
     tags: Array<Tag>;
-
-    _value: V;
-
-    constructor(annotation: ValueAnnotation) {
-        super(annotation)
-        this._value = annotation.value
-    }
+    annotation: ValueAnnotation;
 
     createResolver(): Resolver {
         return new ValueResolver(
-            this,
-            this._value
+            this.displayName,
+            this.annotation.value
         )
     }
 }
 
-// implements Plugin
-export default class ValuePlugin {
-    kind: 'value' = 'value';
-
-    create(annotation: ValueAnnotation, acc: Context): ResolverCreator { // eslint-disable-line
-        const dep = new ValueResolverCreator(annotation)
-        acc.addRelation(dep)
-        return dep
-    }
-
-    finalize(dep: ValueResolverCreator, annotation: ValueAnnotation, acc: Context): void { // eslint-disable-line
+export default {
+    kind: 'value',
+    create(annotation: ValueAnnotation): Provider<ValueAnnotation> {
+        return new ValueProvider(annotation)
     }
 }
