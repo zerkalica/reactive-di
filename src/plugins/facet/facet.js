@@ -2,7 +2,7 @@
 
 import type {DepItem} from 'reactive-di/i/annotationInterfaces'
 import type {FacetAnnotation} from 'reactive-di/i/pluginsInterfaces'
-import annotationSingleton from 'reactive-di/core/annotationSingleton'
+import driver from 'reactive-di/core/annotationDriver'
 
 export function facet(
     target: Function,
@@ -19,7 +19,7 @@ export function facetAnn<V: Function>(
     ...deps: Array<DepItem>
 ): (target: V) => V {
     return function __facet(target: V): V {
-        annotationSingleton.push(facet(target, ...deps))
+        driver.set(target, facet(target, ...deps))
         return target
     }
 }

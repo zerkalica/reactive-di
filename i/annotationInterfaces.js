@@ -9,6 +9,8 @@ export type DepItem = Dependency|SimpleMap<string, Dependency>;
 
 export type Annotation = {
     kind: any;
+    // key?: any;
+    // tags?: Array<Tag>;
     target: Dependency;
 };
 

@@ -1,7 +1,7 @@
 /* @flow */
 
 import type {AliasAnnotation} from 'reactive-di/i/pluginsInterfaces'
-import annotationSingleton from 'reactive-di/core/annotationSingleton'
+import driver from 'reactive-di/core/annotationDriver'
 
 export function alias(target: Function, aliasTarget: Function): AliasAnnotation {
     return {
@@ -11,7 +11,11 @@ export function alias(target: Function, aliasTarget: Function): AliasAnnotation 
     }
 }
 
-export function aliasAnn<V: Function>(target: V, aliasTarget: Function): V {
-    annotationSingleton.push(alias(target, aliasTarget))
-    return target
+export function aliasAnn(
+    aliasTarget: Function
+): (target: Function) => Function {
+    return function _alias(target: Function): Function {
+        driver.set(target, alias(target, aliasTarget))
+        return target
+    }
 }

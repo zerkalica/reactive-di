@@ -1,7 +1,7 @@
 /* @flow */
 
 import type {ValueAnnotation} from 'reactive-di/i/pluginsInterfaces'
-import annotationSingleton from 'reactive-di/core/annotationSingleton'
+import driver from 'reactive-di/core/annotationDriver'
 
 export function value(target: Function, val: any): ValueAnnotation {
     return {
@@ -11,7 +11,11 @@ export function value(target: Function, val: any): ValueAnnotation {
     }
 }
 
-export function valueAnn<V: Function>(target: V): V {
-    annotationSingleton.push(value(target))
-    return target
+export function valueAnn(
+    val: any
+): (target: Function) => Function {
+    return function _value(target: Function): Function {
+        driver.set(target, val)
+        return target
+    }
 }

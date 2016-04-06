@@ -18,7 +18,7 @@ import type {
 import ResolveHelper from 'reactive-di/core/ResolveHelper'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 import normalizeConfiguration from 'reactive-di/core/normalizeConfiguration'
-import annotationSingleton from 'reactive-di/core/annotationSingleton'
+import driver from 'reactive-di/core/annotationDriver'
 
 export default class DiContext {
     _helper: ResolveHelper;
@@ -43,7 +43,7 @@ export default class DiContext {
         this._plugins = plugins;
 
         this._parent = parent
-        const rec = normalizeConfiguration(config || annotationSingleton)
+        const rec = normalizeConfiguration(config || [])
         this._annotations = rec.annotations
 
         this._helper = new ResolveHelper(
@@ -115,13 +115,16 @@ export default class DiContext {
         }
 
         annotation = this._annotations.get(annotatedDep);
-
         if (annotation) {
             return this._invokePlugin(annotation)
         }
 
         if (this._parent) {
             return this._parent.getResolverCreator(annotatedDep)
+        }
+        annotation = driver.get(annotatedDep)
+        if (annotation) {
+            return this._invokePlugin(annotation)
         }
 
         throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)

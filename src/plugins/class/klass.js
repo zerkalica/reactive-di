@@ -2,7 +2,7 @@
 
 import type {DepItem} from 'reactive-di/i/annotationInterfaces'
 import type {ClassAnnotation} from 'reactive-di/i/pluginsInterfaces'
-import annotationSingleton from 'reactive-di/core/annotationSingleton'
+import driver from 'reactive-di/core/annotationDriver'
 
 export function klass(
     target: Function,
@@ -19,7 +19,7 @@ export function klassAnn<V: Function>(
     ...deps: Array<DepItem>
 ): (target: V) => V {
     return function __klass(target: V): V {
-        annotationSingleton.push(klass(target, ...deps))
+        driver.set(target, klass(target, ...deps))
         return target
     }
 }
