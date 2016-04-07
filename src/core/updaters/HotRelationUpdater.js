@@ -2,7 +2,7 @@
 import type {
     Provider
 } from 'reactive-di/i/nodeInterfaces'
-import SafeMap from 'reactive-di/utils/SafeMap'
+import SimpleMap from 'reactive-di/utils/SimpleMap'
 
 export default class HotRelationUpdater {
     _parents: Array<Map<Provider, Provider>>;
@@ -16,7 +16,7 @@ export default class HotRelationUpdater {
         for (let i = 0, l = parents.length; i < l; i++) {
             parents[i].set(provider, provider)
         }
-        parents.push(new SafeMap())
+        parents.push(new SimpleMap())
     }
 
     end(provider: Provider): void {

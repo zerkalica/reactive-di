@@ -1,29 +1,29 @@
 /* @flow */
 import createIdCreator from 'reactive-di/utils/createIdCreator'
+import setProp from 'reactive-di/utils/setProp'
 
-let SafeMap: Class<Map>;
+let SimpleMap: Class<Map>;
 if (typeof Map !== 'undefined') {
-    SafeMap = Map
+    SimpleMap = Map
 } {
+    const createId: () => string = createIdCreator();
     class EmulatedMap<K, V> {
         _map: {[id: string]: V};
-        _keys: {[id: string]: K};
-        _createId: () => string;
 
-        constructor(data: Array<[K, V]> = []) {
+        constructor(data?: Array<[K, V]>) {
             this._map = {}
-            this._keys = {}
-            this._createId = createIdCreator()
-            for (let i = 0, l = data.length; i < l; i++) {
-                const val = data[i]
-                this.set(val[0], val[1])
+            if (data) {
+                for (let i = 0, l = data.length; i < l; i++) {
+                    const val = data[i]
+                    this.set(val[0], val[1])
+                }
             }
         }
 
         forEach(fn: (value: V, index: K) => mixed): void {
-            const {_map: map, _keys: keys} = this
+            const {_map: map} = this
             for (let key in map) { // eslint-disable-line
-                fn(map[key], keys[key])
+                fn(map[key], (key: any))
             }
         }
 
@@ -33,10 +33,18 @@ if (typeof Map !== 'undefined') {
             }
 
             if (!key.__rdi_token) {
-                (key: any).__rdi_token = this._createId() // eslint-disable-line
+                setProp((key: any), '__rdi_token', createId())
             }
 
             return ((key: any).__rdi_token: string)
+        }
+
+        clear(): void {
+            this._map = {}
+        }
+
+        delete(key: K): void {
+            delete this._map[this._getKey(key)]
         }
 
         has(key: K): boolean {
@@ -53,7 +61,7 @@ if (typeof Map !== 'undefined') {
         }
     }
 
-    SafeMap = (EmulatedMap: any)
+    SimpleMap = (EmulatedMap: any)
 }
 
-export default SafeMap
+export default SimpleMap

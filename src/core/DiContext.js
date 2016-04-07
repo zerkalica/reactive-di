@@ -17,7 +17,7 @@ import ResolveHelper from 'reactive-di/core/ResolveHelper'
 import createDepResolverCreator from 'reactive-di/core/createDepResolverCreator'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 import driver from 'reactive-di/core/annotationDriver'
-import SafeMap from 'reactive-di/utils/SafeMap'
+import SimpleMap from 'reactive-di/utils/SimpleMap'
 
 export default class DiContext {
     _cache: Map<Dependency, Provider>;
@@ -36,7 +36,7 @@ export default class DiContext {
         middlewares: Map<Dependency|Tag, Array<Dependency>>,
         parent: ?DiContext = null
     ) {
-        this._cache = new SafeMap()
+        this._cache = new SimpleMap()
         this._plugins = plugins
         this._updater = updater
         this._parent = parent || null
@@ -56,7 +56,7 @@ export default class DiContext {
         if (provider) {
             const parents = provider.getParents()
             for (let i = 0, l = parents.length; i < l; i++) {
-                rc.clear(parents[i].annotation.target)
+                rc.delete(parents[i].annotation.target)
             }
         } else if (this._parent && !this._annotations.has(annotatedDep)) {
             this._parent.replace(annotatedDep)
