@@ -66,24 +66,29 @@ export default class DiContext {
     }
 
     _createProvider(annotatedDep: Dependency): ?Provider {
-        let provider: ?Provider = null;
         let annotation: ?Annotation = this._annotations.get(annotatedDep);
-        if (!this._parent && !annotation) {
-            annotation = driver.get(annotatedDep)
-        }
-        if (annotation) {
-            const plugin: ?Plugin = this._plugins.get(annotation.kind);
-            if (!plugin) {
-                throw new Error(
-                    `Provider not found for annotation ${getFunctionName(annotation.target)}`
-                )
+        if (!annotation) {
+            if (!this._parent) {
+                annotation = driver.get(annotatedDep)
+                if (!annotation) {
+                    return null
+                }
+            } else {
+                return null
             }
-
-            provider = plugin.create(annotation)
-            this._updater.begin(provider)
-            provider.init(this)
-            this._updater.end(provider)
         }
+
+        const plugin: ?Plugin = this._plugins.get(annotation.kind);
+        if (!plugin) {
+            throw new Error(
+                `Provider not found for annotation ${getFunctionName(annotation.target)}`
+            )
+        }
+
+        const provider: Provider = plugin.create(annotation);
+        this._updater.begin(provider)
+        provider.init(this)
+        this._updater.end(provider)
 
         return provider
     }
