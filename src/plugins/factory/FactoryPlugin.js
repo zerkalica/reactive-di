@@ -1,13 +1,11 @@
 /* @flow */
 import type {
-    Tag,
-    DepFn
+    Tag
 } from 'reactive-di/i/annotationInterfaces'
 import type {FactoryAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Context,
-    Provider,
-    ResolveDepsResult
+    Provider
 } from 'reactive-di/i/nodeInterfaces'
 
 import {fastCall} from 'reactive-di/utils/fastCall'

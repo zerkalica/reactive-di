@@ -65,40 +65,33 @@ export default class DiContext {
         }
     }
 
-    _createProvider(annotation: Annotation): Provider {
-        const plugin: ?Plugin = this._plugins.get(annotation.kind);
-        if (!plugin) {
-            throw new Error(
-                `Provider not found for annotation ${getFunctionName(annotation.target)}`
-            )
+    _createProvider(annotatedDep: Dependency): ?Provider {
+        let provider: ?Provider = null;
+        let annotation: ?Annotation = this._annotations.get(annotatedDep);
+        if (!this._parent && !annotation) {
+            annotation = driver.get(annotatedDep)
         }
+        if (annotation) {
+            const plugin: ?Plugin = this._plugins.get(annotation.kind);
+            if (!plugin) {
+                throw new Error(
+                    `Provider not found for annotation ${getFunctionName(annotation.target)}`
+                )
+            }
 
-        const provider: Provider = plugin.create(annotation);
-        this._updater.begin(provider)
-        provider.init(this)
-        this._updater.end(provider)
+            provider = plugin.create(annotation)
+            this._updater.begin(provider)
+            provider.init(this)
+            this._updater.end(provider)
+        }
 
         return provider
-    }
-
-    _createCacheRec(annotatedDep: Dependency): ?Provider {
-        let annotation: ?Annotation = this._annotations.get(annotatedDep);
-        if (annotation) {
-            return this._createProvider(annotation)
-        }
-
-        if (!this._parent) {
-            annotation = driver.get(annotatedDep)
-            if (annotation) {
-                return this._createProvider(annotation)
-            }
-        }
     }
 
     getProvider(annotatedDep: Dependency): Provider {
         let provider: ?Provider = this._cache.get(annotatedDep);
         if (!provider) {
-            provider = this._createCacheRec(annotatedDep);
+            provider = this._createProvider(annotatedDep);
             if (!provider) {
                 if (!this._parent) {
                     throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)
