@@ -59,12 +59,9 @@ export type ResolverCacheRec = {
 
 export type Context = {
     replace(annotatedDep: Dependency, annotation?: Annotation): void;
-    getCached(annotatedDep: Dependency): ResolverCacheRec;
     getResolver(annotatedDep: Dependency): Resolver;
-    create(config: Array<Annotation>): Context;
     createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
 }
-
 
 export type RelationUpdater = {
     begin(provider: Provider): void;

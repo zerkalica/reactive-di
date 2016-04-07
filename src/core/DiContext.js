@@ -7,7 +7,6 @@ import type {
 
 import type {
     Resolver,
-    Context,
     Provider,
     ResolverCacheRec,
     Plugin,
@@ -19,7 +18,6 @@ import type {
 import ResolveHelper from 'reactive-di/core/ResolveHelper'
 import createDepResolverCreator from 'reactive-di/core/createDepResolverCreator'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
-import normalizeConfiguration from 'reactive-di/core/normalizeConfiguration'
 import driver from 'reactive-di/core/annotationDriver'
 
 export default class DiContext {
@@ -28,42 +26,32 @@ export default class DiContext {
     _annotations: Map<Dependency, Annotation>;
     _parent: ?DiContext;
 
-    _initializer: RelationUpdater;
+    _updater: RelationUpdater;
 
     createDepResolver: (rec: CreateResolverOptions, tags: Array<Tag>) => () => ResolveDepsResult;
 
     constructor(
         plugins: Map<string, Plugin>,
-        initializer: RelationUpdater,
-        parent?: DiContext,
-        config?: Array<Annotation>,
-        resolverCache?: Map<Dependency, ResolverCacheRec>
+        updater: RelationUpdater,
+        annotations: Map<Dependency, Annotation>,
+        middlewares: Map<Dependency|Tag, Array<Dependency>>,
+        parent: ?DiContext = null
     ) {
-        this._resolverCache = resolverCache || new Map()
-        this._plugins = plugins;
-        this._initializer = initializer
-        this._parent = parent
-        const rec = normalizeConfiguration(config || [])
-        this._annotations = rec.annotations
+        this._resolverCache = new Map()
+        this._plugins = plugins
+        this._updater = updater
+        this._parent = parent || null
+        this._annotations = annotations
 
         const helper = new ResolveHelper(
-            rec.middlewares,
+            middlewares,
             this
         )
 
         this.createDepResolver = createDepResolverCreator(helper)
     }
 
-    create(config: Array<Annotation>): Context {
-        return new DiContext(
-            this._plugins,
-            this._initializer,
-            this,
-            config
-        )
-    }
-
-    resetCache(annotatedDep: Dependency): void {
+    replace(annotatedDep: Dependency, annotation?: Annotation): void {
         const rc = this._resolverCache
         const cr: ?ResolverCacheRec = rc.get(annotatedDep);
         if (cr) {
@@ -71,17 +59,9 @@ export default class DiContext {
             for (let i = 0, l = parents.length; i < l; i++) {
                 rc.clear(parents[i].annotation.target)
             }
+        } else if (this._parent && !this._annotations.has(annotatedDep)) {
+            this._parent.replace(annotatedDep)
         }
-    }
-
-    replace(annotatedDep: Dependency, annotation?: Annotation): void {
-        if (this._parent) {
-            this._parent.replace(annotatedDep, annotation)
-        }
-        if (!this._annotations.has(annotatedDep)) {
-            return
-        }
-        this.resetCache(annotatedDep)
         if (annotation) {
             this._annotations.set(annotatedDep, annotation)
         }
@@ -96,31 +76,28 @@ export default class DiContext {
         }
 
         const provider: Provider = plugin.create(annotation);
-        this._initializer.begin(provider)
+        this._updater.begin(provider)
         provider.init(this)
-        this._initializer.end(provider)
+        this._updater.end(provider)
 
         return provider
     }
 
     _createCacheRec(annotatedDep: Dependency): ?Provider {
-        let provider: ?Provider;
         let annotation: ?Annotation = this._annotations.get(annotatedDep);
         if (annotation) {
-            provider = this._createProvider(annotation)
+            return this._createProvider(annotation)
         }
 
-        if (!provider && !this._parent) {
+        if (!this._parent) {
             annotation = driver.get(annotatedDep)
             if (annotation) {
-                provider = this._createProvider(annotation)
+                return this._createProvider(annotation)
             }
         }
-
-        return provider
     }
 
-    getCached(annotatedDep: Dependency): ResolverCacheRec {
+    _getCached(annotatedDep: Dependency): ResolverCacheRec {
         let cr: ?ResolverCacheRec = this._resolverCache.get(annotatedDep);
         if (!cr) {
             const provider: ?Provider = this._createCacheRec(annotatedDep);
@@ -128,7 +105,7 @@ export default class DiContext {
                 if (!this._parent) {
                     throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)
                 }
-                cr = this._parent.getCached(annotatedDep)
+                cr = this._parent._getCached(annotatedDep)
             } else {
                 cr = {
                     provider,
@@ -136,12 +113,14 @@ export default class DiContext {
                 }
             }
             this._resolverCache.set(annotatedDep, cr)
+        } else {
+            this._updater.inheritRelations(cr.provider)
         }
 
         return cr
     }
 
     getResolver(annotatedDep: Dependency): Resolver {
-        return this.getCached(annotatedDep).resolver
+        return this._getCached(annotatedDep).resolver
     }
 }

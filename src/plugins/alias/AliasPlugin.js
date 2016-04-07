@@ -5,7 +5,6 @@ import type {
 import type {AliasAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Context,
-    ResolverCacheRec,
     Provider,
     Resolver
 } from 'reactive-di/i/nodeInterfaces'
@@ -18,14 +17,14 @@ class AliasProvider extends BaseProvider<AliasAnnotation> {
     tags: Array<Tag>;
     annotation: AliasAnnotation;
 
-    _realProvider: ResolverCacheRec;
+    _realResolver: Resolver;
 
     init(context: Context): void {
-        this._realProvider = context.getCached(this.annotation.alias)
+        this._realResolver = context.getResolver(this.annotation.alias)
     }
 
     createResolver(): Resolver {
-        return this._realProvider.resolver
+        return this._realResolver
     }
 }
 
