@@ -6,6 +6,7 @@ import type {
 } from 'reactive-di/i/annotationInterfaces'
 import type {MiddlewareAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
+import SafeMap from 'reactive-di/utils/SafeMap'
 
 export default function normalizeConfiguration(
     config: Array<Annotation>
@@ -13,8 +14,8 @@ export default function normalizeConfiguration(
     annotations: Map<Dependency, Annotation>;
     middlewares: Map<Tag|Dependency, Array<Dependency>>;
 } {
-    const annotations: Map<Dependency, Annotation> = new Map();
-    const middlewares: Map<Tag|Dependency, Array<Dependency>> = new Map();
+    const annotations: Map<Dependency, Annotation> = new SafeMap();
+    const middlewares: Map<Tag|Dependency, Array<Dependency>> = new SafeMap();
 
     for (let i = 0, l = config.length; i < l; i++) {
         const annotation: Annotation|MiddlewareAnnotation = config[i];

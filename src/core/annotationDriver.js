@@ -14,7 +14,7 @@ class AnnotationDriver {
     }
 
     get(annotatedDep: Function): Annotation {
-        return annotatedDep[PROP_NAME]
+        return annotatedDep.___rdi_meta
     }
 }
 

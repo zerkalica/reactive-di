@@ -2,9 +2,10 @@
 import type {
     Provider
 } from 'reactive-di/i/nodeInterfaces'
+import SafeMap from 'reactive-di/utils/SafeMap'
 
 export default class HotRelationUpdater {
-    _parents: Array<Map<Provider, boolean>>;
+    _parents: Array<Map<Provider, Provider>>;
 
     constructor() {
         this._parents = []
@@ -13,14 +14,14 @@ export default class HotRelationUpdater {
     begin(provider: Provider): void {
         const {_parents: parents} = this
         for (let i = 0, l = parents.length; i < l; i++) {
-            parents[i].set(provider, true)
+            parents[i].set(provider, provider)
         }
-        parents.push(new Map())
+        parents.push(new SafeMap())
     }
 
     end(provider: Provider): void {
         const childMap = this._parents.pop()
-        function iterateMap(val: boolean, childProvider: Provider): void {
+        function iterateMap(childProvider: Provider): void {
             provider.addChild(childProvider)
             childProvider.addParent(provider)
         }
@@ -38,7 +39,8 @@ export default class HotRelationUpdater {
         for (let i = 0; i < l; i++) {
             const childMap = parents[i];
             for (let j = 0; j < k; j++) {
-                childMap.set(childs[j], true)
+                const child = childs[k]
+                childMap.set(child, child)
             }
         }
     }
