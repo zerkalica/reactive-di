@@ -23,7 +23,7 @@ export default class ReactiveDi {
     constructor(
         pluginsConfig: Array<Plugin>|Map<string, Plugin>,
         config: Array<Annotation> = [],
-        isHotReload: boolean = false,
+        isHotReload?: boolean = false,
         parent: ?DiContext = null
     ) {
         this._isHotReload = isHotReload
