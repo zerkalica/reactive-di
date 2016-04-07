@@ -7,23 +7,26 @@ import type {FactoryAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Context,
     Provider,
-    Resolver,
     ResolveDepsResult
 } from 'reactive-di/i/nodeInterfaces'
 
 import {fastCall} from 'reactive-di/utils/fastCall'
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class FactoryResolver {
+class FactoryProvider extends BaseProvider<FactoryAnnotation> {
+    kind: 'factory';
     displayName: string;
+    tags: Array<Tag>;
+    annotation: FactoryAnnotation;
+
     _value: any;
 
-    constructor(
-        displayName: string,
-        resolver: () => ResolveDepsResult,
-        target: DepFn
-    ) {
-        this.displayName = displayName
+    init(acc: Context): void {
+        const resolver = acc.createDepResolver(
+            this.annotation,
+            this.tags
+        )
+        const target = this.annotation.target
         this._value = function getValue(...args: Array<any>): any {
             const {deps, middlewares} = resolver()
             const props = deps.concat(args)
@@ -43,30 +46,6 @@ class FactoryResolver {
 
     resolve(): any {
         return this._value
-    }
-}
-
-class FactoryProvider extends BaseProvider<FactoryAnnotation> {
-    kind: 'factory';
-    displayName: string;
-    tags: Array<Tag>;
-    annotation: FactoryAnnotation;
-
-    _resolver: () => ResolveDepsResult;
-
-    init(acc: Context): void {
-        this._resolver = acc.createDepResolver(
-            this.annotation,
-            this.tags
-        )
-    }
-
-    createResolver(): Resolver {
-        return new FactoryResolver(
-            this.displayName,
-            this._resolver,
-            this.annotation.target
-        )
     }
 }
 

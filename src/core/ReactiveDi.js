@@ -63,6 +63,6 @@ export default class ReactiveDi {
     }
 
     get(annotatedDep: Dependency): any {
-        return this._context.getResolver(annotatedDep).resolve()
+        return this._context.getProvider(annotatedDep).resolve()
     }
 }

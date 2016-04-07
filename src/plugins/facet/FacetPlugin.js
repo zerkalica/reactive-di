@@ -7,7 +7,6 @@ import type {FacetAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Context,
     Provider,
-    Resolver,
     ResolveDepsResult
 } from 'reactive-di/i/nodeInterfaces'
 
@@ -15,30 +14,31 @@ import {createFunctionProxy} from 'reactive-di/utils/createProxy'
 import {fastCall} from 'reactive-di/utils/fastCall'
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class FacetResolver {
+class FacetProvider extends BaseProvider {
+    kind: 'facet';
     displayName: string;
+    tags: Array<Tag>;
+    annotation: FacetAnnotation;
 
     _isCached: boolean;
     _resolver: () => ResolveDepsResult;
     _target: DepFn;
     _value: any;
 
-    constructor(
-        displayName: string,
-        resolver: () => ResolveDepsResult,
-        target: DepFn
-    ) {
-        this.displayName = displayName
+    init(acc: Context): void {
+        this._resolver = acc.createDepResolver(
+            this.annotation,
+            this.tags
+        )
         this._isCached = false
-        this._resolver = resolver
-        this._target = target
+        this._target = this.annotation.target
     }
 
     reset(): void {
         this._isCached = false
     }
 
-    resolve():any {
+    resolve(): any {
         if (this._isCached) {
             return this._value
         }
@@ -55,30 +55,6 @@ class FacetResolver {
         this._isCached = true
 
         return this._value
-    }
-}
-
-class FacetProvider extends BaseProvider {
-    kind: 'facet';
-    displayName: string;
-    tags: Array<Tag>;
-    annotation: FacetAnnotation;
-
-    _resolver: () => ResolveDepsResult;
-
-    init(acc: Context): void {
-        this._resolver = acc.createDepResolver(
-            this.annotation,
-            this.tags
-        )
-    }
-
-    createResolver(): Resolver {
-        return new FacetResolver(
-            this.displayName,
-            this._resolver,
-            this.annotation.target
-        )
     }
 }
 

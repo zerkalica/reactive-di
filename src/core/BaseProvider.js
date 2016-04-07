@@ -6,7 +6,6 @@ import type {
 } from 'reactive-di/i/annotationInterfaces'
 
 import type {
-    Resolver,
     Context,
     Provider
 } from 'reactive-di/i/nodeInterfaces'
@@ -38,6 +37,9 @@ export default class BaseProvider<Ann: Annotation> {
 
     init(context: Context): void {} // eslint-disable-line
 
+    resolve(): any {}
+    reset(): void {}
+
     getChilds(): Array<Provider> {
         return this._childs
     }
@@ -52,9 +54,5 @@ export default class BaseProvider<Ann: Annotation> {
 
     addParent(parent: Provider): void {
         this._parents.push(parent)
-    }
-
-    createResolver(): Resolver {
-        throw new Error('Implement Resolver')
     }
 }

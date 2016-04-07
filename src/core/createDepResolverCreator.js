@@ -5,7 +5,7 @@ import type {
 } from 'reactive-di/i/annotationInterfaces'
 
 import type {
-    Resolver,
+    Provider,
     CreateResolverOptions,
     ResolveDepsResult
 } from 'reactive-di/i/nodeInterfaces'
@@ -13,9 +13,9 @@ import type {
 import ResolveHelper from 'reactive-di/core/ResolveHelper'
 
 function resolveDeps(
-    deps: Array<Resolver>,
+    deps: Array<Provider>,
     depNames: ?Array<string>,
-    middlewares: ?Array<Resolver>
+    middlewares: ?Array<Provider>
 ): ResolveDepsResult {
     const argsArray = []
     const argsObject = {}

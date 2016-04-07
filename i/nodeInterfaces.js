@@ -28,18 +28,14 @@ export type Provider<Ann: Annotation> = {
     addParent(parent: Provider): void;
 
     init(context: Context): void;
-    createResolver(): Resolver;
+
+    resolve(): any;
+    reset(): void;
 }
 
 export type Plugin<Ann: Annotation, P: Provider> = {
     kind: any;
     create(annotation: Ann): P;
-}
-
-export type Resolver = {
-    displayName: string;
-    resolve(): any;
-    reset(): void;
 }
 
 export type ResolveDepsResult<A> = {
@@ -52,14 +48,9 @@ export type CreateResolverOptions = {
     target: Dependency;
 }
 
-export type ResolverCacheRec = {
-    resolver: Resolver;
-    provider: Provider;
-};
-
 export type Context = {
     replace(annotatedDep: Dependency, annotation?: Annotation): void;
-    getResolver(annotatedDep: Dependency): Resolver;
+    getProvider(annotatedDep: Dependency): Provider;
     createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
 }
 
