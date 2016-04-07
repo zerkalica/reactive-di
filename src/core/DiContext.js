@@ -16,13 +16,12 @@ import type {
 } from 'reactive-di/i/nodeInterfaces'
 
 import ResolveHelper from 'reactive-di/core/ResolveHelper'
+import createDepResolverCreator from 'reactive-di/core/createDepResolverCreator'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 import normalizeConfiguration from 'reactive-di/core/normalizeConfiguration'
 import driver from 'reactive-di/core/annotationDriver'
 
 export default class DiContext {
-    _helper: ResolveHelper;
-
     _resolverCache: Map<Dependency, Resolver>;
     _providerCache: Map<Dependency, Provider>;
     _plugins: Map<string, Plugin>;
@@ -30,6 +29,8 @@ export default class DiContext {
     _parent: ?DiContext;
 
     _initializer: ProviderInitializer;
+
+    createDepResolver: (rec: CreateResolverOptions, tags: Array<Tag>) => () => ResolveDepsResult;
 
     constructor(
         plugins: Map<string, Plugin>,
@@ -46,10 +47,12 @@ export default class DiContext {
         const rec = normalizeConfiguration(config || [])
         this._annotations = rec.annotations
 
-        this._helper = new ResolveHelper(
+        const helper = new ResolveHelper(
             rec.middlewares,
             this
         )
+
+        this.createDepResolver = createDepResolverCreator(helper)
     }
 
     create(config: Array<Annotation>): Context {
@@ -143,40 +146,5 @@ export default class DiContext {
         }
 
         return resolver
-    }
-
-    createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult {
-        const {deps, depNames} = this._helper.getDeps(rec.deps);
-        const middlewares = this._helper.getMiddlewares(
-            rec.target,
-            tags
-        );
-
-        return function resolveDeps(): ResolveDepsResult {
-            const argsArray = []
-            const argsObject = {}
-            for (let i = 0, j = deps.length; i < j; i++) {
-                const dep = deps[i];
-                if (depNames) {
-                    argsObject[depNames[i]] = dep.resolve()
-                } else {
-                    argsArray.push(dep.resolve())
-                }
-            }
-
-            let resolvedMiddlewares: ?Array<any> = null;
-            if (middlewares) {
-                resolvedMiddlewares = []
-                for (let i = 0, j = middlewares.length; i < j; i++) {
-                    const mdl = middlewares[i];
-                    resolvedMiddlewares.push(mdl.resolve())
-                }
-            }
-
-            return {
-                deps: depNames ? [argsObject] : argsArray,
-                middlewares: resolvedMiddlewares
-            }
-        }
     }
 }

@@ -3,7 +3,7 @@ import type {
     Provider
 } from 'reactive-di/i/nodeInterfaces'
 
-export default class HotProviderInitializer {
+export default class HotRelationUpdater {
     _parents: Array<Map<Provider, boolean>>;
 
     constructor() {

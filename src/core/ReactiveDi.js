@@ -14,8 +14,8 @@ import type {
 import createPluginsMap from 'reactive-di/core/createPluginsMap'
 import DiContext from 'reactive-di/core/DiContext'
 
-import HotProviderInitializer from 'reactive-di/core/initializers/HotProviderInitializer'
-import NormalProviderInitializer from 'reactive-di/core/initializers/NormalProviderInitializer'
+import HotRelationUpdater from 'reactive-di/core/updaters/HotRelationUpdater'
+import DummyRelationUpdater from 'reactive-di/core/updaters/DummyRelationUpdater'
 
 export default class ReactiveDi {
     _context: Context;
@@ -29,8 +29,8 @@ export default class ReactiveDi {
             this._context = new DiContext(
                 createPluginsMap(pluginsConfig),
                 isHotReload
-                    ? new HotProviderInitializer()
-                    : new NormalProviderInitializer()
+                    ? new HotRelationUpdater()
+                    : new DummyRelationUpdater()
             )
         } else {
             if (!context) {

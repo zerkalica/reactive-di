@@ -61,10 +61,6 @@ class FactoryProvider extends BaseProvider<FactoryAnnotation> {
         )
     }
 
-    canAddToParent(context: Provider): boolean { // eslint-disable-line
-        return false
-    }
-
     createResolver(): Resolver {
         return new FactoryResolver(
             this.displayName,
