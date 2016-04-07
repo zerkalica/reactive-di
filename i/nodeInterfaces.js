@@ -33,7 +33,7 @@ export type Provider<Ann: Annotation> = {
 
 export type Plugin<Ann: Annotation, P: Provider> = {
     kind: any;
-    create(annotation: Ann, acc: Context): P;
+    create(annotation: Ann): P;
 }
 
 export type Resolver = {
@@ -52,16 +52,21 @@ export type CreateResolverOptions = {
     target: Dependency;
 }
 
+export type ResolverCacheRec = {
+    resolver: Resolver;
+    provider: Provider;
+};
+
 export type Context = {
     replace(annotatedDep: Dependency, annotation?: Annotation): void;
-    getProvider(annotatedDep: Dependency): Provider;
+    getCached(annotatedDep: Dependency): ResolverCacheRec;
     getResolver(annotatedDep: Dependency): Resolver;
     create(config: Array<Annotation>): Context;
     createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
 }
 
 
-export type ProviderInitializer = {
+export type RelationUpdater = {
     begin(provider: Provider): void;
     end(provider: Provider): void;
     inheritRelations(provider: Provider): void;
