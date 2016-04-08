@@ -1,10 +1,11 @@
 /* @flow */
 import type {
-    Provider
+    Provider,
+    RelationUpdater
 } from 'reactive-di/i/nodeInterfaces'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
 
-export default class HotRelationUpdater {
+class HotRelationUpdater {
     _parents: Array<Map<Provider, Provider>>;
 
     constructor() {
@@ -44,4 +45,8 @@ export default class HotRelationUpdater {
             }
         }
     }
+}
+
+export default function createHotRelationUpdater(): RelationUpdater {
+    return new HotRelationUpdater()
 }

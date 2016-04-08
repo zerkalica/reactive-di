@@ -5,6 +5,7 @@ import sinon from 'sinon'
 import assert from 'power-assert'
 
 import {
+    createDummyRelationUpdater,
     ReactiveDi,
     defaultPlugins
 } from 'reactive-di/index'
@@ -20,7 +21,7 @@ describe('ReactiveDiAnnotationTest', () => {
     let di: ReactiveDi;
 
     beforeEach(() => {
-        di = new ReactiveDi(defaultPlugins)
+        di = new ReactiveDi(defaultPlugins, createDummyRelationUpdater)
     })
 
     it('should resolve function factory once', () => {

@@ -5,28 +5,26 @@ import type {
 } from 'reactive-di/i/annotationInterfaces'
 
 import type {
-    Plugin
+    Plugin,
+    RelationUpdater
 } from 'reactive-di/i/nodeInterfaces'
 
 import createPluginsMap from 'reactive-di/core/createPluginsMap'
 import DiContext from 'reactive-di/core/DiContext'
 import normalizeConfiguration from 'reactive-di/core/normalizeConfiguration'
 
-import HotRelationUpdater from 'reactive-di/core/updaters/HotRelationUpdater'
-import DummyRelationUpdater from 'reactive-di/core/updaters/DummyRelationUpdater'
-
 export default class ReactiveDi {
     _context: DiContext;
-    _isHotReload: boolean;
     _plugins: Map<string, Plugin>;
+    _createUpdater: () => RelationUpdater;
 
     constructor(
         pluginsConfig: Array<Plugin>|Map<string, Plugin>,
+        createUpdater: () => RelationUpdater,
         config: Array<Annotation> = [],
-        isHotReload?: boolean = false,
         parent: ?DiContext = null
     ) {
-        this._isHotReload = isHotReload
+        this._createUpdater = createUpdater
         if (Array.isArray(pluginsConfig)) {
             this._plugins = createPluginsMap(pluginsConfig)
         } else {
@@ -44,9 +42,7 @@ export default class ReactiveDi {
 
         return new DiContext(
             this._plugins,
-            this._isHotReload
-                ? new HotRelationUpdater()
-                : new DummyRelationUpdater(),
+            this._createUpdater(),
             annotations,
             middlewares,
             parent
@@ -56,8 +52,8 @@ export default class ReactiveDi {
     create(config: Array<Annotation>): ReactiveDi {
         return new ReactiveDi(
             this._plugins,
+            this._createUpdater,
             config,
-            this._isHotReload,
             this._context
         )
     }
