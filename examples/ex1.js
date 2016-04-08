@@ -3,7 +3,8 @@
 
 import {
     ReactiveDi,
-    defaultPlugins
+    defaultPlugins,
+    createDummyRelationUpdater
 } from 'reactive-di/index'
 
 import {
@@ -109,7 +110,7 @@ function facet1Middleware(result: number, deps: {
     console.log(`facet1(${JSON.stringify(deps, null, '  ')}) returns ${result}`)
 }
 
-const di = new ReactiveDi(defaultPlugins)
+const di = new ReactiveDi(defaultPlugins, createDummyRelationUpdater)
 
 const newDi = di
     .create([

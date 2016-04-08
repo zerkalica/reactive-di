@@ -15,7 +15,7 @@ import {
     facet,
     klass,
     value
-} from 'reactive-di/providers'
+} from 'reactive-di/configurations'
 
 describe('ReactiveDiFacetTest', () => {
     let di: ReactiveDi;

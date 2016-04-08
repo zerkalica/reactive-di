@@ -17,7 +17,7 @@ import {
     klass,
     value,
     middleware
-} from 'reactive-di/providers'
+} from 'reactive-di/configurations'
 
 import {
     klass as klassAnn
