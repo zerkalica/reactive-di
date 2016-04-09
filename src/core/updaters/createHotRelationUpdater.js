@@ -2,7 +2,7 @@
 import type {
     Provider,
     RelationUpdater
-} from 'reactive-di/i/nodeInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
 
 class HotRelationUpdater {
@@ -23,7 +23,6 @@ class HotRelationUpdater {
     end(provider: Provider): void {
         const childMap = this._parents.pop()
         function iterateMap(childProvider: Provider): void {
-            provider.addChild(childProvider)
             childProvider.addParent(provider)
         }
         childMap.forEach(iterateMap)

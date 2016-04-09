@@ -1,41 +1,45 @@
 /* @flow */
 import type {
+    Tag,
     DepItem,
+    DependencyKey,
     Dependency
-} from 'reactive-di/i/annotationInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 
-export type ValueAnnotation<T: Dependency> = {
-    kind: 'value',
-    target: T;
+export type ValueAnnotation = {
+    kind: 'value';
+    target: DependencyKey;
+    tags?: Array<Tag>;
     value: any;
 }
 
 export type AliasAnnotation = {
-    kind: 'alias',
-    target: Dependency;
-    alias: Dependency;
+    kind: 'alias';
+    target: DependencyKey;
+    tags?: Array<Tag>;
+    alias: DependencyKey;
 }
 
-export type FacetAnnotation<T: Dependency> = {
-    kind: 'facet',
-    target: T;
+export type FacetAnnotation = {
+    kind: 'facet';
+    target: DependencyKey;
+    dep?: Dependency;
+    tags?: Array<Tag>;
     deps: Array<DepItem>;
 }
 
-export type MiddlewareAnnotation<T: Dependency> = {
-    kind: 'middleware',
-    target: T;
-    sources: Array<DepItem>;
-}
-
-export type FactoryAnnotation<T: Dependency> = {
-    kind: 'factory',
-    target: T;
+export type FactoryAnnotation = {
+    kind: 'factory';
+    target: DependencyKey;
+    dep?: Dependency;
+    tags?: Array<Tag>;
     deps: Array<DepItem>;
 }
 
-export type ClassAnnotation<T: Dependency> = {
-    kind: 'klass',
-    target: T;
+export type ClassAnnotation = {
+    kind: 'klass';
+    target: DependencyKey;
+    dep?: Dependency;
+    tags?: Array<Tag>;
     deps: Array<DepItem>;
 }

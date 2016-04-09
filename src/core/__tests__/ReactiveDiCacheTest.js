@@ -5,10 +5,8 @@ import sinon from 'sinon'
 import assert from 'power-assert'
 
 import {
-    createDummyRelationUpdater,
-    ReactiveDi,
-    defaultPlugins
-} from 'reactive-di/index'
+    createContainer
+} from 'reactive-di/core/__tests__/createContainer'
 
 import {
     alias,
@@ -16,19 +14,13 @@ import {
     facet,
     klass,
     value,
-    middleware
 } from 'reactive-di/configurations'
 
-import {
-    klass as klassAnn
-} from 'reactive-di/annotations'
-
-
-describe('ReactiveDiCacheTest', () => {
-    let di: ReactiveDi;
+describe('DiContainerCacheTest', () => {
+    let di: Context;
 
     beforeEach(() => {
-        di = new ReactiveDi(defaultPlugins, createDummyRelationUpdater)
+        di = createContainer();
     })
 
     it('should resolve function factory once', () => {
@@ -37,7 +29,7 @@ describe('ReactiveDiCacheTest', () => {
         }
         const myFn = sinon.spy(_myFn)
 
-        const newDi = di.create([
+        const newDi: Context = createContainer([
             facet(myFn)
         ])
         newDi.get(myFn)

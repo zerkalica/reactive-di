@@ -1,36 +1,36 @@
 /* @flow */
-import type {
-    Tag
-} from 'reactive-di/i/annotationInterfaces'
 import type {ClassAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
+    Tag,
+    Dependency,
+    Resolver,
     Provider,
     Context,
     ResolveDepsResult
-} from 'reactive-di/i/nodeInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 
 import {createObjectProxy} from 'reactive-di/utils/createProxy'
 import {fastCreateObject} from 'reactive-di/utils/fastCall'
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class ClassProvider extends BaseProvider<ClassAnnotation> {
-    kind: 'klass';
+class ClassResolver {
     displayName: string;
-    tags: Array<Tag>;
-    annotation: ClassAnnotation;
 
     _resolver: () => ResolveDepsResult;
     _target: Dependency;
     _isCached: boolean;
     _value: any;
 
-    init(acc: Context): void {
-        this._resolver = acc.createDepResolver(
-            this.annotation,
-            this.tags
-        )
+    constructor(
+        resolver: () => ResolveDepsResult,
+        target: Dependency,
+        displayName: string
+    ) {
         this._isCached = false
-        this._target = this.annotation.target
+        this._value = null
+        this._target = target
+        this._resolver = resolver
+        this.displayName = displayName
     }
 
     reset(): void {
@@ -54,6 +54,32 @@ class ClassProvider extends BaseProvider<ClassAnnotation> {
         this._isCached = true
 
         return this._value
+    }
+}
+
+class ClassProvider extends BaseProvider<ClassAnnotation> {
+    kind: 'klass';
+    displayName: string;
+    tags: Array<Tag>;
+    annotation: ClassAnnotation;
+
+    _resolver: () => ResolveDepsResult;
+
+    init(acc: Context): void {
+        this._resolver = acc.createDepResolver(
+            this.annotation,
+            this.tags
+        )
+    }
+
+    createResolver(): Resolver {
+        const annotation = this.annotation
+
+        return new ClassResolver(
+            this._resolver,
+            annotation.dep || (annotation.target: any),
+            this.displayName
+        )
     }
 }
 

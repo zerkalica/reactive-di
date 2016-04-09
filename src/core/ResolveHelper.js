@@ -1,22 +1,22 @@
 /* @flow */
 import type {
     ArgsObject,
-    Dependency,
+    DependencyKey,
     Tag,
     DepItem
-} from 'reactive-di/i/annotationInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 
 import type {
-    Provider,
+    Resolver,
     Context
-} from 'reactive-di/i/nodeInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 
 export default class ResolveHelper {
-    _middlewares: Map<Tag|Dependency, Array<Dependency>>;
+    _middlewares: Map<Tag|DependencyKey, Array<DependencyKey>>;
     _context: Context;
 
     constructor(
-        middlewares: Map<Tag|Dependency, Array<Dependency>>,
+        middlewares: Map<Tag|DependencyKey, Array<DependencyKey>>,
         context: Context
     ) {
         this._middlewares = middlewares
@@ -24,17 +24,17 @@ export default class ResolveHelper {
     }
 
     getMiddlewares(
-        annotatedDep: Dependency,
+        annotatedDep: DependencyKey,
         tags: Array<Tag>
-    ): ?Array<Provider> {
+    ): ?Array<Resolver> {
         const {_middlewares: middlewares, _context: context} = this
-        const ids: Array<Dependency|Tag> = [annotatedDep].concat(tags);
-        const middlewareDeps: Array<Provider> = [];
+        const ids: Array<DependencyKey|Tag> = [annotatedDep].concat(tags);
+        const middlewareDeps: Array<Resolver> = [];
         for (let i = 0, l = ids.length; i < l; i++) {
-            const depMiddlewares: ?Array<Dependency> = middlewares.get(ids[i]);
+            const depMiddlewares: ?Array<DependencyKey> = middlewares.get(ids[i]);
             if (depMiddlewares) {
                 for (let j = 0, k = depMiddlewares.length; j < k; j++) {
-                    middlewareDeps.push(context.getProvider(depMiddlewares[j]))
+                    middlewareDeps.push(context.getResolver(depMiddlewares[j]))
                 }
             }
         }
@@ -43,13 +43,13 @@ export default class ResolveHelper {
     }
 
     getDeps(deps: Array<DepItem>): {
-        deps: Array<Provider>;
+        deps: Array<Resolver>;
         depNames: ?Array<string>;
     } {
         const {_context: context} = this
 
         let depNames: ?Array<string> = null;
-        const resolvedDeps: Array<Provider> = [];
+        const resolvedDeps: Array<Resolver> = [];
         if (deps.length) {
             if (
                 typeof deps[0] === 'object'
@@ -58,12 +58,13 @@ export default class ResolveHelper {
                 depNames = []
                 const argsObject: ArgsObject = (deps[0]: any);
                 for (let key in argsObject) { // eslint-disable-line
-                    resolvedDeps.push(context.getProvider(argsObject[key]))
+                    resolvedDeps.push(context.getResolver(argsObject[key]))
                     depNames.push(key)
                 }
             } else {
                 for (let i = 0, l = deps.length; i < l; i++) {
-                    const dep: Provider = context.getProvider(((deps: any): Array<Dependency>)[i]);
+                    const dep: Resolver =
+                        context.getResolver(((deps: any): Array<DependencyKey>)[i]);
                     resolvedDeps.push(dep)
                 }
             }

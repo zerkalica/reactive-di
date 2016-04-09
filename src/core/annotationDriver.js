@@ -1,15 +1,16 @@
 /* @flow */
-import type {Annotation} from 'reactive-di/i/annotationInterfaces'
+import type {
+    Annotation,
+    Dependency
+} from 'reactive-di/i/coreInterfaces'
 import setProp from 'reactive-di/utils/setProp'
 
-const PROP_NAME = '___rdi_meta';
-
 class AnnotationDriver {
-    set(annotatedDep: Function, annotation: Annotation): void {
-        setProp(annotatedDep, PROP_NAME, annotation)
+    annotate<Ann: Annotation>(annotatedDep: Dependency, annotation: Ann): void {
+        setProp(annotatedDep, '___rdi_meta', annotation)
     }
 
-    get(annotatedDep: Function): Annotation {
+    getAnnotation(annotatedDep: Dependency): Annotation {
         return annotatedDep.___rdi_meta
     }
 }

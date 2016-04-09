@@ -1,30 +1,27 @@
 /* @flow */
-import type {
-    Tag
-} from 'reactive-di/i/annotationInterfaces'
 import type {FactoryAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
+    Tag,
+    Dependency,
+    Resolver,
+    ResolveDepsResult,
     Context,
     Provider
-} from 'reactive-di/i/nodeInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 
 import {fastCall} from 'reactive-di/utils/fastCall'
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class FactoryProvider extends BaseProvider<FactoryAnnotation> {
-    kind: 'factory';
+class FactoryResolver {
     displayName: string;
-    tags: Array<Tag>;
-    annotation: FactoryAnnotation;
 
     _value: any;
 
-    init(acc: Context): void {
-        const resolver = acc.createDepResolver(
-            this.annotation,
-            this.tags
-        )
-        const target = this.annotation.target
+    constructor(
+        resolver: () => ResolveDepsResult,
+        target: Dependency,
+        displayName: string
+    ) {
         this._value = function getValue(...args: Array<any>): any {
             const {deps, middlewares} = resolver()
             const props = deps.concat(args)
@@ -37,6 +34,7 @@ class FactoryProvider extends BaseProvider<FactoryAnnotation> {
             }
             return result
         }
+        this.displayName = displayName
     }
 
     reset(): void {
@@ -44,6 +42,32 @@ class FactoryProvider extends BaseProvider<FactoryAnnotation> {
 
     resolve(): any {
         return this._value
+    }
+}
+
+class FactoryProvider extends BaseProvider<FactoryAnnotation> {
+    kind: 'factory';
+    displayName: string;
+    tags: Array<Tag>;
+    annotation: FactoryAnnotation;
+
+    _resolver: () => ResolveDepsResult;
+
+    init(acc: Context): void {
+        this._resolver = acc.createDepResolver(
+            this.annotation,
+            this.tags
+        )
+    }
+
+    createResolver(): Resolver {
+        const annotation = this.annotation
+
+        return new FactoryResolver(
+            this._resolver,
+            annotation.dep || (annotation.target: any),
+            this.displayName
+        )
     }
 }
 

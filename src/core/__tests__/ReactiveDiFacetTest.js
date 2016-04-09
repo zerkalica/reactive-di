@@ -5,10 +5,12 @@ import sinon from 'sinon'
 import assert from 'power-assert'
 
 import {
-    createDummyRelationUpdater,
-    ReactiveDi,
-    defaultPlugins
-} from 'reactive-di/index'
+    createContainer
+} from 'reactive-di/core/__tests__/createContainer'
+
+import type {
+    Context
+} from 'reactive-di/i/coreInterfaces'
 
 import {
     factory,
@@ -17,21 +19,16 @@ import {
     value
 } from 'reactive-di/configurations'
 
-describe('ReactiveDiFacetTest', () => {
-    let di: ReactiveDi;
-    beforeEach(() => {
-        di = new ReactiveDi(defaultPlugins, createDummyRelationUpdater)
-    })
-
+describe('DiContainerFacetTest', () => {
     it('should resolve facet without deps', () => {
         function _myFn(): number {
             return 123
         }
         const myFn = sinon.spy(_myFn)
 
-        const newDi = di.create([
+        const newDi: Context = createContainer([
             facet(myFn)
-        ])
+        ]);
 
         const result = newDi.get(myFn)
 
@@ -47,10 +44,10 @@ describe('ReactiveDiFacetTest', () => {
         }
         const myFn = sinon.spy(_myFn)
 
-        const newDi = di.create([
+        const newDi: Context = createContainer([
             value(MyValue, 2),
             facet(myFn, MyValue)
-        ])
+        ]);
 
         const result = newDi.get(myFn)
         assert(myFn.calledOnce)
@@ -65,10 +62,10 @@ describe('ReactiveDiFacetTest', () => {
         }
         const myFn = sinon.spy(_myFn)
 
-        const newDi = di.create([
+        const newDi: Context = createContainer([
             value(MyValue, {a: 1, b: 2}),
             facet(myFn, MyValue)
-        ])
+        ]);
 
         const result = newDi.get(myFn)
         assert(myFn.calledOnce)
@@ -83,10 +80,10 @@ describe('ReactiveDiFacetTest', () => {
                 this.v = v
             }
         }
-        const newDi = di.create([
+        const newDi: Context = createContainer([
             value(MyValue, '123'),
             klass(MyClass, MyValue)
-        ])
+        ]);
         const result = newDi.get(MyClass)
         assert(result instanceof MyClass)
         assert(result.v === '123')
@@ -100,10 +97,10 @@ describe('ReactiveDiFacetTest', () => {
         }
         const myFn = sinon.spy(_myFn)
 
-        const newDi = di.create([
+        const newDi: Context = createContainer([
             value(MyValue, 2),
             factory(myFn, MyValue)
-        ])
+        ]);
 
         const result = newDi.get(myFn)
 

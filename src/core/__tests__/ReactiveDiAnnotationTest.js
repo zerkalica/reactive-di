@@ -5,10 +5,12 @@ import sinon from 'sinon'
 import assert from 'power-assert'
 
 import {
-    createDummyRelationUpdater,
-    ReactiveDi,
-    defaultPlugins
-} from 'reactive-di/index'
+    createContainer
+} from 'reactive-di/core/__tests__/createContainer'
+
+import type {
+    Context
+} from 'reactive-di/i/coreInterfaces'
 
 import {
     alias,
@@ -17,13 +19,7 @@ import {
     klass
 } from 'reactive-di/annotations'
 
-describe('ReactiveDiAnnotationTest', () => {
-    let di: ReactiveDi;
-
-    beforeEach(() => {
-        di = new ReactiveDi(defaultPlugins, createDummyRelationUpdater)
-    })
-
+describe('DiContainerAnnotationTest', () => {
     it('should resolve function factory once', () => {
         function _myFn(): number {
             return 123
@@ -31,7 +27,7 @@ describe('ReactiveDiAnnotationTest', () => {
         const myFn = sinon.spy(_myFn)
         facet()(myFn)
 
-        const newDi = di
+        const newDi: Context = createContainer()
         const result = newDi.get(myFn)
 
         assert(result === 123)

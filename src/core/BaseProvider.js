@@ -2,13 +2,11 @@
 
 import type {
     Tag,
-    Annotation
-} from 'reactive-di/i/annotationInterfaces'
-
-import type {
+    Annotation,
+    Resolver,
     Context,
     Provider
-} from 'reactive-di/i/nodeInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 
@@ -16,8 +14,8 @@ export default class BaseProvider<Ann: Annotation> {
     kind: any;
     displayName: string;
     tags: Array<Tag>;
-    annotation: Ann;
 
+    annotation: Ann;
     _childs: Array<Provider>;
     _parents: Array<Provider>;
 
@@ -26,19 +24,16 @@ export default class BaseProvider<Ann: Annotation> {
         this.annotation = annotation
         this._childs = [this]
         this._parents = [this]
-        // this.key = annotation.key || annotation.target
         const fnName: string = getFunctionName(annotation.target);
         this.displayName = this.kind + '@' + fnName
-        this.tags = [this.kind, fnName]
-        if (annotation.tags) {
-            this.tags = this.tags.concat(annotation.tags)
-        }
+        this.tags = [this.kind].concat(annotation.tags || [])
     }
 
     init(context: Context): void {} // eslint-disable-line
 
-    resolve(): any {}
-    reset(): void {}
+    createResolver(): Resolver {
+        throw new Error('Implement resolver')
+    }
 
     getChilds(): Array<Provider> {
         return this._childs
@@ -53,6 +48,7 @@ export default class BaseProvider<Ann: Annotation> {
     }
 
     addParent(parent: Provider): void {
+        parent.addChild(this)
         this._parents.push(parent)
     }
 }

@@ -5,18 +5,19 @@ import sinon from 'sinon'
 import assert from 'power-assert'
 
 import {
-    createDummyRelationUpdater,
-    ReactiveDi,
-    defaultPlugins
-} from 'reactive-di/index'
+    createContainer
+} from 'reactive-di/core/__tests__/createContainer'
+
+import type {
+    Context
+} from 'reactive-di/i/coreInterfaces'
 
 import {
     alias,
     factory,
     facet,
     klass,
-    value,
-    middleware
+    value
 } from 'reactive-di/configurations'
 
 import {
@@ -24,13 +25,7 @@ import {
 } from 'reactive-di/annotations'
 
 
-describe('ReactiveDiMiddlewareTest', () => {
-    let di: ReactiveDi;
-
-    beforeEach(() => {
-        di = new ReactiveDi(defaultPlugins, createDummyRelationUpdater)
-    })
-
+describe('DiContainerMiddlewareTest', () => {
     it('should log facet calls for factory', () => {
         function MyValue() {}
 
@@ -43,11 +38,12 @@ describe('ReactiveDiMiddlewareTest', () => {
 
         const myFnMiddleware = sinon.spy(_myFnMiddleware)
 
-        const newDi = di.create([
+        const newDi: Context = createContainer([
             value(MyValue, 2),
             factory(myFn, MyValue),
-            factory(myFnMiddleware),
-            middleware(myFnMiddleware, myFn)
+            factory(myFnMiddleware)
+        ], [
+            [myFnMiddleware, [myFn]]
         ])
 
         const result = newDi.get(myFn)
@@ -74,10 +70,11 @@ describe('ReactiveDiMiddlewareTest', () => {
             }
         }
 
-        const newDi = di.create([
+        const newDi: Context = createContainer([
             klass(MyClass),
-            klass(MyClassMiddleware),
-            middleware(MyClassMiddleware, MyClass)
+            klass(MyClassMiddleware)
+        ], [
+            [MyClassMiddleware, [MyClass]]
         ])
         const testMethod = sinon.spy()
         newDi.get(MyClassMiddleware).test = testMethod

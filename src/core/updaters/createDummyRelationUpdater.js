@@ -2,7 +2,7 @@
 import type {
     Provider,
     RelationUpdater
-} from 'reactive-di/i/nodeInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 
 class DummyRelationUpdater {
     /* eslint-disable no-unused-vars */

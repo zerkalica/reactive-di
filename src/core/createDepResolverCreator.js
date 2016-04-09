@@ -2,20 +2,20 @@
 
 import type {
     Tag
-} from 'reactive-di/i/annotationInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 
 import type {
-    Provider,
+    Resolver,
     CreateResolverOptions,
     ResolveDepsResult
-} from 'reactive-di/i/nodeInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 
 import ResolveHelper from 'reactive-di/core/ResolveHelper'
 
 function resolveDeps(
-    deps: Array<Provider>,
+    deps: Array<Resolver>,
     depNames: ?Array<string>,
-    middlewares: ?Array<Provider>
+    middlewares: ?Array<Resolver>
 ): ResolveDepsResult {
     const argsArray = []
     const argsObject = {}

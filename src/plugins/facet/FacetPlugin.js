@@ -1,37 +1,37 @@
 /* @flow */
-import type {
-    Tag,
-    DepFn
-} from 'reactive-di/i/annotationInterfaces'
 import type {FacetAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
+    Tag,
+    Dependency,
     Context,
+    Resolver,
     Provider,
     ResolveDepsResult
-} from 'reactive-di/i/nodeInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 
 import {createFunctionProxy} from 'reactive-di/utils/createProxy'
 import {fastCall} from 'reactive-di/utils/fastCall'
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class FacetProvider extends BaseProvider {
-    kind: 'facet';
-    displayName: string;
-    tags: Array<Tag>;
-    annotation: FacetAnnotation;
 
-    _isCached: boolean;
+class FacetResolver {
+    displayName: string;
+
     _resolver: () => ResolveDepsResult;
-    _target: DepFn;
+    _target: Dependency;
+    _isCached: boolean;
     _value: any;
 
-    init(acc: Context): void {
-        this._resolver = acc.createDepResolver(
-            this.annotation,
-            this.tags
-        )
+    constructor(
+        resolver: () => ResolveDepsResult,
+        target: Dependency,
+        displayName: string
+    ) {
         this._isCached = false
-        this._target = this.annotation.target
+        this._value = null
+        this._target = target
+        this._resolver = resolver
+        this.displayName = displayName
     }
 
     reset(): void {
@@ -55,6 +55,32 @@ class FacetProvider extends BaseProvider {
         this._isCached = true
 
         return this._value
+    }
+}
+
+class FacetProvider extends BaseProvider {
+    kind: 'facet';
+    displayName: string;
+    tags: Array<Tag>;
+    annotation: FacetAnnotation;
+
+    _resolver: () => ResolveDepsResult;
+
+    init(acc: Context): void {
+        this._resolver = acc.createDepResolver(
+            this.annotation,
+            this.tags
+        )
+    }
+
+    createResolver(): Resolver {
+        const annotation = this.annotation
+
+        return new FacetResolver(
+            this._resolver,
+            annotation.dep || (annotation.target: any),
+            this.displayName
+        )
     }
 }
 

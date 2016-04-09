@@ -2,7 +2,7 @@
 
 import type {
     Plugin
-} from 'reactive-di/i/nodeInterfaces'
+} from 'reactive-di/i/coreInterfaces'
 
 import FacetPlugin from 'reactive-di/plugins/facet/FacetPlugin'
 import FactoryPlugin from 'reactive-di/plugins/factory/FactoryPlugin'

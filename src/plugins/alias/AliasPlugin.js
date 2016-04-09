@@ -1,14 +1,29 @@
 /* @flow */
-import type {
-    Tag
-} from 'reactive-di/i/annotationInterfaces'
 import type {AliasAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
+    Tag,
     Context,
-    Provider
-} from 'reactive-di/i/nodeInterfaces'
+    Provider,
+    Resolver
+} from 'reactive-di/i/coreInterfaces'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
+
+class AliasResolver {
+    _resolver: Resolver;
+
+    constructor(resolver: Resolver) {
+        this._resolver = resolver
+    }
+
+    reset(): void {
+        this._resolver.reset()
+    }
+
+    resolve(): any {
+        return this._resolver.resolve()
+    }
+}
 
 class AliasProvider extends BaseProvider<AliasAnnotation> {
     kind: 'alias';
@@ -16,24 +31,20 @@ class AliasProvider extends BaseProvider<AliasAnnotation> {
     tags: Array<Tag>;
     annotation: AliasAnnotation;
 
-    _provider: Provider;
+    _resolver: Resolver;
 
     init(context: Context): void {
-        this._provider = context.getProvider(this.annotation.alias)
+        this._resolver = context.getResolver(this.annotation.alias)
     }
 
-    reset(): void {
-        this._provider.reset()
-    }
-
-    resolve(): any {
-        return this._provider.resolve()
+    createResolver(): Resolver {
+        return new AliasResolver(this._resolver)
     }
 }
 
 export default {
     kind: 'alias',
-    create(annotation: AliasAnnotation): Provider { // eslint-disable-line
+    create(annotation: AliasAnnotation): Provider {
         return new AliasProvider(annotation)
     }
 }
