@@ -8,7 +8,7 @@ import type {
 
 import type {
     ContainerManager,
-    Context,
+    Container,
     Resolver,
     Provider,
     Plugin,
@@ -51,7 +51,7 @@ class DefaultProviderManager {
         this._resolverCaches = []
     }
 
-    _createProvider(annotatedDep: DependencyKey, context: Context): ?Provider {
+    _createProvider(annotatedDep: DependencyKey, Container: Container): ?Provider {
         let annotation: ?Annotation = this._annotations.get(annotatedDep);
         if (!annotation) {
             if (!this._parent) {
@@ -73,7 +73,7 @@ class DefaultProviderManager {
 
         const provider: Provider = plugin.create(annotation);
         this._updater.begin(provider)
-        provider.init(context)
+        provider.init(Container)
         this._updater.end(provider)
 
         return provider
@@ -86,7 +86,7 @@ class DefaultProviderManager {
         return this
     }
 
-    createContainer(parent?: Context): Context {
+    createContainer(parent?: Container): Container {
         return new DiContainer((this: ProviderManager), parent)
     }
 
@@ -118,10 +118,10 @@ class DefaultProviderManager {
         }
     }
 
-    getProvider(annotatedDep: DependencyKey, context: Context): ?Provider {
+    getProvider(annotatedDep: DependencyKey, Container: Container): ?Provider {
         let provider: ?Provider = this._cache.get(annotatedDep);
         if (!provider) {
-            provider = this._createProvider(annotatedDep, context);
+            provider = this._createProvider(annotatedDep, Container);
             if (provider) {
                 this._cache.set(annotatedDep, provider)
             }

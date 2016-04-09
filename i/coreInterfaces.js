@@ -32,7 +32,7 @@ export type Provider<Ann: Annotation> = {
     getParents(): Array<Provider>;
     addParent(parent: Provider): void;
 
-    init(context: Context): void;
+    init(context: Container): void;
 
     createResolver(): Resolver;
 }
@@ -53,9 +53,6 @@ export type CreateResolverOptions = {
 }
 
 export type Container = {
-
-}
-export type Context = {
     get(annotatedDep: DependencyKey): any;
     getResolver(annotatedDep: DependencyKey): Resolver;
     createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
@@ -67,7 +64,7 @@ export type ContainerManager = {
     setMiddlewares(
         raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
     ): ContainerManager;
-    createContainer(parent?: Context): Context;
+    createContainer(parent?: Container): Container;
     replace(annotatedDep: DependencyKey, annotation?: Annotation): void;
 }
 

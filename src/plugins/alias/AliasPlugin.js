@@ -2,7 +2,7 @@
 import type {AliasAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Tag,
-    Context,
+    Container,
     Provider,
     Resolver
 } from 'reactive-di/i/coreInterfaces'
@@ -33,8 +33,8 @@ class AliasProvider extends BaseProvider<AliasAnnotation> {
 
     _resolver: Resolver;
 
-    init(context: Context): void {
-        this._resolver = context.getResolver(this.annotation.alias)
+    init(Container: Container): void {
+        this._resolver = Container.getResolver(this.annotation.alias)
     }
 
     createResolver(): Resolver {

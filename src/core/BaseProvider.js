@@ -4,7 +4,7 @@ import type {
     Tag,
     Annotation,
     Resolver,
-    Context,
+    Container,
     Provider
 } from 'reactive-di/i/coreInterfaces'
 
@@ -29,7 +29,7 @@ export default class BaseProvider<Ann: Annotation> {
         this.tags = [this.kind].concat(annotation.tags || [])
     }
 
-    init(context: Context): void {} // eslint-disable-line
+    init(Container: Container): void {} // eslint-disable-line
 
     createResolver(): Resolver {
         throw new Error('Implement resolver')

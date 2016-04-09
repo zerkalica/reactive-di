@@ -7,6 +7,9 @@ import assert from 'power-assert'
 import {
     createContainer
 } from 'reactive-di/core/__tests__/createContainer'
+import type {
+    Container
+} from 'reactive-di/i/coreInterfaces'
 
 import {
     alias,
@@ -17,7 +20,7 @@ import {
 } from 'reactive-di/configurations'
 
 describe('DiContainerCacheTest', () => {
-    let di: Context;
+    let di: Container;
 
     beforeEach(() => {
         di = createContainer();
@@ -29,7 +32,7 @@ describe('DiContainerCacheTest', () => {
         }
         const myFn = sinon.spy(_myFn)
 
-        const newDi: Context = createContainer([
+        const newDi: Container = createContainer([
             facet(myFn)
         ])
         newDi.get(myFn)

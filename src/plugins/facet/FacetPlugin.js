@@ -3,7 +3,7 @@ import type {FacetAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Tag,
     Dependency,
-    Context,
+    Container,
     Resolver,
     Provider,
     ResolveDepsResult
@@ -66,7 +66,7 @@ class FacetProvider extends BaseProvider {
 
     _resolver: () => ResolveDepsResult;
 
-    init(acc: Context): void {
+    init(acc: Container): void {
         this._resolver = acc.createDepResolver(
             this.annotation,
             this.tags

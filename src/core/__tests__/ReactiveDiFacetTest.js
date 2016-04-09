@@ -9,7 +9,7 @@ import {
 } from 'reactive-di/core/__tests__/createContainer'
 
 import type {
-    Context
+    Container
 } from 'reactive-di/i/coreInterfaces'
 
 import {
@@ -26,7 +26,7 @@ describe('DiContainerFacetTest', () => {
         }
         const myFn = sinon.spy(_myFn)
 
-        const newDi: Context = createContainer([
+        const newDi: Container = createContainer([
             facet(myFn)
         ]);
 
@@ -44,7 +44,7 @@ describe('DiContainerFacetTest', () => {
         }
         const myFn = sinon.spy(_myFn)
 
-        const newDi: Context = createContainer([
+        const newDi: Container = createContainer([
             value(MyValue, 2),
             facet(myFn, MyValue)
         ]);
@@ -62,7 +62,7 @@ describe('DiContainerFacetTest', () => {
         }
         const myFn = sinon.spy(_myFn)
 
-        const newDi: Context = createContainer([
+        const newDi: Container = createContainer([
             value(MyValue, {a: 1, b: 2}),
             facet(myFn, MyValue)
         ]);
@@ -80,7 +80,7 @@ describe('DiContainerFacetTest', () => {
                 this.v = v
             }
         }
-        const newDi: Context = createContainer([
+        const newDi: Container = createContainer([
             value(MyValue, '123'),
             klass(MyClass, MyValue)
         ]);
@@ -97,7 +97,7 @@ describe('DiContainerFacetTest', () => {
         }
         const myFn = sinon.spy(_myFn)
 
-        const newDi: Context = createContainer([
+        const newDi: Container = createContainer([
             value(MyValue, 2),
             factory(myFn, MyValue)
         ]);

@@ -11,7 +11,7 @@ import {
 } from 'reactive-di/index'
 
 import type {
-    Context
+    Container
 } from 'reactive-di/i/coreInterfaces'
 
 import {
@@ -83,9 +83,7 @@ const perRequestConfiguration = createConfiguration([
 const appDi = appConfiguration.createContainer()
 
 function accept(req: http.IncomingMessage, res: http.ClientRequest): void {
-    /* eslint-disable */
-
-    const requestDi: Context = perRequestConfiguration.createContainer(appDi);
+    const requestDi: Container = perRequestConfiguration.createContainer(appDi);
     const request: Request = requestDi.get(Request);
     request
         .setUrl((url.parse((req.url: any), true): any))
@@ -96,8 +94,13 @@ function accept(req: http.IncomingMessage, res: http.ClientRequest): void {
     if (!controllerDep) {
         controllerDep = controllerMap.NotFoundController
     }
-    const response: string = requestDi.get(controllerDep)
-    res.end(response)
+
+    try {
+        const response: string = requestDi.get(controllerDep);
+        res.end(response)
+    } catch (e) {
+        res.end(e.toString())
+    }
 }
 
 http.createServer(accept).listen(8080)

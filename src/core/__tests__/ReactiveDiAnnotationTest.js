@@ -9,7 +9,7 @@ import {
 } from 'reactive-di/core/__tests__/createContainer'
 
 import type {
-    Context
+    Container
 } from 'reactive-di/i/coreInterfaces'
 
 import {
@@ -27,7 +27,7 @@ describe('DiContainerAnnotationTest', () => {
         const myFn = sinon.spy(_myFn)
         facet()(myFn)
 
-        const newDi: Context = createContainer()
+        const newDi: Container = createContainer()
         const result = newDi.get(myFn)
 
         assert(result === 123)

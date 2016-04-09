@@ -10,7 +10,7 @@ import type {
     Tag,
     DependencyKey,
     Annotation,
-    Context,
+    Container,
     ContainerManager,
     CreateContainerManager
 } from 'reactive-di/i/coreInterfaces'
@@ -18,7 +18,7 @@ import type {
 export function createContainer(
     config?: Array<Annotation>,
     raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
-): Context {
+): Container {
     const createContainerManager: CreateContainerManager
         = createConfigProvider(defaultPlugins, createDummyRelationUpdater);
     const cm: ContainerManager = createContainerManager(config)

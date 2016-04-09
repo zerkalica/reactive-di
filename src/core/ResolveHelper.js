@@ -8,33 +8,33 @@ import type {
 
 import type {
     Resolver,
-    Context
+    Container
 } from 'reactive-di/i/coreInterfaces'
 
 export default class ResolveHelper {
     _middlewares: Map<Tag|DependencyKey, Array<DependencyKey>>;
-    _context: Context;
+    _Container: Container;
 
     constructor(
         middlewares: Map<Tag|DependencyKey, Array<DependencyKey>>,
-        context: Context
+        Container: Container
     ) {
         this._middlewares = middlewares
-        this._context = context
+        this._Container = Container
     }
 
     getMiddlewares(
         annotatedDep: DependencyKey,
         tags: Array<Tag>
     ): ?Array<Resolver> {
-        const {_middlewares: middlewares, _context: context} = this
+        const {_middlewares: middlewares, _Container: Container} = this
         const ids: Array<DependencyKey|Tag> = [annotatedDep].concat(tags);
         const middlewareDeps: Array<Resolver> = [];
         for (let i = 0, l = ids.length; i < l; i++) {
             const depMiddlewares: ?Array<DependencyKey> = middlewares.get(ids[i]);
             if (depMiddlewares) {
                 for (let j = 0, k = depMiddlewares.length; j < k; j++) {
-                    middlewareDeps.push(context.getResolver(depMiddlewares[j]))
+                    middlewareDeps.push(Container.getResolver(depMiddlewares[j]))
                 }
             }
         }
@@ -46,7 +46,7 @@ export default class ResolveHelper {
         deps: Array<Resolver>;
         depNames: ?Array<string>;
     } {
-        const {_context: context} = this
+        const {_Container: Container} = this
 
         let depNames: ?Array<string> = null;
         const resolvedDeps: Array<Resolver> = [];
@@ -58,13 +58,13 @@ export default class ResolveHelper {
                 depNames = []
                 const argsObject: ArgsObject = (deps[0]: any);
                 for (let key in argsObject) { // eslint-disable-line
-                    resolvedDeps.push(context.getResolver(argsObject[key]))
+                    resolvedDeps.push(Container.getResolver(argsObject[key]))
                     depNames.push(key)
                 }
             } else {
                 for (let i = 0, l = deps.length; i < l; i++) {
                     const dep: Resolver =
-                        context.getResolver(((deps: any): Array<DependencyKey>)[i]);
+                        Container.getResolver(((deps: any): Array<DependencyKey>)[i]);
                     resolvedDeps.push(dep)
                 }
             }

@@ -5,7 +5,7 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 
 import type {
-    Context,
+    Container,
     Provider,
     Resolver,
     ResolveDepsResult,
@@ -21,12 +21,12 @@ export type ProviderManager = {
     middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
     addCacheHandler(cache: Map<DependencyKey, Resolver>): void;
     removeCacheHandler(cache: Map<DependencyKey, Resolver>): void;
-    getProvider(annotatedDep: DependencyKey, context: Context): ?Provider;
+    getProvider(annotatedDep: DependencyKey, Container: Container): ?Provider;
 }
 
 export default class DiContainer {
     _cache: Map<DependencyKey, Resolver>;
-    _parent: ?Context;
+    _parent: ?Container;
     _providerManager: ProviderManager;
     _removeCacheHandler: () => void;
 
@@ -34,7 +34,7 @@ export default class DiContainer {
 
     constructor(
         providerManager: ProviderManager,
-        parent: ?Context = null
+        parent: ?Container = null
     ) {
         this._cache = new SimpleMap()
         this._providerManager = providerManager
@@ -63,7 +63,7 @@ export default class DiContainer {
         if (!resolver) {
             const provider: ?Provider = this._providerManager.getProvider(
                 annotatedDep,
-                (this: Context)
+                (this: Container)
             );
             if (!provider) {
                 if (!this._parent) {

@@ -5,7 +5,7 @@ import type {
     Dependency,
     Resolver,
     Provider,
-    Context,
+    Container,
     ResolveDepsResult
 } from 'reactive-di/i/coreInterfaces'
 
@@ -65,7 +65,7 @@ class ClassProvider extends BaseProvider<ClassAnnotation> {
 
     _resolver: () => ResolveDepsResult;
 
-    init(acc: Context): void {
+    init(acc: Container): void {
         this._resolver = acc.createDepResolver(
             this.annotation,
             this.tags

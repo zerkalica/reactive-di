@@ -1,122 +1,106 @@
 Reactive DI
 ===========
 
-Реализация паттерна Dependency Injection. Выделение в отдельный слой и переиспользование логики по настройке и связыванию компонентов приложения: классов, функций, данных. Предоставление апи для создания собственных провайдеров и апи для вычисления связей между зависимостями. Предоставления middleware для логирования вызовов любой функции или метода.
+Dependency Injection, имеет небольшой размер, не имеет внешних зависимостей (может использовать Map, если он есть), может конфигурироваться через аннотации или конфиг, работать в браузере от IE9 и на сервере, уметь делать горячую замену зависимостей (hotreload), уметь прозрачно логировать вызовы функций через middleware, оптимально клонировать контейнеры, предоставлять апи для расширения функциональности, максимально использовать flow-типы.
 
-Обзор
------
+Особое внимание уделялось оптимизации: зависимости рассчитываются отдельно от данных контейнера, что позволяет уменьшить время его создания, parent-child связи между зависимостями рассчитываются по мере запроса. Используется двухуровневое кэширование: кэшируется нормализованная конфигурация и полученные из контейнера данные.
 
-В JavaScript среде данный паттерн не популярен, однако есть уверенность, что в последнее время ситуация изменится: [angular.io](https://angular.io/docs/ts/latest/guide/dependency-injection.html), [scatter](https://github.com/mariocasciaro/scatter), [electrolyte](https://github.com/jaredhanson/electrolyte), [intravenous](https://github.com/RoyJacobs/intravenous), [yokohama](https://github.com/goodybag/yokohama).
+Библиотека писалась с оглядкой на существующие решения ([angular2.di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di), [scatter](https://github.com/mariocasciaro/scatter)), с учетом особенностей js и работы в браузере (скорость работы, поддежка старых браузеров) и в серверной среде node.js.
 
-Текущая невостребованность DI, связана с тем, что в целом, сложность fontend-задач пока только приближается к сложности бэкенд. И с тем, что экосистема JavaScript проходит стадии взросления, что в свое время проходили Java [Spring MVC](https://spring.io/), C# [Ninject](http://www.ninject.org/), PHP [Symfony2](https://symfony.com/)
+Киллерфичей являются расширяемые провайдеры и особенности их api. Провайдеры - сущности, которые знают как настраивать тот или иной компонет и как повлиять на дочерний или родительский компонент в дереве зависимостей.
+
+Это влияние происходит динамически: при первом запросе очередной зависимости, она встраивается в дерево, получает и сама влияет на дочерние и родительские компоненты. Что дает возможность для реализации hotreload, observable на основе di и т.д.
+
+Введение
+--------
+
+В JavaScript среде данный паттерн не популярен, однако есть уверенность, что в последнее время ситуация изменится. Текущая невостребованность DI, связана с тем, что в целом сложность frontend-задач пока только приближается к сложности бэкенд. И с тем, что экосистема JavaScript проходит стадии взросления, что в свое время проходили Java [Spring MVC](https://spring.io/), C# [Ninject](http://www.ninject.org/), PHP [Symfony2](https://symfony.com/)
 
 Без соотвествующего опыта у JavaScript-программистов складывается [не всегда правильное представление](http://stackoverflow.com/questions/9250851/do-i-need-dependency-injection-in-nodejs-or-how-to-deal-with) того, для чего нужен DI и SOLID в их работе.
 
-Удобство тестирования, возможность подмены одной реализации на другую, с таким же интерфейсом не являются основыми преимуществами в использовании DI. Основная задача DI - предварительная настройка всего и вся, вынесенная в отдельный слой и скрывающая детали этой настройки от основного кода приложения. DI не имеет прямого отношения к ООП - можно преднастраивать функции-фабрики, данные, что угодно.
+Удобство тестирования, возможность подмены одной реализации на другую с таким же интерфейсом, не являются основыми преимуществами в использовании DI. Основная задача DI - предварительная настройка всего и вся, вынесенная в отдельный слой и скрывающая детали этой настройки от основного кода приложения. DI не имеет прямого отношения к ООП - можно преднастраивать функции-фабрики, данные, что угодно.
 
-Почему не...
-------------
+Существующие решения
+--------------------
 
-[angular2 di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di) не является отдельной библиотекой, монолитна - сложно расширять, апи не позволяет реализовать горячую замену зависимостей (hotreload), нету механизма middleware - логирования вызовов функций и методов.
+[angular2 di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di) не является отдельной библиотекой, монолитна - сложно расширять, апи не позволяет реализовать горячую замену зависимостей (hotreload), нету механизма middleware - логирования вызовов функций и методов, несколько запутанное апи.
 
 [scatter](https://github.com/mariocasciaro/scatter), сложное апи, изначальная направленность на серверную работу, строковые ключи.
 
 [yokohama](https://github.com/goodybag/yokohama) - форк заброшенного форка angular2 di, с наследуемыми проблемами по расширению.
 
-Почему да
+Структура
 ---------
-
-Библиотека писалась с оглядкой на существующие решения, с учетом особенностей js и работы в браузере (скорость работы, поддежка старых браузеров). Описывать зависимости можно как через аннотации, так и передавая отдельно в контейнер DI. Можно клонировать контейнер и определять новые зависимости, старые при этом будут переиспользованы без переинициализации (аналог resolveAndCreateChild в angular2).
-
-На любую зависимость можно в отдельном слое добавить middleware - функцию или класс, которая сработает вместе с вызовом оригинальной функции/класса и получит ее аргументы и результат выполнения.
-
-Киллерфичей являются расширяемые провайдеры и особенности их api. Провайдеры - сущности, которые знают как настраивать тот или иной компонет и как повлиять на дочерний или родительский компонент в дереве зависимостей.
-
-Это влияние происходит динамически: при первом запросе очередной зависимости, она встраивается в дерево, получает и сама влияет на дочерние и родительские зависимости. Что дает возможности для реализации hotreload, observable на основе di и т.д.
 
 В структуре ReactiveDi можно выделить следующие сущности:
 
--	Annotation - описывает зависимости: тип, аргументы, передаваемые в конструктор или функцию-фабрику.
+-	Dependency - зависимость: класс, функция, строка, объект
+-	Annotation - описывает зависимости: тип зависимости, аргументы, передаваемые в конструктор или функцию.
 -	Configuration - способ описания зависимостей в отдельной конфигурации DI.
--	Provider - знает как по аннотации создать и настроить зависимость, как закэшировать и очистить кэш этой зависимости, как повлиять на дочерние или родительские зависимости в дереве
--	Provider plugins - фабрики провайдеров для соотвествующих аннотаций, Например, klass - для класса, factory - функция-фабрика, value - значение, alias - ссылка. Например, klass(Car) аналог bind(Car).toClass(Car) из angular2.
--	Context - базовое api ядра по разрешению дочерних зависимостей, которое передается провайдеру при его инициализации
--	RelationUpdater - составная часть ядра, стратегия, куда выносятся общие для всех зависимостей алгоритмы по вычислению их детей и родителей в дереве. В библиотеке есть 2 готовые стратегии: HotRelationUpdater - вычисляет parent/child зависимости, DummyRelationUpdater - ничего не вычисляет, используется для ускорения вычисления зависимостей, когда не нужен hotreload.
--	ReactiveDi - публичное фасадное api для получения зависимости и клонирования контейнера
+-	Resolver - вычисляет значение зависимости и управляет ее кэшем
+-	Provider - представляет зависимость со всеми ее связями и мета-информацией, обновляет связи при перестоении зависимостей, создает Resolver
+-	Plugin - расшияет функциональсть reactive-di. Создает провайдер для соотвествующей аннотации. Например, ClassPlugin в паре с аннотацией klass создает ClassProvider и ClassResolver.
+-	Container - по зависимости-ключу получает ее значение или Resolver
+-	RelationUpdater - стратегия, куда выносятся общие для всех зависимостей алгоритмы по вычислению их детей и родителей в дереве. В библиотеке есть 2 готовые стратегии: HotRelationUpdater - вычисляет parent/child зависимости, DummyRelationUpdater - ничего не вычисляет, используется для ускорения вычисления, когда не нужен hotreload.
+-	ContainerManager - нормализует и кэширует конфигурацию, создает контейнеры с зависимостями, перестраивает дерево зависимостей при изменении одной из них
+-	ContainerCreator - регистрирует Plugins, RelationUpdater и создает ContainerManager
 
-Provider plugins + relationUpdater strategy + providers configuration = ReactiveDi
-
-Класс + ReactiveDi = настроенный объект
-
-Пример 1. klass, factory, value
--------------------------------
+Пример 1.
+---------
 
 ```js
+// @flow
+import type {
+    Tag,
+    DependencyKey,
+    Annotation,
+    Container,
+    ContainerManager,
+    CreateContainerManager
+} from 'reactive-di/i/coreInterfaces'
+
 import {
-    ReactiveDi,
+    createConfigProvider,
     defaultPlugins,
     createDummyRelationUpdater
 } from 'reactive-di'
 
-import {alias, value} from 'reactive-di/configurations'
+import {alias} from 'reactive-di/configurations'
 
-import {klass, factory} from 'reactive-di/annotations'
+import {klass} from 'reactive-di/annotations'
 
-class Tire {
-    diameter: number;
-    width: number;
-
-    constructor(width: number, diameter: number) {
-        this.width = width
-        this.diameter = diameter
-    }
+// AbstractEngine.js
+class AbstractEngine {
+    power: number;
 }
 
-class AbstractEngine {}
-
+// ConcreteEngine.js
 @klass()
 class ConcreteEngine extends AbstractEngine {
+    power: number = 33;
 }
 
 @klass(AbstractEngine)
 class Car {
     engine: AbstractEngine;
+
     constructor(engine: AbstractEngine) {
         this.engine = engine
     }
 }
 
-@klass({engine: AbstractEngine})
-class Bus {
-    engine: AbstractEngine;
-    constructor({engine}: {engine: AbstractEngine}) {
-        this.engine = engine
-    }
-}
+const createContainerManager: CreateContainerManager
+    = createConfigProvider(defaultPlugins, createDummyRelationUpdater);
 
-function DefaultWidth() {}
-
-function createTire(defaultWidth: number, diameter: number): Tire {
-    return new Tire(defaultWidth, diameter)
-}
-factory(DefaultWidth)(createTire)
-
-const di = new ReactiveDi(defaultPlugins, createDummyRelationUpdater, [
-    value(DefaultWidth, 22),
+const cm: ContainerManager = createContainerManager([
     alias(AbstractEngine, ConcreteEngine)
 ])
 
-assert(di.get(Car) instanceof Car)
-assert(di.get(Car).engine instanceof ConcreteEngine)
+const di: Container = cm.createContainer();
 
-const createTireWithDiameter: (diameter: number) => Tire = di.get(createTire);
-
-const tire: Tire = createTireWithDiameter(15);
-
-assert(tire instanceof Tire)
-assert(tire.width === 22)
-assert(tire.diameter === 15)
-
+assert(di.get(AbstractEngine) instanceof ConcreteEngine)
+assert(di.get(Car).engine.power === 33)
 ```
 
-[Еще примеры](https://github.com/zerkalica/reactive-di/examples/ex1.js)
+Сравнение с angular2
+--------------------

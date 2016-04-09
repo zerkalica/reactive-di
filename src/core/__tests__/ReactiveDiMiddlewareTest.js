@@ -9,7 +9,7 @@ import {
 } from 'reactive-di/core/__tests__/createContainer'
 
 import type {
-    Context
+    Container
 } from 'reactive-di/i/coreInterfaces'
 
 import {
@@ -38,7 +38,7 @@ describe('DiContainerMiddlewareTest', () => {
 
         const myFnMiddleware = sinon.spy(_myFnMiddleware)
 
-        const newDi: Context = createContainer([
+        const newDi: Container = createContainer([
             value(MyValue, 2),
             factory(myFn, MyValue),
             factory(myFnMiddleware)
@@ -70,7 +70,7 @@ describe('DiContainerMiddlewareTest', () => {
             }
         }
 
-        const newDi: Context = createContainer([
+        const newDi: Container = createContainer([
             klass(MyClass),
             klass(MyClassMiddleware)
         ], [
