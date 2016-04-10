@@ -18,7 +18,6 @@ import getFunctionName from 'reactive-di/utils/getFunctionName'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
 
 export type ProviderManager = {
-    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
     addCacheHandler(cache: Map<DependencyKey, Resolver>): void;
     removeCacheHandler(cache: Map<DependencyKey, Resolver>): void;
     getProvider(annotatedDep: DependencyKey, Container: Container): ?Provider;
@@ -34,6 +33,7 @@ export default class DiContainer {
 
     constructor(
         providerManager: ProviderManager,
+        middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>,
         parent: ?Container = null
     ) {
         this._cache = new SimpleMap()
@@ -41,7 +41,7 @@ export default class DiContainer {
         this._parent = parent || null
 
         const helper = new ResolveHelper(
-            providerManager.middlewares,
+            middlewares,
             this
         )
 
@@ -56,6 +56,21 @@ export default class DiContainer {
 
     get(annotatedDep: DependencyKey): any {
         return this.getResolver(annotatedDep).resolve()
+    }
+
+    getProvider(annotatedDep: DependencyKey): Provider {
+        let provider: ?Provider = this._providerManager.getProvider(
+            annotatedDep,
+            (this: Container)
+        );
+        if (!provider) {
+            if (!this._parent) {
+                throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)
+            }
+            provider = this._parent.getProvider(annotatedDep)
+        }
+
+        return provider
     }
 
     getResolver(annotatedDep: DependencyKey): Resolver {

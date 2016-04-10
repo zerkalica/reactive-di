@@ -35,7 +35,7 @@ class DefaultProviderManager {
     _plugins: Map<string, Plugin>;
     _updater: RelationUpdater;
 
-    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
+_middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
     _resolverCaches: Array<Map<DependencyKey, Resolver>>;
 
     constructor(
@@ -44,14 +44,14 @@ class DefaultProviderManager {
         updater: RelationUpdater
     ) {
         this._annotations = normalizeConfiguration(config)
-        this.middlewares = new SimpleMap()
+        this._middlewares = new SimpleMap()
         this._cache = new SimpleMap()
         this._plugins = plugins
         this._updater = updater
         this._resolverCaches = []
     }
 
-    _createProvider(annotatedDep: DependencyKey, Container: Container): ?Provider {
+    _createProvider(annotatedDep: DependencyKey, container: Container): ?Provider {
         let annotation: ?Annotation = this._annotations.get(annotatedDep);
         if (!annotation) {
             if (!this._parent) {
@@ -73,7 +73,7 @@ class DefaultProviderManager {
 
         const provider: Provider = plugin.create(annotation);
         this._updater.begin(provider)
-        provider.init(Container)
+        provider.init(container)
         this._updater.end(provider)
 
         return provider
@@ -82,12 +82,16 @@ class DefaultProviderManager {
     setMiddlewares(
         raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
     ): ContainerManager {
-        this.middlewares = normalizeMiddlewares(raw || [])
+        this._middlewares = normalizeMiddlewares(raw || [])
         return this
     }
 
     createContainer(parent?: Container): Container {
-        return new DiContainer((this: ProviderManager), parent)
+        return new DiContainer(
+            (this: ProviderManager),
+            this._middlewares,
+            parent
+        )
     }
 
     addCacheHandler(cache: Map<DependencyKey, Resolver>): void {
@@ -118,10 +122,10 @@ class DefaultProviderManager {
         }
     }
 
-    getProvider(annotatedDep: DependencyKey, Container: Container): ?Provider {
+    getProvider(annotatedDep: DependencyKey, container: Container): ?Provider {
         let provider: ?Provider = this._cache.get(annotatedDep);
         if (!provider) {
-            provider = this._createProvider(annotatedDep, Container);
+            provider = this._createProvider(annotatedDep, container);
             if (provider) {
                 this._cache.set(annotatedDep, provider)
             }

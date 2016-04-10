@@ -54,6 +54,8 @@ export type CreateResolverOptions = {
 
 export type Container = {
     get(annotatedDep: DependencyKey): any;
+    finalize(): void;
+    getProvider(annotatedDep: DependencyKey): Provider;
     getResolver(annotatedDep: DependencyKey): Resolver;
     createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
 }
