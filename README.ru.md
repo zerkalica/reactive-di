@@ -9,7 +9,7 @@ Dependency Injection, имеет небольшой размер, не имее�
 
 Киллерфичей являются расширяемые провайдеры и особенности их api. Провайдеры - сущности, которые знают как настраивать тот или иной компонет и как повлиять на дочерний или родительский компонент в дереве зависимостей.
 
-Это влияние происходит динамически: при первом запросе очередной зависимости, она встраивается в дерево, получает и сама влияет на дочерние и родительские компоненты. Что дает возможность для реализации hotreload, observable на основе di и т.д.
+Это влияние происходит динамически: при первом запросе очередной зависимости, она встраивается в дерево, получает и сама влияет на дочерние и родительские компоненты. Что дает возможность сторонним плагинам управлять кэшем, реагировать на перестроение дерева зависимостей, что может быть использовано для реализации hotreload, observable на основе di и т.д.
 
 Введение
 --------
@@ -23,7 +23,7 @@ Dependency Injection, имеет небольшой размер, не имее�
 Существующие решения
 --------------------
 
-[angular2 di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di) не является отдельной библиотекой, монолитна - сложно расширять, апи не позволяет реализовать горячую замену зависимостей (hotreload), нету механизма middleware - логирования вызовов функций и методов, несколько запутанное апи.
+[angular2 di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di) не является отдельной библиотекой, монолитна - сложно расширять, апи не позволяет реализовать горячую замену зависимостей (hotreload), нету механизма middleware - логирования вызовов функций и методов, несколько запутанное апи. Все зависимости в angular2 di - синглтоны, создаются при первом запросе и помещаются в кэш, на это никак нельзя повлиять. ReactiveDi попытался оставить многие фичи, которые дает angular.di и дать возможность программисту самому управлять кэшем и реагировать на перестроение дерева зависимостей через систему плагинов.
 
 [scatter](https://github.com/mariocasciaro/scatter), сложное апи, изначальная направленность на серверную работу, строковые ключи.
 
@@ -104,3 +104,132 @@ assert(di.get(Car).engine.power === 33)
 
 Сравнение с angular2
 --------------------
+
+Что бы лучше понять сравнение с angular2, следует изучить, как он работает.
+
+[angular2 Injector](https://angular.io/docs/js/latest/api/core/Injector-class.html),
+
+[Host and Visibility in Angular 2's Dependency Injection](http://blog.thoughtram.io/angular/2015/08/20/host-and-visibility-in-angular-2-dependency-injection.html)
+
+[http://blog.thoughtram.io/angular/2015/05/18/dependency-injection-in-angular-2.html](http://blog.thoughtram.io/angular/2015/05/18/dependency-injection-in-angular-2.html)
+
+### Описание зависимостей
+
+angular2:
+
+```typescript
+import {provide} from 'angular2/core';
+
+const injector = Injector.resolveAndCreate([
+    Car,
+    provide(Engine, {useClass: Engine}),
+    provide(String, {useValue: 'Hello World'}),
+    provide(V8, {useExisting: Engine}),
+    provide(Factory, {
+        useFactory: (car, engine) => IS_V8 ? new V8Engine() : V6Engine(),
+        deps: [Car, Engine]
+    })
+]);
+
+injector.get(Car)
+```
+
+reactive-di:
+
+```js
+// @flow
+import { defaultPlugins, createDummyRelationUpdater } from 'reactive-di'
+import { alias, klass, factory} from 'reactive-di/configurations'
+
+const createContainerManager = createConfigProvider(defaultPlugins, createDummyRelationUpdater);
+const cm = createContainerManager([
+    klass(Car),
+    klass(Engine),
+    value(String, 'Hello World'),
+    alias(V8, Engine),
+    factory(Factory, Car, Engine),
+])
+const di = cm.createContainer();
+
+di.get(Car)
+```
+
+### Дочерние контейнеры
+
+angular2:
+
+```typescript
+var injector = Injector.resolveAndCreate([Engine, Car]);
+var childInjector = injector.resolveAndCreateChild([Engine]);
+
+injector.get(Engine) !== childInjector.get(Engine);
+injector.get(Car) === childInjector.get(Car) // Car from first injector
+```
+
+reactive-di:
+
+```js
+// @flow
+import { defaultPlugins, createDummyRelationUpdater } from 'reactive-di'
+import { alias, klass, factory} from 'reactive-di/configurations'
+
+const createContainerManager = createConfigProvider(defaultPlugins, createDummyRelationUpdater);
+const cm = createContainerManager([
+    klass(Car),
+    klass(Engine)
+])
+const childCm = createContainerManager([
+    klass(Engine)
+])
+
+const di = cm.createContainer();
+const childDi = childCm.createContainer(di)
+
+di.get(Engine) !== childDi.get(Engine);
+di.get(Car) === childDi.get(Car)
+```
+
+### Создание контейнера из ранее подготовленных провайдеров
+
+Используется для быстрого создания контейнера из уже рассчитанных зависимостей
+
+angular2:
+
+```typescript
+
+@Injectable()
+class Engine {
+}
+@Injectable()
+class Car {
+  constructor(public engine:Engine) {}
+}
+var providers = Injector.resolve([Car, Engine]);
+var injector = Injector.fromResolvedProviders(providers);
+injector.get(Car) instanceof Car
+```
+
+reactive-di:
+
+```js
+// @flow
+import { defaultPlugins, createDummyRelationUpdater } from 'reactive-di'
+import { klass } from 'reactive-di/configurations'
+
+class Engine {
+}
+
+class Car {
+  constructor(engine: Engine) {}
+}
+
+const createContainerManager = createConfigProvider(defaultPlugins, createDummyRelationUpdater);
+const providers = createContainerManager([
+    klass(Car),
+    klass(Engine)
+])
+
+const di = providers.createContainer();
+di.get(Car) intanceof Car
+
+```
