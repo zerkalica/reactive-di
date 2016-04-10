@@ -1,0 +1,41 @@
+<diagram program="umletino" version="14.1"><zoom_level>10</zoom_level><help_text>Space for diagram notesR</help_text><element><id>UMLClass</id><coordinates><x>590</x><y>450</y><w>130</w><h>60</h></coordinates><panel_attributes>Object
+-
+instanceof MyClassA
+bg=pink</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>450</x><y>270</y><w>100</w><h>40</h></coordinates><panel_attributes>Annotation
+bg=magenta</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>390</x><y>450</y><w>140</w><h>60</h></coordinates><panel_attributes>ClassResolver
+-
+resolve(): Object
+bg=red</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>120</x><y>440</y><w>210</w><h>80</h></coordinates><panel_attributes>ClassProvider
+-
+childs: Provider[]
+parents: Provider[]
+createResolver(): Resolver
+bg=blue</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>410</x><y>150</y><w>100</w><h>50</h></coordinates><panel_attributes>Plugins
+bg=333</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>120</x><y>340</y><w>240</w><h>60</h></coordinates><panel_attributes>Container
+--
+get(dependency: any): any
+bg=cyan</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>410</x><y>110</y><w>100</w><h>30</h></coordinates><panel_attributes>RelationUpdater
+bg=#9999</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>120</x><y>220</y><w>240</w><h>80</h></coordinates><panel_attributes>ContainerManager
+-
+getProvider(dependency: any): Provider
+createContainer(p?: Container): Container
+bg=yellow</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>120</x><y>110</y><w>240</w><h>70</h></coordinates><panel_attributes>ContainerCreator
+-
+plugins: Plugins[]
+updater: RelationUpdater
+bg=white</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>240</x><y>170</y><w>60</w><h>70</h></coordinates><panel_attributes>lt=&lt;-
+m1=create</panel_attributes><additional_attributes>10;50;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>450</x><y>220</y><w>100</w><h>30</h></coordinates><panel_attributes>Configuration
+bg=pink</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>350</x><y>270</y><w>120</w><h>40</h></coordinates><panel_attributes>lt=&lt;.
+provide</panel_attributes><additional_attributes>10;20;100;20</additional_attributes></element><element><id>UMLClass</id><coordinates><x>560</x><y>360</y><w>100</w><h>30</h></coordinates><panel_attributes>MyClassA
+bg=green</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>540</x><y>270</y><w>90</w><h>110</h></coordinates><panel_attributes>lt=&lt;.
+provide
+</panel_attributes><additional_attributes>10;20;70;20;70;90</additional_attributes></element><element><id>Relation</id><coordinates><x>350</x><y>210</y><w>120</w><h>40</h></coordinates><panel_attributes>lt=&lt;-
+register</panel_attributes><additional_attributes>10;20;100;20</additional_attributes></element><element><id>Relation</id><coordinates><x>240</x><y>290</y><w>60</w><h>70</h></coordinates><panel_attributes>lt=&lt;-
+m1=create</panel_attributes><additional_attributes>10;50;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>350</x><y>110</y><w>80</w><h>30</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;10;60;10</additional_attributes></element><element><id>Relation</id><coordinates><x>350</x><y>150</y><w>80</w><h>30</h></coordinates><panel_attributes>lt=&lt;-</panel_attributes><additional_attributes>10;10;60;10</additional_attributes></element><element><id>Relation</id><coordinates><x>320</x><y>470</y><w>90</w><h>40</h></coordinates><panel_attributes>lt=&lt;-
+m1=create</panel_attributes><additional_attributes>70;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>520</x><y>470</y><w>90</w><h>40</h></coordinates><panel_attributes>lt=&lt;-
+m1=create</panel_attributes><additional_attributes>70;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>240</x><y>390</y><w>180</w><h>70</h></coordinates><panel_attributes>lt=&lt;.
+get from ContainerManager</panel_attributes><additional_attributes>10;50;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>350</x><y>350</y><w>230</w><h>40</h></coordinates><panel_attributes>lt=&lt;.
+get dependency by class</panel_attributes><additional_attributes>10;20;210;20</additional_attributes></element><element><id>UMLClass</id><coordinates><x>620</x><y>220</y><w>100</w><h>30</h></coordinates><panel_attributes>MyClassB
+bg=gray</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>540</x><y>210</y><w>100</w><h>40</h></coordinates><panel_attributes>lt=&lt;.
+register</panel_attributes><additional_attributes>10;20;80;20</additional_attributes></element><element><id>Relation</id><coordinates><x>0</x><y>180</y><w>430</w><h>330</h></coordinates><panel_attributes>lt=&lt;.
+m1=created by plugin</panel_attributes><additional_attributes>120;300;100;300;100;10;410;10</additional_attributes></element></diagram>
