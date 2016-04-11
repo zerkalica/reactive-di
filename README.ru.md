@@ -450,12 +450,15 @@ function myAnnotation(value: string): (target: Function) => void {
 
 class MyResolver {
     _provider: MyProvider;
+    _value: string;
 
     constructor(
+        value: string,
         provider: MyProvider,
         parents: Array<Parent>,
         getResolver: (dep: DependencyKey) => Resolver
     ) {
+        this._value = value
         this._provide = provider
     }
 
@@ -464,7 +467,7 @@ class MyResolver {
     }
 
     resolve(): any {
-        return 'MyValue'
+        return this._value
     }
 }
 
@@ -485,6 +488,7 @@ class MyProvider extends BaseProvider<MyConfiguration> {
 
     createResolver(): Resolver {
         return new MyResolver(
+            this.annotation.value,
             this,
             this._parents,
             (dep: DependencyKey) => this._container.getResolver(dep)
