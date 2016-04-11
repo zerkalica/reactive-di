@@ -523,6 +523,67 @@ const container = createContainerManageFactory(myPlugins)(configuration).createC
 container.get(Car).value === 'testValue'
 ```
 
+Стратегия рассчета зависимостей
+-------------------------------
+
+Реализует алгоритм рассчета всех, в том числе и дальних в иерархии, childs и parents каждой зависимости по мере ее запроса.
+
+Когда зависимость запрашивается первый раз, ContainerManager по конфигурации сперва найдет соотвествующий плагин, через его create метод получит экземпляр Provider, затем выполнит RelationUpdater.begin, provider.init (здесь провайдер может рекурсивно запростить Container для разрешения своих дочерних зависимостей) и RelationUpdater.begin
+
+```js
+const provider: Provider = plugin.create(annotation);
+this._updater.begin(provider)
+provider.init(container)
+this._updater.end(provider)
+```
+
+В стратегии HotRelationUpdater метод begin заносит provider в стек parents (метод end - убирает из стека), что бы при разрешении рекурсивных зависимостей, получить их провайдеры в childs
+
+Когда зависимость запрашивается более одного раза и она уже есть в кэше, то вызывается метод RelationUpdater.inheritRelations. Эта оптимизация нужна, что бы в родительскую зависимость, если она рассчитывается первый раз, занести информацию о дочерних зависимостях, которые были посчитаны ранее.
+
+```js
+let provider: ?Provider = this._cache.get(annotatedDep);
+if (!provider) {
+    // create provider
+} else {
+    this._updater.inheritRelations(provider)
+}
+```
+
+По-умолчанию используется стратегия, которую создает фабрика createHotRelationUpdater, но можно также определить свою:
+
+```js
+// @flow
+import type {
+    RelationUpdater
+} from 'reactive-di/i/coreInterfaces'
+import {
+    defaultPlugins,
+    createDummyRelationUpdater,
+    createHotRelationUpdater,
+    createContainerManageFactory
+} from 'reactive-di'
+
+function createMyRelationUpdater(): RelationUpdater {
+    return {
+        begin(provider: Provider) {
+
+        },
+        end(provider: Provider) {
+
+        },
+        inheritRelations(provider: Provider) {
+        }
+    }
+}
+
+const createContainerManager = createContainerManageFactory(
+    defaultPlugins,
+    createMyRelationUpdater
+)
+
+```
+
 Сравнение с angular2
 --------------------
 
