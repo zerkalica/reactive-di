@@ -1,7 +1,7 @@
 Reactive DI
 ===========
 
-Dependency Injection, имеет небольшой размер, не имеет внешних зависимостей (может использовать Map, если он есть), может конфигурироваться через аннотации или конфиг, работать в браузере от IE9 и на сервере, уметь делать горячую замену зависимостей (hotreload), уметь прозрачно логировать вызовы функций через middleware, оптимально клонировать контейнеры, предоставлять апи для расширения функциональности, максимально использовать flow-типы.
+Dependency Injection, имеет небольшой размер, не имеет внешних зависимостей (может использовать Map, если он есть), может конфигурироваться через аннотации или конфиг, работать в браузере от IE9 и на сервере, уметь делать горячую замену зависимостей (hotreload), уметь прозрачно логировать вызовы функций через middleware, оптимально клонировать контейнеры, предоставлять апи для расширения функциональности.
 
 Особое внимание уделялось оптимизации: зависимости рассчитываются отдельно от данных контейнера, что позволяет уменьшить время его создания, parent-child связи между зависимостями рассчитываются по мере запроса. Используется двухуровневое кэширование: кэшируется нормализованная конфигурация и полученные из контейнера данные.
 
@@ -38,53 +38,6 @@ Dependency Injection, имеет небольшой размер, не имее�
 
 ![ReactiveDi class diagram](./docs/images/class-diagram.png)
 
-Общий пример регистрации и получении зависимостей
--------------------------------------------------
-
-```js
-// @flow
-import type {
-    Tag,
-    DependencyKey,
-    Annotation,
-    Container,
-    ContainerManager,
-    CreateContainerManager
-} from 'reactive-di/i/coreInterfaces'
-
-import {alias} from 'reactive-di/configurations'
-import {klass} from 'reactive-di/annotations'
-
-// AbstractEngine.js
-class AbstractEngine {
-    power: number;
-}
-
-// ConcreteEngine.js
-@klass()
-class ConcreteEngine extends AbstractEngine {
-    power: number = 33;
-}
-
-@klass(AbstractEngine)
-class Car {
-    engine: AbstractEngine;
-
-    constructor(engine: AbstractEngine) {
-        this.engine = engine
-    }
-}
-
-const createContainerManager: CreateContainerManager = createContainerManageFactory();
-const cm: ContainerManager = createContainerManager([
-    alias(AbstractEngine, ConcreteEngine)
-])
-const di: Container = cm.createContainer();
-
-assert(di.get(AbstractEngine) instanceof ConcreteEngine)
-assert(di.get(Car).engine.power === 33)
-```
-
 Описание зависимостей
 ---------------------
 
@@ -92,7 +45,7 @@ assert(di.get(Car).engine.power === 33)
 
 Для провайдеров, поддерживающих зависимости (klass, factory, compose): зависимости можно описывать через запятую и через options-объекты.
 
-Для всех конфигураций есть аналогичные аннотации, которые могут быть прикреплены к классу или функции. Описывать зависимости через конфигурацию предпочтительнее, т.к. тогда кроме интерфейсов компоненты не будут содержать статических связей между собой, все связи можно вынести в отдельный конфигурационный слой.
+Для всех конфигураций есть аналогичные аннотации, которые могут быть прикреплены к классу или функции. Описывать зависимости через конфигурацию предпочтительнее, т.к. тогда кроме интерфейсов компоненты не будут содержать статических связей между собой, все связи можно вынести в отдельный конфигурационный слой, см. статью [Composition Root by Mark Seemann](http://blog.ploeh.dk/2011/07/28/CompositionRoot/)
 
 ### klass
 
@@ -300,6 +253,8 @@ container.get(AbstractCar).color === 'red'
 
 Присваивает значение зависимости-ссылке, ссылка может быть функцией-пустышкой или классом-пустышкой.
 
+-	value(CarColor, 'red') - присваивает значение 'red' ссылке CarColor
+
 Описание через конфигурацию:
 
 ```js
@@ -338,6 +293,10 @@ function CarColor() {}
 @klass(CarColor)
 class Car {
     color: string;
+
+    constructor(color: string) {
+        this.color = color
+    }
 }
 
 const configuration: Array<Annotation> = [
@@ -345,6 +304,101 @@ const configuration: Array<Annotation> = [
 ];
 const container = createContainerManageFactory()(configuration).createContainer()
 container.get(Car).color === 'red'
+```
+
+### tag
+
+Каждую зависимость можно пометить тегами. Тег используется для логирования вызовов функций через механизм middleware.
+
+-	tag(klass(Car), 'tag1', 'tag2', ...) - добавляет к klass(Car), теги 'tag1' и 'tag2'
+
+Описание через конфигурацию:
+
+```js
+// @flow
+import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import {tag, klass} from 'reactive-di/configurations'
+
+class RedCar {
+}
+
+const configuration: Array<Annotation> = [
+    tag(klass(RedCar), 'machine', 'car')
+];
+```
+
+Описание через аннотации:
+
+```js
+// @flow
+import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import {tag, klass} from 'reactive-di/annotations'
+
+@tag('machine', 'car')
+// Важно, что б tag был до klass аннотации.
+@klass()
+class RedCar {
+}
+```
+
+Middlewares
+-----------
+
+Middlewares представляют собой обработчики вызовов функций или методов класса. Обработчики прозрачно прикрепляются либо к функции/классу, либо к тегу, которым могут быть помечены несколько зависимостей.
+
+Для функций, через тег:
+
+```js
+function myFn(b: number, c: number): number {
+    return b + c
+}
+function myFnMiddleware(result: number, b: number, c: number): void {
+    console.log(result, b, c)
+}
+
+const newDi: Container = cm.createContainer([
+    tag(compose(myFn, MyValue), 'mytag'),
+    compose(myFnMiddleware)
+], [
+    [myFnMiddleware, ['mytag']]
+])
+
+const result = newDi.get(myFn)
+result(1, 2)
+// console: 3, 1, 2
+```
+
+Для классов:
+
+```js
+class MyClass {
+    test(a: number): number {
+        return a + 1
+    }
+
+    test2(a: number): number {
+        return a
+    }
+}
+
+class MyClassMiddleware {
+    test(result: number, a: number): void {
+        console.log(result, a)
+    }
+}
+
+const newDi: Container = createContainer([
+    klass(MyClass),
+    klass(MyClassMiddleware)
+], [
+    [MyClassMiddleware, [MyClass]]
+])
+
+const my = newDi.get(MyClass)
+
+assert(my instanceof MyClass) // true
+my.test(1) // console: 2, 1
+my.test2(1) // no console output
 ```
 
 Создание своих конфигураций
@@ -425,7 +479,7 @@ class MyProvider extends BaseProvider<MyConfiguration> {
 
     _container: Container;
 
-    init(Container: Container): void {
+    init(container: Container): void {
         this._container = container
     }
 
@@ -468,7 +522,9 @@ container.get(Car).value === 'testValue'
 Сравнение с angular2
 --------------------
 
-[angular2 di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di) не является отдельной библиотекой, монолитна - сложно расширять, апи не позволяет реализовать горячую замену зависимостей (hotreload), нету механизма middleware - логирования вызовов функций и методов, сложное [апи](https://angular.io/docs/ts/latest/api/core/Injector-class.html) Injector класса (около 3х методов для получения данных). Все зависимости в angular2 di - синглтоны, создаются при первом запросе и помещаются в кэш, на это никак нельзя повлиять. ReactiveDi попытался оставить многие фичи, которые есть в angular.di и дать возможность программисту самому управлять кэшем и реагировать на перестроение дерева зависимостей через систему плагинов.
+[angular2 di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di) не является отдельной библиотекой, монолитна - сложно расширять, апи не позволяет реализовать горячую замену зависимостей (hotreload), нету механизма middleware - логирования вызовов функций и методов, сложное [апи](https://angular.io/docs/ts/latest/api/core/Injector-class.html) Injector класса (около 3х методов для получения данных). Все зависимости в angular2 di - синглтоны, создаются при первом запросе и помещаются в кэш, на это никак нельзя повлиять. В [примерах документации angular 2](https://angular.io/docs/ts/latest/guide/dependency-injection.html#!#appendix-working-with-injectors-directly) (InjectorComponent) не грушаются использовать Injector как ServiceLocator, что является антипаттерном, см. [stackoverflow](http://stackoverflow.com/questions/22795459/is-servicelocator-anti-pattern), [habrahabr.ru](https://habrahabr.ru/post/166287/) [статью Mark Seemann](http://blog.ploeh.dk/2010/02/03/ServiceLocatorisanAnti-Pattern/), использование которого обусловленно непродуманностью апи провайдеров.
+
+ReactiveDi попытался оставить многие фичи, которые есть в angular.di и дать возможность программисту самому управлять кэшем и реагировать на перестроение дерева зависимостей через систему плагинов.
 
 Что бы лучше понять сравнение с angular2, следует изучить, как он работает.
 
@@ -480,7 +536,7 @@ container.get(Car).value === 'testValue'
 
 ### Описание зависимостей
 
-angular2:
+В angular2:
 
 ```typescript
 import {provide} from 'angular2/core';
@@ -499,7 +555,7 @@ const injector = Injector.resolveAndCreate([
 injector.get(Car)
 ```
 
-reactive-di:
+В reactive-di:
 
 ```js
 // @flow
@@ -518,9 +574,9 @@ const di = cm.createContainer();
 di.get(Car)
 ```
 
-### Дочерние контейнеры
+### Иерархические контейнеры
 
-angular2:
+В angular2 есть [hierarchical dependency injection](https://angular.io/docs/ts/latest/guide/hierarchical-dependency-injection.html):
 
 ```typescript
 var injector = Injector.resolveAndCreate([Engine, Car]);
@@ -530,7 +586,7 @@ injector.get(Engine) !== childInjector.get(Engine);
 injector.get(Car) === childInjector.get(Car) // Car from first injector
 ```
 
-reactive-di:
+В reactive-di:
 
 ```js
 // @flow
@@ -556,7 +612,7 @@ di.get(Car) === childDi.get(Car)
 
 Используется для быстрого создания контейнера из уже рассчитанных зависимостей
 
-angular2:
+В angular2:
 
 ```typescript
 
@@ -572,7 +628,7 @@ var injector = Injector.fromResolvedProviders(providers);
 injector.get(Car) instanceof Car
 ```
 
-reactive-di:
+В reactive-di:
 
 ```js
 // @flow
@@ -594,4 +650,46 @@ const providers = createContainerManager([
 const di = providers.createContainer();
 di.get(Car) intanceof Car
 
+```
+
+### Multi-зависимости
+
+В angular2 есть возможность определять [массивы зависимостей](https://angular.io/docs/ts/latest/api/core/Provider-class.html#!#multi), закрепленные за определенным ключем.
+
+```typescript
+var injector = Injector.resolveAndCreate([
+  new Provider('Strings', { useValue: 'String1', multi: true}),
+  new Provider('Strings', { useValue: 'String2', multi: true})
+]);
+injector.get('Strings') === ['String1', 'String2']
+```
+
+В reactive-di аналогичных способов делать массивы зависимостей нет, т.к. это пример cпорного дизайна. Из-за того, что new Provider('Strings' могут быть разбросаны по коду и нет единой точки регистрации их всех. Лучше явно прописывать их в центральной точке регистрации, как показано в примере ниже (Tire1, Tire2).
+
+```js
+// @flow
+import { factory, klass } from 'reactive-di/configurations'
+
+function Tires(...tires: Array<Tire>): Array<Tire> {
+    return tires
+}
+
+class Tire {}
+class Car {
+  constructor(tires: Array<Tire>) {}
+}
+
+class Tire1 {}
+class Tire2 {}
+
+const createContainerManager = createContainerManageFactory();
+const providers = createContainerManager([
+    klass(Car, Tires),
+    klass(Tire1),
+    klass(Tire2),
+    factory(Tires, Tire1, Tire2)
+])
+
+const di = providers.createContainer();
+di.get(Car) intanceof Car
 ```

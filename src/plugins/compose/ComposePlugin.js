@@ -45,7 +45,7 @@ class ComposeResolver {
     }
 }
 
-class ComposeProvider extends BaseProvider {
+class ComposeProvider extends BaseProvider<ComposeAnnotation> {
     kind: 'compose';
     displayName: string;
     tags: Array<Tag>;

@@ -20,8 +20,14 @@ export type AliasAnnotation = {
     alias: DependencyKey;
 }
 
-export type FacetAnnotation = {
-    kind: 'facet';
+export type AggregateAnnotation = {
+    kind: 'aggregate';
+    target: DependencyKey;
+    tags: Array<Tag>;
+}
+
+export type ComposeAnnotation = {
+    kind: 'compose';
     target: DependencyKey;
     dep?: Dependency;
     tags?: Array<Tag>;
