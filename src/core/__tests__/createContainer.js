@@ -1,7 +1,7 @@
 /* @flow */
 
 import {
-    createConfigProvider,
+    createConfigManagerFactory,
     defaultPlugins,
     createDummyRelationUpdater
 } from 'reactive-di/index'
@@ -20,7 +20,7 @@ export function createContainer(
     raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
 ): Container {
     const createContainerManager: CreateContainerManager
-        = createConfigProvider(defaultPlugins, createDummyRelationUpdater);
+        = createConfigManagerFactory(defaultPlugins, createDummyRelationUpdater);
     const cm: ContainerManager = createContainerManager(config)
         .setMiddlewares(raw);
 

@@ -52,14 +52,7 @@ import type {
     CreateContainerManager
 } from 'reactive-di/i/coreInterfaces'
 
-import {
-    createConfigProvider,
-    defaultPlugins,
-    createDummyRelationUpdater
-} from 'reactive-di'
-
 import {alias} from 'reactive-di/configurations'
-
 import {klass} from 'reactive-di/annotations'
 
 // AbstractEngine.js
@@ -82,17 +75,394 @@ class Car {
     }
 }
 
-const createContainerManager: CreateContainerManager
-    = createConfigProvider(defaultPlugins, createDummyRelationUpdater);
-
+const createContainerManager: CreateContainerManager = createContainerManageFactory();
 const cm: ContainerManager = createContainerManager([
     alias(AbstractEngine, ConcreteEngine)
 ])
-
 const di: Container = cm.createContainer();
 
 assert(di.get(AbstractEngine) instanceof ConcreteEngine)
 assert(di.get(Car).engine.power === 33)
+```
+
+Описание зависимостей
+---------------------
+
+Для описание зависимостей есть встроенные конфигурации klass, factory, compose, alias, value..
+
+Для провайдеров, поддерживающих зависимости (klass, factory, compose): зависимости можно описывать через запятую и через options-объекты.
+
+Для всех конфигураций есть аналогичные аннотации, которые могут быть прикреплены к классу или функции. Описывать зависимости через конфигурацию предпочтительнее, т.к. тогда кроме интерфейсов компоненты не будут содержать статических связей между собой, все связи можно вынести в отдельный конфигурационный слой.
+
+### klass
+
+Описывает, что создаваемая сущность - класс с зависимостями.
+
+Описание через конфигурацию:
+
+-	klass(Car, Engine, Brakes) - описывает класс Car с зависимостями Engine и Brakes
+-	klass(Car, {engine: Engine, brakes: Brakes}) - options-объект, который придет в конструктор Car
+
+```js
+// @flow
+import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import {createContainerManageFactory} from 'reactive-di'
+import {klass} from 'reactive-di/configurations'
+
+class Engine {}
+class Brakes {}
+class Car {
+    engine: Engine;
+    constructor(engine: Engine) {
+        this.engine = engine
+    }
+}
+
+const configuration: Array<Annotation> = [
+    klass(Engine),
+    klass(Brakes),
+    klass(Car, Engine, Brakes)
+];
+
+const container = createContainerManageFactory()(configuration).createContainer()
+container.get(Car)
+```
+
+Описание через аннотации:
+
+```js
+// @flow
+import {createContainerManageFactory} from 'reactive-di'
+import {klass} from 'reactive-di/annotations'
+
+@klass({engine: Engine, brakes: Brakes})
+class Car {
+    engine: Engine;
+    brakes: Brakes;
+
+    constructor(options: {engine: Engine, brakes: Brakes}) {
+        this.engine = options.engine
+        this.brakes = options.brakes
+    }
+}
+
+@klass()
+class Engine {}
+
+@klass()
+class Brakes {}
+
+const container = createContainerManageFactory()().createContainer()
+container.get(Car)
+```
+
+### factory
+
+Описывает функцию с зависимостями, которая возвращает любое значение.
+
+-	factory(CarFactory, Engine, Brakes) - описывает функцию-фабрику CarFactory с зависимостями Engine и Brakes
+-	factory(CarFactory, {engine: Engine, brakes: Brakes}) - аналогично с options-объектом
+
+Описание через конфигурацию:
+
+```js
+// @flow
+import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import {createContainerManageFactory} from 'reactive-di'
+import {klass, factory} from 'reactive-di/configurations'
+
+class Car {}
+class Engine {}
+
+function CarFactory(engine: Engine): Car {
+    return new Car(engine)
+}
+
+const configuration: Array<Annotation> = [
+    klass(Engine),
+    factory(CarFactory, Engine)
+];
+const container = createContainerManageFactory()(configuration).createContainer()
+container.get(CarFactory)
+```
+
+Описание через аннотации:
+
+Из-за неработающих в js декораторов на функции, аннотация выглядит как вызов функции factory.
+
+```js
+// @flow
+import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import {createContainerManageFactory} from 'reactive-di'
+import {klass, factory} from 'reactive-di/annotations'
+
+class Car {}
+
+@klass()
+class Engine {}
+
+function CarFactory(engine: Engine): Car {
+    return new Car(engine)
+}
+factory(CarFactory, Engine)
+
+const container = createContainerManageFactory()().createContainer()
+container.get(CarFactory)
+```
+
+### compose
+
+Функция, зависимости которой передаются перед аргументами ее вызова, упрощая ситуации, когда функция-фабрика возвращает функцию в результате.
+
+-	compose(CarFactory, Engine, Brakes) - описывает функцию-фабрику CarFactory с зависимостями Engine и Brakes
+-	compose(CarFactory, {engine: Engine, brakes: Brakes}) - аналогично с options-объектом
+
+Описание через конфигурацию:
+
+```js
+// @flow
+import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import {createContainerManageFactory} from 'reactive-di'
+import {klass, compose} from 'reactive-di/configurations'
+
+class Car {}
+class Engine {}
+
+function CarFactory(engine: Engine, {power}: {power: number}): Car {
+    return new Car(engine, power)
+}
+
+const configuration: Array<Annotation> = [
+    klass(Engine),
+    compose(CarFactory, Engine)
+];
+const container = createContainerManageFactory()(configuration).createContainer()
+const createCar: ({power}: {power: number}) => Car = container.get(CarFactory);
+const car: Car = createCar({33});
+```
+
+Описание через аннотации:
+
+```js
+// @flow
+import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import {createContainerManageFactory} from 'reactive-di'
+import {klass, compose} from 'reactive-di/annotations'
+
+class Car {}
+
+@klass()
+class Engine {}
+
+function CarFactory(engine: Engine, {power}: {power: number}): Car {
+    return new Car(engine, power)
+}
+compose(Engine)(CarFactory)
+
+const container = createContainerManageFactory()().createContainer()
+const createCar: ({power}: {power: number}) => Car = container.get(CarFactory);
+const car: Car = createCar({33});
+```
+
+### alias
+
+Ссылка на другую зависимость, используется когда надо переопределить абстрактный класс на реальный.
+
+-	alias(AbstractCar, ConcreteCar)
+
+Описание через конфигурацию:
+
+```js
+// @flow
+import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import {createContainerManageFactory} from 'reactive-di'
+import {klass, alias} from 'reactive-di/configurations'
+
+class AbstractCar {
+    color: string;
+}
+
+class RedCar {
+    color: string = 'red';
+}
+
+const configuration: Array<Annotation> = [
+    klass(Car),
+    alias(AbstractCar, RedCar)
+];
+const container = createContainerManageFactory()(configuration).createContainer()
+container.get(AbstractCar).color === 'red'
+```
+
+Описание через аннотации не имеет смысла, т.к. это привяжет AbstractCar к RedCar в модуле с AbstractCar.
+
+###value
+
+Присваивает значение зависимости-ссылке, ссылка может быть функцией-пустышкой или классом-пустышкой.
+
+Описание через конфигурацию:
+
+```js
+// @flow
+import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import {createContainerManageFactory} from 'reactive-di'
+import {klass, value} from 'reactive-di/configurations'
+
+function CarColor() {}
+
+class Car {
+    color: string = 'red';
+}
+
+const configuration: Array<Annotation> = [
+    klass(Car, CarColor),
+    value(CarColor, 'red')
+];
+const container = createContainerManageFactory()(configuration).createContainer()
+container.get(Car).color === 'red'
+```
+
+Описание через аннотации:
+
+value, не имеет смысла описывать в аннотации, т.к. это свяжет в том же модуле значение с ключем, по которому значение может быть получено. Однако, можно описать в аннотациях зависимость, использующую value.
+
+```js
+// @flow
+import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import {createContainerManageFactory} from 'reactive-di'
+import {klass} from 'reactive-di/annotations'
+import {value} from 'reactive-di/configurations'
+
+function CarColor() {}
+
+@klass(CarColor)
+class Car {
+    color: string;
+}
+
+const configuration: Array<Annotation> = [
+    value(CarColor, 'red')
+];
+const container = createContainerManageFactory()(configuration).createContainer()
+container.get(Car).color === 'red'
+```
+
+Создание своих конфигураций
+---------------------------
+
+Кроме вышеперечисленных klass, factory, compose, value, alias можно создавать свои. Существуют 3 уровня описания провайдера:
+
+1.	Plugin - знает как по типу создать сущность провайдера
+2.	Provider - Содержит информацию о связях с другими сущностями, которая может обновляться в реальном времени, по мере запроса зависимостей. Знает как создать Resolver. Provider-у доступен контейнер, который инициализировал его создание.
+3.	Resolver - Создает и кэширует значение зависимости, может обращаться с контейнеру, если Provider предоставил его Resolver-у.
+
+```js
+// @flow
+import type {
+    DependencyKey,
+    Annotation,
+    Container,
+    Provider,
+    Resolver,
+    Plugin
+} from 'reactive-di/i/coreInterfaces'
+import {
+    annotationDriver,
+    BaseProvider,
+    defaultPlugins,
+    createContainerManageFactory
+} from 'reactive-di'
+
+import {klass} from 'reactive-di/annotations'
+
+type MyConfiguration = {
+    kind: 'myPlugin';
+    value: string;
+}
+
+function myConfiguration(key: DependencyKey, value: string): MyConfiguration {
+    return {
+        kind: 'myPlugin',
+        key,
+        value
+    }
+}
+
+function myAnnotation(value: string): (target: Function) => void {
+    return function _myAnnotation(target: Function): void {
+        annotationDriver.annotate(target, myConfiguration(target, value))
+    }
+}
+
+class MyResolver {
+    _provider: MyProvider;
+
+    constructor(
+        provider: MyProvider,
+        parents: Array<Parent>,
+        getResolver: (dep: DependencyKey) => Resolver
+    ) {
+        this._provide = provider
+    }
+
+    reset(): void {
+
+    }
+
+    resolve(): any {
+        return 'MyValue'
+    }
+}
+
+class MyProvider extends BaseProvider<MyConfiguration> {
+    kind: 'myPlugin';
+    displayName: string;
+    tags: Array<Tag>;
+
+    annotation: MyConfiguration;
+    _childs: Array<Provider>;
+    _parents: Array<Provider>;
+
+    _container: Container;
+
+    init(Container: Container): void {
+        this._container = container
+    }
+
+    createResolver(): Resolver {
+        return new MyResolver(
+            this,
+            this._parents,
+            (dep: DependencyKey) => this._container.getResolver(dep)
+        )
+    }
+}
+
+const myPlugin: Plugin = {
+    kind: 'myPlugin';
+    create(annotation: MyConfiguration): Provider<MyConfiguration> {
+        return new MyProvider(annotation)
+    }
+}
+
+const myPlugins: Array<Plugin> = defaultPlugins.concat([myPlugin]);
+
+function myValue() {}
+
+@klass(myValue)
+class Car {
+    value: string;
+
+    constructor(value: string) {
+        this.value = value
+    }
+}
+const confugration: Array<Annotation> = [
+    myConfiguration(myValue, 'testValue')
+];
+
+const container = createContainerManageFactory(myPlugins)(configuration).createContainer()
+container.get(Car).value === 'testValue'
 ```
 
 Сравнение с angular2
@@ -133,10 +503,9 @@ reactive-di:
 
 ```js
 // @flow
-import { defaultPlugins, createDummyRelationUpdater } from 'reactive-di'
 import { alias, klass, factory} from 'reactive-di/configurations'
 
-const createContainerManager = createConfigProvider(defaultPlugins, createDummyRelationUpdater);
+const createContainerManager = createContainerManageFactory();
 const cm = createContainerManager([
     klass(Car),
     klass(Engine),
@@ -165,10 +534,9 @@ reactive-di:
 
 ```js
 // @flow
-import { defaultPlugins, createDummyRelationUpdater } from 'reactive-di'
 import { alias, klass, factory} from 'reactive-di/configurations'
 
-const createContainerManager = createConfigProvider(defaultPlugins, createDummyRelationUpdater);
+const createContainerManager = createContainerManageFactory();
 const cm = createContainerManager([
     klass(Car),
     klass(Engine)
@@ -208,7 +576,6 @@ reactive-di:
 
 ```js
 // @flow
-import { defaultPlugins, createDummyRelationUpdater } from 'reactive-di'
 import { klass } from 'reactive-di/configurations'
 
 class Engine {
@@ -218,7 +585,7 @@ class Car {
   constructor(engine: Engine) {}
 }
 
-const createContainerManager = createConfigProvider(defaultPlugins, createDummyRelationUpdater);
+const createContainerManager = createContainerManageFactory();
 const providers = createContainerManager([
     klass(Car),
     klass(Engine)

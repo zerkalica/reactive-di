@@ -14,20 +14,20 @@ import type {
 
 import {
     factory,
-    facet,
+    compose,
     klass,
     value
 } from 'reactive-di/configurations'
 
-describe('DiContainerFacetTest', () => {
-    it('should resolve facet without deps', () => {
+describe('DiContainerComposeTest', () => {
+    it('should resolve factory without deps', () => {
         function _myFn(): number {
             return 123
         }
         const myFn = sinon.spy(_myFn)
 
         const newDi: Container = createContainer([
-            facet(myFn)
+            factory(myFn)
         ]);
 
         const result = newDi.get(myFn)
@@ -36,7 +36,7 @@ describe('DiContainerFacetTest', () => {
         assert(result === 123)
     })
 
-    it('should resolve facet with deps', () => {
+    it('should resolve factory with deps', () => {
         function MyValue() {}
 
         function _myFn(a: number): number {
@@ -46,7 +46,7 @@ describe('DiContainerFacetTest', () => {
 
         const newDi: Container = createContainer([
             value(MyValue, 2),
-            facet(myFn, MyValue)
+            factory(myFn, MyValue)
         ]);
 
         const result = newDi.get(myFn)
@@ -64,7 +64,7 @@ describe('DiContainerFacetTest', () => {
 
         const newDi: Container = createContainer([
             value(MyValue, {a: 1, b: 2}),
-            facet(myFn, MyValue)
+            factory(myFn, MyValue)
         ]);
 
         const result = newDi.get(myFn)
@@ -89,7 +89,7 @@ describe('DiContainerFacetTest', () => {
         assert(result.v === '123')
     })
 
-    it('should resolve function factory with deps', () => {
+    it('should resolve function compose with deps', () => {
         function MyValue() {}
 
         function _myFn(a: number, b: number, c: number): number {
@@ -99,7 +99,7 @@ describe('DiContainerFacetTest', () => {
 
         const newDi: Container = createContainer([
             value(MyValue, 2),
-            factory(myFn, MyValue)
+            compose(myFn, MyValue)
         ]);
 
         const result = newDi.get(myFn)

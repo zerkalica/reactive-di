@@ -27,7 +27,7 @@ class ValueResolver {
     }
 }
 
-export class ValueProvider extends BaseProvider<ValueAnnotation> {
+class ValueProvider extends BaseProvider<ValueAnnotation> {
     kind: 'value';
     displayName: string;
     tags: Array<Tag>;

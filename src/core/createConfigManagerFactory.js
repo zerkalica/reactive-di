@@ -16,8 +16,9 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 
 import type {
+    CreateContainer,
     ProviderManager
-} from 'reactive-di/core/DiContainer'
+} from 'reactive-di/core/createDefaultContainer'
 
 import normalizeMiddlewares from 'reactive-di/core/normalizeMiddlewares'
 import normalizeConfiguration from 'reactive-di/core/normalizeConfiguration'
@@ -25,8 +26,9 @@ import SimpleMap from 'reactive-di/utils/SimpleMap'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 import driver from 'reactive-di/core/annotationDriver'
 import createPluginsMap from 'reactive-di/core/createPluginsMap'
-import DiContainer from 'reactive-di/core/DiContainer'
-
+import createDefaultContainer from 'reactive-di/core/createDefaultContainer'
+import defaultPlugins from 'reactive-di/plugins/defaultPlugins'
+import createDummyRelationUpdater from 'reactive-di/core/updaters/createDummyRelationUpdater'
 
 // implements ProviderManager, ContainerManager
 class DefaultProviderManager {
@@ -35,16 +37,19 @@ class DefaultProviderManager {
     _plugins: Map<string, Plugin>;
     _updater: RelationUpdater;
 
-_middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
+    _middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
     _resolverCaches: Array<Map<DependencyKey, Resolver>>;
+    _createContainer: CreateContainer;
 
     constructor(
-        config: Array<Annotation> = [],
+        config: Array<Annotation>,
         plugins: Map<string, Plugin>,
-        updater: RelationUpdater
+        updater: RelationUpdater,
+        createContainer: CreateContainer
     ) {
         this._annotations = normalizeConfiguration(config)
         this._middlewares = new SimpleMap()
+        this._createContainer = createContainer
         this._cache = new SimpleMap()
         this._plugins = plugins
         this._updater = updater
@@ -87,7 +92,7 @@ _middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
     }
 
     createContainer(parent?: Container): Container {
-        return new DiContainer(
+        return this._createContainer(
             (this: ProviderManager),
             this._middlewares,
             parent
@@ -137,15 +142,61 @@ _middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
     }
 }
 
-export default function createConfigProvider(
-    pluginsConfig: Array<Plugin>,
-    createUpdater: () => RelationUpdater
+/**
+ * Create config container manager factory for instantiating
+ * new configurations and replacing dependencies.
+ *
+ * In typical use, in application entry point, we create config manager factory.
+ * This factory creates config manager, which used for registering dependency configurations
+ * and creating injection containers
+ *
+ * ### Example
+ *
+ * The following example creates an `Container` configured to create `Engine` and `Car`
+ *
+ * ```js
+ * // @flow
+ *
+ * import {createConfigManagerFactory} from 'reactive-di'
+ * import {klass} from 'reactive-di/configurations'
+ *
+ * class Engine {}
+ *
+ * class Car {
+ *   engine: Engine;
+ *
+ *   constructor(engine: Engine) {
+ *     this.engine = engine
+ *   }
+ * }
+ *
+ * const cmf = createConfigManagerFactory()
+ * const cm = cmf([
+ *   klass(Engine),
+ *   klass(Car, Engine)
+ * ])
+ * const container = cm.createContainer()
+ * const car: Car = container.get(Car);
+ *
+ * assert(car instanceof Car)
+ * assert(car.engine instanceof Engine)
+ * ```
+ */
+export default function createConfigManagerFactory(
+    pluginsConfig?: Array<Plugin> = defaultPlugins,
+    createUpdater?: () => RelationUpdater = createDummyRelationUpdater,
+    createContainer?: CreateContainer = createDefaultContainer
 ): (config?: Array<Annotation>) => ContainerManager {
     const plugins: Map<string, Plugin> = createPluginsMap(pluginsConfig);
 
     return function createContainerManager(
         config?: Array<Annotation> = []
     ): ContainerManager {
-        return new DefaultProviderManager(config, plugins, createUpdater());
+        return new DefaultProviderManager(
+            config,
+            plugins,
+            createUpdater(),
+            createContainer
+        );
     }
 }

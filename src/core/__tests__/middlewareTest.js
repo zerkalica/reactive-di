@@ -13,20 +13,13 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 
 import {
-    alias,
-    factory,
-    facet,
+    compose,
     klass,
     value
 } from 'reactive-di/configurations'
 
-import {
-    klass as klassAnn
-} from 'reactive-di/annotations'
-
-
 describe('DiContainerMiddlewareTest', () => {
-    it('should log facet calls for factory', () => {
+    it('should log compose calls for factory', () => {
         function MyValue() {}
 
         function myFn(a: number, b: number, c: number): number {
@@ -40,8 +33,8 @@ describe('DiContainerMiddlewareTest', () => {
 
         const newDi: Container = createContainer([
             value(MyValue, 2),
-            factory(myFn, MyValue),
-            factory(myFnMiddleware)
+            compose(myFn, MyValue),
+            compose(myFnMiddleware)
         ], [
             [myFnMiddleware, [myFn]]
         ])
@@ -54,7 +47,7 @@ describe('DiContainerMiddlewareTest', () => {
         ))
     })
 
-    it('should log facet calls for klass', () => {
+    it('should log compose calls for klass', () => {
         class MyClass {
             test(a: number): number {
                 return a + 1

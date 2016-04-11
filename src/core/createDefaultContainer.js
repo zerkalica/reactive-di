@@ -23,7 +23,13 @@ export type ProviderManager = {
     getProvider(annotatedDep: DependencyKey, Container: Container): ?Provider;
 }
 
-export default class DiContainer {
+export type CreateContainer = (
+    providerManager: ProviderManager,
+    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>,
+    parent: ?Container
+) => Container;
+
+class DiContainer {
     _cache: Map<DependencyKey, Resolver>;
     _parent: ?Container;
     _providerManager: ProviderManager;
@@ -93,4 +99,16 @@ export default class DiContainer {
 
         return resolver
     }
+}
+
+export default function createDefaultContainer(
+    providerManager: ProviderManager,
+    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>,
+    parent: ?Container
+): Container {
+    return new DiContainer(
+        providerManager,
+        middlewares,
+        parent
+    )
 }

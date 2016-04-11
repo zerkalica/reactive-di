@@ -3,38 +3,35 @@ import type {
     ArgsObject,
     DependencyKey,
     Tag,
-    DepItem
-} from 'reactive-di/i/coreInterfaces'
-
-import type {
+    DepItem,
     Resolver,
     Container
 } from 'reactive-di/i/coreInterfaces'
 
 export default class ResolveHelper {
     _middlewares: Map<Tag|DependencyKey, Array<DependencyKey>>;
-    _Container: Container;
+    _container: Container;
 
     constructor(
         middlewares: Map<Tag|DependencyKey, Array<DependencyKey>>,
-        Container: Container
+        container: Container
     ) {
         this._middlewares = middlewares
-        this._Container = Container
+        this._container = container
     }
 
     getMiddlewares(
         annotatedDep: DependencyKey,
         tags: Array<Tag>
     ): ?Array<Resolver> {
-        const {_middlewares: middlewares, _Container: Container} = this
+        const {_middlewares: middlewares, _container: container} = this
         const ids: Array<DependencyKey|Tag> = [annotatedDep].concat(tags);
         const middlewareDeps: Array<Resolver> = [];
         for (let i = 0, l = ids.length; i < l; i++) {
             const depMiddlewares: ?Array<DependencyKey> = middlewares.get(ids[i]);
             if (depMiddlewares) {
                 for (let j = 0, k = depMiddlewares.length; j < k; j++) {
-                    middlewareDeps.push(Container.getResolver(depMiddlewares[j]))
+                    middlewareDeps.push(container.getResolver(depMiddlewares[j]))
                 }
             }
         }
@@ -46,7 +43,7 @@ export default class ResolveHelper {
         deps: Array<Resolver>;
         depNames: ?Array<string>;
     } {
-        const {_Container: Container} = this
+        const {_container: container} = this
 
         let depNames: ?Array<string> = null;
         const resolvedDeps: Array<Resolver> = [];
@@ -58,13 +55,13 @@ export default class ResolveHelper {
                 depNames = []
                 const argsObject: ArgsObject = (deps[0]: any);
                 for (let key in argsObject) { // eslint-disable-line
-                    resolvedDeps.push(Container.getResolver(argsObject[key]))
+                    resolvedDeps.push(container.getResolver(argsObject[key]))
                     depNames.push(key)
                 }
             } else {
                 for (let i = 0, l = deps.length; i < l; i++) {
                     const dep: Resolver =
-                        Container.getResolver(((deps: any): Array<DependencyKey>)[i]);
+                        container.getResolver(((deps: any): Array<DependencyKey>)[i]);
                     resolvedDeps.push(dep)
                 }
             }
