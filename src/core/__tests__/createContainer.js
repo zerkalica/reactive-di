@@ -3,6 +3,7 @@
 import {
     createConfigManagerFactory,
     defaultPlugins,
+    createHotRelationUpdater,
     createDummyRelationUpdater
 } from 'reactive-di/index'
 
@@ -17,10 +18,14 @@ import type {
 
 export function createContainer(
     config?: Array<Annotation>,
-    raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
+    raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>,
+    isHot: ?boolean = false
 ): Container {
     const createContainerManager: CreateContainerManager
-        = createConfigManagerFactory(defaultPlugins, createDummyRelationUpdater);
+        = createConfigManagerFactory(
+            defaultPlugins,
+            isHot ? createHotRelationUpdater : createDummyRelationUpdater
+        );
     const cm: ContainerManager = createContainerManager(config)
         .setMiddlewares(raw);
 

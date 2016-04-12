@@ -40,15 +40,19 @@ export default class BaseProvider<Ann: Annotation> {
     }
 
     addChild(child: Provider): void {
+        child.addParent(this)
         this._childs.push(child)
     }
 
+    /**
+     * All dependants
+     */
     getParents(): Array<Provider> {
         return this._parents
     }
 
     addParent(parent: Provider): void {
-        parent.addChild(this)
+        // console.log('add', this.displayName parent.displayName)
         this._parents.push(parent)
     }
 }

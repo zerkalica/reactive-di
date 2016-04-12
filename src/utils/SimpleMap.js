@@ -2,12 +2,12 @@
 import createIdCreator from 'reactive-di/utils/createIdCreator'
 import setProp from 'reactive-di/utils/setProp'
 
-let SimpleMap: Class<Map>;
-if (typeof Map !== 'undefined') {
-    SimpleMap = Map
-} {
+const token = '__rdi__token'
+
+function createMap(): Class<Map> {
     const createId: () => string = createIdCreator();
-    class EmulatedMap<K, V> {
+
+    class EmulatedMap<K: Function|Object, V> {
         _map: {[id: string]: V};
 
         constructor(data?: Array<[K, V]>) {
@@ -28,15 +28,11 @@ if (typeof Map !== 'undefined') {
         }
 
         _getKey(key: K): string {
-            if (!key || typeof key === 'string') {
-                return (key: any)
+            if (!key[token]) {
+                setProp((key: any), token, createId())
             }
 
-            if (!key.__rdi_token) {
-                setProp((key: any), '__rdi_token', createId())
-            }
-
-            return ((key: any).__rdi_token: string)
+            return ((key: any)[token]: string)
         }
 
         clear(): void {
@@ -61,7 +57,14 @@ if (typeof Map !== 'undefined') {
         }
     }
 
-    SimpleMap = (EmulatedMap: any)
+    return (EmulatedMap: any)
+}
+
+let SimpleMap: Class<Map>;
+if (typeof Map !== 'undefined') {
+    SimpleMap = Map
+} else {
+    SimpleMap = createMap()
 }
 
 export default SimpleMap

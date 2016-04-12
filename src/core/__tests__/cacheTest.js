@@ -30,4 +30,20 @@ describe('DiContainerCacheTest', () => {
 
         assert(myFn.calledOnce)
     })
+
+    it('should cache providers', () => {
+        const A = () => 1;
+        const newDi: Container = createContainer([
+            factory(A)
+        ])
+        assert(newDi.getProvider(A) === newDi.getProvider(A))
+    })
+
+    it('should cache resolvers', () => {
+        const A = () => 1;
+        const newDi: Container = createContainer([
+            factory(A)
+        ])
+        assert(newDi.getResolver(A) === newDi.getResolver(A))
+    })
 })

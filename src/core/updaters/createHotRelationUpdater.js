@@ -3,10 +3,10 @@ import type {
     Provider,
     RelationUpdater
 } from 'reactive-di/i/coreInterfaces'
-import SimpleMap from 'reactive-di/utils/SimpleMap'
+import SimpleSet from 'reactive-di/utils/SimpleSet'
 
 class HotRelationUpdater {
-    _parents: Array<Map<Provider, Provider>>;
+    _parents: Array<Set<Provider>>;
 
     constructor() {
         this._parents = []
@@ -15,32 +15,32 @@ class HotRelationUpdater {
     begin(provider: Provider): void {
         const {_parents: parents} = this
         for (let i = 0, l = parents.length; i < l; i++) {
-            parents[i].set(provider, provider)
+            parents[i].add(provider)
         }
-        parents.push(new SimpleMap())
+        parents.push(new SimpleSet())
     }
 
-    end(provider: Provider): void {
-        const childMap = this._parents.pop()
-        function iterateMap(childProvider: Provider): void {
-            childProvider.addParent(provider)
+    end(child: Provider): void {
+        const parentMap = this._parents.pop()
+        function iterateMap(parent: Provider): void {
+            parent.addChild(child)
         }
-        childMap.forEach(iterateMap)
+        parentMap.forEach(iterateMap)
     }
 
     inheritRelations(provider: Provider): void {
-        const l = this._parents.length
+        const l: number = this._parents.length;
         if (!l) {
             return
         }
-        const parents = this._parents
-        const childs = provider.getChilds()
-        const k = childs.length
+        const parents: Array<Set<Provider>> = this._parents;
+        const childs: Array<Provider> = provider.getParents();
+        const k: number = childs.length;
         for (let i = 0; i < l; i++) {
-            const childMap = parents[i];
+            const childMap: Set<Provider> = parents[i];
             for (let j = 0; j < k; j++) {
-                const child = childs[k]
-                childMap.set(child, child)
+                const child: Provider = childs[j];
+                childMap.add(child)
             }
         }
     }
