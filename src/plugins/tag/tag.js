@@ -20,7 +20,7 @@ import getFunctionName from 'reactive-di/utils/getFunctionName'
  *  ];
  * ```
  */
-export function tag<Ann: Annotation>(annotation: Ann, ...tags: Array<Tag>): Ann {
+export function tag(annotation: Annotation, ...tags: Array<Tag>): Annotation {
     annotation.tags = (annotation.tags || []).concat(tags) // eslint-disable-line
 
     return annotation

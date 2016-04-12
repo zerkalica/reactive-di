@@ -1,16 +1,16 @@
 /* @flow */
 
 import {
-    createConfigProvider,
+    createConfigManagerFactory,
     defaultPlugins,
     createDummyRelationUpdater
-} from 'reactive-di'
-import assert from 'powerassert'
+} from 'reactive-di/index'
+import assert from 'power-assert'
 
 import {alias, value} from 'reactive-di/configurations'
 
-import {klass, factory} from 'reactive-di/annotations'
 
+import {klass, factory} from 'reactive-di/annotations'
 class Tire {
     diameter: number;
     width: number;
@@ -23,25 +23,25 @@ class Tire {
 
 class AbstractEngine {}
 
-@klass()
 class ConcreteEngine extends AbstractEngine {
 }
+klass()(ConcreteEngine)
 
-@klass(AbstractEngine)
 class Car {
     engine: AbstractEngine;
     constructor(engine: AbstractEngine) {
         this.engine = engine
     }
 }
+klass(AbstractEngine)(Car)
 
-@klass({engine: AbstractEngine})
 class Bus {
     engine: AbstractEngine;
     constructor({engine}: {engine: AbstractEngine}) {
         this.engine = engine
     }
 }
+klass({engine: AbstractEngine})(Bus)
 
 function DefaultWidth() {}
 
@@ -51,14 +51,14 @@ function createTire(defaultWidth: number, diameter: number): Tire {
 factory(DefaultWidth)(createTire)
 
 const createContainerManager: CreateContainerManager
-    = createConfigProvider(defaultPlugins, createDummyRelationUpdater);
+    = createConfigManagerFactory(defaultPlugins, createDummyRelationUpdater);
 
 const cm: ContainerManager = createContainerManager([
     value(DefaultWidth, 22),
     alias(AbstractEngine, ConcreteEngine)
-])
+]);
 
-const di: Container = cm.createContainer();
+const di = cm.createContainer();
 
 assert(di.get(Car) instanceof Car)
 assert(di.get(Bus) instanceof Bus)

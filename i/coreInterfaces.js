@@ -26,11 +26,11 @@ export type Provider<Ann: Annotation> = {
     tags: Array<Tag>;
     annotation: Ann;
 
-    getChilds(): Array<Provider>;
-    addChild(child: Provider): void;
+    getDependencies(): Array<Provider>;
+    addDependency(dependency: Provider): void;
 
-    getParents(): Array<Provider>;
-    addParent(parent: Provider): void;
+    getDependants(): Array<Provider>;
+    addDependant(dependant: Provider): void;
 
     init(context: Container): void;
 
@@ -66,7 +66,7 @@ export type ContainerManager = {
     setMiddlewares(
         raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
     ): ContainerManager;
-    createContainer(parent?: Container): Container;
+    createContainer(dependant?: Container): Container;
     replace(annotatedDep: DependencyKey, annotation?: Annotation): void;
 }
 

@@ -6,41 +6,41 @@ import type {
 import SimpleSet from 'reactive-di/utils/SimpleSet'
 
 class HotRelationUpdater {
-    _parents: Array<Set<Provider>>;
+    _dependants: Array<Set<Provider>>;
 
     constructor() {
-        this._parents = []
+        this._dependants = []
     }
 
-    begin(provider: Provider): void {
-        const {_parents: parents} = this
-        for (let i = 0, l = parents.length; i < l; i++) {
-            parents[i].add(provider)
+    begin(dependency: Provider): void {
+        const {_dependants: dependants} = this
+        for (let i = 0, l = dependants.length; i < l; i++) {
+            dependants[i].add(dependency)
         }
-        parents.push(new SimpleSet())
+        dependants.push(new SimpleSet())
     }
 
-    end(child: Provider): void {
-        const parentMap = this._parents.pop()
-        function iterateMap(parent: Provider): void {
-            parent.addChild(child)
+    end(dependency: Provider): void {
+        const dependantSet = this._dependants.pop()
+        function iterateMap(dependant: Provider): void {
+            dependant.addDependency(dependency)
         }
-        parentMap.forEach(iterateMap)
+        dependantSet.forEach(iterateMap)
     }
 
-    inheritRelations(provider: Provider): void {
-        const l: number = this._parents.length;
+    inheritRelations(dependency: Provider): void {
+        const l: number = this._dependants.length;
         if (!l) {
             return
         }
-        const parents: Array<Set<Provider>> = this._parents;
-        const childs: Array<Provider> = provider.getParents();
-        const k: number = childs.length;
+        const dependants: Array<Set<Provider>> = this._dependants;
+        const inheritDependants: Array<Provider> = dependency.getDependants();
+        const k: number = inheritDependants.length;
         for (let i = 0; i < l; i++) {
-            const childMap: Set<Provider> = parents[i];
+            const dependantSet: Set<Provider> = dependants[i];
             for (let j = 0; j < k; j++) {
-                const child: Provider = childs[j];
-                childMap.add(child)
+                const dependant: Provider = inheritDependants[j];
+                dependantSet.add(dependant)
             }
         }
     }

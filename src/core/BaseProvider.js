@@ -16,14 +16,14 @@ export default class BaseProvider<Ann: Annotation> {
     tags: Array<Tag>;
 
     annotation: Ann;
-    _childs: Array<Provider>;
-    _parents: Array<Provider>;
+    _dependencies: Array<Provider>;
+    _dependants: Array<Provider>;
 
     constructor(annotation: Ann) {
         this.kind = annotation.kind
         this.annotation = annotation
-        this._childs = [this]
-        this._parents = [this]
+        this._dependencies = [this]
+        this._dependants = [this]
         const fnName: string = getFunctionName(annotation.target);
         this.displayName = this.kind + '@' + fnName
         this.tags = [this.kind].concat(annotation.tags || [])
@@ -35,24 +35,24 @@ export default class BaseProvider<Ann: Annotation> {
         throw new Error('Implement resolver')
     }
 
-    getChilds(): Array<Provider> {
-        return this._childs
+    getDependencies(): Array<Provider> {
+        return this._dependencies
     }
 
-    addChild(child: Provider): void {
-        child.addParent(this)
-        this._childs.push(child)
+    addDependency(dependency: Provider): void {
+        dependency.addDependant(this)
+        this._dependencies.push(dependency)
     }
 
     /**
      * All dependants
      */
-    getParents(): Array<Provider> {
-        return this._parents
+    getDependants(): Array<Provider> {
+        return this._dependants
     }
 
-    addParent(parent: Provider): void {
-        // console.log('add', this.displayName parent.displayName)
-        this._parents.push(parent)
+    addDependant(dependant: Provider): void {
+        // console.log('add', this.displayName dependant.displayName)
+        this._dependants.push(dependant)
     }
 }

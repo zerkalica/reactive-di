@@ -59,7 +59,7 @@ class DefaultProviderManager {
     _createProvider(annotatedDep: DependencyKey, container: Container): ?Provider {
         let annotation: ?Annotation = this._annotations.get(annotatedDep);
         if (!annotation) {
-            if (!this._parent) {
+            if (!this._dependant) {
                 annotation = driver.getAnnotation((annotatedDep: Dependency))
                 if (!annotation) {
                     return null
@@ -113,9 +113,9 @@ class DefaultProviderManager {
         if (provider) {
             const rc = this._resolverCaches
             const k = rc.length
-            const parents = provider.getParents()
-            for (let i = 0, l = parents.length; i < l; i++) {
-                const target = parents[i].annotation.target
+            const dependants = provider.getDependants()
+            for (let i = 0, l = dependants.length; i < l; i++) {
+                const target = dependants[i].annotation.target
                 cache.delete(target)
                 for (let j = 0; j < k; j++) {
                     rc[j].delete(target)

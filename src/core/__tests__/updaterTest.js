@@ -20,7 +20,7 @@ function depName(dep: Provider): string {
 }
 
 describe('HotRelationUpdaterTest', () => {
-    it('should cache child deps', () => {
+    it('should cache dependency deps', () => {
         const A = () => 1;
         const B = (c: number) => 2 + c;
         const C = (a: number) => 3 + a;
@@ -33,7 +33,7 @@ describe('HotRelationUpdaterTest', () => {
 
         di.getProvider(C)
 
-        const result = di.getProvider(B).getParents()
+        const result = di.getProvider(B).getDependants()
             .map(depName);
 
         assert.deepEqual(result, [
@@ -53,7 +53,7 @@ describe('HotRelationUpdaterTest', () => {
             factory(B, C, A)
         ], [], true);
 
-        const result = di.getProvider(B).getParents().map(depName);
+        const result = di.getProvider(B).getDependants().map(depName);
 
         assert.deepEqual(result, [
             'factory@B',
@@ -62,7 +62,7 @@ describe('HotRelationUpdaterTest', () => {
         ])
     })
 
-    it('should add parents in A, B->C, C->A: A, B->C&A, C->A', () => {
+    it('should add dependants in A, B->C, C->A: A, B->C&A, C->A', () => {
         const A = () => 1;
         const B = (c: number) => 2 + c;
         const C = (a: number) => 3 + a;
@@ -72,7 +72,7 @@ describe('HotRelationUpdaterTest', () => {
             factory(B, C)
         ], [], true);
 
-        const result = di.getProvider(B).getParents().map(depName)
+        const result = di.getProvider(B).getDependants().map(depName)
 
         assert.deepEqual(result, [
             'factory@B',
@@ -81,7 +81,7 @@ describe('HotRelationUpdaterTest', () => {
         ])
     })
 
-    it('should resolve childs after parents in A, B->C, C->A: A, B->C&A, C->A', () => {
+    it('should resolve dependencies after dependants in A, B->C, C->A: A, B->C&A, C->A', () => {
         const A = () => 1;
         const B = (c: number) => 2 + c;
         const C = (a: number) => 3 + a;
@@ -91,15 +91,15 @@ describe('HotRelationUpdaterTest', () => {
             factory(B, C)
         ], [], true);
 
-        const childs = di.getProvider(A).getChilds()
+        const dependencies = di.getProvider(A).getDependencies()
 
-        assert.deepEqual(childs.map(depName), [
+        assert.deepEqual(dependencies.map(depName), [
             'factory@A'
         ])
 
-        di.getProvider(B).getParents().map(depName)
+        di.getProvider(B).getDependants().map(depName)
 
-        assert.deepEqual(childs.map(depName), [
+        assert.deepEqual(dependencies.map(depName), [
             'factory@A',
             'factory@C',
             'factory@B'

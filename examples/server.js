@@ -5,7 +5,7 @@ import http from 'http'
 import url from 'url'
 
 import {
-    createConfigProvider,
+    createConfigManagerFactory,
     defaultPlugins,
     createDummyRelationUpdater
 } from 'reactive-di/index'
@@ -68,7 +68,10 @@ const controllerMap = {
     AppIndexController
 }
 
-const createConfiguration = createConfigProvider(defaultPlugins, createDummyRelationUpdater)
+const createConfiguration = createConfigManagerFactory(
+    defaultPlugins,
+    createDummyRelationUpdater
+)
 
 const appConfiguration = createConfiguration([
     factory(NotFoundController),
@@ -97,8 +100,10 @@ function accept(req: http.IncomingMessage, res: http.ClientRequest): void {
 
     try {
         const response: string = requestDi.get(controllerDep);
+        requestDi.finalize()
         res.end(response)
     } catch (e) {
+        requestDi.finalize()
         res.end(e.toString())
     }
 }
