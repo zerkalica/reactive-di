@@ -92,7 +92,7 @@ class Car {
     constructor(options: {engine: Engine, tire: Tire}) {}
 }
 const configuration = [
-    klass({engine: Engine, tire: Tire})
+    klass(Car, {engine: Engine, tire: Tire})
 ]
 ```
 
