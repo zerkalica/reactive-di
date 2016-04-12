@@ -729,7 +729,11 @@ const cm = createContainerManager([
     klass(Engine),
     value(String, 'Hello World'),
     alias(V8, Engine),
-    factory(Factory, Car, Engine),
+    {
+        kind: 'factory',
+        target: (car, engine) => IS_V8 ? new V8Engine() : V6Engine(),
+        deps: [Car, Engine]
+    }
 ])
 const di = cm.createContainer();
 
