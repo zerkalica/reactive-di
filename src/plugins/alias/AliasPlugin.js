@@ -33,8 +33,8 @@ class AliasProvider extends BaseProvider<AliasAnnotation> {
 
     _resolver: Resolver;
 
-    init(Container: Container): void {
-        this._resolver = Container.getResolver(this.annotation.alias)
+    init(container: Container): void {
+        this._resolver = container.getResolver(this.annotation.alias)
     }
 
     createResolver(): Resolver {

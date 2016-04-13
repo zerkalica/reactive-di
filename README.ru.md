@@ -45,50 +45,64 @@ container.get(Car)
 
 Это влияние происходит динамически: при первом запросе очередной зависимости, она встраивается в дерево, получает и сама влияет на дочерние и родительские компоненты. Что дает возможность сторонним плагинам управлять кэшем, реагировать на перестроение дерева зависимостей, что может быть использовано для реализации hotreload, observable на основе di и т.д.
 
-Удобство тестирования, возможность подмены одной реализации на другую с таким же интерфейсом, не являются основыми преимуществами в использовании DI. Основная задача DI - предварительная настройка зависимостей, вынесенная в отдельный слой - [Composition Root](http://blog.ploeh.dk/2011/07/28/CompositionRoot/) и скрывающая детали этой настройки от основного кода приложения. DI не имеет прямого отношения к ООП - можно преднастраивать функции-фабрики, данные, что угодно.
+Удобство тестирования, возможность подмены одной реализации на другую с таким же интерфейсом, не являются основыми преимуществами в использовании DI. Основная задача DI - предварительная настройка зависимостей, вынесенная в отдельный слой - [Composition Root](http://blog.ploeh.dk/2011/07/28/CompositionRoot/) и скрывающая детали этой настройки от основного кода приложения. DI не имеет прямого отношения к ООП - можно преднастраивать функции-фабрики, данные.
 
 Структура
 ---------
 
 В структуре ReactiveDi можно выделить следующие сущности:
 
--	Dependency - зависимость: класс, функция, строка, объект
--	Annotation - описывает зависимости: тип зависимости, аргументы, передаваемые в конструктор или функцию.
--	Configuration - способ описания зависимостей в отдельной конфигурации DI.
--	Resolver - вычисляет значение зависимости и управляет ее кэшем
--	Provider - представляет зависимость со всеми ее связями и мета-информацией, обновляет связи при перестоении зависимостей, создает Resolver
--	Plugin - расшияет функциональсть reactive-di. Создает провайдер для соотвествующей аннотации. Например, ClassPlugin в паре с аннотацией klass создает ClassProvider и ClassResolver.
--	Container - по зависимости-ключу получает ее значение или Resolver, кэширует результаты вычисления зависимости
--	RelationUpdater - стратегия, куда выносятся общие для всех зависимостей алгоритмы по вычислению их детей и родителей в дереве. В библиотеке есть 2 готовые стратегии: HotRelationUpdater - вычисляет parent/child зависимости, DummyRelationUpdater - ничего не вычисляет, используется для ускорения вычисления, когда не нужен hotreload.
--	ContainerManager - нормализует и кэширует конфигурацию, создает контейнеры с зависимостями, перестраивает дерево зависимостей при изменении одной из них
--	CreateConfigResolver - регистрирует Plugins, RelationUpdater и создает ContainerManager
+### Dependency
 
-[core interfaces](./i/coreInterfaces.js)
-
-[plugins interfaces](./i/pluginsInterfaces.js)
-
-![ReactiveDi class diagram](./docs/images/class-diagram.png)
-
-Описание зависимостей
----------------------
-
-Для описания зависимостей есть встроенные конфигурации klass, factory, compose, alias, value..
-
-Для некоторых провайдеров (klass, factory, compose): зависимости можно описывать через запятую и через options-объекты.
+Зависимость: класс или функция. Зависимость может быть зависимой от других зависимостей. Например, Car зависимый от Engine.
 
 ```js
 // @flow
 
-class Car {
-    constructor(engine: Engine, tire: Tire) {}
-}
+class Engine {}
 
-const configuration = [
-    klass(Car, Engine, Tire)
-]
+class Car {
+    engine: Engine;
+    constructor(engine: Engine) {
+        this.engine = engine
+    }
+}
 ```
 
-или
+### Annotation
+
+Описывает зависимости: ее тип, аргументы, передаваемые в конструктор или функцию. Зависимости можно описывать через запятую и через options-объекты. Для описания зависимостей есть аннотации klass, factory, compose, alias, value.
+
+Для классов:
+
+```js
+// @flow
+
+@klass(Engine)
+class Car {
+    constructor(engine: Engine) {}
+}
+
+@klass({engine: Engine})
+class AnotherCar {
+    constructor(options: {engine: Engine}) {}
+}
+```
+
+Для фабрик:
+
+```js
+// @flow
+
+function carFactory(engine: engine) {
+    return new Car(engine)
+}
+factory(engine)(carFactory)
+```
+
+### Configuration
+
+Аналогично аннотациям, но в отдельной конфигурации DI.
 
 ```js
 // @flow
@@ -101,21 +115,143 @@ const configuration = [
 ]
 ```
 
-Для всех конфигураций есть аналогичные аннотации, которые могут быть прикреплены к классу или функции.
+klass - простая функция-хелпер, которая генерирует такую структуру:
 
 ```js
-@klass(Engine, Tire)
-class Car {
-    constructor(engine: Engine, tire: Tire) {}
+{
+    kind: 'klass',
+    target: Car,
+    deps: {engine: Engine, tire: Tire}
 }
 ```
 
 Описывать зависимости через конфигурацию предпочтительнее, т.к. тогда кроме интерфейсов компоненты не будут содержать статических связей между собой, все связи можно вынести в отдельный конфигурационный слой, см. статью [Composition Root by Mark Seemann](http://blog.ploeh.dk/2011/07/28/CompositionRoot/)
 
+Подробнее, типы конфигураций будут расмотренны далее.
+
+### Resolver
+
+Каждое значение, полученное из контейнера зависимостей вычисляется этой сущностью.
+
+```js
+// @flow
+export type Resolver = {
+    resolve(): any;
+    reset(): void;
+}
+```
+
+resolve - вычисляет значение, заносит в кэш, reset - сбрасывает кэш.
+
+```js
+    @klass()
+    class Car {}
+
+    container.getResolver(Car).resolve()
+    // или
+    container.get(Car)
+```
+
+Под каждый тип зависимости klass, factory, value, alias свои реализации Resolvers, это дает возможность расширять апи через собственные плагины.
+
+### Provider
+
+Представляет мета-информацию о зависимости: ее связи и т.д. Обновляет связи при перестоении зависимостей, создает Resolver.
+
+```js
+// @flow
+@klass()
+class Engine {}
+
+@klass(Engine)
+class Car {}
+
+configuration.getProvider(Car).getDependencies(); // [Provider<Engine>]
+configuration.getProvider(Engine).getDependants(); // [Provider<Car>]
+```
+
+Подробнее см. Provider в [core interfaces](./i/coreInterfaces.js).
+
+### Plugin
+
+Расшияет функциональсть reactive-di. За кажой аннотацией стоит соотвествующий plugin. Например, ClassPlugin в паре с аннотацией klass создает ClassProvider и ClassResolver.
+
+```js
+// @flow
+const AliasPlugin = {
+    kind: 'alias',
+    create(annotation: AliasAnnotation): Provider {
+        return new AliasProvider(annotation)
+    }
+}
+
+const configResolver = createConfigResolver([
+    AliasPlugin
+])
+
+const config = configResolver([
+    alias(Car, RedCar)
+])
+```
+
+### Container
+
+По зависимости-ключу получает ее значение или Resolver, кэширует результаты вычисления зависимости.
+
+```js
+// @flow
+export type Container = {
+    get(annotatedDep: DependencyKey): any;
+    finalize(): void;
+    getResolver(annotatedDep: DependencyKey): Resolver;
+}
+```
+
+Когда контейнер становится не нужен, следует вызывать finalize. Например когда react-виджет монтируется в DOM, может создаваться контейнер с зависимостями виджета, которые по отмантировании виджета становятся ненужными.
+
+### RelationUpdater
+
+Т.к. API reactive-di проектировалось с рассчетом на реактивность, то зависимости могут влиять друг на друга. В RelationUpdater выносятся общие для всех зависимостей алгоритмы по вычислению их связей в дереве. В библиотеке есть 2 готовые стратегии:
+
+-	HotRelationUpdater - вычисляет связи "зависимый-зависимости" по мере создания зависимостей,
+-	DummyRelationUpdater - ничего не вычисляет, используется для ускорения вычисления, когда не нужен hotreload и предполагается использовать reactive-di, как обычный di.
+
+```js
+// @flow
+export type RelationUpdater = {
+    begin(provider: Provider): void;
+    end(provider: Provider): void;
+    inheritRelations(provider: Provider): void;
+}
+```
+
+### ContainerManager
+
+Нормализует и кэширует мета-информацию о зависимостях, создает контейнеры, перестраивает кэш зависимостей при замене одной из них.
+
+```js
+// @flow
+export type ContainerManager = {
+    setMiddlewares(
+        raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
+    ): ContainerManager;
+    createContainer(parent?: Container): Container;
+    replace(annotatedDep: DependencyKey, annotation: Annotation): void;
+}
+```
+
+### CreateConfigResolver
+
+Точка регистрации Plugins, RelationUpdater.
+
+Подробнее об API в [core interfaces](./i/coreInterfaces.js) и [plugins interfaces](./i/pluginsInterfaces.js).
+
+![ReactiveDi class diagram](./docs/images/class-diagram.png)
+
 Создание контейнера
 -------------------
 
-В первую очередь создается ConfigResolver. При создании ему опционально передаются:
+Для первичной настройки контейнера, передачи плагинов, различных стратегий, используется ConfigResolver. При создании ему опционально передаются:
 
 -	pluginConfig - точка расширения плагинов, по умолчанию используются defaultPlugins.
 -	createUpdater - фабрика, создающая стратегию обновления связей "зависимый-зависимость"
@@ -161,6 +297,9 @@ container.get(Car)
 ```
 
 Такое разделение позволяет расширять, дешево создавать и реализовывать иерархические контейнеры. Например, по аналогии с angluar2, можно сделать react-компоненты, каждый из которых будет иметь свой контейнер. Внутренние формы, экшены, валидаторы будут в этом контейнеры, а слой работы с rest-api, логгеры источники данных будут в родительском контейнере.
+
+Типы зависимостей
+-----------------
 
 ### klass
 

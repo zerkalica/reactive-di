@@ -72,7 +72,7 @@ export type ContainerManager = {
     setMiddlewares(
         raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
     ): ContainerManager;
-    createContainer(dependant?: Container): Container;
+    createContainer(parent?: Container): Container;
     replace(annotatedDep: DependencyKey, annotation?: Annotation): void;
 }
 
