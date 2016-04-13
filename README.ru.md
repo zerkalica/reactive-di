@@ -32,7 +32,8 @@
         - [Multi-зависимости](#user-content-multi-зависимости)
 
 Reactive-di планируется, как клей для функций, классов, observable-данных, модификаторов состояния и component-based библиотек виджетов, вроде [react](https://facebook.github.io/react/) [mithril](http://mithril.js.org/), [mercury](https://github.com/Raynos/mercury) или [hyperscript](https://github.com/dominictarr/hyperscript).
-Что бы изолировать в [Composition Root](http://blog.ploeh.dk/2011/07/28/CompositionRoot/) знания о react, и других low-level библиотеках, оставив только чистые функции и jsx или любой другой формат описания дерева виджетов.
+
+Для frontend-разработки идея di заключается в вынесении в [Composition Root](http://blog.ploeh.dk/2011/07/28/CompositionRoot/) знания о react и других low-level библиотеках. Только чистые функции и jsx или любой другой формат описания дерева виджетов.
 
 Reactive-di
 
