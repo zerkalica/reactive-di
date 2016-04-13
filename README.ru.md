@@ -1,7 +1,7 @@
 # Reactive DI
 
 - [Reactive DI](#reactive-di)
-    - [Структура](#)
+    - [Структура](#user-content-Структура)
         - [Dependency](#dependency)
         - [Annotation](#annotation)
         - [Configuration](#configuration)
@@ -29,7 +29,7 @@
         - [Иерархические контейнеры](#user-content-Иерархические-контейнеры)
         - [Создание контейнера из ранее подготовленных провайдеров](#user-content-Создание-контейнера-из-ранее подготовленных-провайдеров)
         - [Opaque token](#opaque-token)
-        - [Multi-зависимости](#user-content-Multi-зависимости)
+        - [Multi-зависимости](#user-content-multi-зависимости)
 
 Реализация паттерна внедрение зависимостей.
 
