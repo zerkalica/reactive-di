@@ -739,7 +739,7 @@ import type {
     Resolver,
     Plugin
 } from 'reactive-di/i/coreInterfaces'
-import {3
+import {
     annotationDriver,
     BaseProvider,
     defaultPlugins,
