@@ -31,11 +31,13 @@
         - [Opaque token](#opaque-token)
         - [Multi-зависимости](#user-content-multi-зависимости)
 
-Reactive-di планируется, как клей для функций, классов, observable-данных, модификаторов состояния и component-based библиотек виджетов, вроде [react](https://facebook.github.io/react/) [mithril](http://mithril.js.org/), [mercury](https://github.com/Raynos/mercury) или [hyperscript](https://github.com/dominictarr/hyperscript).
+Цель - создать meta-фреймворк, сопоставимый с angular2, но состоящий из сторонних компонент, где reactive-di является тонкой прослойкой, посредством провайдов объединяющим сторонние библиотеки в одно целое и вынесением их настройки и связей в отдельный слой.
+
+Reactive-di планируется, как клей для функций, классов, observable-данных, модификаторов состояния и component-based библиотек виджетов, вроде [react](https://facebook.github.io/react/), [mithril](http://mithril.js.org/), [mercury](https://github.com/Raynos/mercury) или [hyperscript](https://github.com/dominictarr/hyperscript).
 
 Для frontend-разработки идея di заключается в вынесении в [Composition Root](http://blog.ploeh.dk/2011/07/28/CompositionRoot/) знания о react и других low-level библиотеках. Только чистые функции и jsx или любой другой формат описания дерева виджетов.
 
-Reactive-di
+Reactive-di также
 
 -	Поддерживает иерархические зависимости, как в angular2
 -	Умеет делать горячую замену зависимости с очисткой кэша всех зависимых сущностей
@@ -328,7 +330,7 @@ const container: Container = cm.createContainer();
 container.get(Car)
 ```
 
-Такое разделение позволяет расширять, дешево создавать и реализовывать иерархические контейнеры. Например, по аналогии с angluar2, можно сделать react-компоненты, каждый из которых будет иметь свой контейнер. Внутренние формы, экшены, валидаторы будут в этом контейнеры, а слой работы с rest-api, логгеры источники данных будут в родительском контейнере.
+Такое разделение позволяет расширять, дешево создавать и реализовывать иерархические контейнеры. Например, по аналогии с angluar2, можно сделать [react](https://facebook.github.io/react/)-компоненты, каждый из которых будет иметь свой контейнер. Внутренние формы, экшены, валидаторы будут в этом контейнере, а слой работы с rest-api, логгеры источники данных будут в родительском контейнере.
 
 ## Типы зависимостей
 
@@ -336,10 +338,10 @@ container.get(Car)
 
 Описывает класс с зависимостями.
 
-Через конфигурацию:
-
 -	klass(Car, Engine, Brakes) - описывает класс Car с зависимостями Engine и Brakes
 -	klass(Car, {engine: Engine, brakes: Brakes}) - options-объект, который придет в конструктор Car
+
+Через конфигурацию:
 
 ```js
 // @flow
