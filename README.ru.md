@@ -902,9 +902,9 @@ const createContainerManager = createConfigResolver(
 
 ## Сравнение с angular2
 
-[angular2 di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di) не является неделимой частью экосистемы angular2, его API не позволяет реализовать горячую замену зависимостей (hotreload), нету механизма middleware - логирования вызовов функций и методов, сложное API [Injector Class](https://angular.io/docs/ts/latest/api/core/Injector-class.html) (около 3х методов для получения данных). Все зависимости в angular2 di - синглтоны, создаются при первом запросе и помещаются в кэш, на это никак нельзя повлиять.
+[angular2 di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di) является неделимой частью экосистемы angular2, его API не позволяет реализовать горячую замену зависимостей (hotreload), нету механизма middleware - логирования вызовов функций и методов, сложное API [Injector Class](https://angular.io/docs/ts/latest/api/core/Injector-class.html) (около 3х методов для получения данных). Все зависимости в angular2 di - синглтоны, создаются при первом запросе и помещаются в кэш, на это никак нельзя повлиять.
 
-В отличие от reactive-di, вместо идеи meta-фреймворка, который может склеивать любые компоненты и библиотеки, google продвигает идею монолитного angular2.
+В отличие от reactive-di, вместо идеи meta-фреймворка, который может склеивать любые компоненты и библиотеки, google продвигает идею "всего в себе" - монолитного angular2. Хотя работа по разделению компонент ведется, но еще долго в angular2 нельзя будет удобно работать с react-виджетами, стороними библиотеками роутинга или подобными решениями. Angular2 не позиционируется, как meta-фреймворк, вроде [Java Spring](http://spring.io/) или [PHP Symfony2](https://symfony.com/).
 
 В [примерах документации angular 2](https://angular.io/docs/ts/latest/guide/dependency-injection.html#!#appendix-working-with-injectors-directly) (InjectorComponent) авторы не грушаются использовать Injector как ServiceLocator, что является плохим подходом, если есть возможность использовать DI, см. [stackoverflow](http://stackoverflow.com/questions/22795459/is-servicelocator-anti-pattern), [habrahabr.ru](https://habrahabr.ru/post/166287/) [статью Mark Seemann](http://blog.ploeh.dk/2010/02/03/ServiceLocatorisanAnti-Pattern/).
 
