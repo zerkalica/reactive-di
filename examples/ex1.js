@@ -1,7 +1,7 @@
 /* @flow */
 
 import {
-    createConfigManagerFactory,
+    createConfigResolver,
     defaultPlugins,
     createDummyRelationUpdater
 } from 'reactive-di/index'
@@ -51,7 +51,7 @@ function createTire(defaultWidth: number, diameter: number): Tire {
 factory(DefaultWidth)(createTire)
 
 const createContainerManager: CreateContainerManager
-    = createConfigManagerFactory(defaultPlugins, createDummyRelationUpdater);
+    = createConfigResolver(defaultPlugins, createDummyRelationUpdater);
 
 const cm: ContainerManager = createContainerManager([
     value(DefaultWidth, 22),

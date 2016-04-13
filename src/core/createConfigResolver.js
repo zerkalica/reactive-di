@@ -157,7 +157,7 @@ class DefaultProviderManager {
  * ```js
  * // @flow
  *
- * import {createConfigManagerFactory} from 'reactive-di'
+ * import {createConfigResolver} from 'reactive-di'
  * import {klass} from 'reactive-di/configurations'
  *
  * class Engine {}
@@ -170,7 +170,7 @@ class DefaultProviderManager {
  *   }
  * }
  *
- * const cmf = createConfigManagerFactory()
+ * const cmf = createConfigResolver()
  * const cm = cmf([
  *   klass(Engine),
  *   klass(Car, Engine)
@@ -182,7 +182,7 @@ class DefaultProviderManager {
  * assert(car.engine instanceof Engine)
  * ```
  */
-export default function createConfigManagerFactory(
+export default function createConfigResolver(
     pluginsConfig?: Array<Plugin> = defaultPlugins,
     createUpdater?: () => RelationUpdater = createDummyRelationUpdater,
     createContainer?: CreateContainer = createDefaultContainer

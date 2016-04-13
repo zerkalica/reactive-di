@@ -5,7 +5,7 @@ import http from 'http'
 import url from 'url'
 
 import {
-    createConfigManagerFactory,
+    createConfigResolver,
     defaultPlugins,
     createDummyRelationUpdater
 } from 'reactive-di/index'
@@ -68,7 +68,7 @@ const controllerMap = {
     AppIndexController
 }
 
-const createConfiguration = createConfigManagerFactory(
+const createConfiguration = createConfigResolver(
     defaultPlugins,
     createDummyRelationUpdater
 )

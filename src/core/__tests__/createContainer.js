@@ -1,7 +1,7 @@
 /* @flow */
 
 import {
-    createConfigManagerFactory,
+    createConfigResolver,
     defaultPlugins,
     createHotRelationUpdater,
     createDummyRelationUpdater
@@ -22,7 +22,7 @@ export function createContainer(
     isHot: ?boolean = false
 ): Container {
     const createContainerManager: CreateContainerManager
-        = createConfigManagerFactory(
+        = createConfigResolver(
             defaultPlugins,
             isHot ? createHotRelationUpdater : createDummyRelationUpdater
         );

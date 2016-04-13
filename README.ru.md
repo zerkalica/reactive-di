@@ -4,24 +4,25 @@ Reactive DI
 Реализация паттерна внедрение зависимостей.
 
 -	Поддерживаются иерархические зависимости, как в angular2
--	Умеет делать горячую замену зависимости (hotreload) с очисткой кэша всех зависимых сущностей
+-	Умеет делать горячую замену зависимости с очисткой кэша всех зависимых сущностей
 -	Умеет прозрачно логировать вызовы функций через middleware
 -	Может конфигурироваться через аннотации или конфиг
 -	Может быстро работать без Map и Set полифилов в браузерах от IE9
--	Предоставляет апи для работы со связями зависимый-зависимость
--	Позволяет создавать собственные провайдеры зависимостей и управлть кэшем
+-	Предоставляет апи для работы со связями "зависимый-зависимость"
+-	Позволяет создавать собственные провайдеры зависимостей и управлять кэшем
+-	Позволяет "дешево" создать контейнер на основе ранее созданной конфигурации
 
 ```js
 // @flow
 import type {Annotation} from 'reactive-di/i/coreInterfaces'
-import {createContainerManageFactory} from 'reactive-di'
+import {createConfigResolver} from 'reactive-di'
 import {klass} from 'reactive-di/configurations'
 
 class Engine {}
 class Brakes {}
 class Car {
     engine: Engine;
-    constructor(engine: Engine) {
+    constructor(engine: Engine, brakes: Brakes) {
         this.engine = engine
     }
 }
@@ -32,7 +33,7 @@ const configuration: Array<Annotation> = [
     klass(Car, Engine, Brakes)
 ];
 
-const container = createContainerManageFactory()(configuration).createContainer()
+const container = createConfigResolver()(configuration).createContainer()
 container.get(Car)
 ```
 
@@ -60,7 +61,11 @@ container.get(Car)
 -	Container - по зависимости-ключу получает ее значение или Resolver, кэширует результаты вычисления зависимости
 -	RelationUpdater - стратегия, куда выносятся общие для всех зависимостей алгоритмы по вычислению их детей и родителей в дереве. В библиотеке есть 2 готовые стратегии: HotRelationUpdater - вычисляет parent/child зависимости, DummyRelationUpdater - ничего не вычисляет, используется для ускорения вычисления, когда не нужен hotreload.
 -	ContainerManager - нормализует и кэширует конфигурацию, создает контейнеры с зависимостями, перестраивает дерево зависимостей при изменении одной из них
--	ContainerCreator - регистрирует Plugins, RelationUpdater и создает ContainerManager
+-	CreateConfigResolver - регистрирует Plugins, RelationUpdater и создает ContainerManager
+
+[core interfaces](./i/coreInterfaces.js)
+
+[plugins interfaces](./i/pluginsInterfaces.js)
 
 ![ReactiveDi class diagram](./docs/images/class-diagram.png)
 
@@ -119,7 +124,7 @@ class Car {
 ```js
 // @flow
 import type {Annotation} from 'reactive-di/i/coreInterfaces'
-import {createContainerManageFactory} from 'reactive-di'
+import {createConfigResolver} from 'reactive-di'
 import {klass} from 'reactive-di/configurations'
 
 class Engine {}
@@ -137,7 +142,7 @@ const configuration: Array<Annotation> = [
     klass(Car, Engine, Brakes)
 ];
 
-const container = createContainerManageFactory()(configuration).createContainer()
+const container = createConfigResolver()(configuration).createContainer()
 container.get(Car)
 ```
 
@@ -145,7 +150,7 @@ container.get(Car)
 
 ```js
 // @flow
-import {createContainerManageFactory} from 'reactive-di'
+import {createConfigResolver} from 'reactive-di'
 import {klass} from 'reactive-di/annotations'
 
 @klass({engine: Engine, brakes: Brakes})
@@ -165,7 +170,7 @@ class Engine {}
 @klass()
 class Brakes {}
 
-const container = createContainerManageFactory()().createContainer()
+const container = createConfigResolver()().createContainer()
 container.get(Car)
 ```
 
@@ -181,7 +186,7 @@ container.get(Car)
 ```js
 // @flow
 import type {Annotation} from 'reactive-di/i/coreInterfaces'
-import {createContainerManageFactory} from 'reactive-di'
+import {createConfigResolver} from 'reactive-di'
 import {klass, factory} from 'reactive-di/configurations'
 
 class Car {}
@@ -195,7 +200,7 @@ const configuration: Array<Annotation> = [
     klass(Engine),
     factory(CarFactory, Engine)
 ];
-const container = createContainerManageFactory()(configuration).createContainer()
+const container = createConfigResolver()(configuration).createContainer()
 container.get(CarFactory)
 ```
 
@@ -206,7 +211,7 @@ container.get(CarFactory)
 ```js
 // @flow
 import type {Annotation} from 'reactive-di/i/coreInterfaces'
-import {createContainerManageFactory} from 'reactive-di'
+import {createConfigResolver} from 'reactive-di'
 import {klass, factory} from 'reactive-di/annotations'
 
 class Car {}
@@ -219,7 +224,7 @@ function CarFactory(engine: Engine): Car {
 }
 factory(CarFactory, Engine)
 
-const container = createContainerManageFactory()().createContainer()
+const container = createConfigResolver()().createContainer()
 container.get(CarFactory)
 ```
 
@@ -235,7 +240,7 @@ container.get(CarFactory)
 ```js
 // @flow
 import type {Annotation} from 'reactive-di/i/coreInterfaces'
-import {createContainerManageFactory} from 'reactive-di'
+import {createConfigResolver} from 'reactive-di'
 import {klass, compose} from 'reactive-di/configurations'
 
 class Car {}
@@ -249,7 +254,7 @@ const configuration: Array<Annotation> = [
     klass(Engine),
     compose(CarFactory, Engine)
 ];
-const container = createContainerManageFactory()(configuration).createContainer()
+const container = createConfigResolver()(configuration).createContainer()
 const createCar: ({power}: {power: number}) => Car = container.get(CarFactory);
 const car: Car = createCar({33});
 ```
@@ -259,7 +264,7 @@ const car: Car = createCar({33});
 ```js
 // @flow
 import type {Annotation} from 'reactive-di/i/coreInterfaces'
-import {createContainerManageFactory} from 'reactive-di'
+import {createConfigResolver} from 'reactive-di'
 import {klass, compose} from 'reactive-di/annotations'
 
 class Car {}
@@ -272,7 +277,7 @@ function CarFactory(engine: Engine, {power}: {power: number}): Car {
 }
 compose(Engine)(CarFactory)
 
-const container = createContainerManageFactory()().createContainer()
+const container = createConfigResolver()().createContainer()
 const createCar: ({power}: {power: number}) => Car = container.get(CarFactory);
 const car: Car = createCar({33});
 ```
@@ -288,7 +293,7 @@ const car: Car = createCar({33});
 ```js
 // @flow
 import type {Annotation} from 'reactive-di/i/coreInterfaces'
-import {createContainerManageFactory} from 'reactive-di'
+import {createConfigResolver} from 'reactive-di'
 import {klass, alias} from 'reactive-di/configurations'
 
 class AbstractCar {
@@ -303,7 +308,7 @@ const configuration: Array<Annotation> = [
     klass(Car),
     alias(AbstractCar, RedCar)
 ];
-const container = createContainerManageFactory()(configuration).createContainer()
+const container = createConfigResolver()(configuration).createContainer()
 container.get(AbstractCar).color === 'red'
 ```
 
@@ -320,7 +325,7 @@ container.get(AbstractCar).color === 'red'
 ```js
 // @flow
 import type {Annotation} from 'reactive-di/i/coreInterfaces'
-import {createContainerManageFactory} from 'reactive-di'
+import {createConfigResolver} from 'reactive-di'
 import {klass, value} from 'reactive-di/configurations'
 
 function CarColor() {}
@@ -333,7 +338,7 @@ const configuration: Array<Annotation> = [
     klass(Car, CarColor),
     value(CarColor, 'red')
 ];
-const container = createContainerManageFactory()(configuration).createContainer()
+const container = createConfigResolver()(configuration).createContainer()
 container.get(Car).color === 'red'
 ```
 
@@ -344,7 +349,7 @@ value, не имеет смысла описывать в аннотации, т
 ```js
 // @flow
 import type {Annotation} from 'reactive-di/i/coreInterfaces'
-import {createContainerManageFactory} from 'reactive-di'
+import {createConfigResolver} from 'reactive-di'
 import {klass} from 'reactive-di/annotations'
 import {value} from 'reactive-di/configurations'
 
@@ -362,7 +367,7 @@ class Car {
 const configuration: Array<Annotation> = [
     value(CarColor, 'red')
 ];
-const container = createContainerManageFactory()(configuration).createContainer()
+const container = createConfigResolver()(configuration).createContainer()
 container.get(Car).color === 'red'
 ```
 
@@ -469,7 +474,7 @@ my.test2(1) // no console output
 ```js
 // @flow
 import type {Annotation} from 'reactive-di/i/coreInterfaces'
-import {createContainerManageFactory} from 'reactive-di'
+import {createConfigResolver} from 'reactive-di'
 import {klass} from 'reactive-di/annotations'
 import {value} from 'reactive-di/configurations'
 
@@ -487,7 +492,7 @@ class Car {
 const configuration: Array<Annotation> = [
     value(CarColor, 'red')
 ];
-const cm = createContainerManageFactory()(configuration)
+const cm = createConfigResolver()(configuration)
 const container = cm.createContainer()
 container.get(Car).color === 'red'
 
@@ -499,11 +504,11 @@ container.get(Car).color === 'blue'
 Создание своих конфигураций
 ---------------------------
 
-Кроме вышеперечисленных провайдеров klass, factory, compose, value, alias можно создавать свои. Существуют 3 уровня описания провайдера:
+Кроме вышеперечисленных провайдеров klass, factory, compose, value, alias можно создавать свои. Для этого надо:
 
-1.	Plugin - знает как по типу создать сущность провайдера
-2.	Provider - Содержит информацию о связях с другими сущностями, которая может обновляться в реальном времени, по мере запроса зависимостей. Знает как создать Resolver. Provider-у доступен контейнер, который инициализировал его создание.
-3.	Resolver - Создает и кэширует значение зависимости, может обращаться с контейнеру, если Provider предоставил его Resolver-у.
+1.	Создать Plugin, который знает как по типу создать сущность провайдера.
+2.	В Plugin создать Provider, который будет содержать информацию о связях с другими сущностями. Provider-у доступен контейнер, который инициализировал его создание.
+3.	В Provider создать Resolver, который вычисляет и кэширует значение зависимости, может обращаться с контейнеру, если Provider предоставил его Resolver-у.
 
 ```js
 // @flow
@@ -519,7 +524,7 @@ import {
     annotationDriver,
     BaseProvider,
     defaultPlugins,
-    createContainerManageFactory
+    createConfigResolver
 } from 'reactive-di'
 
 import {klass} from 'reactive-di/annotations'
@@ -614,7 +619,7 @@ const confugration: Array<Annotation> = [
     myConfiguration(myValue, 'testValue')
 ];
 
-const container = createContainerManageFactory(myPlugins)(configuration).createContainer()
+const container = createConfigResolver(myPlugins)(configuration).createContainer()
 container.get(Car).value === 'testValue'
 ```
 
@@ -656,7 +661,7 @@ import {
     defaultPlugins,
     createDummyRelationUpdater,
     createHotRelationUpdater,
-    createContainerManageFactory
+    createConfigResolver
 } from 'reactive-di'
 
 function createMyRelationUpdater(): RelationUpdater {
@@ -672,7 +677,7 @@ function createMyRelationUpdater(): RelationUpdater {
     }
 }
 
-const createContainerManager = createContainerManageFactory(
+const createContainerManager = createConfigResolver(
     defaultPlugins,
     createMyRelationUpdater
 )
@@ -723,7 +728,7 @@ injector.get(Car)
 // @flow
 import { alias, klass, factory} from 'reactive-di/configurations'
 
-const createContainerManager = createContainerManageFactory();
+const createContainerManager = createConfigResolver();
 const cm = createContainerManager([
     klass(Car),
     klass(Engine),
@@ -758,7 +763,7 @@ injector.get(Car) === childInjector.get(Car) // Car from first injector
 // @flow
 import { alias, klass, factory} from 'reactive-di/configurations'
 
-const createContainerManager = createContainerManageFactory();
+const createContainerManager = createConfigResolver();
 const cm = createContainerManager([
     klass(Car),
     klass(Engine)
@@ -807,7 +812,7 @@ class Car {
   constructor(engine: Engine) {}
 }
 
-const createContainerManager = createContainerManageFactory();
+const createContainerManager = createConfigResolver();
 const providers = createContainerManager([
     klass(Car),
     klass(Engine)
@@ -848,8 +853,8 @@ class Car {
 class Tire1 {}
 class Tire2 {}
 
-const createContainerManager = createContainerManageFactory();
-const providers = createContainerManager([
+const resolveProviders = createResolveProviders();
+const providers = resolveProviders([
     klass(Car, Tires),
     klass(Tire1),
     klass(Tire2),

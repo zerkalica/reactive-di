@@ -1,6 +1,6 @@
 /* @flow */
 import BaseProvider from 'reactive-di/core/BaseProvider'
-import createConfigManagerFactory from 'reactive-di/core/createConfigManagerFactory'
+import createConfigResolver from 'reactive-di/core/createConfigResolver'
 import defaultPlugins from 'reactive-di/plugins/defaultPlugins'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
 import createHotRelationUpdater from 'reactive-di/core/updaters/createHotRelationUpdater'
@@ -13,6 +13,6 @@ export {
     createDummyRelationUpdater,
     SimpleMap,
     BaseProvider,
-    createConfigManagerFactory,
+    createConfigResolver,
     defaultPlugins
 }
