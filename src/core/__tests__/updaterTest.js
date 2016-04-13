@@ -1,7 +1,6 @@
 /* @flow */
 /* eslint-env mocha */
 
-import sinon from 'sinon'
 import assert from 'power-assert'
 
 import {

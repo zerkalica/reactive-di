@@ -32,7 +32,7 @@ export type Provider<Ann: Annotation> = {
     getDependants(): Array<Provider>;
     addDependant(dependant: Provider): void;
 
-    init(context: Container): void;
+    init(container: Container): void;
 
     createResolver(): Resolver;
 }
@@ -81,3 +81,15 @@ export type RelationUpdater = {
     end(provider: Provider): void;
     inheritRelations(provider: Provider): void;
 }
+
+export type ProviderManager = {
+    addCacheHandler(cache: Map<DependencyKey, Resolver>): void;
+    removeCacheHandler(cache: Map<DependencyKey, Resolver>): void;
+    getProvider(annotatedDep: DependencyKey, Container: Container): ?Provider;
+}
+
+export type CreateContainer = (
+    providerManager: ProviderManager,
+    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>,
+    parent: ?Container
+) => Container;

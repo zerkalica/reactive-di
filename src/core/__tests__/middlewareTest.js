@@ -26,7 +26,12 @@ describe('DiContainerMiddlewareTest', () => {
         function myFn(a: number, b: number, c: number): number {
             return a + b + c
         }
-        function _myFnMiddleware(result: number, a: number, b: number, c: number): void {
+        function _myFnMiddleware(
+            result: number,
+            a: number,
+            b: number,
+            c: number // eslint-disable-line
+        ): void {
             // console.log(result, a, b, c)
         }
 
@@ -60,7 +65,10 @@ describe('DiContainerMiddlewareTest', () => {
         }
 
         class MyClassMiddleware {
-            test(result: number, a: number): void {
+            test(
+                result: number,
+                a: number // eslint-disable-line
+            ): void {
             }
         }
 
@@ -87,7 +95,12 @@ describe('DiContainerMiddlewareTest', () => {
         function myFn(a: number, b: number, c: number): number {
             return a + b + c
         }
-        function _myFnMiddleware(result: number, a: number, b: number, c: number): void {
+        function _myFnMiddleware(
+            result: number,
+            a: number,
+            b: number,
+            c: number // eslint-disable-line
+        ): void {
             // console.log(result, a, b, c)
         }
 

@@ -9,25 +9,14 @@ import type {
     Provider,
     Resolver,
     ResolveDepsResult,
-    CreateResolverOptions
+    CreateResolverOptions,
+    ProviderManager
 } from 'reactive-di/i/coreInterfaces'
 
 import ResolveHelper from 'reactive-di/core/ResolveHelper'
 import createDepResolverCreator from 'reactive-di/core/createDepResolverCreator'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
-
-export type ProviderManager = {
-    addCacheHandler(cache: Map<DependencyKey, Resolver>): void;
-    removeCacheHandler(cache: Map<DependencyKey, Resolver>): void;
-    getProvider(annotatedDep: DependencyKey, Container: Container): ?Provider;
-}
-
-export type CreateContainer = (
-    providerManager: ProviderManager,
-    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>,
-    parent: ?Container
-) => Container;
 
 class DiContainer {
     _cache: Map<DependencyKey, Resolver>;

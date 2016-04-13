@@ -12,13 +12,10 @@ import type {
     Resolver,
     Provider,
     Plugin,
-    RelationUpdater
-} from 'reactive-di/i/coreInterfaces'
-
-import type {
+    RelationUpdater,
     CreateContainer,
     ProviderManager
-} from 'reactive-di/core/createDefaultContainer'
+} from 'reactive-di/i/coreInterfaces'
 
 import normalizeMiddlewares from 'reactive-di/core/normalizeMiddlewares'
 import normalizeConfiguration from 'reactive-di/core/normalizeConfiguration'
