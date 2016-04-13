@@ -30,6 +30,7 @@
 		- [Описание зависимостей](#-)
 		- [Иерархические контейнеры](#-)
 		- [Создание контейнера из ранее подготовленных провайдеров](#-)
+		- [Opaque token](#opaque-token)
 		- [Multi-зависимости](#multi-)
 
 <!-- /TOC -->
@@ -1035,6 +1036,33 @@ const providers = createContainerManager([
 const di = providers.createContainer();
 di.get(Car) intanceof Car
 
+```
+
+### Opaque token
+
+Зависимости бывают не только функции или классы, но еще строки или объекты, которые внедряются в контейнер как значения, в angular2 для доступа к ним используют [Opaque token](https://angular.io/docs/js/latest/api/core/OpaqueToken-class.html).
+
+```typescript
+var t = new OpaqueToken("value");
+var injector = Injector.resolveAndCreate([
+  provide(t, {useValue: "bindingValue"})
+]);
+expect(injector.get(t)).toEqual("bindingValue");
+```
+
+В reactive-di ее аналогом является функция-пустышка:
+
+```js
+// @flow
+
+function t() {}
+
+const createContainerManager = createConfigResolver();
+const providers = createContainerManager([
+    value(t, 'some value')
+])
+const di = providers.createContainer();
+di.get(t) === 'some value'
 ```
 
 ### Multi-зависимости
