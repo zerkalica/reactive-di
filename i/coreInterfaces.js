@@ -62,6 +62,12 @@ export type Container = {
 
 export type CreateContainerManager = (config?: Array<Annotation>) => ContainerManager;
 
+export type CreateConfigResolver = (
+    pluginsConfig?: Array<Plugin>,
+    createUpdater?: () => RelationUpdater,
+    createContainer?: CreateContainer
+) => CreateContainerManager;
+
 export type ContainerManager = {
     setMiddlewares(
         raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>

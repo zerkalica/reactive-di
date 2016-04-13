@@ -6,6 +6,7 @@ import SimpleMap from 'reactive-di/utils/SimpleMap'
 import createHotRelationUpdater from 'reactive-di/core/updaters/createHotRelationUpdater'
 import createDummyRelationUpdater from 'reactive-di/core/updaters/createDummyRelationUpdater'
 import annotationDriver from 'reactive-di/core/annotationDriver'
+import createDefaultContainer from 'reactive-di/core/createDefaultContainer'
 
 export {
     annotationDriver,
@@ -13,6 +14,7 @@ export {
     createDummyRelationUpdater,
     SimpleMap,
     BaseProvider,
+    createDefaultContainer,
     createConfigResolver,
     defaultPlugins
 }

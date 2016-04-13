@@ -112,6 +112,56 @@ class Car {
 
 Описывать зависимости через конфигурацию предпочтительнее, т.к. тогда кроме интерфейсов компоненты не будут содержать статических связей между собой, все связи можно вынести в отдельный конфигурационный слой, см. статью [Composition Root by Mark Seemann](http://blog.ploeh.dk/2011/07/28/CompositionRoot/)
 
+Создание контейнера
+-------------------
+
+В первую очередь создается ConfigResolver. При создании ему опционально передаются:
+
+-	pluginConfig - точка расширения плагинов, по умолчанию используются defaultPlugins.
+-	createUpdater - фабрика, создающая стратегию обновления связей "зависимый-зависимость"
+-	createContainer - фабрика, создающая контейнер с зависимостями
+
+```js
+// @flow
+import {
+    defaultPlugins,
+    createHotRelationUpdater,
+    createDefaultContainer,
+    createConfigResolver
+} from 'reactive-di'
+import type {
+    CreateContainerManager,
+    ContainerManager,
+    Container
+} from 'reactive-di/i/coreInterfaces'
+
+const createContainerManager: CreateContainerManager = createConfigResolver(
+    defaultPlugins,
+    createHotRelationUpdater,
+    createDefaultContainer
+);
+```
+
+Из полученной фабрики создается ContainerManager, задача которого нормализовывать конфигурацию, кэшировать и хранить связи между зависимостями и дешево создавать di-контейнеры.
+
+```js
+// @flow
+const cm: ContainerManager = createContainerManager([
+    klass(Car)
+]);
+```
+
+Последний этап - создание контейнера, получение зависимости верхнего уровня.
+
+```js
+// @flow
+const container: Container = cm.createContainer();
+
+container.get(Car)
+```
+
+Такое разделение позволяет расширять, дешево создавать и реализовывать иерархические контейнеры. Например, по аналогии с angluar2, можно сделать react-компоненты, каждый из которых будет иметь свой контейнер. Внутренние формы, экшены, валидаторы будут в этом контейнеры, а слой работы с rest-api, логгеры источники данных будут в родительском контейнере.
+
 ### klass
 
 Описывает класс с зависимостями.
