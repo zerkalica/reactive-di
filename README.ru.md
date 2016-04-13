@@ -31,9 +31,12 @@
         - [Opaque token](#opaque-token)
         - [Multi-зависимости](#user-content-multi-зависимости)
 
-Реализация паттерна внедрение зависимостей.
+Reactive-di планируется, как клей для функций, классов, observable-данных, модификаторов состояния и component-based библиотек виджетов, вроде [react](https://facebook.github.io/react/) [mithril](http://mithril.js.org/), [mercury](https://github.com/Raynos/mercury) или [hyperscript](https://github.com/dominictarr/hyperscript).
+Что бы изолировать в [Composition Root](http://blog.ploeh.dk/2011/07/28/CompositionRoot/) знания о react, и других low-level библиотеках, оставив только чистые функции и jsx или любой другой формат описания дерева виджетов.
 
--	Поддерживаются иерархические зависимости, как в angular2
+Reactive-di
+
+-	Поддерживает иерархические зависимости, как в angular2
 -	Умеет делать горячую замену зависимости с очисткой кэша всех зависимых сущностей
 -	Умеет прозрачно логировать вызовы функций через middleware
 -	Может конфигурироваться через аннотации или конфиг
@@ -733,7 +736,7 @@ import type {
     Resolver,
     Plugin
 } from 'reactive-di/i/coreInterfaces'
-import {
+import {3
     annotationDriver,
     BaseProvider,
     defaultPlugins,
@@ -898,7 +901,9 @@ const createContainerManager = createConfigResolver(
 
 ## Сравнение с angular2
 
-[angular2 di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di) не является отдельной библиотекой, и является частью неделимой экосистемы angular2, апи не позволяет реализовать горячую замену зависимостей (hotreload), нету механизма middleware - логирования вызовов функций и методов, сложное [api Injector Class](https://angular.io/docs/ts/latest/api/core/Injector-class.html) (около 3х методов для получения данных). Все зависимости в angular2 di - синглтоны, создаются при первом запросе и помещаются в кэш, на это никак нельзя повлиять.
+[angular2 di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di) не является неделимой частью экосистемы angular2, его API не позволяет реализовать горячую замену зависимостей (hotreload), нету механизма middleware - логирования вызовов функций и методов, сложное API [Injector Class](https://angular.io/docs/ts/latest/api/core/Injector-class.html) (около 3х методов для получения данных). Все зависимости в angular2 di - синглтоны, создаются при первом запросе и помещаются в кэш, на это никак нельзя повлиять.
+
+В отличие от reactive-di, вместо идеи meta-фреймворка, который может склеивать любые компоненты и библиотеки, google продвигает идею монолитного angular2.
 
 В [примерах документации angular 2](https://angular.io/docs/ts/latest/guide/dependency-injection.html#!#appendix-working-with-injectors-directly) (InjectorComponent) авторы не грушаются использовать Injector как ServiceLocator, что является плохим подходом, если есть возможность использовать DI, см. [stackoverflow](http://stackoverflow.com/questions/22795459/is-servicelocator-anti-pattern), [habrahabr.ru](https://habrahabr.ru/post/166287/) [статью Mark Seemann](http://blog.ploeh.dk/2010/02/03/ServiceLocatorisanAnti-Pattern/).
 
