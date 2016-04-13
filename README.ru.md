@@ -1,6 +1,31 @@
 Reactive DI
 ===========
 
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+
+		- [Dependency](#dependency)
+		- [Annotation](#annotation)
+		- [Configuration](#configuration)
+		- [Resolver](#resolver)
+		- [Provider](#provider)
+		- [Plugin](#plugin)
+		- [Container](#container)
+		- [RelationUpdater](#relationupdater)
+		- [ContainerManager](#containermanager)
+		- [CreateConfigResolver](#createconfigresolver)
+		- [klass](#klass)
+		- [factory](#factory)
+		- [compose](#compose)
+		- [alias](#alias)
+		- [value](#value)
+		- [tag](#tag)
+		- [Описание зависимостей](#-)
+		- [Иерархические контейнеры](#-)
+		- [Создание контейнера из ранее подготовленных провайдеров](#-)
+		- [Multi-зависимости](#multi-)
+
+<!-- /TOC -->
+
 Реализация паттерна внедрение зависимостей.
 
 -	Поддерживаются иерархические зависимости, как в angular2
