@@ -5,6 +5,7 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 
 class DummyRelationUpdater {
+    dependants: Array<Set<Provider>> = [];
     /* eslint-disable no-unused-vars */
     begin(provider: Provider): void {}
     end(provider: Provider): void {}

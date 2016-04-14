@@ -1,16 +1,15 @@
 /* @flow */
 /* eslint-env mocha */
 
-import sinon from 'sinon'
-import assert from 'power-assert'
-
-import {
-    createContainer
-} from 'reactive-di/core/__tests__/createContainer'
 import type {
     Container
 } from 'reactive-di/i/coreInterfaces'
 
+import sinon from 'sinon'
+import assert from 'power-assert'
+import {
+    createContainer
+} from 'reactive-di/core/__tests__/createContainer'
 import {
     factory
 } from 'reactive-di/configurations'
@@ -29,14 +28,6 @@ describe('DiContainerCacheTest', () => {
         newDi.get(myFn)
 
         assert(myFn.calledOnce)
-    })
-
-    it('should cache providers', () => {
-        const A = () => 1;
-        const newDi: Container = createContainer([
-            factory(A)
-        ])
-        assert(newDi.getProvider(A) === newDi.getProvider(A))
     })
 
     it('should cache resolvers', () => {

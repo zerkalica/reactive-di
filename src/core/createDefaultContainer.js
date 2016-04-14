@@ -5,12 +5,13 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 
 import type {
+    ContainerHelper,
     Container,
+    RelationUpdater,
     Provider,
     Resolver,
     ResolveDepsResult,
-    CreateResolverOptions,
-    ProviderManager
+    CreateResolverOptions
 } from 'reactive-di/i/coreInterfaces'
 
 import ResolveHelper from 'reactive-di/core/ResolveHelper'
@@ -18,72 +19,74 @@ import createDepResolverCreator from 'reactive-di/core/createDepResolverCreator'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
 
-class DiContainer {
-    _cache: Map<DependencyKey, Resolver>;
-    _parent: ?Container;
-    _providerManager: ProviderManager;
-    _removeCacheHandler: () => void;
+function disposeResolver(resolver: Resolver): void {
+    resolver.dispose()
+}
 
+class DefaultContainer {
+    parent: ?Container;
     createDepResolver: (rec: CreateResolverOptions, tags: Array<Tag>) => () => ResolveDepsResult;
 
+    _resolverCache: Map<DependencyKey, Resolver>;
+    _privateCache: Map<DependencyKey, Resolver>;
+    _helper: ContainerHelper;
+
+    _updater: RelationUpdater;
+    _dependants: Array<Set<Provider>>;
+
     constructor(
-        providerManager: ProviderManager,
-        middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>,
+        containerHelper: ContainerHelper,
         parent: ?Container = null
     ) {
-        this._cache = new SimpleMap()
-        this._providerManager = providerManager
-        this._parent = parent || null
+        this._updater = containerHelper.updater
+        this._dependants = this._updater.dependants
 
-        const helper = new ResolveHelper(
-            middlewares,
+        this._helper = containerHelper
+        this.parent = parent || null
+
+        this._privateCache = new SimpleMap()
+        this._resolverCache = new SimpleMap()
+        this.createDepResolver = createDepResolverCreator(new ResolveHelper(
+            containerHelper.middlewares,
             this
-        )
-
-        this.createDepResolver = createDepResolverCreator(helper)
-
-        providerManager.addCacheHandler(this._cache)
+        ))
     }
 
-    finalize(): void {
-        this._providerManager.removeCacheHandler(this._cache)
+    delete(annotatedDep: DependencyKey): void {
+        this._resolverCache.delete(annotatedDep)
+        const resolver: ?Resolver = this._privateCache.get(annotatedDep);
+        if (resolver) {
+            resolver.dispose()
+        }
+        this._privateCache.delete(annotatedDep)
+    }
+
+    dispose(): void {
+        this._privateCache.forEach(disposeResolver)
+        this._helper.removeContainer(this)
     }
 
     get(annotatedDep: DependencyKey): any {
         return this.getResolver(annotatedDep).resolve()
     }
 
-    getProvider(annotatedDep: DependencyKey): Provider {
-        let provider: ?Provider = this._providerManager.getProvider(
-            annotatedDep,
-            (this: Container)
-        );
-        if (!provider) {
-            if (!this._parent) {
-                throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)
-            }
-            provider = this._parent.getProvider(annotatedDep)
-        }
-
-        return provider
-    }
-
     getResolver(annotatedDep: DependencyKey): Resolver {
-        let resolver: ?Resolver = this._cache.get(annotatedDep);
+        let resolver: ?Resolver = this._resolverCache.get(annotatedDep);
         if (!resolver) {
-            const provider: ?Provider = this._providerManager.getProvider(
-                annotatedDep,
-                (this: Container)
-            );
-            if (!provider) {
-                if (!this._parent) {
-                    throw new Error(`Can't find annotation for ${getFunctionName(annotatedDep)}`)
-                }
-                resolver = this._parent.getResolver(annotatedDep)
+            resolver = this._helper.createResolver(annotatedDep, (this: Container))
+            if (resolver) {
+                this._privateCache.set(annotatedDep, resolver)
             } else {
-                resolver = provider.createResolver()
+                if (!this.parent) {
+                    throw new Error(
+                        `Can't find annotation for ${getFunctionName(annotatedDep)}`
+                    )
+                }
+                resolver = this.parent.getResolver(annotatedDep)
             }
-            this._cache.set(annotatedDep, resolver)
+            this._resolverCache.set(annotatedDep, resolver)
+        } else if (this._dependants.length) {
+            this._updater.inheritRelations(resolver.provider)
         }
 
         return resolver
@@ -91,13 +94,8 @@ class DiContainer {
 }
 
 export default function createDefaultContainer(
-    providerManager: ProviderManager,
-    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>,
+    helper: ContainerHelper,
     parent: ?Container
 ): Container {
-    return new DiContainer(
-        providerManager,
-        middlewares,
-        parent
-    )
+    return new DefaultContainer(helper, parent)
 }

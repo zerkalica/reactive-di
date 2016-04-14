@@ -6,14 +6,14 @@ import type {
 import SimpleSet from 'reactive-di/utils/SimpleSet'
 
 class HotRelationUpdater {
-    _dependants: Array<Set<Provider>>;
+    dependants: Array<Set<Provider>>;
 
     constructor() {
-        this._dependants = []
+        this.dependants = []
     }
 
     begin(dependency: Provider): void {
-        const {_dependants: dependants} = this
+        const {dependants} = this
         for (let i = 0, l = dependants.length; i < l; i++) {
             dependants[i].add(dependency)
         }
@@ -21,7 +21,7 @@ class HotRelationUpdater {
     }
 
     end(dependency: Provider): void {
-        const dependantSet = this._dependants.pop()
+        const dependantSet = this.dependants.pop()
         function iterateMap(dependant: Provider): void {
             dependant.addDependency(dependency)
         }
@@ -29,11 +29,11 @@ class HotRelationUpdater {
     }
 
     inheritRelations(dependency: Provider): void {
-        const l: number = this._dependants.length;
+        const l: number = this.dependants.length;
         if (!l) {
             return
         }
-        const dependants: Array<Set<Provider>> = this._dependants;
+        const dependants: Array<Set<Provider>> = this.dependants;
         const inheritDependants: Array<Provider> = dependency.getDependants();
         const k: number = inheritDependants.length;
         for (let i = 0; i < l; i++) {

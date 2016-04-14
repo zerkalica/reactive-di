@@ -14,14 +14,16 @@ import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class ComposeResolver {
     displayName: string;
-
+    provider: Provider;
     _value: any;
 
     constructor(
+        provider: Provider,
         resolver: () => ResolveDepsResult,
         target: Dependency,
         displayName: string
     ) {
+        this.provider = provider
         this._value = function getValue(...args: Array<any>): any {
             const {deps, middlewares} = resolver()
             const props = deps.concat(args)
@@ -37,8 +39,9 @@ class ComposeResolver {
         this.displayName = displayName
     }
 
-    reset(): void {
-    }
+    dispose(): void {}
+
+    reset(): void {}
 
     resolve(): any {
         return this._value
@@ -51,20 +54,15 @@ class ComposeProvider extends BaseProvider<ComposeAnnotation> {
     tags: Array<Tag>;
     annotation: ComposeAnnotation;
 
-    _resolver: () => ResolveDepsResult;
-
-    init(acc: Container): void {
-        this._resolver = acc.createDepResolver(
-            this.annotation,
-            this.tags
-        )
-    }
-
-    createResolver(): Resolver {
+    createResolver(container: Container): Resolver {
         const annotation = this.annotation
 
         return new ComposeResolver(
-            this._resolver,
+            this,
+            container.createDepResolver(
+                this.annotation,
+                this.tags
+            ),
             annotation.dep || (annotation.target: any),
             this.displayName
         )

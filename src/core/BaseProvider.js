@@ -16,6 +16,7 @@ export default class BaseProvider<Ann: Annotation> {
     tags: Array<Tag>;
 
     annotation: Ann;
+
     _dependencies: Array<Provider>;
     _dependants: Array<Provider>;
 
@@ -29,9 +30,7 @@ export default class BaseProvider<Ann: Annotation> {
         this.tags = [this.kind].concat(annotation.tags || [])
     }
 
-    init(Container: Container): void {} // eslint-disable-line
-
-    createResolver(): Resolver {
+    createResolver(container: Container): Resolver { // eslint-disable-line
         throw new Error('Implement resolver')
     }
 
@@ -52,7 +51,6 @@ export default class BaseProvider<Ann: Annotation> {
     }
 
     addDependant(dependant: Provider): void {
-        // console.log('add', this.displayName dependant.displayName)
         this._dependants.push(dependant)
     }
 }

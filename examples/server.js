@@ -5,13 +5,15 @@ import http from 'http'
 import url from 'url'
 
 import {
-    createConfigResolver,
+    createManagerFactory,
     defaultPlugins,
     createDummyRelationUpdater
 } from 'reactive-di/index'
 
 import type {
-    Container
+    Container,
+    ContainerManager,
+    CreateContainerManager
 } from 'reactive-di/i/coreInterfaces'
 
 import {
@@ -21,7 +23,7 @@ import {
 
 class Logger {
     log(message: string): void {
-        console.log(message)
+        console.log(message) // eslint-disable-line
     }
 }
 
@@ -68,25 +70,25 @@ const controllerMap = {
     AppIndexController
 }
 
-const createConfiguration = createConfigResolver(
+const createContainerManager: CreateContainerManager = createManagerFactory(
     defaultPlugins,
     createDummyRelationUpdater
-)
+);
 
-const appConfiguration = createConfiguration([
+const appManager: ContainerManager = createContainerManager([
     factory(NotFoundController),
     klass(Logger)
-])
+]);
 
-const perRequestConfiguration = createConfiguration([
+const requestManager: ContainerManager = createContainerManager([
     klass(Request),
     factory(AppIndexController, Logger)
-])
+]);
 
-const appDi = appConfiguration.createContainer()
+const appDi: Container = appManager.createContainer();
 
 function accept(req: http.IncomingMessage, res: http.ClientRequest): void {
-    const requestDi: Container = perRequestConfiguration.createContainer(appDi);
+    const requestDi: Container = requestManager.createContainer(appDi);
     const request: Request = requestDi.get(Request);
     request
         .setUrl((url.parse((req.url: any), true): any))
@@ -100,10 +102,10 @@ function accept(req: http.IncomingMessage, res: http.ClientRequest): void {
 
     try {
         const response: string = requestDi.get(controllerDep);
-        requestDi.finalize()
+        requestDi.dispose()
         res.end(response)
     } catch (e) {
-        requestDi.finalize()
+        requestDi.dispose()
         res.end(e.toString())
     }
 }

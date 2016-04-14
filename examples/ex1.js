@@ -1,16 +1,20 @@
 /* @flow */
 
+import type {
+    Container,
+    ContainerManager,
+    CreateContainerManager
+} from 'reactive-di/i/coreInterfaces'
+
 import {
-    createConfigResolver,
+    createManagerFactory,
     defaultPlugins,
     createDummyRelationUpdater
 } from 'reactive-di/index'
 import assert from 'power-assert'
-
 import {alias, value} from 'reactive-di/configurations'
-
-
 import {klass, factory} from 'reactive-di/annotations'
+
 class Tire {
     diameter: number;
     width: number;
@@ -51,14 +55,14 @@ function createTire(defaultWidth: number, diameter: number): Tire {
 factory(DefaultWidth)(createTire)
 
 const createContainerManager: CreateContainerManager
-    = createConfigResolver(defaultPlugins, createDummyRelationUpdater);
+    = createManagerFactory(defaultPlugins, createDummyRelationUpdater);
 
 const cm: ContainerManager = createContainerManager([
     value(DefaultWidth, 22),
     alias(AbstractEngine, ConcreteEngine)
 ]);
 
-const di = cm.createContainer();
+const di: Container = cm.createContainer();
 
 assert(di.get(Car) instanceof Car)
 assert(di.get(Bus) instanceof Bus)

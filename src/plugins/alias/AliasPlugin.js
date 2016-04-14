@@ -9,36 +9,14 @@ import type {
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class AliasResolver {
-    _resolver: Resolver;
-
-    constructor(resolver: Resolver) {
-        this._resolver = resolver
-    }
-
-    reset(): void {
-        this._resolver.reset()
-    }
-
-    resolve(): any {
-        return this._resolver.resolve()
-    }
-}
-
 class AliasProvider extends BaseProvider<AliasAnnotation> {
     kind: 'alias';
     displayName: string;
     tags: Array<Tag>;
     annotation: AliasAnnotation;
 
-    _resolver: Resolver;
-
-    init(container: Container): void {
-        this._resolver = container.getResolver(this.annotation.alias)
-    }
-
-    createResolver(): Resolver {
-        return new AliasResolver(this._resolver)
+    createResolver(container: Container): Resolver {
+        return container.getResolver(this.annotation.alias)
     }
 }
 

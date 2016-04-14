@@ -7,14 +7,14 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 
 import type {
-    ContainerManager,
-    Container,
     Resolver,
     Provider,
     Plugin,
     RelationUpdater,
     CreateContainer,
-    ProviderManager
+    Container,
+    ContainerManager,
+    ContainerHelper
 } from 'reactive-di/i/coreInterfaces'
 
 import normalizeMiddlewares from 'reactive-di/core/normalizeMiddlewares'
@@ -27,36 +27,44 @@ import createDefaultContainer from 'reactive-di/core/createDefaultContainer'
 import defaultPlugins from 'reactive-di/plugins/defaultPlugins'
 import createDummyRelationUpdater from 'reactive-di/core/updaters/createDummyRelationUpdater'
 
-// implements ProviderManager, ContainerManager
-class DefaultProviderManager {
+// implements ContainerHelper
+class DefaultContainerHelper {
     _annotations: Map<DependencyKey, Annotation>;
-    _cache: Map<DependencyKey, Provider>;
     _plugins: Map<string, Plugin>;
-    _updater: RelationUpdater;
+    _cache: Map<DependencyKey, Provider>;
 
-    _middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
-    _resolverCaches: Array<Map<DependencyKey, Resolver>>;
-    _createContainer: CreateContainer;
+    containers: Array<Container>;
+    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
+    updater: RelationUpdater;
 
     constructor(
-        config: Array<Annotation>,
+        annotations: Map<DependencyKey, Annotation>,
         plugins: Map<string, Plugin>,
         updater: RelationUpdater,
-        createContainer: CreateContainer
+        cache: Map<DependencyKey, Provider>
     ) {
-        this._annotations = normalizeConfiguration(config)
-        this._middlewares = new SimpleMap()
-        this._createContainer = createContainer
-        this._cache = new SimpleMap()
+        this._annotations = annotations
         this._plugins = plugins
-        this._updater = updater
-        this._resolverCaches = []
+        this.updater = updater
+        this._cache = cache
+        this.containers = []
+        this.middlewares = new SimpleMap()
     }
 
-    _createProvider(annotatedDep: DependencyKey, container: Container): ?Provider {
+    removeContainer(container: Container): void {
+        this.containers = this.containers.filter((target) => target !== container)
+    }
+
+    createResolver(annotatedDep: DependencyKey, container: Container): ?Resolver {
+        let provider: ?Provider = this._cache.get(annotatedDep);
+
+        if (provider) {
+            return provider.createResolver(container)
+        }
+
         let annotation: ?Annotation = this._annotations.get(annotatedDep);
         if (!annotation) {
-            if (!this._dependant) {
+            if (!container.parent) {
                 annotation = driver.getAnnotation((annotatedDep: Dependency))
                 if (!annotation) {
                     return null
@@ -73,69 +81,86 @@ class DefaultProviderManager {
             )
         }
 
-        const provider: Provider = plugin.create(annotation);
-        this._updater.begin(provider)
-        provider.init(container)
-        this._updater.end(provider)
+        provider = plugin.create(annotation);
+        this._cache.set(annotatedDep, provider)
+        this.updater.begin(provider)
+        const resolver: Resolver = provider.createResolver(container);
+        this.updater.end(provider)
 
-        return provider
+        return resolver
+    }
+}
+
+// implements ContainerManager
+class DefaultContainerManager {
+    _annotations: Map<DependencyKey, Annotation>;
+    _cache: Map<DependencyKey, Provider>;
+    _helper: DefaultContainerHelper;
+    _createContainer: CreateContainer;
+
+    constructor(
+        annotations: Map<DependencyKey, Annotation>,
+        plugins: Map<string, Plugin>,
+        updater: RelationUpdater,
+        createContainer: CreateContainer
+    ) {
+        this._annotations = annotations
+        this._cache = new SimpleMap()
+        this._createContainer = createContainer
+
+        this._helper = new DefaultContainerHelper(
+            this._annotations,
+            plugins,
+            updater,
+            this._cache
+        )
     }
 
     setMiddlewares(
         raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
     ): ContainerManager {
-        this._middlewares = normalizeMiddlewares(raw || [])
+        this._helper.middlewares = normalizeMiddlewares(raw || [])
         return this
     }
 
     createContainer(parent?: Container): Container {
-        return this._createContainer(
-            (this: ProviderManager),
-            this._middlewares,
+        const container = this._createContainer(
+            (this._helper: ContainerHelper),
             parent
         )
+        this._helper.containers.push(container)
+
+        return container
     }
 
-    addCacheHandler(cache: Map<DependencyKey, Resolver>): void {
-        this._resolverCaches.push(cache)
-    }
-
-    removeCacheHandler(cache: Map<DependencyKey, Resolver>): void {
-        this._resolverCaches = this._resolverCaches.filter((target) => target !== cache)
-    }
-
-    replace(annotatedDep: DependencyKey, annotation?: Annotation): void {
+    _delete(oldDep: DependencyKey): void {
         const cache = this._cache
-        const provider: ?Provider = cache.get(annotatedDep);
+        const provider: ?Provider = cache.get(oldDep);
         if (provider) {
-            const rc = this._resolverCaches
-            const k = rc.length
+            const containers = this._helper.containers
+            const k = containers.length
             const dependants = provider.getDependants()
             for (let i = 0, l = dependants.length; i < l; i++) {
                 const target = dependants[i].annotation.target
                 cache.delete(target)
                 for (let j = 0; j < k; j++) {
-                    rc[j].delete(target)
+                    containers[j].delete(target)
                 }
             }
         }
-        if (annotation) {
-            this._annotations.set(annotatedDep, annotation)
-        }
     }
 
-    getProvider(annotatedDep: DependencyKey, container: Container): ?Provider {
-        let provider: ?Provider = this._cache.get(annotatedDep);
-        if (!provider) {
-            provider = this._createProvider(annotatedDep, container);
-            if (provider) {
-                this._cache.set(annotatedDep, provider)
-            }
-        } else {
-            this._updater.inheritRelations(provider)
-        }
+    replace(oldDep: DependencyKey, newDep?: DependencyKey|Annotation): void {
+        this._delete(oldDep)
+        if (newDep && this._annotations.has(oldDep)) {
+            const annotation: ?Annotation = typeof newDep === 'object'
+                ? (newDep: Annotation)
+                : driver.getAnnotation((newDep: Dependency));
 
-        return provider
+            if (annotation) {
+                this._annotations.set(oldDep, annotation)
+            }
+        }
     }
 }
 
@@ -154,8 +179,8 @@ class DefaultProviderManager {
  * ```js
  * // @flow
  *
- * import {createConfigResolver} from 'reactive-di'
- * import {klass} from 'reactive-di/configurations'
+ * import {createManagerFactory} from 'reactive-di'
+ * import {klass} from 'reactive-di/providers'
  *
  * class Engine {}
  *
@@ -167,19 +192,19 @@ class DefaultProviderManager {
  *   }
  * }
  *
- * const cmf = createConfigResolver()
- * const cm = cmf([
+ * const configFactory = createManagerFactory()
+ * const config = configFactory([
  *   klass(Engine),
  *   klass(Car, Engine)
  * ])
- * const container = cm.createContainer()
+ * const container = config.createContainer()
  * const car: Car = container.get(Car);
  *
  * assert(car instanceof Car)
  * assert(car.engine instanceof Engine)
  * ```
  */
-export default function createConfigResolver(
+export default function createManagerFactory(
     pluginsConfig?: Array<Plugin> = defaultPlugins,
     createUpdater?: () => RelationUpdater = createDummyRelationUpdater,
     createContainer?: CreateContainer = createDefaultContainer
@@ -189,8 +214,8 @@ export default function createConfigResolver(
     return function createContainerManager(
         config?: Array<Annotation> = []
     ): ContainerManager {
-        return new DefaultProviderManager(
-            config,
+        return new DefaultContainerManager(
+            normalizeConfiguration(config),
             plugins,
             createUpdater(),
             createContainer

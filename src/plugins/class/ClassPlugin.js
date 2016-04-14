@@ -16,16 +16,20 @@ import BaseProvider from 'reactive-di/core/BaseProvider'
 class ClassResolver {
     displayName: string;
 
+    provider: Provider;
+
     _resolver: () => ResolveDepsResult;
     _target: Dependency;
     _isCached: boolean;
     _value: any;
 
     constructor(
+        provider: Provider,
         resolver: () => ResolveDepsResult,
         target: Dependency,
         displayName: string
     ) {
+        this.provider = provider
         this._isCached = false
         this._value = null
         this._target = target
@@ -36,6 +40,8 @@ class ClassResolver {
     reset(): void {
         this._isCached = false
     }
+
+    dispose(): void {}
 
     resolve(): any {
         if (this._isCached) {
@@ -63,20 +69,14 @@ class ClassProvider extends BaseProvider<ClassAnnotation> {
     tags: Array<Tag>;
     annotation: ClassAnnotation;
 
-    _resolver: () => ResolveDepsResult;
-
-    init(acc: Container): void {
-        this._resolver = acc.createDepResolver(
-            this.annotation,
-            this.tags
-        )
-    }
-
-    createResolver(): Resolver {
+    createResolver(container: Container): Resolver {
         const annotation = this.annotation
-
         return new ClassResolver(
-            this._resolver,
+            this,
+            container.createDepResolver(
+                annotation,
+                this.tags
+            ),
             annotation.dep || (annotation.target: any),
             this.displayName
         )

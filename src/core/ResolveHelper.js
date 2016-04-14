@@ -45,25 +45,25 @@ export default class ResolveHelper {
     } {
         const {_container: container} = this
 
-        let depNames: ?Array<string> = null;
+        let depNames: ?Array<string>;
         const resolvedDeps: Array<Resolver> = [];
-        if (deps.length) {
-            if (
-                typeof deps[0] === 'object'
-                && deps.length === 1
-            ) {
-                depNames = []
-                const argsObject: ArgsObject = (deps[0]: any);
-                for (let key in argsObject) { // eslint-disable-line
-                    resolvedDeps.push(container.getResolver(argsObject[key]))
-                    depNames.push(key)
-                }
-            } else {
-                for (let i = 0, l = deps.length; i < l; i++) {
-                    const dep: Resolver =
-                        container.getResolver(((deps: any): Array<DependencyKey>)[i]);
-                    resolvedDeps.push(dep)
-                }
+        const l: number = deps.length;
+        if (
+            l === 1
+            && typeof deps[0] === 'object'
+        ) {
+            depNames = []
+            const argsObject: ArgsObject = (deps[0]: any);
+            for (let key in argsObject) { // eslint-disable-line
+                resolvedDeps.push(container.getResolver(argsObject[key]))
+                depNames.push(key)
+            }
+        } else {
+            depNames = null
+            for (let i = 0; i < l; i++) {
+                const dep: Resolver =
+                    container.getResolver(((deps: any): Array<DependencyKey>)[i]);
+                resolvedDeps.push(dep)
             }
         }
 

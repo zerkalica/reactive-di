@@ -4,6 +4,7 @@
 import assert from 'power-assert'
 
 import {
+    getProvider,
     createContainer
 } from 'reactive-di/core/__tests__/createContainer'
 import type {
@@ -30,9 +31,9 @@ describe('HotRelationUpdaterTest', () => {
             factory(B, C)
         ], [], true);
 
-        di.getProvider(C)
-
-        const result = di.getProvider(B).getDependants()
+        di.getResolver(C)
+        di.getResolver(B)
+        const result = getProvider(di, B).getDependants()
             .map(depName);
 
         assert.deepEqual(result, [
@@ -52,7 +53,8 @@ describe('HotRelationUpdaterTest', () => {
             factory(B, C, A)
         ], [], true);
 
-        const result = di.getProvider(B).getDependants().map(depName);
+        di.getResolver(B)
+        const result = getProvider(di, B).getDependants().map(depName);
 
         assert.deepEqual(result, [
             'factory@B',
@@ -70,8 +72,8 @@ describe('HotRelationUpdaterTest', () => {
             factory(C, A),
             factory(B, C)
         ], [], true);
-
-        const result = di.getProvider(B).getDependants().map(depName)
+        di.getResolver(B)
+        const result = getProvider(di, B).getDependants().map(depName);
 
         assert.deepEqual(result, [
             'factory@B',
@@ -89,14 +91,14 @@ describe('HotRelationUpdaterTest', () => {
             factory(C, A),
             factory(B, C)
         ], [], true);
-
-        const dependencies = di.getProvider(A).getDependencies()
+        di.getResolver(A)
+        const dependencies = getProvider(di, A).getDependencies();
 
         assert.deepEqual(dependencies.map(depName), [
             'factory@A'
         ])
 
-        di.getProvider(B).getDependants().map(depName)
+        di.getResolver(B)
 
         assert.deepEqual(dependencies.map(depName), [
             'factory@A',

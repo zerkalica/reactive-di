@@ -15,6 +15,7 @@ import {createFunctionProxy} from 'reactive-di/utils/createProxy'
 
 class FactoryResolver {
     displayName: string;
+    provider: Provider;
 
     _resolver: () => ResolveDepsResult;
     _target: Dependency;
@@ -22,10 +23,12 @@ class FactoryResolver {
     _value: any;
 
     constructor(
+        provider: Provider,
         resolver: () => ResolveDepsResult,
         target: Dependency,
         displayName: string
     ) {
+        this.provider = provider
         this._isCached = false
         this._value = null
         this._target = target
@@ -36,6 +39,8 @@ class FactoryResolver {
     reset(): void {
         this._isCached = false
     }
+
+    dispose(): void {}
 
     resolve(): any {
         if (this._isCached) {
@@ -63,20 +68,15 @@ class FactoryProvider extends BaseProvider<FactoryAnnotation> {
     tags: Array<Tag>;
     annotation: FactoryAnnotation;
 
-    _resolver: () => ResolveDepsResult;
-
-    init(acc: Container): void {
-        this._resolver = acc.createDepResolver(
-            this.annotation,
-            this.tags
-        )
-    }
-
-    createResolver(): Resolver {
+    createResolver(container: Container): Resolver {
         const annotation = this.annotation
 
         return new FactoryResolver(
-            this._resolver,
+            this,
+            container.createDepResolver(
+                this.annotation,
+                this.tags
+            ),
             annotation.dep || (annotation.target: any),
             this.displayName
         )

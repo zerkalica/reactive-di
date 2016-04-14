@@ -10,8 +10,13 @@ import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class ValueResolver {
     _value: any;
+    provider: Provider;
 
-    constructor(value: any) {
+    constructor(
+        provider: Provider,
+        value: any
+    ) {
+        this.provider = provider
         this._value = value
     }
 
@@ -19,8 +24,9 @@ class ValueResolver {
         this._value = value
     }
 
-    reset(): void {
-    }
+    dispose(): void {}
+
+    reset(): void {}
 
     resolve(): any {
         return this._value
@@ -33,8 +39,11 @@ class ValueProvider extends BaseProvider<ValueAnnotation> {
     tags: Array<Tag>;
     annotation: ValueAnnotation;
 
-    createResolver(): Resolver {
-        return new ValueResolver(this.annotation.value)
+    createResolver(container: Container): Resolver { // eslint-disable-line
+        return new ValueResolver(
+            this,
+            this.annotation.value
+        )
     }
 }
 

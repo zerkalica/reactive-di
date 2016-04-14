@@ -16,8 +16,10 @@ export type Annotation = {
 }
 
 export type Resolver = {
+    provider: Provider;
     resolve(): any;
     reset(): void;
+    dispose(): void;
 }
 
 export type Provider<Ann: Annotation> = {
@@ -32,9 +34,7 @@ export type Provider<Ann: Annotation> = {
     getDependants(): Array<Provider>;
     addDependant(dependant: Provider): void;
 
-    init(container: Container): void;
-
-    createResolver(): Resolver;
+    createResolver(container: Container): Resolver;
 }
 
 export type Plugin<Ann: Annotation> = {
@@ -53,43 +53,39 @@ export type CreateResolverOptions = {
 }
 
 export type Container = {
+    parent: ?Container;
     get(annotatedDep: DependencyKey): any;
-    finalize(): void;
-    getProvider(annotatedDep: DependencyKey): Provider;
     getResolver(annotatedDep: DependencyKey): Resolver;
+    delete(annotatedDep: DependencyKey): void;
+    dispose(): void;
     createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
 }
 
-export type CreateContainerManager = (config?: Array<Annotation>) => ContainerManager;
-
-export type CreateConfigResolver = (
-    pluginsConfig?: Array<Plugin>,
-    createUpdater?: () => RelationUpdater,
-    createContainer?: CreateContainer
-) => CreateContainerManager;
+export type CreateContainer = (
+    helper: ContainerHelper,
+    parent: ?Container
+) => Container;
 
 export type ContainerManager = {
     setMiddlewares(
         raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
     ): ContainerManager;
     createContainer(parent?: Container): Container;
-    replace(annotatedDep: DependencyKey, annotation?: Annotation): void;
+    replace(oldDep: DependencyKey, newDep?: DependencyKey|Annotation): void;
 }
 
+export type CreateContainerManager = (config?: Array<Annotation>) => ContainerManager;
+
 export type RelationUpdater = {
+    dependants: Array<Set<Provider>>;
     begin(provider: Provider): void;
     end(provider: Provider): void;
     inheritRelations(provider: Provider): void;
 }
 
-export type ProviderManager = {
-    addCacheHandler(cache: Map<DependencyKey, Resolver>): void;
-    removeCacheHandler(cache: Map<DependencyKey, Resolver>): void;
-    getProvider(annotatedDep: DependencyKey, Container: Container): ?Provider;
+export type ContainerHelper = {
+    updater: RelationUpdater;
+    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
+    removeContainer(container: Container): void;
+    createResolver(annotatedDep: DependencyKey, container: Container): ?Resolver;
 }
-
-export type CreateContainer = (
-    providerManager: ProviderManager,
-    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>,
-    parent: ?Container
-) => Container;
