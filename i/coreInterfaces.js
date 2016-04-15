@@ -3,7 +3,7 @@
 export type Tag = string;
 export type DepFn<T> = (...x: any) => T;
 export type Dependency<T> = DepFn<T>|Class<T>;
-export type DependencyKey<T> = Dependency<T>|string;
+export type DependencyKey<T> = Dependency<T>;
 export type ArgsObject = {
     [name: string]: DependencyKey;
 }
@@ -60,10 +60,18 @@ export type Container = {
     createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
 }
 
-export type CreateContainer = (
+export type ContainerHelper = {
+    createProvider(annotatedDep: DependencyKey, isParent: boolean): ?Provider;
+    removeContainer(container: Container): void;
+}
+export type ContainerProps = {
     helper: ContainerHelper,
+    updater: RelationUpdater,
+    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>,
     parent: ?Container
-) => Container;
+}
+
+export type CreateContainer = (props: ContainerProps) => Container;
 
 export type ContainerManager = {
     setMiddlewares(
@@ -80,11 +88,4 @@ export type RelationUpdater = {
     begin(provider: Provider): void;
     end(provider: Provider): void;
     inheritRelations(provider: Provider): void;
-}
-
-export type ContainerHelper = {
-    updater: RelationUpdater;
-    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
-    removeContainer(container: Container): void;
-    createProvider(annotatedDep: DependencyKey, isParent: boolean): ?Provider;
 }

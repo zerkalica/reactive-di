@@ -6,11 +6,7 @@ import type {
 import SimpleSet from 'reactive-di/utils/SimpleSet'
 
 class HotRelationUpdater {
-    dependants: Array<Set<Provider>>;
-
-    constructor() {
-        this.dependants = []
-    }
+    dependants: Array<Set<Provider>> = [];
 
     begin(dependency: Provider): void {
         const {dependants} = this
@@ -30,17 +26,13 @@ class HotRelationUpdater {
 
     inheritRelations(dependency: Provider): void {
         const l: number = this.dependants.length;
-        if (!l) {
-            return
-        }
         const dependants: Array<Set<Provider>> = this.dependants;
         const inheritDependants: Array<Provider> = dependency.getDependants();
         const k: number = inheritDependants.length;
         for (let i = 0; i < l; i++) {
             const dependantSet: Set<Provider> = dependants[i];
             for (let j = 0; j < k; j++) {
-                const dependant: Provider = inheritDependants[j];
-                dependantSet.add(dependant)
+                dependantSet.add(inheritDependants[j])
             }
         }
     }

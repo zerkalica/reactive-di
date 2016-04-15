@@ -5,6 +5,7 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 
 import type {
+    ContainerProps,
     ContainerHelper,
     Container,
     RelationUpdater,
@@ -34,20 +35,17 @@ class DefaultContainer {
     _updater: RelationUpdater;
     _dependants: Array<Set<Provider>>;
 
-    constructor(
-        containerHelper: ContainerHelper,
-        parent: ?Container = null
-    ) {
-        this._updater = containerHelper.updater
+    constructor(props: ContainerProps) {
+        this._updater = props.updater
         this._dependants = this._updater.dependants
 
-        this._helper = containerHelper
-        this._parent = parent || null
+        this._helper = props.helper
+        this._parent = props.parent || null
 
         this._privateCache = new SimpleMap()
         this._resolverCache = new SimpleMap()
         this.createDepResolver = createDepResolverCreator(new ResolveHelper(
-            containerHelper.middlewares,
+            props.middlewares,
             this
         ))
     }
@@ -74,7 +72,6 @@ class DefaultContainer {
         let resolver: ?Resolver = this._resolverCache.get(annotatedDep);
         if (!resolver) {
             const provider: ?Provider = this._helper.createProvider(annotatedDep, !!this._parent);
-
             if (provider) {
                 this._updater.begin(provider)
                 resolver = provider.createResolver((this: Container))
@@ -97,9 +94,6 @@ class DefaultContainer {
     }
 }
 
-export default function createDefaultContainer(
-    helper: ContainerHelper,
-    _parent: ?Container
-): Container {
-    return new DefaultContainer(helper, _parent)
+export default function createDefaultContainer(props: ContainerProps): Container {
+    return new DefaultContainer(props)
 }

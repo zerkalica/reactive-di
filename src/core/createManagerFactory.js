@@ -11,9 +11,10 @@ import type {
     Plugin,
     RelationUpdater,
     CreateContainer,
+    ContainerProps,
+    ContainerHelper,
     Container,
-    ContainerManager,
-    ContainerHelper
+    ContainerManager
 } from 'reactive-di/i/coreInterfaces'
 
 import normalizeMiddlewares from 'reactive-di/core/normalizeMiddlewares'
@@ -26,34 +27,52 @@ import createDefaultContainer from 'reactive-di/core/createDefaultContainer'
 import defaultPlugins from 'reactive-di/plugins/defaultPlugins'
 import createDummyRelationUpdater from 'reactive-di/core/updaters/createDummyRelationUpdater'
 
-// implements ContainerHelper
-class DefaultContainerHelper {
-    _annotations: Map<DependencyKey, Annotation>;
-    _plugins: Map<string, Plugin>;
-    _cache: Map<DependencyKey, Provider>;
+// implements ContainerManager, ContainerHelper
+class DefaultContainerManager {
+    _createContainer: CreateContainer;
 
-    containers: Array<Container>;
-    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
-    updater: RelationUpdater;
+    _annotations: Map<DependencyKey, Annotation>;
+    _cache: Map<DependencyKey, Provider>;
+    _plugins: Map<string, Plugin>;
+
+    _containers: Array<Container>;
+    _middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
+    _updater: RelationUpdater;
 
     constructor(
         annotations: Map<DependencyKey, Annotation>,
         plugins: Map<string, Plugin>,
         updater: RelationUpdater,
-        cache: Map<DependencyKey, Provider>
+        createContainer: CreateContainer
     ) {
+        this._createContainer = createContainer
+
         this._annotations = annotations
+        this._cache = new SimpleMap()
         this._plugins = plugins
-        this.updater = updater
-        this._cache = cache
-        this.containers = []
-        this.middlewares = new SimpleMap()
+
+        this._containers = []
+        this._middlewares = new SimpleMap()
+        this._updater = updater
     }
 
+    setMiddlewares(
+        raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
+    ): ContainerManager {
+        this._middlewares = normalizeMiddlewares(raw || [])
+        return this
+    }
+
+    /**
+     * @see ContainerHelper interface
+     */
     removeContainer(container: Container): void {
-        this.containers = this.containers.filter((target) => target !== container)
+        this._containers = this._containers.filter((target) => target !== container)
     }
 
+    /**
+     * @see ContainerHelper interface
+     */
     createProvider(annotatedDep: DependencyKey, isParent: boolean): ?Provider {
         let provider: ?Provider = this._cache.get(annotatedDep);
 
@@ -85,46 +104,17 @@ class DefaultContainerHelper {
 
         return provider
     }
-}
-
-// implements ContainerManager
-class DefaultContainerManager {
-    _annotations: Map<DependencyKey, Annotation>;
-    _cache: Map<DependencyKey, Provider>;
-    _helper: DefaultContainerHelper;
-    _createContainer: CreateContainer;
-
-    constructor(
-        annotations: Map<DependencyKey, Annotation>,
-        plugins: Map<string, Plugin>,
-        updater: RelationUpdater,
-        createContainer: CreateContainer
-    ) {
-        this._annotations = annotations
-        this._cache = new SimpleMap()
-        this._createContainer = createContainer
-
-        this._helper = new DefaultContainerHelper(
-            this._annotations,
-            plugins,
-            updater,
-            this._cache
-        )
-    }
-
-    setMiddlewares(
-        raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
-    ): ContainerManager {
-        this._helper.middlewares = normalizeMiddlewares(raw || [])
-        return this
-    }
 
     createContainer(parent?: Container): Container {
-        const container = this._createContainer(
-            (this._helper: ContainerHelper),
+        const props: ContainerProps = {
+            helper: (this: ContainerHelper),
+            middlewares: this._middlewares,
+            updater: this._updater,
             parent
-        )
-        this._helper.containers.push(container)
+        };
+
+        const container: Container = this._createContainer(props);
+        this._containers.push(container)
 
         return container
     }
@@ -133,7 +123,7 @@ class DefaultContainerManager {
         const cache = this._cache
         const provider: ?Provider = cache.get(oldDep);
         if (provider) {
-            const containers = this._helper.containers
+            const containers = this._containers
             const k = containers.length
             const dependants = provider.getDependants()
             for (let i = 0, l = dependants.length; i < l; i++) {
