@@ -7,7 +7,6 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 
 import type {
-    Resolver,
     Provider,
     Plugin,
     RelationUpdater,
@@ -55,16 +54,16 @@ class DefaultContainerHelper {
         this.containers = this.containers.filter((target) => target !== container)
     }
 
-    createResolver(annotatedDep: DependencyKey, container: Container): ?Resolver {
+    createProvider(annotatedDep: DependencyKey, isParent: boolean): ?Provider {
         let provider: ?Provider = this._cache.get(annotatedDep);
 
         if (provider) {
-            return provider.createResolver(container)
+            return provider
         }
 
         let annotation: ?Annotation = this._annotations.get(annotatedDep);
         if (!annotation) {
-            if (!container.parent) {
+            if (!isParent) {
                 annotation = driver.getAnnotation((annotatedDep: Dependency))
                 if (!annotation) {
                     return null
@@ -81,13 +80,10 @@ class DefaultContainerHelper {
             )
         }
 
-        provider = plugin.create(annotation);
+        provider = plugin.create(annotation)
         this._cache.set(annotatedDep, provider)
-        this.updater.begin(provider)
-        const resolver: Resolver = provider.createResolver(container);
-        this.updater.end(provider)
 
-        return resolver
+        return provider
     }
 }
 

@@ -24,7 +24,7 @@ function disposeResolver(resolver: Resolver): void {
 }
 
 class DefaultContainer {
-    parent: ?Container;
+    _parent: ?Container;
     createDepResolver: (rec: CreateResolverOptions, tags: Array<Tag>) => () => ResolveDepsResult;
 
     _resolverCache: Map<DependencyKey, Resolver>;
@@ -42,7 +42,7 @@ class DefaultContainer {
         this._dependants = this._updater.dependants
 
         this._helper = containerHelper
-        this.parent = parent || null
+        this._parent = parent || null
 
         this._privateCache = new SimpleMap()
         this._resolverCache = new SimpleMap()
@@ -73,16 +73,20 @@ class DefaultContainer {
     getResolver(annotatedDep: DependencyKey): Resolver {
         let resolver: ?Resolver = this._resolverCache.get(annotatedDep);
         if (!resolver) {
-            resolver = this._helper.createResolver(annotatedDep, (this: Container))
-            if (resolver) {
+            const provider: ?Provider = this._helper.createProvider(annotatedDep, !!this._parent);
+
+            if (provider) {
+                this._updater.begin(provider)
+                resolver = provider.createResolver((this: Container))
+                this._updater.end(provider)
                 this._privateCache.set(annotatedDep, resolver)
             } else {
-                if (!this.parent) {
+                if (!this._parent) {
                     throw new Error(
                         `Can't find annotation for ${getFunctionName(annotatedDep)}`
                     )
                 }
-                resolver = this.parent.getResolver(annotatedDep)
+                resolver = this._parent.getResolver(annotatedDep)
             }
             this._resolverCache.set(annotatedDep, resolver)
         } else if (this._dependants.length) {
@@ -95,7 +99,7 @@ class DefaultContainer {
 
 export default function createDefaultContainer(
     helper: ContainerHelper,
-    parent: ?Container
+    _parent: ?Container
 ): Container {
-    return new DefaultContainer(helper, parent)
+    return new DefaultContainer(helper, _parent)
 }

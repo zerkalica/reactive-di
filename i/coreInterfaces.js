@@ -53,7 +53,6 @@ export type CreateResolverOptions = {
 }
 
 export type Container = {
-    parent: ?Container;
     get(annotatedDep: DependencyKey): any;
     getResolver(annotatedDep: DependencyKey): Resolver;
     delete(annotatedDep: DependencyKey): void;
@@ -87,5 +86,5 @@ export type ContainerHelper = {
     updater: RelationUpdater;
     middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>;
     removeContainer(container: Container): void;
-    createResolver(annotatedDep: DependencyKey, container: Container): ?Resolver;
+    createProvider(annotatedDep: DependencyKey, isParent: boolean): ?Provider;
 }
