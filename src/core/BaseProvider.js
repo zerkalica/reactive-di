@@ -39,7 +39,7 @@ export default class BaseProvider<Ann: Annotation> {
     }
 
     addDependency(dependency: Provider): void {
-        dependency.addDependant(this)
+        // dependency.addDependant(this)
         this._dependencies.push(dependency)
     }
 
@@ -51,6 +51,7 @@ export default class BaseProvider<Ann: Annotation> {
     }
 
     addDependant(dependant: Provider): void {
+        dependant.addDependency(this)
         this._dependants.push(dependant)
     }
 }

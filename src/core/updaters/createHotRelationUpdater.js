@@ -19,7 +19,8 @@ class HotRelationUpdater {
     end(dependency: Provider): void {
         const dependantSet = this.dependants.pop()
         function iterateMap(dependant: Provider): void {
-            dependant.addDependency(dependency)
+            dependency.addDependant(dependant)
+            // dependant.addDependency(dependency)
         }
         dependantSet.forEach(iterateMap)
     }
