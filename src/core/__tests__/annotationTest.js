@@ -24,7 +24,7 @@ describe('DiContainerAnnotationTest', () => {
         const myFn = sinon.spy(_myFn)
         factory()(myFn)
 
-        const newDi: Container = createContainer()
+        const newDi: Container = createContainer();
         const result = newDi.get(myFn)
 
         assert(result === 123)

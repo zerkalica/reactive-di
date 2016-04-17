@@ -6,34 +6,38 @@ import type {
 import SimpleSet from 'reactive-di/utils/SimpleSet'
 
 class HotRelationUpdater {
-    dependants: Array<Set<Provider>> = [];
+    _dependants: Array<Set<Provider>> = [];
+    length: number = 0;
 
     begin(dependency: Provider): void {
-        const {dependants} = this
-        for (let i = 0, l = dependants.length; i < l; i++) {
-            dependants[i].add(dependency)
+        const {_dependants: deps} = this
+        const l = this.length
+        for (let i = 0; i < l; i++) {
+            deps[i].add(dependency)
         }
-        dependants.push(new SimpleSet())
+        deps[l] = new SimpleSet()
+        this.length = l + 1
     }
 
     end(dependency: Provider): void {
-        const dependantSet = this.dependants.pop()
+        const l = this.length - 1
+        this.length = l
+        const dependantSet = this._dependants[l]
         function iterateMap(dependant: Provider): void {
-            dependency.addDependant(dependant)
-            // dependant.addDependency(dependency)
+            dependant.addDependency(dependency)
         }
         dependantSet.forEach(iterateMap)
     }
 
-    inheritRelations(dependency: Provider): void {
-        const l: number = this.dependants.length;
-        const dependants: Array<Set<Provider>> = this.dependants;
-        const inheritDependants: Array<Provider> = dependency.getDependants();
-        const k: number = inheritDependants.length;
+    addCached(dependency: Provider): void {
+        const {_dependants: dependants} = this
+        const deps: Array<Provider> = dependency.dependants;
+        const k: number = deps.length;
+        const l = this.length
         for (let i = 0; i < l; i++) {
             const dependantSet: Set<Provider> = dependants[i];
             for (let j = 0; j < k; j++) {
-                dependantSet.add(inheritDependants[j])
+                dependantSet.add(deps[j])
             }
         }
     }

@@ -21,8 +21,9 @@ function createSet(): Class<Set> {
 
         forEach(fn: (value: V) => mixed): void {
             const {_map: map} = this
-            for (let key in map) { // eslint-disable-line
-                fn(map[key])
+            const keys = Object.keys(map)
+            for (let i = 0, l = keys.length; i < l; i++) {
+                fn(map[keys[i]])
             }
         }
 

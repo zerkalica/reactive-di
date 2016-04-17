@@ -6,16 +6,15 @@ import SimpleMap from 'reactive-di/utils/SimpleMap'
 import createHotRelationUpdater from 'reactive-di/core/updaters/createHotRelationUpdater'
 import createDummyRelationUpdater from 'reactive-di/core/updaters/createDummyRelationUpdater'
 import annotationDriver from 'reactive-di/core/annotationDriver'
+
 import {
     fastCall,
-    fastCreateObject,
-    fastCallMethod
+    fastCreateObject
 } from 'reactive-di/utils/fastCall'
 
 export {
     fastCall,
     fastCreateObject,
-    fastCallMethod,
     annotationDriver,
     createHotRelationUpdater,
     createDummyRelationUpdater,

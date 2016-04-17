@@ -1,49 +1,29 @@
 /* @flow */
 import type {ValueAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
-    Tag,
-    Resolver,
     Provider
 } from 'reactive-di/i/coreInterfaces'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class ValueResolver {
-    _value: any;
-    provider: Provider;
-
-    constructor(
-        provider: Provider,
-        value: any
-    ) {
-        this.provider = provider
-        this._value = value
-    }
-
-    setValue(value: any): void {
-        this._value = value
-    }
-
-    dispose(): void {}
-
-    reset(): void {}
-
-    resolve(): any {
-        return this._value
-    }
-}
-
 class ValueProvider extends BaseProvider<ValueAnnotation> {
     kind: 'value';
-    displayName: string;
-    tags: Array<Tag>;
     annotation: ValueAnnotation;
+    dependants: Array<Provider>;
 
-    createResolver(container: Container): Resolver { // eslint-disable-line
-        return new ValueResolver(
-            this,
-            this.annotation.value
-        )
+    _value: any;
+
+    init(container: Container): void { // eslint-disable-line
+        this._value = this.annotation.value
+    }
+
+    get(): any {
+        return this._value
+    }
+
+    set(value: any): boolean {
+        this._value = value
+        return true
     }
 }
 

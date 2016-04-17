@@ -5,11 +5,11 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 
 class DummyRelationUpdater {
-    dependants: Array<Set<Provider>> = [];
+    length: number = 0;
     /* eslint-disable no-unused-vars */
     begin(provider: Provider): void {}
     end(provider: Provider): void {}
-    inheritRelations(provider: Provider): void {}
+    addCached(provider: Provider): void {}
 }
 
 export default function creteDummyRelationUpdater(): RelationUpdater {

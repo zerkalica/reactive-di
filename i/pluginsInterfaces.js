@@ -1,51 +1,36 @@
 /* @flow */
 import type {
+    DepAnnotation,
+    Annotation,
+    Provider,
     Tag,
     DepItem,
-    DependencyKey,
-    Dependency
+    DependencyKey
 } from 'reactive-di/i/coreInterfaces'
 
-export type ValueAnnotation = {
-    kind: 'value';
-    target: DependencyKey;
-    tags?: Array<Tag>;
-    value: any;
-}
-
-export type AliasAnnotation = {
+export type AliasAnnotation = Annotation & {
     kind: 'alias';
-    target: DependencyKey;
-    tags?: Array<Tag>;
     alias: DependencyKey;
 }
 
-export type AggregateAnnotation = {
-    kind: 'aggregate';
-    target: DependencyKey;
-    tags: Array<Tag>;
-}
-
-export type ComposeAnnotation = {
+export type ComposeAnnotation = DepAnnotation & {
     kind: 'compose';
-    target: DependencyKey;
-    dep?: Dependency;
-    tags?: Array<Tag>;
-    deps: Array<DepItem>;
 }
 
-export type FactoryAnnotation = {
+export type FactoryAnnotation = DepAnnotation & {
     kind: 'factory';
-    target: DependencyKey;
-    dep?: Dependency;
-    tags?: Array<Tag>;
-    deps: Array<DepItem>;
 }
 
-export type ClassAnnotation = {
+export type ClassAnnotation = DepAnnotation & {
     kind: 'klass';
-    target: DependencyKey;
-    dep?: Dependency;
-    tags?: Array<Tag>;
-    deps: Array<DepItem>;
+}
+
+export type ValueAnnotation = Annotation & {
+    kind: 'value';
+    value: any;
+}
+
+export type ValueProvider<Ann: Annotation> = Provider<Ann> | Provider<Ann> & {
+    kind: 'value';
+    set(value: any): boolean;
 }

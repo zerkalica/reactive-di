@@ -12,16 +12,9 @@ import type {
     DependencyKey,
     Annotation,
     Container,
-    Provider,
     ContainerManager,
     CreateContainerManager
 } from 'reactive-di/i/coreInterfaces'
-
-export function getProvider(container: Container, dep: DependencyKey): Provider {
-    const cache = ((container: any)._helper: any)._cache;
-
-    return cache.get(dep)
-}
 
 export function createContainer(
     config?: Array<Annotation>,

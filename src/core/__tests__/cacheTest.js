@@ -35,6 +35,6 @@ describe('DiContainerCacheTest', () => {
         const newDi: Container = createContainer([
             factory(A)
         ])
-        assert(newDi.getResolver(A) === newDi.getResolver(A))
+        assert(newDi.getProvider(A) === newDi.getProvider(A))
     })
 })

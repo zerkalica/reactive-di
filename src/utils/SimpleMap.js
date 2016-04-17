@@ -22,8 +22,9 @@ function createMap(): Class<Map> {
 
         forEach(fn: (value: V, index: K) => mixed): void {
             const {_map: map} = this
-            for (let key in map) { // eslint-disable-line
-                fn(map[key], (key: any))
+            const keys = Object.keys(map)
+            for (let i = 0, l = keys.length; i < l; i++) {
+                fn(map[keys[i]], (keys[i]: any))
             }
         }
 

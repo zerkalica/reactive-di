@@ -11,15 +11,13 @@ export type DepItem = DependencyKey|ArgsObject;
 
 export type Annotation = {
     kind: any;
+    displayName?: string;
     tags?: Array<Tag>;
     target: DependencyKey;
 }
 
-export type Resolver = {
-    provider: Provider;
-    resolve(): any;
-    reset(): void;
-    dispose(): void;
+export type DepAnnotation = Annotation & {
+    deps: Array<DepItem>;
 }
 
 export type Provider<Ann: Annotation> = {
@@ -28,50 +26,56 @@ export type Provider<Ann: Annotation> = {
     tags: Array<Tag>;
     annotation: Ann;
 
-    getDependencies(): Array<Provider>;
+    /**
+     * Read only dependencies
+     */
+    dependencies: Array<Provider>;
+
+    /**
+     * Read only dependants
+     */
+    dependants: Array<Provider>;
+
+    /**
+     * Provider.get read this property if false - recalculates get result.
+     * Dependency provider can set isCached to false
+     *
+     * read/write
+     */
+    isCached: boolean;
+
+    /**
+     * Used for garbage collector, when disposing container
+     */
+    isDisposed: boolean;
+
+    init(container: Container): void;
+    dispose(): void;
+
+    get(): any;
+
     addDependency(dependency: Provider): void;
-
-    getDependants(): Array<Provider>;
     addDependant(dependant: Provider): void;
-
-    createResolver(container: Container): Resolver;
 }
 
 export type Plugin<Ann: Annotation> = {
     kind: any;
-    create(annotation: Ann): Provider;
+    create(annotation: Ann, container: Container): Provider;
 }
 
-export type ResolveDepsResult<A> = {
-    deps: Array<any>,
-    middlewares: ?Array<A>
-}
-
-export type CreateResolverOptions = {
-    deps: Array<DepItem>;
-    target: DependencyKey;
+export type ArgumentHelper = {
+    invokeComposed(...args: Array<any>): any;
+    invokeFunction(): any;
+    createObject(): Object;
 }
 
 export type Container = {
+    createArgumentHelper(annotation: DepAnnotation): ArgumentHelper;
     get(annotatedDep: DependencyKey): any;
-    getResolver(annotatedDep: DependencyKey): Resolver;
+    getProvider(annotatedDep: DependencyKey): Provider;
     delete(annotatedDep: DependencyKey): void;
     dispose(): void;
-    createDepResolver(rec: CreateResolverOptions, tags: Array<Tag>): () => ResolveDepsResult;
 }
-
-export type ContainerHelper = {
-    createProvider(annotatedDep: DependencyKey, isParent: boolean): ?Provider;
-    removeContainer(container: Container): void;
-}
-export type ContainerProps = {
-    helper: ContainerHelper,
-    updater: RelationUpdater,
-    middlewares: Map<DependencyKey|Tag, Array<DependencyKey>>,
-    parent: ?Container
-}
-
-export type CreateContainer = (props: ContainerProps) => Container;
 
 export type ContainerManager = {
     setMiddlewares(
@@ -84,8 +88,8 @@ export type ContainerManager = {
 export type CreateContainerManager = (config?: Array<Annotation>) => ContainerManager;
 
 export type RelationUpdater = {
-    dependants: Array<Set<Provider>>;
-    begin(provider: Provider): void;
-    end(provider: Provider): void;
-    inheritRelations(provider: Provider): void;
+    length: number;
+    begin(dependant: Provider): void;
+    end(dependant: Provider): void;
+    addCached(dependency: Provider): void;
 }

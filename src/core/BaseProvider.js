@@ -3,12 +3,9 @@
 import type {
     Tag,
     Annotation,
-    Resolver,
     Container,
     Provider
 } from 'reactive-di/i/coreInterfaces'
-
-import getFunctionName from 'reactive-di/utils/getFunctionName'
 
 export default class BaseProvider<Ann: Annotation> {
     kind: any;
@@ -17,41 +14,39 @@ export default class BaseProvider<Ann: Annotation> {
 
     annotation: Ann;
 
-    _dependencies: Array<Provider>;
-    _dependants: Array<Provider>;
+    isDisposed: boolean;
+    isCached: boolean;
+
+    dependencies: Array<Provider>;
+    dependants: Array<Provider>;
 
     constructor(annotation: Ann) {
         this.kind = annotation.kind
         this.annotation = annotation
-        this._dependencies = [this]
-        this._dependants = [this]
-        const fnName: string = getFunctionName(annotation.target);
-        this.displayName = this.kind + '@' + fnName
-        this.tags = [this.kind].concat(annotation.tags || [])
+        this.dependencies = [this]
+        this.dependants = [this]
+        this.isCached = false
+        this.isDisposed = false
+        this.displayName = (annotation: any).displayName
+        this.tags = (annotation: any).tags
     }
 
-    createResolver(container: Container): Resolver { // eslint-disable-line
-        throw new Error('Implement resolver')
+    init(container: Container): void {} // eslint-disable-line
+
+    dispose(): void {
+        this.isDisposed = true
     }
 
-    getDependencies(): Array<Provider> {
-        return this._dependencies
+    get(): any {
+        return null
     }
 
-    addDependency(dependency: Provider): void {
-        // dependency.addDependant(this)
-        this._dependencies.push(dependency)
+    addDependency<P: Provider>(dependency: P): void {
+        dependency.addDependant(this)
+        this.dependencies.push(dependency)
     }
 
-    /**
-     * All dependants
-     */
-    getDependants(): Array<Provider> {
-        return this._dependants
-    }
-
-    addDependant(dependant: Provider): void {
-        dependant.addDependency(this)
-        this._dependants.push(dependant)
+    addDependant<P: Provider>(dependant: P): void {
+        this.dependants.push(dependant)
     }
 }
