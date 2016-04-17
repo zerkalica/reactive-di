@@ -58,9 +58,12 @@ export default class DefaultContainer {
         for (let i = 0, l = ids.length; i < l; i++) {
             const depMiddlewares: ?Array<DependencyKey> = middlewares.get(ids[i]);
             if (depMiddlewares) {
+                let m = mdls.length
                 for (let j = 0, k = depMiddlewares.length; j < k; j++) {
-                    mdls[mdls.length++] = this.getProvider(depMiddlewares[j])
+                    mdls[m] = this.getProvider(depMiddlewares[j])
+                    m = m + 1
                 }
+                mdls.length = m
             }
         }
 
@@ -71,7 +74,7 @@ export default class DefaultContainer {
         deps: Array<Provider>;
         depNames: ?Array<string>;
     } {
-        let depNames: ?Array<string>;
+        let depNames: ?Array<string> = null;
         const resolvedDeps: Array<Provider> = new Array(deps.length);
         const l: number = deps.length;
         if (
@@ -89,7 +92,6 @@ export default class DefaultContainer {
                 depNames[i] = key
             }
         } else {
-            depNames = null
             for (let i = 0; i < l; i++) {
                 const dep: Provider =
                     this.getProvider(((deps: any): Array<DependencyKey>)[i]);

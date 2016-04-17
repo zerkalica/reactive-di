@@ -1,36 +1,36 @@
-# Reactive DI
+Reactive DI
+===========
 
-- [Reactive DI](#reactive-di)
-    - [Структура](#user-content-Структура)
-        - [Dependency](#dependency)
-        - [Configuration](#configuration)
-        - [Annotation](#annotation)
-        - [Resolver](#resolver)
-        - [Provider](#provider)
-        - [Plugin](#plugin)
-        - [Container](#container)
-        - [RelationUpdater](#relationupdater)
-        - [ContainerManager](#containermanager)
-        - [CreateManagerFactory](#createconfigfactory)
-    - [Создание контейнера](#user-content-Создание-контейнера)
-    - [Типы зависимостей](#user-content-Типы-зависимостей)
-        - [klass](#klass)
-        - [factory](#factory)
-        - [compose](#compose)
-        - [alias](#alias)
-        - [value](#value)
-        - [tag](#tag)
-    - [Middlewares](#middlewares)
-    - [Горячая замена зависимостей](#user-content-Горячая-замена-зависимостей)
-    - [Создание своих конфигураций](#user-content-Создание-своих-конфигураций)
-    - [Стратегия расчета зависимостей](#user-content-Стратегия-расчета-зависимостей)
-    - [Сравнение с angular2](#user-content-Сравнение-с-angular2)
-        - [Описание зависимостей](#user-content-Описание-зависимостей)
-        - [Иерархические контейнеры](#user-content-Иерархические-контейнеры)
-        - [Создание контейнера из ранее подготовленных провайдеров](#user-content-Создание-контейнера-из-ранее подготовленных-провайдеров)
-        - [Opaque token](#opaque-token)
-        - [Multi-зависимости](#user-content-multi-зависимости)
-        - [Контейнер как зависимость](#user-content-Контейнер-как-зависимость)
+-	[Reactive DI](#reactive-di)
+    -	[Структура](#user-content-Структура)
+        -	[Dependency](#dependency)
+        -	[Configuration](#configuration)
+        -	[Annotation](#annotation)
+        -	[Provider](#provider)
+        -	[Plugin](#plugin)
+        -	[Container](#container)
+        -	[RelationUpdater](#relationupdater)
+        -	[ContainerManager](#containermanager)
+        -	[CreateManagerFactory](#createconfigfactory)
+    -	[Создание контейнера](#user-content-Создание-контейнера)
+    -	[Типы зависимостей](#user-content-Типы-зависимостей)
+        -	[klass](#klass)
+        -	[factory](#factory)
+        -	[compose](#compose)
+        -	[alias](#alias)
+        -	[value](#value)
+        -	[tag](#tag)
+    -	[Middlewares](#middlewares)
+    -	[Горячая замена зависимостей](#user-content-Горячая-замена-зависимостей)
+    -	[Создание своих конфигураций](#user-content-Создание-своих-конфигураций)
+    -	[Стратегия расчета зависимостей](#user-content-Стратегия-расчета-зависимостей)
+    -	[Сравнение с angular2](#user-content-Сравнение-с-angular2)
+        -	[Описание зависимостей](#user-content-Описание-зависимостей)
+        -	[Иерархические контейнеры](#user-content-Иерархические-контейнеры)
+        -	[Создание контейнера из ранее подготовленных провайдеров](#user-content-Создание-контейнера-из-ранее подготовленных-провайдеров)
+        -	[Opaque token](#opaque-token)
+        -	[Multi-зависимости](#user-content-multi-зависимости)
+        -	[Контейнер как зависимость](#user-content-Контейнер-как-зависимость)
 
 Цель - создать meta-фреймворк, сопоставимый с angular2, но состоящий из сторонних компонент, где reactive-di является тонкой прослойкой, посредством провайдов объединяющим сторонние библиотеки в одно целое и вынесением их настройки и связей в отдельный слой.
 
@@ -84,7 +84,8 @@ container.get(Car)
 
 Удобство тестирования, возможность подмены одной реализации на другую с таким же интерфейсом, не являются основыми преимуществами в использовании DI. Основная задача DI - предварительная настройка зависимостей, вынесенная в отдельный слой - [Composition Root](http://blog.ploeh.dk/2011/07/28/CompositionRoot/) и скрывающая детали этой настройки от основного кода приложения. DI не имеет прямого отношения к ООП - можно преднастраивать функции-фабрики, данные.
 
-## Структура
+Структура
+---------
 
 В структуре ReactiveDi можно выделить следующие сущности:
 
@@ -167,35 +168,9 @@ factory(engine)(carFactory)
 
 Описывать зависимости предпочтительнее через конфигурацию, т.к. тогда кроме интерфейсов компоненты не будут содержать статических связей между собой, все связи можно вынести в отдельный конфигурационный слой, см. статью [Composition Root by Mark Seemann](http://blog.ploeh.dk/2011/07/28/CompositionRoot/)
 
-### Resolver
-
-Каждое значение, полученное из контейнера зависимостей вычисляется этой сущностью.
-
-```js
-// @flow
-export type Resolver = {
-    resolve(): any;
-    dispose(): void;
-    reset(): void;
-}
-```
-
-resolve - вычисляет значение, заносит в кэш, reset - сбрасывает кэш, dispose - вызывается при горячей замене зависимости или при dispose контейнера, в контексте которого был создан Resolver.
-
-```js
-    @klass()
-    class Car {}
-
-    container.getResolver(Car).resolve()
-    // или
-    container.get(Car)
-```
-
-Под каждый тип зависимости klass, factory, value, alias свои реализации Resolvers, это дает возможность расширять апи через собственные плагины.
-
 ### Provider
 
-Представляет мета-информацию о зависимости: ее связи и т.д. Обновляет связи при перестоении зависимостей, создает Resolver.
+Представляет мета-информацию о зависимости: ее связи и т.д. Обновляет связи при перестоении зависимостей. Под каждый тип зависимости klass, factory, value, alias свои реализации Provider, это дает возможность расширять апи через собственные плагины.
 
 ```js
 // @flow
@@ -235,14 +210,14 @@ const config = managerFactory([
 
 ### Container
 
-По зависимости-ключу получает ее значение или Resolver, кэширует результаты вычисления зависимости.
+По зависимости-ключу получает ее значение или Provider, кэширует результаты вычисления зависимости.
 
 ```js
 // @flow
 export type Container = {
     get(annotatedDep: DependencyKey): any;
     dispose(): void;
-    getResolver(annotatedDep: DependencyKey): Resolver;
+    getProvider(annotatedDep: DependencyKey): Provider;
 }
 ```
 
@@ -283,11 +258,11 @@ di.get(B)
 export type RelationUpdater = {
     begin(provider: Provider): void;
     end(provider: Provider): void;
-    inheritRelations(provider: Provider): void;
+    addCached(provider: Provider): void;
 }
 ```
 
-begin вызывается сразу после создания очередного провайдера зависимости при первом ее запросе, end после того, как провайдер запросит в provider.createResolver() свои дочернии зависимости и inheritRelation вызывается каждый раз, когда запрошенный провайдер уже есть в кэше, что бы  вновь создаваемые зависимые от него провайдеры могли унаследовать его зависимости.
+begin вызывается сразу после создания очередного провайдера зависимости при первом ее запросе, end после того, как провайдер запросит в provider.createResolver() свои дочернии зависимости и inheritRelation вызывается каждый раз, когда запрошенный провайдер уже есть в кэше, что бы вновь создаваемые зависимые от него провайдеры могли унаследовать его зависимости.
 
 ### ContainerManager
 
@@ -312,7 +287,8 @@ export type ContainerManager = {
 
 ![ReactiveDi class diagram](./docs/images/class-diagram.png)
 
-## Создание контейнера
+Создание контейнера
+-------------------
 
 Для первичной настройки контейнера, передачи плагинов, различных стратегий, используется managerFactory. При создании опционально передаются:
 
@@ -359,7 +335,8 @@ container.get(Car)
 
 Такое разделение позволяет расширять, создавать и реализовывать иерархические контейнеры. Например, по аналогии с angluar2, можно сделать [react](https://facebook.github.io/react/)-компоненты, каждый из которых будет иметь свой контейнер. Внутренние формы, экшены, валидаторы будут в этом контейнере, а слой работы с rest-api, логгеры источники данных будут в родительском контейнере.
 
-## Типы зависимостей
+Типы зависимостей
+-----------------
 
 ### klass
 
@@ -655,7 +632,8 @@ class RedCar {
 }
 ```
 
-## Middlewares
+Middlewares
+-----------
 
 Middlewares представляют собой обработчики вызовов функций или методов класса. Обработчики прозрачно прикрепляются либо к функции/классу, либо к тегу, которым могут быть помечены несколько зависимостей.
 
@@ -714,7 +692,8 @@ my.test(1) // console: 2, 1
 my.test2(1) // no console output
 ```
 
-## Горячая замена зависимостей
+Горячая замена зависимостей
+---------------------------
 
 Любую зависимость можно заменить в конфигурации, автоматически перестроится кэш всех прямо или косвенно зависимых от нее сущностей.
 
@@ -748,13 +727,13 @@ cm.replace(CarColor, value(CarColor, 'blue'))
 container.get(Car).color === 'blue'
 ```
 
-## Создание своих конфигураций
+Создание своих конфигураций
+---------------------------
 
 Кроме вышеперечисленных провайдеров klass, factory, compose, value, alias можно создавать свои. Для этого надо:
 
 1.	Создать Plugin, который знает как по типу создать сущность провайдера.
-2.	В Plugin создать Provider, который будет содержать информацию о связях с другими сущностями. Provider-у доступен контейнер, который инициализировал его создание.
-3.	В Provider создать Resolver, который вычисляет и кэширует значение зависимости, может обращаться к контейнеру, если Provider предоставил его Resolver-у.
+2.	В Plugin создать Provider, который будет содержать информацию о связях с другими сущностями. В метод Provider.init передается контейнер, который инициализировал его создание.
 
 ```js
 // @flow
@@ -763,7 +742,6 @@ import type {
     Annotation,
     Container,
     Provider,
-    Resolver,
     Plugin
 } from 'reactive-di/i/coreInterfaces'
 import {
@@ -794,31 +772,6 @@ function myAnnotation(value: string): (target: Function) => void {
     }
 }
 
-class MyResolver {
-    _provider: MyProvider;
-    _value: string;
-
-    constructor(
-        value: string,
-        provider: MyProvider,
-        parents: Array<Parent>,
-        getResolver: (dep: DependencyKey) => Resolver
-    ) {
-        this._value = value
-        this._provide = provider
-    }
-
-    dispose(): void {}
-
-    reset(): void {
-
-    }
-
-    resolve(): any {
-        return this._value
-    }
-}
-
 class MyProvider extends BaseProvider<MyConfig> {
     kind: 'myPlugin';
     displayName: string;
@@ -828,13 +781,13 @@ class MyProvider extends BaseProvider<MyConfig> {
     _childs: Array<Provider>;
     _parents: Array<Provider>;
 
-    createResolver(container: Container): Resolver {
-        return new MyResolver(
-            this.annotation.value,
-            this,
-            this._parents,
-            (dep: DependencyKey) => container.getResolver(dep)
-        )
+    dispose(): void {}
+
+    get(): any {
+        return this.annotation.value
+    }
+
+    init(container: Container): void {
     }
 }
 
@@ -865,7 +818,8 @@ const container = createManagerFactory(myPlugins)(configuration).createContainer
 container.get(Car).value === 'testValue'
 ```
 
-## Сравнение с angular2
+Сравнение с angular2
+--------------------
 
 На данный момент [angular2 di](https://github.com/angular/angular/tree/master/modules/angular2/src/core/di) не является отдельной библиотекой в npm, его API не позволяет реализовать горячую замену зависимостей (hotreload), нету механизма middleware - логирования вызовов функций и методов, пока еще 'сырое' плоское API [Injector Class](https://angular.io/docs/ts/latest/api/core/Injector-class.html). Много static методов принадлежащим разным уровням контейнера: resolve, resolveAndCreate, fromResolvedProviders, get, resolveAndCreateChild, createChildFromResolved, resolveAndInstantiate, instantiateResolved.
 
@@ -888,31 +842,28 @@ constructor(token: any, {useClass, useValue, useExisting, useFactory, deps, mult
 })
 ```
 
-В reactive-di для этого есть связка Annotation, Plugin, Provider, Resolver. Которая позволяет создавать более сложную
- логику настройки зависимостей на основе их связей.
+В reactive-di для этого есть связка Annotation, Plugin, Provider. Которая позволяет создавать более сложную логику настройки зависимостей на основе их связей.
 
 ```js
 // @flow
-
-export type Resolver = {
-    resolve(): any;
-    reset(): void;
-    dispose(): void;
-}
 
 export type Provider<Ann: Annotation> = {
     kind: any;
     displayName: string;
     tags: Array<Tag>;
     annotation: Ann;
+    dependencies: Array<Provider>;
+    dependants: Array<Provider>;
+    isCached: boolean;
+    isDisposed: boolean;
 
-    getDependencies(): Array<Provider>;
+    init(container: Container): void;
+    dispose(): void;
+
+    get(): any;
+
     addDependency(dependency: Provider): void;
-
-    getDependants(): Array<Provider>;
     addDependant(dependant: Provider): void;
-
-    createResolver(container: Container): Resolver;
 }
 
 export type Plugin<Ann: Annotation> = {
@@ -1120,10 +1071,11 @@ const di = containerManager.createContainer();
 di.get(Car) intanceof Car
 ```
 
-## Контейнер как зависимость
+Контейнер как зависимость
+-------------------------
 
 В некоторых [примерах документации angular 2](https://angular.io/docs/ts/latest/guide/dependency-injection.html#!#appendix-working-with-injectors-directly) авторы используют Injector как [service locator](https://en.wikipedia.org/wiki/Service_locator_pattern), что является плохим подходом, о чем они справедливо сообщают.
 
 Подробнее можно ознакомиться с материалами [stackoverflow](http://stackoverflow.com/questions/22795459/is-servicelocator-anti-pattern), [habrahabr.ru](https://habrahabr.ru/post/166287/), [статьи by Mark Seemann](http://blog.ploeh.dk/2010/02/03/ServiceLocatorisanAnti-Pattern/).
 
-В reactive-di нет возможности 'заинжектить' контейнер, но вся логика по прямой работе с контейнером может быть вынесена в Provider.createResolver()
+В reactive-di нет возможности 'заинжектить' контейнер, но вся логика по прямой работе с контейнером может быть вынесена в Provider.init()
