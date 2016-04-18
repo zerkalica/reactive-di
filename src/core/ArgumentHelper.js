@@ -63,9 +63,9 @@ export default class ArgumentHelper {
         return fn
     }
 
-    createObject(): Object {
+    createObject<O: Object>(): O {
         const {deps, middlewares} = this._getArguments()
-        let object: Object;
+        let object: O;
         object = fastCreateObject(this._target, deps);
         if (middlewares) {
             object = createObjectProxy(object, middlewares)
@@ -81,11 +81,19 @@ export default class ArgumentHelper {
 
         if (depNames) {
             for (let i = 0, j = deps.length; i < j; i++) {
-                argsObject[depNames[i]] = deps[i].get()
+                const dep = deps[i]
+                if (!dep.isCached) {
+                    dep.update()
+                }
+                argsObject[depNames[i]] = dep.value
             }
         } else {
             for (let i = 0, j = deps.length; i < j; i++) {
-                argsArray.push(deps[i].get())
+                const dep = deps[i]
+                if (!dep.isCached) {
+                    dep.update()
+                }
+                argsArray[i] = dep.value
             }
         }
 
@@ -93,7 +101,11 @@ export default class ArgumentHelper {
         if (middlewares) {
             resolvedMiddlewares = []
             for (let i = 0, j = middlewares.length; i < j; i++) {
-                resolvedMiddlewares.push(middlewares[i].get())
+                const dep = middlewares[i]
+                if (!dep.isCached) {
+                    dep.update()
+                }
+                resolvedMiddlewares[i] = dep.value
             }
         }
 

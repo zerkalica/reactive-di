@@ -1,7 +1,7 @@
 /* @flow */
 import type {ComposeAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
-    Tag,
+    DepFn,
     Container,
     ArgumentHelper,
     Provider
@@ -9,17 +9,16 @@ import type {
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class ComposeProvider extends BaseProvider<ComposeAnnotation, Provider> {
+class ComposeProvider<V> extends BaseProvider<DepFn<V>, ComposeAnnotation, Provider> {
     kind: 'compose';
-    displayName: string;
-    tags: Array<Tag>;
     annotation: ComposeAnnotation;
-    isCached: boolean;
-    _value: any;
+
+    value: DepFn<V>;
 
     init(container: Container): void {
         const helper: ArgumentHelper = container.createArgumentHelper(this.annotation);
-        this._value = function getValue(...args: Array<any>): any {
+        this.isCached = true
+        this.value = function getValue(...args: Array<any>): V {
             return helper.invokeComposed(args)
         }
     }
@@ -27,15 +26,11 @@ class ComposeProvider extends BaseProvider<ComposeAnnotation, Provider> {
     addDependency(dependency: Provider): void {
         this.dependencies.push(dependency)
     }
-
-    get(): any {
-        return this._value
-    }
 }
 
 export default {
     kind: 'compose',
-    create(annotation: ComposeAnnotation): Provider<ComposeAnnotation, Provider> {
+    create(annotation: ComposeAnnotation): Provider<DepFn, ComposeAnnotation, Provider> {
         return new ComposeProvider(annotation)
     }
 }

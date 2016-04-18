@@ -1,42 +1,35 @@
 /* @flow */
+
 import type {FactoryAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
-    Tag,
     ArgumentHelper,
-    Dependency,
     Container,
     Provider
 } from 'reactive-di/i/coreInterfaces'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class FactoryProvider extends BaseProvider<FactoryAnnotation, Provider> {
+class FactoryProvider<V> extends BaseProvider<V, FactoryAnnotation, Provider> {
     kind: 'factory';
-    displayName: string;
-    tags: Array<Tag>;
     annotation: FactoryAnnotation;
-    _value: any;
+    isCached: boolean;
+
+    value: V;
     _helper: ArgumentHelper;
-    _target: Dependency;
 
     init(container: Container): void {
         this._helper = container.createArgumentHelper(this.annotation);
     }
 
-    get(): any {
-        if (this.isCached) {
-            return this._value
-        }
-        this._value = this._helper.invokeFunction()
+    update(): void {
+        this.value = this._helper.invokeFunction()
         this.isCached = true
-
-        return this._value
     }
 }
 
 export default {
     kind: 'factory',
-    create(annotation: FactoryAnnotation): Provider<FactoryAnnotation, Provider> {
+    create(annotation: FactoryAnnotation): Provider<any, FactoryAnnotation, Provider> {
         return new FactoryProvider(annotation)
     }
 }

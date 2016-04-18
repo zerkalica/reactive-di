@@ -25,12 +25,12 @@ export type ClassAnnotation = DepAnnotation & {
     kind: 'klass';
 }
 
-export type ValueAnnotation = Annotation & {
+export type ValueAnnotation<V> = Annotation & {
     kind: 'value';
-    value: any;
+    value: V;
 }
 
-export type ValueProvider = Provider<ValueAnnotation> & {
+export type ValueProvider<V> = Provider<V, ValueAnnotation, Provider> & {
     kind: 'value';
-    set(value: any): boolean;
+    set(value: V): boolean;
 }

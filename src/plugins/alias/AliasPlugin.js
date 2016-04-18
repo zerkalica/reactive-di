@@ -7,7 +7,7 @@ import type {
 
 export default {
     kind: 'alias',
-    create(annotation: AliasAnnotation, container: Container): Provider<AliasAnnotation, Provider> {
+    create(annotation: AliasAnnotation, container: Container): Provider {
         return container.getProvider(annotation.alias)
     }
 }

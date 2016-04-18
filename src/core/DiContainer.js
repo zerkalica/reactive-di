@@ -134,7 +134,12 @@ export default class DefaultContainer {
     }
 
     get(annotatedDep: DependencyKey): any {
-        return this.getProvider(annotatedDep).get()
+        const dep = this.getProvider(annotatedDep)
+        if (!dep.isCached) {
+            dep.update()
+        }
+
+        return dep.value
     }
 
     getProvider(annotatedDep: DependencyKey): Provider {

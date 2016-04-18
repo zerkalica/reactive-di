@@ -29,7 +29,7 @@ export type DepAnnotation = Annotation & {
     deps: Array<DepItem>;
 }
 
-export type Provider<Ann: Annotation, P: Provider> = Disposable & {
+export type Provider<V, Ann: Annotation, P: Provider> = Disposable & {
     kind: any;
     displayName: string;
     tags: Array<Tag>;
@@ -58,24 +58,27 @@ export type Provider<Ann: Annotation, P: Provider> = Disposable & {
      */
     isDisposed: boolean;
 
+
     init(container: Container): void;
     dispose(): void;
 
-    get(): any;
+    value: V;
+
+    update(): void;
 
     addDependency(dependency: P): void;
     addDependant(dependant: P): void;
 }
 
-export type Plugin<Ann: Annotation> = {
+export type Plugin<Ann: Annotation, P: Provider> = {
     kind: any;
-    create(annotation: Ann, container: Container): Provider;
+    create(annotation: Ann, container: Container): P;
 }
 
 export type ArgumentHelper = {
     invokeComposed(...args: Array<any>): any;
     invokeFunction(): any;
-    createObject(): Object;
+    createObject<O: Object>(): O;
 }
 
 export type Container = {
