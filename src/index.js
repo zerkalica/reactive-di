@@ -7,6 +7,7 @@ import SimpleSet from 'reactive-di/utils/SimpleSet'
 import createHotRelationUpdater from 'reactive-di/core/updaters/createHotRelationUpdater'
 import createDummyRelationUpdater from 'reactive-di/core/updaters/createDummyRelationUpdater'
 import annotationDriver from 'reactive-di/core/annotationDriver'
+import DisposableCollection from 'reactive-di/utils/DisposableCollection'
 
 import {
     fastCall,
@@ -16,6 +17,8 @@ import {
 export {
     fastCall,
     fastCreateObject,
+
+    DisposableCollection,
     annotationDriver,
     createHotRelationUpdater,
     createDummyRelationUpdater,
