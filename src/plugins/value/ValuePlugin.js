@@ -7,7 +7,7 @@ import type {
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class ValueProvider extends BaseProvider<ValueAnnotation> {
+class ValueProvider extends BaseProvider<ValueAnnotation, Provider> {
     kind: 'value';
     annotation: ValueAnnotation;
     dependants: Collection<Provider>;
@@ -30,7 +30,7 @@ class ValueProvider extends BaseProvider<ValueAnnotation> {
 
 export default {
     kind: 'value',
-    create(annotation: ValueAnnotation): Provider {
+    create(annotation: ValueAnnotation): Provider<ValueAnnotation, Provider> {
         return new ValueProvider(annotation)
     }
 }

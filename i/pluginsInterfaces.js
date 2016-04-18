@@ -30,7 +30,7 @@ export type ValueAnnotation = Annotation & {
     value: any;
 }
 
-export type ValueProvider<Ann: Annotation> = Provider<Ann> | Provider<Ann> & {
+export type ValueProvider = Provider<ValueAnnotation> & {
     kind: 'value';
     set(value: any): boolean;
 }

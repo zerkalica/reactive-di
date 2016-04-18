@@ -10,7 +10,7 @@ import type {
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class FactoryProvider extends BaseProvider<FactoryAnnotation> {
+class FactoryProvider extends BaseProvider<FactoryAnnotation, Provider> {
     kind: 'factory';
     displayName: string;
     tags: Array<Tag>;
@@ -36,7 +36,7 @@ class FactoryProvider extends BaseProvider<FactoryAnnotation> {
 
 export default {
     kind: 'factory',
-    create(annotation: FactoryAnnotation): Provider<FactoryAnnotation> {
+    create(annotation: FactoryAnnotation): Provider<FactoryAnnotation, Provider> {
         return new FactoryProvider(annotation)
     }
 }

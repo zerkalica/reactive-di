@@ -9,7 +9,7 @@ import type {
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class ClassProvider extends BaseProvider<ClassAnnotation> {
+class ClassProvider extends BaseProvider<ClassAnnotation, Provider> {
     kind: 'klass';
     displayName: string;
     tags: Array<Tag>;
@@ -39,7 +39,7 @@ class ClassProvider extends BaseProvider<ClassAnnotation> {
 
 export default {
     kind: 'klass',
-    create(annotation: ClassAnnotation): Provider<ClassAnnotation> {
+    create(annotation: ClassAnnotation): Provider<ClassAnnotation, Provider> {
         return new ClassProvider(annotation)
     }
 }

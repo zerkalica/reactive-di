@@ -29,7 +29,7 @@ export type DepAnnotation = Annotation & {
     deps: Array<DepItem>;
 }
 
-export type Provider<Ann: Annotation> = Disposable & {
+export type Provider<Ann: Annotation, P: Provider> = Disposable & {
     kind: any;
     displayName: string;
     tags: Array<Tag>;
@@ -38,12 +38,12 @@ export type Provider<Ann: Annotation> = Disposable & {
     /**
      * Read only dependencies
      */
-    dependencies: Array<Provider>;
+    dependencies: Array<Provider|P>;
 
     /**
      * Read only dependants
      */
-    dependants: Collection<Provider>;
+    dependants: Collection<Provider|P>;
 
     /**
      * Provider.get read this property if false - recalculates get result.
@@ -63,8 +63,8 @@ export type Provider<Ann: Annotation> = Disposable & {
 
     get(): any;
 
-    addDependency(dependency: Provider): void;
-    addDependant(dependant: Provider): void;
+    addDependency(dependency: P): void;
+    addDependant(dependant: P): void;
 }
 
 export type Plugin<Ann: Annotation> = {

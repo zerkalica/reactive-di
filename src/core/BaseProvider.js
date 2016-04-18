@@ -9,7 +9,7 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 import DisposableCollection from 'reactive-di/utils/DisposableCollection'
 
-export default class BaseProvider<Ann: Annotation> {
+export default class BaseProvider<Ann: Annotation, P: Provider> {
     kind: any;
     displayName: string;
     tags: Array<Tag>;
@@ -19,8 +19,8 @@ export default class BaseProvider<Ann: Annotation> {
     isDisposed: boolean;
     isCached: boolean;
 
-    dependencies: Array<Provider>;
-    dependants: Collection<Provider>;
+    dependencies: Array<Provider|P>;
+    dependants: Collection<Provider|P>;
 
     constructor(annotation: Ann) {
         this.kind = annotation.kind
@@ -43,12 +43,12 @@ export default class BaseProvider<Ann: Annotation> {
         return null
     }
 
-    addDependency<P: Provider>(dependency: P): void {
+    addDependency(dependency: P): void {
         dependency.addDependant(this)
         this.dependencies.push(dependency)
     }
 
-    addDependant<P: Provider>(dependant: P): void {
+    addDependant(dependant: P): void {
         this.dependants.add(dependant)
     }
 }

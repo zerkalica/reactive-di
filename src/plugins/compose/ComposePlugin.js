@@ -9,7 +9,7 @@ import type {
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class ComposeProvider extends BaseProvider<ComposeAnnotation> {
+class ComposeProvider extends BaseProvider<ComposeAnnotation, Provider> {
     kind: 'compose';
     displayName: string;
     tags: Array<Tag>;
@@ -35,7 +35,7 @@ class ComposeProvider extends BaseProvider<ComposeAnnotation> {
 
 export default {
     kind: 'compose',
-    create(annotation: ComposeAnnotation): Provider<ComposeAnnotation> {
+    create(annotation: ComposeAnnotation): Provider<ComposeAnnotation, Provider> {
         return new ComposeProvider(annotation)
     }
 }
