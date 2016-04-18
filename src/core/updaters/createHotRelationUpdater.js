@@ -31,7 +31,7 @@ class HotRelationUpdater {
 
     addCached(dependency: Provider): void {
         const {_dependants: dependants} = this
-        const deps: Array<Provider> = dependency.dependants;
+        const deps: Array<Provider> = dependency.dependants.items;
         const k: number = deps.length;
         const l = this.length
         for (let i = 0; i < l; i++) {

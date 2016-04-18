@@ -4,8 +4,10 @@ import type {
     Tag,
     Annotation,
     Container,
-    Provider
+    Provider,
+    Collection
 } from 'reactive-di/i/coreInterfaces'
+import DisposableCollection from 'reactive-di/utils/DisposableCollection'
 
 export default class BaseProvider<Ann: Annotation> {
     kind: any;
@@ -18,13 +20,13 @@ export default class BaseProvider<Ann: Annotation> {
     isCached: boolean;
 
     dependencies: Array<Provider>;
-    dependants: Array<Provider>;
+    dependants: Collection<Provider>;
 
     constructor(annotation: Ann) {
         this.kind = annotation.kind
         this.annotation = annotation
         this.dependencies = [this]
-        this.dependants = [this]
+        this.dependants = new DisposableCollection([this])
         this.isCached = false
         this.isDisposed = false
         this.displayName = (annotation: any).displayName
@@ -47,6 +49,6 @@ export default class BaseProvider<Ann: Annotation> {
     }
 
     addDependant<P: Provider>(dependant: P): void {
-        this.dependants.push(dependant)
+        this.dependants.add(dependant)
     }
 }

@@ -1,7 +1,8 @@
 /* @flow */
 import type {ValueAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
-    Provider
+    Provider,
+    Collection
 } from 'reactive-di/i/coreInterfaces'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
@@ -9,7 +10,7 @@ import BaseProvider from 'reactive-di/core/BaseProvider'
 class ValueProvider extends BaseProvider<ValueAnnotation> {
     kind: 'value';
     annotation: ValueAnnotation;
-    dependants: Array<Provider>;
+    dependants: Collection<Provider>;
 
     _value: any;
 

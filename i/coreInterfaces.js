@@ -9,6 +9,15 @@ export type ArgsObject = {
 }
 export type DepItem = DependencyKey|ArgsObject;
 
+export type Disposable = {
+    isDisposed: boolean;
+}
+
+export type Collection<T: Disposable> = {
+    items: Array<T>;
+    add(item: T): void;
+}
+
 export type Annotation = {
     kind: any;
     displayName?: string;
@@ -20,7 +29,7 @@ export type DepAnnotation = Annotation & {
     deps: Array<DepItem>;
 }
 
-export type Provider<Ann: Annotation> = {
+export type Provider<Ann: Annotation> = Disposable & {
     kind: any;
     displayName: string;
     tags: Array<Tag>;
@@ -34,7 +43,7 @@ export type Provider<Ann: Annotation> = {
     /**
      * Read only dependants
      */
-    dependants: Array<Provider>;
+    dependants: Collection<Provider>;
 
     /**
      * Provider.get read this property if false - recalculates get result.

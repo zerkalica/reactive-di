@@ -32,7 +32,7 @@ describe('HotRelationUpdaterTest', () => {
 
         di.getProvider(C)
 
-        const result = di.getProvider(B).dependants
+        const result = di.getProvider(B).dependants.items
             .map(depName);
         // console.log(result, di.getProvider(B).displayName)
         assert.deepEqual(result, [
@@ -53,7 +53,7 @@ describe('HotRelationUpdaterTest', () => {
         ], [], true);
 
 
-        const result = di.getProvider(B).dependants.map(depName);
+        const result = di.getProvider(B).dependants.items.map(depName);
 
         assert.deepEqual(result, [
             'factory@B',
@@ -72,7 +72,7 @@ describe('HotRelationUpdaterTest', () => {
             factory(B, C)
         ], [], true);
 
-        const result = di.getProvider(B).dependants.map(depName);
+        const result = di.getProvider(B).dependants.items.map(depName);
 
         assert.deepEqual(result, [
             'factory@B',
