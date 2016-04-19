@@ -19,19 +19,20 @@ class HotRelationUpdater {
         this.length = l + 1
     }
 
-    end(dependency: Provider): void {
+    end(dependant: Provider): void {
         const l = this.length - 1
         this.length = l
         const dependantSet = this._dependants[l]
-        function iterateMap(dependant: Provider): void {
+        function iterateMap(dependency: Provider): void {
             dependant.addDependency(dependency)
         }
+
         dependantSet.forEach(iterateMap)
     }
 
     addCached(dependency: Provider): void {
         const {_dependants: dependants} = this
-        const deps: Array<Provider> = dependency.dependants.items;
+        const deps: Array<Provider> = dependency.dependencies;
         const k: number = deps.length;
         const l = this.length
         for (let i = 0; i < l; i++) {

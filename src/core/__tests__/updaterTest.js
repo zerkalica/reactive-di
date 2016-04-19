@@ -19,6 +19,23 @@ function depName(dep: Provider): string {
 }
 
 describe('HotRelationUpdaterTest', () => {
+    it('should add dependency', () => {
+        const A = () => 1;
+        const B = (a: number) => 2 + a;
+
+        const di: Container = createContainer([
+            factory(A),
+            factory(B, A)
+        ], [], true);
+
+        const result = di.getProvider(B).dependencies.map(depName);
+        // console.log(result, di.getProvider(B).displayName)
+        assert.deepEqual(result, [
+            'factory@B',
+            'factory@A'
+        ])
+    })
+
     it('should cache dependency deps', () => {
         const A = () => 1;
         const B = (c: number) => 2 + c;
@@ -32,8 +49,7 @@ describe('HotRelationUpdaterTest', () => {
 
         di.getProvider(C)
 
-        const result = di.getProvider(B).dependants.items
-            .map(depName);
+        const result = di.getProvider(B).dependencies.map(depName);
         // console.log(result, di.getProvider(B).displayName)
         assert.deepEqual(result, [
             'factory@B',
@@ -53,7 +69,7 @@ describe('HotRelationUpdaterTest', () => {
         ], [], true);
 
 
-        const result = di.getProvider(B).dependants.items.map(depName);
+        const result = di.getProvider(B).dependencies.map(depName);
 
         assert.deepEqual(result, [
             'factory@B',
@@ -62,7 +78,7 @@ describe('HotRelationUpdaterTest', () => {
         ])
     })
 
-    it('should add dependants in A, B->C, C->A: A, B->C&A, C->A', () => {
+    it('should add dependencies in A, B->C, C->A: A, B->C&A, C->A', () => {
         const A = () => 1;
         const B = (c: number) => 2 + c;
         const C = (a: number) => 3 + a;
@@ -72,37 +88,12 @@ describe('HotRelationUpdaterTest', () => {
             factory(B, C)
         ], [], true);
 
-        const result = di.getProvider(B).dependants.items.map(depName);
+        const result = di.getProvider(B).dependencies.map(depName);
 
         assert.deepEqual(result, [
             'factory@B',
             'factory@C',
             'factory@A'
-        ])
-    })
-
-    it('should resolve dependencies after dependants in A, B->C, C->A: A, B->C&A, C->A', () => {
-        const A = () => 1;
-        const B = (c: number) => 2 + c;
-        const C = (a: number) => 3 + a;
-        const di: Container = createContainer([
-            factory(A),
-            factory(C, A),
-            factory(B, C)
-        ], [], true);
-
-        const dependencies = di.getProvider(A).dependencies;
-
-        assert.deepEqual(dependencies.map(depName), [
-            'factory@A'
-        ])
-
-        di.getProvider(B)
-
-        assert.deepEqual(dependencies.map(depName), [
-            'factory@A',
-            'factory@C',
-            'factory@B'
         ])
     })
 })

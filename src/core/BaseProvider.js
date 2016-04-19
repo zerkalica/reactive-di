@@ -4,35 +4,30 @@ import type {
     Tag,
     Annotation,
     Container,
-    Provider,
-    Collection
+    Provider
 } from 'reactive-di/i/coreInterfaces'
-import DisposableCollection from 'reactive-di/utils/DisposableCollection'
+import getFunctionName from 'reactive-di/utils/getFunctionName'
 
 export default class BaseProvider<V, Ann: Annotation, P: Provider> {
     kind: any;
     displayName: string;
     tags: Array<Tag>;
-
     annotation: Ann;
-
     value: V;
-
     isDisposed: boolean;
     isCached: boolean;
-
-    dependencies: Array<Provider|P>;
-    dependants: Collection<Provider|P>;
+    dependencies: Array<P>;
 
     constructor(annotation: Ann) {
-        this.kind = annotation.kind
         this.annotation = annotation
-        this.dependencies = [this]
-        this.dependants = new DisposableCollection([this])
+        this.kind = annotation.kind
+        this.dependencies = [((this: any): P)]
         this.isCached = false
         this.isDisposed = false
-        this.displayName = (annotation: any).displayName
-        this.tags = (annotation: any).tags
+        this.value = (null: any)
+        this.displayName =
+            annotation.displayName || (annotation.kind + '@' + getFunctionName(annotation.target))
+        this.tags = annotation.tags || []
     }
 
     init(container: Container): void {} // eslint-disable-line
@@ -41,14 +36,17 @@ export default class BaseProvider<V, Ann: Annotation, P: Provider> {
         this.isDisposed = true
     }
 
-    update(): void {}
+    update(): void {
+        this.isCached = true
+    }
 
     addDependency(dependency: P): void {
+        const deps = this.dependencies
+        const l = deps.length
+        deps[l] = dependency
+        deps.length = l + 1
         dependency.addDependant(this)
-        this.dependencies.push(dependency)
     }
 
-    addDependant(dependant: P): void {
-        this.dependants.add(dependant)
-    }
+    addDependant(dependant: P): void {} // eslint-disable-line
 }
