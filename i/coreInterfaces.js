@@ -29,34 +29,76 @@ export type DepAnnotation = Annotation & {
     deps: Array<DepItem>;
 }
 
-export type Provider<V, A: Annotation, P> = {
-    kind: any;
-    displayName: string;
-    tags: Array<Tag>;
+export type Provider<V, A: Annotation, P: Provider> = {
     /**
-     * Read only dependencies
+     * Provider type
+     */
+    kind: any;
+
+    /**
+     * Debug name
+     */
+    displayName: string;
+
+    /**
+     * Tags from annotation. Used in middlewares: cat attach middleware by tag.
+     */
+    tags: Array<Tag>;
+
+    /**
+     * Cached dependencies. Used in Container.
+     * Not for use in Provider.
      */
     dependencies: Array<P>;
 
     /**
-     * Provider.get read this property if false - recalculates get result.
-     * Dependency provider can set isCached to false
-     *
-     * read/write
+     * If true - Container runs Provider.update()
+     * Provider.update() sets to true
      */
     isCached: boolean;
 
     /**
-     * Used for garbage collector, when disposing container
+     * Used in dependantas collections, sets to true when disposing container with dependantas.
+     * Ignore this dependants in for loops
      */
     isDisposed: boolean;
 
+    /**
+     * Evaluated dependency value
+     */
     value: V;
 
+    /**
+     * Resolve dependencies here via Container.createArgumentHelper()
+     *
+     * @example
+     *
+     * ```js
+     * init(annotation: FactoryAnnotation, container: Container): void {
+     *     this._helper = container.createArgumentHelper(annotation);
+     * }
+     * ```
+     */
     init(annotation: A, container: Container): void;
+
+    /**
+     * Set isDisposed = true and runs some logic for unsubscribes
+     */
     dispose(): void;
+
+    /**
+     * Evaluate value and set isCached = true
+     */
     update(): void;
+
+    /**
+     * Add dependecy hook: noop by default
+     */
     addDependency(dependency: P): void;
+
+    /**
+     * Add dependant hook: noop by default
+     */
     addDependant(dependant: P): void;
 }
 
