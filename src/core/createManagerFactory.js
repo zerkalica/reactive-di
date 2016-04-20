@@ -138,6 +138,7 @@ export default function createManagerFactory(
     createUpdater?: () => RelationUpdater = createDummyRelationUpdater
 ): (config?: Array<Annotation>) => ContainerManager {
     let plugins: Map<string, Plugin>;
+    const updater = createUpdater()
 
     function createContainerManager(
         config?: Array<Annotation> = []
@@ -145,7 +146,7 @@ export default function createManagerFactory(
         return new DefaultContainerManager(
             new AnnotationMap(config),
             plugins,
-            createUpdater()
+            updater
         );
     }
     function initPlugins(PluginClass: Class<Plugin>): Plugin {
