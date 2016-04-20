@@ -11,7 +11,6 @@ import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class ComposeProvider<V> extends BaseProvider<DepFn<V>, ComposeAnnotation, Provider> {
     kind: 'compose';
-
     value: DepFn<V>;
 
     init(annotation: ComposeAnnotation, container: Container): void {

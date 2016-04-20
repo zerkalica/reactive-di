@@ -10,7 +10,6 @@ import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class ClassProvider<V: Object> extends BaseProvider<V, ClassAnnotation, Provider> {
     kind: 'klass';
-    isCached: boolean;
     value: V;
     _helper: ArgumentHelper = (null: any);
 
@@ -20,7 +19,6 @@ class ClassProvider<V: Object> extends BaseProvider<V, ClassAnnotation, Provider
 
     update(): void {
         this.value = this._helper.createObject()
-        this.isCached = true
     }
 
     addDependency(dependency: Provider): void {

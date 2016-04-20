@@ -20,6 +20,7 @@ import SimpleMap from 'reactive-di/utils/SimpleMap'
 
 function disposeResolver(provider: Provider): void {
     provider.dispose()
+    provider.isDisposed = true // eslint-disable-line
 }
 
 export default class DefaultContainer {
@@ -137,6 +138,7 @@ export default class DefaultContainer {
         const dep = this.getProvider(annotatedDep)
         if (!dep.isCached) {
             dep.update()
+            dep.isCached = true
         }
 
         return dep.value

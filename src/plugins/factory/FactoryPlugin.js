@@ -11,8 +11,6 @@ import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class FactoryProvider<V> extends BaseProvider<V, FactoryAnnotation, Provider> {
     kind: 'factory';
-    isCached: boolean;
-
     value: V;
     _helper: ArgumentHelper = (null: any);
 
@@ -22,7 +20,6 @@ class FactoryProvider<V> extends BaseProvider<V, FactoryAnnotation, Provider> {
 
     update(): void {
         this.value = this._helper.invokeFunction()
-        this.isCached = true
     }
 
     addDependency(dependency: Provider): void {

@@ -22,6 +22,10 @@ class ValueProvider<V> extends BaseProvider<V, ValueAnnotation, Provider> {
         this.value = value
         return true
     }
+
+    addDependency(dependency: Provider): void {
+        dependency.addDependant(this)
+    }
 }
 
 export default {

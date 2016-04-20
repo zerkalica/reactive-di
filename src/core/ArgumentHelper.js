@@ -84,6 +84,7 @@ export default class ArgumentHelper {
                 const dep = deps[i]
                 if (!dep.isCached) {
                     dep.update()
+                    dep.isCached = true
                 }
                 argsObject[depNames[i]] = dep.value
             }
@@ -92,6 +93,7 @@ export default class ArgumentHelper {
                 const dep = deps[i]
                 if (!dep.isCached) {
                     dep.update()
+                    dep.isCached = true
                 }
                 argsArray[i] = dep.value
             }
@@ -104,6 +106,7 @@ export default class ArgumentHelper {
                 const dep = middlewares[i]
                 if (!dep.isCached) {
                     dep.update()
+                    dep.isCached = true
                 }
                 resolvedMiddlewares[i] = dep.value
             }

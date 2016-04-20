@@ -12,11 +12,11 @@ export default class BaseProvider<V, A: Annotation, P: Provider> {
     kind: any;
     displayName: string;
     tags: Array<Tag>;
-    value: V;
     isDisposed: boolean;
     isCached: boolean;
     dependencies: Array<P>;
-    isDependant: boolean;
+
+    value: V;
 
     constructor(annotation: A) {
         this.kind = annotation.kind
@@ -30,15 +30,8 @@ export default class BaseProvider<V, A: Annotation, P: Provider> {
     }
 
     init(annotation: A, container: Container): void {} // eslint-disable-line
-
-    dispose(): void {
-        this.isDisposed = true
-    }
-
-    update(): void {
-        this.isCached = true
-    }
-
+    dispose(): void {}
+    update(): void {}
     addDependency(dependency: P): void {} // eslint-disable-line
     addDependant(dependant: P): void {} // eslint-disable-line
 }
