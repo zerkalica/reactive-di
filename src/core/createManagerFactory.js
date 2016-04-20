@@ -7,7 +7,6 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 
 import type {
-    Plugin,
     RelationUpdater,
     Container,
     ContainerManager
@@ -135,12 +134,12 @@ class DefaultContainerManager {
  * ```
  */
 export default function createManagerFactory(
-    pluginsConfig?: Array<Plugin> = defaultPlugins,
+    pluginsConfig?: Array<Class<Plugin>> = defaultPlugins,
     createUpdater?: () => RelationUpdater = createDummyRelationUpdater
 ): (config?: Array<Annotation>) => ContainerManager {
-    const plugins: Map<string, Plugin> = createPluginsMap(pluginsConfig);
+    let plugins: Map<string, Plugin>;
 
-    return function createContainerManager(
+    function createContainerManager(
         config?: Array<Annotation> = []
     ): ContainerManager {
         return new DefaultContainerManager(
@@ -149,4 +148,11 @@ export default function createManagerFactory(
             createUpdater()
         );
     }
+    function initPlugins(PluginClass: Class<Plugin>): Plugin {
+        return new PluginClass(createContainerManager)
+    }
+
+    plugins = createPluginsMap(pluginsConfig.map(initPlugins));
+
+    return createContainerManager
 }

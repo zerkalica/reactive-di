@@ -102,11 +102,6 @@ export type Provider<V, A: Annotation, P: Provider> = {
     addDependant(dependant: P): void;
 }
 
-export type Plugin<Ann: Annotation, P: Provider> = {
-    kind: any;
-    create(annotation: Ann, container: Container): P;
-}
-
 export type ArgumentHelper = {
     invokeComposed(...args: Array<any>): any;
     invokeFunction(): any;

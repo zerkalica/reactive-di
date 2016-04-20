@@ -28,8 +28,8 @@ class ValueProvider<V> extends BaseProvider<V, ValueAnnotation, Provider> {
     }
 }
 
-export default {
-    kind: 'value',
+export default class ValuePlugin {
+    kind: 'value' = 'value';
     create(annotation: ValueAnnotation): IValueProvider<any> {
         return new ValueProvider(annotation)
     }

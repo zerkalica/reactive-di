@@ -27,8 +27,8 @@ class FactoryProvider<V> extends BaseProvider<V, FactoryAnnotation, Provider> {
     }
 }
 
-export default {
-    kind: 'factory',
+export default class FactoryPlugin {
+    kind: 'factory' = 'factory';
     create(annotation: FactoryAnnotation): Provider<any, FactoryAnnotation, Provider> {
         return new FactoryProvider(annotation)
     }

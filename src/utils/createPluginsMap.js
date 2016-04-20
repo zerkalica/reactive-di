@@ -1,6 +1,5 @@
 /* @flow */
 
-import type {Plugin} from 'reactive-di/i/coreInterfaces'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
 
 export default function createProvidersMap(

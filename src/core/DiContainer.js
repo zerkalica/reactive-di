@@ -8,7 +8,6 @@ import type {
     ArgsObject,
     Container,
     RelationUpdater,
-    Plugin,
     Provider,
     DepAnnotation
 } from 'reactive-di/i/coreInterfaces'

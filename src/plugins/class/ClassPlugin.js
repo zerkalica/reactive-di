@@ -26,8 +26,8 @@ class ClassProvider<V: Object> extends BaseProvider<V, ClassAnnotation, Provider
     }
 }
 
-export default {
-    kind: 'klass',
+export default class ClassPlugin {
+    kind: 'klass' = 'klass';
     create(annotation: ClassAnnotation): Provider<Object, ClassAnnotation, Provider> {
         return new ClassProvider(annotation)
     }

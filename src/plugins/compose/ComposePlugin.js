@@ -22,8 +22,9 @@ class ComposeProvider<V> extends BaseProvider<DepFn<V>, ComposeAnnotation, Provi
     }
 }
 
-export default {
-    kind: 'compose',
+export default class ComposePlugin {
+    kind: 'compose' = 'compose';
+
     create(annotation: ComposeAnnotation): Provider<DepFn, ComposeAnnotation, Provider> {
         return new ComposeProvider(annotation)
     }
