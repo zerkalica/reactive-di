@@ -29,12 +29,10 @@ export type DepAnnotation = Annotation & {
     deps: Array<DepItem>;
 }
 
-export type Provider<V, Ann: Annotation, P> = {
+export type Provider<V, A: Annotation, P> = {
     kind: any;
     displayName: string;
     tags: Array<Tag>;
-    annotation: Ann;
-
     /**
      * Read only dependencies
      */
@@ -53,14 +51,11 @@ export type Provider<V, Ann: Annotation, P> = {
      */
     isDisposed: boolean;
 
-
-    init(container: Container): void;
-    dispose(): void;
-
     value: V;
 
+    init(annotation: A, container: Container): void;
+    dispose(): void;
     update(): void;
-
     addDependency(dependency: P): void;
     addDependant(dependant: P): void;
 }

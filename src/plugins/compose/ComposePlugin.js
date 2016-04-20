@@ -11,20 +11,15 @@ import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class ComposeProvider<V> extends BaseProvider<DepFn<V>, ComposeAnnotation, Provider> {
     kind: 'compose';
-    annotation: ComposeAnnotation;
 
     value: DepFn<V>;
 
-    init(container: Container): void {
-        const helper: ArgumentHelper = container.createArgumentHelper(this.annotation);
+    init(annotation: ComposeAnnotation, container: Container): void {
+        const helper: ArgumentHelper = container.createArgumentHelper(annotation);
         this.isCached = true
         this.value = function getValue(...args: Array<any>): V {
             return helper.invokeComposed(args)
         }
-    }
-
-    addDependency(dependency: Provider): void {
-        this.dependencies.push(dependency)
     }
 }
 

@@ -11,19 +11,22 @@ import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class FactoryProvider<V> extends BaseProvider<V, FactoryAnnotation, Provider> {
     kind: 'factory';
-    annotation: FactoryAnnotation;
     isCached: boolean;
 
     value: V;
-    _helper: ArgumentHelper;
+    _helper: ArgumentHelper = (null: any);
 
-    init(container: Container): void {
-        this._helper = container.createArgumentHelper(this.annotation);
+    init(annotation: FactoryAnnotation, container: Container): void {
+        this._helper = container.createArgumentHelper(annotation);
     }
 
     update(): void {
         this.value = this._helper.invokeFunction()
         this.isCached = true
+    }
+
+    addDependency(dependency: Provider): void {
+        dependency.addDependant(this)
     }
 }
 

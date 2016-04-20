@@ -23,7 +23,9 @@ class HotRelationUpdater {
         const l = this.length - 1
         this.length = l
         const dependantSet = this._dependants[l]
+        const deps = dependant.dependencies
         function iterateMap(dependency: Provider): void {
+            deps.push(dependency)
             dependant.addDependency(dependency)
         }
 

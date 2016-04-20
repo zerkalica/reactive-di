@@ -10,26 +10,27 @@ import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class ClassProvider<V: Object> extends BaseProvider<V, ClassAnnotation, Provider> {
     kind: 'klass';
-    annotation: ClassAnnotation;
     isCached: boolean;
-
     value: V;
+    _helper: ArgumentHelper = (null: any);
 
-    _helper: ArgumentHelper;
-
-    init(container: Container): void {
-        this._helper = container.createArgumentHelper(this.annotation)
+    init(annotation: ClassAnnotation, container: Container): void {
+        this._helper = container.createArgumentHelper(annotation)
     }
 
     update(): void {
         this.value = this._helper.createObject()
         this.isCached = true
     }
+
+    addDependency(dependency: Provider): void {
+        dependency.addDependant(this)
+    }
 }
 
 export default {
     kind: 'klass',
-    create(annotation: ClassAnnotation): Provider<any, ClassAnnotation, Provider> {
+    create(annotation: ClassAnnotation): Provider<Object, ClassAnnotation, Provider> {
         return new ClassProvider(annotation)
     }
 }
