@@ -50,7 +50,7 @@ class DefaultContainerManager {
         return this
     }
 
-    createContainer(parent?: Container): Container {
+    createContainer(parent?: Container, initState?: Array<[DependencyKey, any]>): Container {
         let container: Container;
         const self = this
 
@@ -64,7 +64,8 @@ class DefaultContainerManager {
             this._updater,
             this._plugins,
             this._annotations,
-            parent
+            parent,
+            new SimpleMap(initState || [])
         );
         this._containers.push(container)
 

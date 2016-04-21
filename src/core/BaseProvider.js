@@ -8,7 +8,7 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 
-export default class BaseProvider {
+export default class BaseProvider<InitState> {
     displayName: string;
     tags: Array<Tag>;
     isDisposed: boolean;
@@ -24,7 +24,7 @@ export default class BaseProvider {
         this.tags = annotation.tags || []
     }
 
-    init(container: Container): void {} // eslint-disable-line
+    init(container: Container, initState: ?InitState): void {} // eslint-disable-line
     dispose(): void {}
     update(): void {}
     addDependency(dependency: Provider): void {

@@ -32,7 +32,7 @@ class ComposeProvider<V> extends BaseProvider {
 export default class ComposePlugin {
     kind: 'compose' = 'compose';
 
-    create(annotation: ComposeAnnotation): PipeProvider<DepFn> {
+    create(annotation: ComposeAnnotation): PipeProvider {
         return new ComposeProvider(annotation)
     }
 }

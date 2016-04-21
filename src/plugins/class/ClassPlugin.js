@@ -8,7 +8,7 @@ import type {
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class ClassProvider<V: Object> extends BaseProvider {
+class ClassProvider<V> extends BaseProvider {
     type: 'pipe' = 'pipe';
     value: V;
 
@@ -31,7 +31,7 @@ class ClassProvider<V: Object> extends BaseProvider {
 
 export default class ClassPlugin {
     kind: 'klass' = 'klass';
-    create(annotation: ClassAnnotation): PipeProvider<Object> {
+    create(annotation: ClassAnnotation): PipeProvider {
         return new ClassProvider(annotation)
     }
 }

@@ -41,7 +41,7 @@ export type PromiseSource = {
     meta: Meta;
 }
 
-export type PipeProvider<V> = {
+export type PipeProvider<V, InitState> = {
     type: 'pipe';
 
     /**
@@ -88,7 +88,7 @@ export type PipeProvider<V> = {
      * }
      * ```
      */
-    init(container: Container): void;
+    init(container: Container, initState: ?InitState): void;
 
     /**
      * Set isDisposed = true and runs some logic for unsubscribes
@@ -111,7 +111,7 @@ export type PipeProvider<V> = {
     addDependant(dependant: Provider): void;
 }
 
-export type ValueProvider<V> = {
+export type ValueProvider<V, InitState> = {
     type: 'value';
     set(v: V): boolean;
 
@@ -121,14 +121,14 @@ export type ValueProvider<V> = {
     isCached: boolean;
     isDisposed: boolean;
     value: V;
-    init(container: Container): void;
+    init(container: Container, initState: InitState): void;
     dispose(): void;
     update(): void;
     addDependency(dependency: Provider): void;
     addDependant(dependant: Provider): void;
 }
 
-export type ListenerProvider<V> = {
+export type ListenerProvider<V, InitState> = {
     type: 'listener';
     notify(): void;
 
@@ -138,16 +138,17 @@ export type ListenerProvider<V> = {
     isCached: boolean;
     isDisposed: boolean;
     value: V;
-    init(container: Container): void;
+    init(container: Container, initState: InitState): void;
     dispose(): void;
     update(): void;
     addDependency(dependency: Provider): void;
     addDependant(dependant: Provider): void;
 }
 
-export type EmiterProvider<V> = {
+export type EmiterProvider<V, InitState> = {
     type: 'emiter';
     state: PromiseSource;
+    reset(isNotify?: boolean): void;
 
     displayName: string;
     tags: Array<Tag>;
@@ -155,14 +156,14 @@ export type EmiterProvider<V> = {
     isCached: boolean;
     isDisposed: boolean;
     value: V;
-    init(container: Container): void;
+    init(container: Container, initState: InitState): void;
     dispose(): void;
     update(): void;
     addDependency(dependency: Provider): void;
     addDependant(dependant: Provider): void;
 }
 
-export type Provider<V> = PipeProvider<V> | ValueProvider<V> | ListenerProvider<V> | EmiterProvider<V>;
+export type Provider = PipeProvider | ValueProvider | ListenerProvider | EmiterProvider;
 
 export type ArgumentHelper = {
     invokeComposed(...args: Array<any>): any;
@@ -182,7 +183,7 @@ export type ContainerManager = {
     setMiddlewares(
         raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
     ): ContainerManager;
-    createContainer(parent?: Container): Container;
+    createContainer(parent?: Container, state?: Array<[DependencyKey, any]>): Container;
     replace(oldDep: DependencyKey, newDep?: DependencyKey|Annotation): void;
 }
 

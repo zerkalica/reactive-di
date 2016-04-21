@@ -32,6 +32,7 @@ export default class DefaultContainer {
     _plugins: Map<string, Plugin>;
     _annotations: AnnotationMap;
     _parent: ?Container;
+    _initState: Map<DependencyKey, any>;
 
     constructor(
         dispose: () => void,
@@ -39,9 +40,11 @@ export default class DefaultContainer {
         updater: RelationUpdater,
         plugins: Map<string, Plugin>,
         annotations: AnnotationMap,
-        parent: ?Container
+        parent: ?Container,
+        initState: Map<DependencyKey, any>
     ) {
         this._dispose = dispose
+        this._initState = initState
         this._middlewares = middlewares
         this._updater = updater
         this._plugins = plugins
@@ -172,10 +175,9 @@ export default class DefaultContainer {
                 `Provider not found for annotation ${getFunctionName(annotation.target)}`
             )
         }
-
         provider = plugin.create(annotation, (this: Container))
         this._updater.begin(provider)
-        provider.init((this: Container))
+        provider.init((this: Container), this._initState.get(annotatedDep))
         this._updater.end(provider)
 
         this._providerCache.set(annotatedDep, provider)

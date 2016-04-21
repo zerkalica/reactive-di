@@ -8,13 +8,19 @@ import type {
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class ValueProvider<V> extends BaseProvider {
+class ValueProvider<V> extends BaseProvider<V> {
     type: 'value' = 'value';
     value: V;
 
     constructor(annotation: ValueAnnotation<V>) {
         super(annotation)
         this.value = annotation.value
+    }
+
+    init(container: Container, value: ?V): void {
+        if (value) {
+            this.value = value
+        }
     }
 
     set(value: V): boolean {
