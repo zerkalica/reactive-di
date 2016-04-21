@@ -175,7 +175,7 @@ export default class DefaultContainer {
 
         provider = plugin.create(annotation, (this: Container))
         this._updater.begin(provider)
-        provider.init(annotation, (this: Container))
+        provider.init((this: Container))
         this._updater.end(provider)
 
         this._providerCache.set(annotatedDep, provider)

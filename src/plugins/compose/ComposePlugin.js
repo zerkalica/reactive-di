@@ -4,17 +4,24 @@ import type {
     DepFn,
     Container,
     ArgumentHelper,
-    Provider
+    PipeProvider
 } from 'reactive-di/i/coreInterfaces'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class ComposeProvider<V> extends BaseProvider<DepFn<V>, ComposeAnnotation, Provider> {
-    kind: 'compose';
+class ComposeProvider<V> extends BaseProvider {
+    type: 'pipe' = 'pipe';
     value: DepFn<V>;
 
-    init(annotation: ComposeAnnotation, container: Container): void {
-        const helper: ArgumentHelper = container.createArgumentHelper(annotation);
+    _annotation: ComposeAnnotation;
+
+    constructor(annotation: ComposeAnnotation) {
+        super(annotation)
+        this._annotation = annotation
+    }
+
+    init(container: Container): void {
+        const helper: ArgumentHelper = container.createArgumentHelper(this._annotation);
         this.isCached = true
         this.value = function getValue(...args: Array<any>): V {
             return helper.invokeComposed(args)
@@ -25,7 +32,7 @@ class ComposeProvider<V> extends BaseProvider<DepFn<V>, ComposeAnnotation, Provi
 export default class ComposePlugin {
     kind: 'compose' = 'compose';
 
-    create(annotation: ComposeAnnotation): Provider<DepFn, ComposeAnnotation, Provider> {
+    create(annotation: ComposeAnnotation): PipeProvider<DepFn> {
         return new ComposeProvider(annotation)
     }
 }

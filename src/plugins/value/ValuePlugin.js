@@ -1,16 +1,15 @@
 /* @flow */
 import type {
-    ValueAnnotation,
-    ValueProvider as IValueProvider
+    ValueAnnotation
 } from 'reactive-di/i/pluginsInterfaces'
 import type {
-    Provider
+    ValueProvider as IValueProvider
 } from 'reactive-di/i/coreInterfaces'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class ValueProvider<V> extends BaseProvider<V, ValueAnnotation, Provider> {
-    kind: 'value';
+class ValueProvider<V> extends BaseProvider {
+    type: 'value' = 'value';
     value: V;
 
     constructor(annotation: ValueAnnotation<V>) {
@@ -22,15 +21,11 @@ class ValueProvider<V> extends BaseProvider<V, ValueAnnotation, Provider> {
         this.value = value
         return true
     }
-
-    addDependency(dependency: Provider): void {
-        dependency.addDependant(this)
-    }
 }
 
 export default class ValuePlugin {
     kind: 'value' = 'value';
-    create(annotation: ValueAnnotation): IValueProvider<any> {
+    create(annotation: ValueAnnotation): IValueProvider {
         return new ValueProvider(annotation)
     }
 }

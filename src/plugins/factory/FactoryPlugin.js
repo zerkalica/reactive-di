@@ -4,32 +4,34 @@ import type {FactoryAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     ArgumentHelper,
     Container,
-    Provider
+    PipeProvider
 } from 'reactive-di/i/coreInterfaces'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class FactoryProvider<V> extends BaseProvider<V, FactoryAnnotation, Provider> {
-    kind: 'factory';
+class FactoryProvider<V> extends BaseProvider {
+    type: 'pipe' = 'pipe';
     value: V;
     _helper: ArgumentHelper = (null: any);
+    _annotation: FactoryAnnotation;
 
-    init(annotation: FactoryAnnotation, container: Container): void {
-        this._helper = container.createArgumentHelper(annotation);
+    constructor(annotation: FactoryAnnotation) {
+        super(annotation)
+        this._annotation = annotation
+    }
+
+    init(container: Container): void {
+        this._helper = container.createArgumentHelper(this._annotation);
     }
 
     update(): void {
         this.value = this._helper.invokeFunction()
     }
-
-    addDependency(dependency: Provider): void {
-        dependency.addDependant(this)
-    }
 }
 
 export default class FactoryPlugin {
     kind: 'factory' = 'factory';
-    create(annotation: FactoryAnnotation): Provider<any, FactoryAnnotation, Provider> {
+    create(annotation: FactoryAnnotation): PipeProvider {
         return new FactoryProvider(annotation)
     }
 }

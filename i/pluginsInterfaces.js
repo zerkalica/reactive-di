@@ -2,9 +2,6 @@
 import type {
     DepAnnotation,
     Annotation,
-    Provider,
-    Tag,
-    DepItem,
     DependencyKey
 } from 'reactive-di/i/coreInterfaces'
 
@@ -28,9 +25,4 @@ export type ClassAnnotation = DepAnnotation & {
 export type ValueAnnotation<V> = Annotation & {
     kind: 'value';
     value: V;
-}
-
-export type ValueProvider<V> = Provider<V, ValueAnnotation, Provider> & {
-    kind: 'value';
-    set(value: V): boolean;
 }

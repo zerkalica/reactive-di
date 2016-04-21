@@ -29,11 +29,20 @@ export type DepAnnotation = Annotation & {
     deps: Array<DepItem>;
 }
 
-export type Provider<V, A: Annotation, P: Provider> = {
-    /**
-     * Provider type
-     */
-    kind: any;
+export type Meta = {
+    pending: boolean;
+    success: boolean;
+    error: boolean;
+    reason: string;
+}
+
+export type PromiseSource = {
+    promise: ?Promise<void>;
+    meta: Meta;
+}
+
+export type PipeProvider<V> = {
+    type: 'pipe';
 
     /**
      * Debug name
@@ -49,7 +58,7 @@ export type Provider<V, A: Annotation, P: Provider> = {
      * Cached dependencies. Used in Container.
      * Not for use in Provider.
      */
-    dependencies: Array<P>;
+    dependencies: Array<Provider>;
 
     /**
      * If true - Container runs Provider.update()
@@ -74,12 +83,12 @@ export type Provider<V, A: Annotation, P: Provider> = {
      * @example
      *
      * ```js
-     * init(annotation: FactoryAnnotation, container: Container): void {
-     *     this._helper = container.createArgumentHelper(annotation);
+     * init(container: Container): void {
+     *     this._helper = container.createArgumentHelper(this._annotation);
      * }
      * ```
      */
-    init(annotation: A, container: Container): void;
+    init(container: Container): void;
 
     /**
      * Set isDisposed = true and runs some logic for unsubscribes
@@ -94,13 +103,66 @@ export type Provider<V, A: Annotation, P: Provider> = {
     /**
      * Add dependecy hook: noop by default
      */
-    addDependency(dependency: P): void;
+    addDependency(dependency: Provider): void;
 
     /**
      * Add dependant hook: noop by default
      */
-    addDependant(dependant: P): void;
+    addDependant(dependant: Provider): void;
 }
+
+export type ValueProvider<V> = {
+    type: 'value';
+    set(v: V): boolean;
+
+    displayName: string;
+    tags: Array<Tag>;
+    dependencies: Array<Provider>;
+    isCached: boolean;
+    isDisposed: boolean;
+    value: V;
+    init(container: Container): void;
+    dispose(): void;
+    update(): void;
+    addDependency(dependency: Provider): void;
+    addDependant(dependant: Provider): void;
+}
+
+export type ListenerProvider<V> = {
+    type: 'listener';
+    notify(): void;
+
+    displayName: string;
+    tags: Array<Tag>;
+    dependencies: Array<Provider>;
+    isCached: boolean;
+    isDisposed: boolean;
+    value: V;
+    init(container: Container): void;
+    dispose(): void;
+    update(): void;
+    addDependency(dependency: Provider): void;
+    addDependant(dependant: Provider): void;
+}
+
+export type EmiterProvider<V> = {
+    type: 'emiter';
+    state: PromiseSource;
+
+    displayName: string;
+    tags: Array<Tag>;
+    dependencies: Array<Provider>;
+    isCached: boolean;
+    isDisposed: boolean;
+    value: V;
+    init(container: Container): void;
+    dispose(): void;
+    update(): void;
+    addDependency(dependency: Provider): void;
+    addDependant(dependant: Provider): void;
+}
+
+export type Provider<V> = PipeProvider<V> | ValueProvider<V> | ListenerProvider<V> | EmiterProvider<V>;
 
 export type ArgumentHelper = {
     invokeComposed(...args: Array<any>): any;
