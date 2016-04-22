@@ -3,28 +3,28 @@
 import type {
     Tag,
     Annotation,
-    Container,
-    Provider
+    Provider,
+    Container
 } from 'reactive-di/i/coreInterfaces'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 
-export default class BaseProvider<InitState> {
+export default class BaseProvider {
     displayName: string;
     tags: Array<Tag>;
     isDisposed: boolean;
     isCached: boolean;
     dependencies: Array<Provider>;
 
-    constructor(annotation: Annotation) {
+    constructor(annotation: Annotation, container: Container) {
         this.dependencies = [(this: any)]
         this.isCached = false
         this.isDisposed = false
         this.displayName =
             annotation.displayName || (annotation.kind + '@' + getFunctionName(annotation.target))
         this.tags = annotation.tags || []
+        container.beginInitialize(((this: any): Provider))
     }
 
-    init(container: Container, initState: ?InitState): void {} // eslint-disable-line
     dispose(): void {}
     update(): void {}
     addDependency(dependency: Provider): void {

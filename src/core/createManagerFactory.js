@@ -3,7 +3,9 @@
 import type {
     Tag,
     DependencyKey,
-    Annotation
+    Annotation,
+    Plugin,
+    CreatePlugin
 } from 'reactive-di/i/coreInterfaces'
 
 import type {
@@ -135,7 +137,7 @@ class DefaultContainerManager {
  * ```
  */
 export default function createManagerFactory(
-    pluginsConfig?: Array<Class<Plugin>> = defaultPlugins,
+    pluginsConfig?: Array<CreatePlugin> = defaultPlugins,
     createUpdater?: () => RelationUpdater = createDummyRelationUpdater
 ): (config?: Array<Annotation>) => ContainerManager {
     let plugins: Map<string, Plugin>;
@@ -150,11 +152,8 @@ export default function createManagerFactory(
             updater
         );
     }
-    function initPlugins(PluginClass: Class<Plugin>): Plugin {
-        return new PluginClass(createContainerManager)
-    }
 
-    plugins = createPluginsMap(pluginsConfig.map(initPlugins));
+    plugins = createPluginsMap(createContainerManager, pluginsConfig)
 
     return createContainerManager
 }

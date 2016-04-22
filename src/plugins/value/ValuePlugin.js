@@ -3,24 +3,24 @@ import type {
     ValueAnnotation
 } from 'reactive-di/i/pluginsInterfaces'
 import type {
+    Plugin,
+    Container,
     ValueProvider as IValueProvider
 } from 'reactive-di/i/coreInterfaces'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
-class ValueProvider<V> extends BaseProvider<V> {
+class ValueProvider<V> extends BaseProvider {
     type: 'value' = 'value';
     value: V;
 
-    constructor(annotation: ValueAnnotation<V>) {
-        super(annotation)
-        this.value = annotation.value
-    }
-
-    init(container: Container, value: ?V): void {
-        if (value) {
-            this.value = value
-        }
+    constructor(
+        annotation: ValueAnnotation<V>,
+        container: Container,
+        value: ?V
+    ) {
+        super(annotation, container)
+        this.value = value || annotation.value
     }
 
     set(value: V): boolean {
@@ -29,9 +29,18 @@ class ValueProvider<V> extends BaseProvider<V> {
     }
 }
 
-export default class ValuePlugin {
+class ValuePlugin {
     kind: 'value' = 'value';
-    create(annotation: ValueAnnotation): IValueProvider {
-        return new ValueProvider(annotation)
+
+    createContainer(annotation: ValueAnnotation, container: Container): Container {
+        return container
     }
+
+    createProvider(annotation: ValueAnnotation, container: Container, value: any): IValueProvider {
+        return new ValueProvider(annotation, container, value)
+    }
+}
+
+export default function createValuePlugin(): Plugin {
+    return new ValuePlugin()
 }

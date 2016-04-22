@@ -1,5 +1,6 @@
 /* @flow */
 import type {
+    Plugin,
     Annotation,
     Tag,
     DependencyKey,
@@ -146,6 +147,10 @@ export default class DefaultContainer {
         return dep.value
     }
 
+    beginInitialize(provider: Provider): void {
+        this._updater.begin(provider)
+    }
+
     getProvider(annotatedDep: DependencyKey): Provider {
         let provider: ?Provider = this._providerCache.get(annotatedDep);
 
@@ -175,13 +180,20 @@ export default class DefaultContainer {
                 `Provider not found for annotation ${getFunctionName(annotation.target)}`
             )
         }
-        provider = plugin.create(annotation, (this: Container))
-        this._updater.begin(provider)
-        provider.init((this: Container), this._initState.get(annotatedDep))
-        this._updater.end(provider)
+        const container = plugin.createContainer(annotation, this)
+        const updater = this._updater
+        const l = updater.length
+        provider = plugin.createProvider(
+            annotation,
+            container,
+            this._initState.get(annotatedDep)
+        )
+        if (l !== updater.length) {
+            updater.end(provider)
+        }
 
         this._providerCache.set(annotatedDep, provider)
-        this._privateCache.set(annotatedDep, provider)
+        container._privateCache.set(annotatedDep, provider)
 
         return provider
     }

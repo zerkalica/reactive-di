@@ -2,12 +2,20 @@
 import type {AliasAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     Container,
-    Provider
+    Provider,
+    Plugin
 } from 'reactive-di/i/coreInterfaces'
 
-export default class AliasPlugin {
+class AliasPlugin {
     kind: 'alias' = 'alias';
-    create(annotation: AliasAnnotation, container: Container): Provider {
+    createContainer(annotation: AliasAnnotation, container: Container): Container {
+        return container
+    }
+    createProvider(annotation: AliasAnnotation, container: Container): Provider {
         return container.getProvider(annotation.alias)
     }
+}
+
+export default function createAliasPlugin(): Plugin {
+    return new AliasPlugin()
 }

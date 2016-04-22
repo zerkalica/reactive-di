@@ -32,8 +32,7 @@ export type DepAnnotation = Annotation & {
 export type Meta = {
     pending: boolean;
     success: boolean;
-    error: boolean;
-    reason: string;
+    error: ?Error;
 }
 
 export type PromiseSource = {
@@ -41,7 +40,7 @@ export type PromiseSource = {
     meta: Meta;
 }
 
-export type PipeProvider<V, InitState> = {
+export type PipeProvider<V> = {
     type: 'pipe';
 
     /**
@@ -78,19 +77,6 @@ export type PipeProvider<V, InitState> = {
     value: V;
 
     /**
-     * Resolve dependencies here via Container.createArgumentHelper()
-     *
-     * @example
-     *
-     * ```js
-     * init(container: Container): void {
-     *     this._helper = container.createArgumentHelper(this._annotation);
-     * }
-     * ```
-     */
-    init(container: Container, initState: ?InitState): void;
-
-    /**
      * Set isDisposed = true and runs some logic for unsubscribes
      */
     dispose(): void;
@@ -111,7 +97,7 @@ export type PipeProvider<V, InitState> = {
     addDependant(dependant: Provider): void;
 }
 
-export type ValueProvider<V, InitState> = {
+export type ValueProvider<V> = {
     type: 'value';
     set(v: V): boolean;
 
@@ -121,14 +107,13 @@ export type ValueProvider<V, InitState> = {
     isCached: boolean;
     isDisposed: boolean;
     value: V;
-    init(container: Container, initState: InitState): void;
     dispose(): void;
     update(): void;
     addDependency(dependency: Provider): void;
     addDependant(dependant: Provider): void;
 }
 
-export type ListenerProvider<V, InitState> = {
+export type ListenerProvider<V> = {
     type: 'listener';
     notify(): void;
 
@@ -138,14 +123,13 @@ export type ListenerProvider<V, InitState> = {
     isCached: boolean;
     isDisposed: boolean;
     value: V;
-    init(container: Container, initState: InitState): void;
     dispose(): void;
     update(): void;
     addDependency(dependency: Provider): void;
     addDependant(dependant: Provider): void;
 }
 
-export type EmiterProvider<V, InitState> = {
+export type EmiterProvider<V> = {
     type: 'emiter';
     state: PromiseSource;
     reset(isNotify?: boolean): void;
@@ -156,7 +140,6 @@ export type EmiterProvider<V, InitState> = {
     isCached: boolean;
     isDisposed: boolean;
     value: V;
-    init(container: Container, initState: InitState): void;
     dispose(): void;
     update(): void;
     addDependency(dependency: Provider): void;
@@ -172,7 +155,9 @@ export type ArgumentHelper = {
 }
 
 export type Container = {
+    _privateCache: Map<DependencyKey, Provider>;
     createArgumentHelper(annotation: DepAnnotation): ArgumentHelper;
+    beginInitialize(provider: Provider): void;
     get(annotatedDep: DependencyKey): any;
     getProvider(annotatedDep: DependencyKey): Provider;
     delete(annotatedDep: DependencyKey): void;
@@ -195,3 +180,15 @@ export type RelationUpdater = {
     end(dependant: Provider): void;
     addCached(dependency: Provider): void;
 }
+
+export type Plugin<State, A: Annotation, P: Provider> = {
+    kind: any;
+    createContainer(annotation: A, parent: Container): Container;
+    createProvider(
+        annotation: A,
+        container: Container,
+        initialState: ?State
+    ): P;
+}
+
+export type CreatePlugin = (cm: CreateContainerManager) => Plugin;
