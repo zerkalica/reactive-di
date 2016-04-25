@@ -8,12 +8,12 @@ import type {
 } from 'reactive-di/i/coreInterfaces'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 
-export default class BaseProvider {
+export default class BaseProvider<P: Provider> {
     displayName: string;
     tags: Array<Tag>;
     isDisposed: boolean;
     isCached: boolean;
-    dependencies: Array<Provider>;
+    dependencies: Array<P>;
 
     constructor(annotation: Annotation, container: Container) {
         this.dependencies = [(this: any)]
@@ -22,13 +22,13 @@ export default class BaseProvider {
         this.displayName =
             annotation.displayName || (annotation.kind + '@' + getFunctionName(annotation.target))
         this.tags = annotation.tags || []
-        container.beginInitialize(((this: any): Provider))
+        container.beginInitialize(annotation.target, ((this: any): Provider))
     }
 
     dispose(): void {}
     update(): void {}
-    addDependency(dependency: Provider): void {
+    addDependency(dependency: P): void {
         dependency.addDependant((this: any))
     }
-    addDependant(dependant: Provider): void {} // eslint-disable-line
+    addDependant(dependant: P): void {} // eslint-disable-line
 }

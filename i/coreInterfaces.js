@@ -13,11 +13,6 @@ export type Disposable = {
     isDisposed: boolean;
 }
 
-export type Collection<T: Disposable> = {
-    items: Array<T>;
-    add(item: T): void;
-}
-
 export type Annotation = {
     kind: any;
     displayName?: string;
@@ -29,20 +24,7 @@ export type DepAnnotation = Annotation & {
     deps: Array<DepItem>;
 }
 
-export type Meta = {
-    pending: boolean;
-    success: boolean;
-    error: ?Error;
-}
-
-export type PromiseSource = {
-    promise: ?Promise<void>;
-    meta: Meta;
-}
-
-export type PipeProvider<V> = {
-    type: 'pipe';
-
+export type Provider<V, P: Provider> = {
     /**
      * Debug name
      */
@@ -57,7 +39,7 @@ export type PipeProvider<V> = {
      * Cached dependencies. Used in Container.
      * Not for use in Provider.
      */
-    dependencies: Array<Provider>;
+    dependencies: Array<P>;
 
     /**
      * If true - Container runs Provider.update()
@@ -89,17 +71,16 @@ export type PipeProvider<V> = {
     /**
      * Add dependecy hook: noop by default
      */
-    addDependency(dependency: Provider): void;
+    addDependency(dependency: P): void;
 
     /**
      * Add dependant hook: noop by default
      */
-    addDependant(dependant: Provider): void;
+    addDependant(dependant: P): void;
 }
 
-export type ValueProvider<V> = {
-    type: 'value';
-    set(v: V): boolean;
+export type PassiveProvider<V> = {
+    type: 'passive';
 
     displayName: string;
     tags: Array<Tag>;
@@ -112,41 +93,6 @@ export type ValueProvider<V> = {
     addDependency(dependency: Provider): void;
     addDependant(dependant: Provider): void;
 }
-
-export type ListenerProvider<V> = {
-    type: 'listener';
-    notify(): void;
-
-    displayName: string;
-    tags: Array<Tag>;
-    dependencies: Array<Provider>;
-    isCached: boolean;
-    isDisposed: boolean;
-    value: V;
-    dispose(): void;
-    update(): void;
-    addDependency(dependency: Provider): void;
-    addDependant(dependant: Provider): void;
-}
-
-export type EmiterProvider<V> = {
-    type: 'emiter';
-    state: PromiseSource;
-    reset(isNotify?: boolean): void;
-
-    displayName: string;
-    tags: Array<Tag>;
-    dependencies: Array<Provider>;
-    isCached: boolean;
-    isDisposed: boolean;
-    value: V;
-    dispose(): void;
-    update(): void;
-    addDependency(dependency: Provider): void;
-    addDependant(dependant: Provider): void;
-}
-
-export type Provider = PipeProvider | ValueProvider | ListenerProvider | EmiterProvider;
 
 export type ArgumentHelper = {
     invokeComposed(...args: Array<any>): any;
@@ -154,12 +100,13 @@ export type ArgumentHelper = {
     createObject<O: Object>(): O;
 }
 
-export type Container = {
-    _privateCache: Map<DependencyKey, Provider>;
+export type Container<P: Provider> = {
+    parent: ?Container;
     createArgumentHelper(annotation: DepAnnotation): ArgumentHelper;
-    beginInitialize(provider: Provider): void;
+    beginInitialize(annotatedDep: DependencyKey, provider: P): void;
     get(annotatedDep: DependencyKey): any;
-    getProvider(annotatedDep: DependencyKey): Provider;
+    hasProvider(annotatedDep: DependencyKey): boolean;
+    getProvider(annotatedDep: DependencyKey): P;
     delete(annotatedDep: DependencyKey): void;
     dispose(): void;
 }
@@ -174,16 +121,15 @@ export type ContainerManager = {
 
 export type CreateContainerManager = (config?: Array<Annotation>) => ContainerManager;
 
-export type RelationUpdater = {
+export type RelationUpdater<P: Provider> = {
     length: number;
-    begin(dependant: Provider): void;
-    end(dependant: Provider): void;
-    addCached(dependency: Provider): void;
+    begin(dependant: P): void;
+    end(dependant: P): void;
+    addCached(dependency: P): void;
 }
 
 export type Plugin<State, A: Annotation, P: Provider> = {
     kind: any;
-    createContainer(annotation: A, parent: Container): Container;
     createProvider(
         annotation: A,
         container: Container,

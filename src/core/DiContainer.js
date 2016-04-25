@@ -24,6 +24,8 @@ function disposeResolver(provider: Provider): void {
 }
 
 export default class DefaultContainer {
+    parent: ?Container;
+
     _providerCache: Map<DependencyKey, Provider>;
     _privateCache: Map<DependencyKey, Provider>;
 
@@ -32,7 +34,6 @@ export default class DefaultContainer {
     _updater: RelationUpdater;
     _plugins: Map<string, Plugin>;
     _annotations: AnnotationMap;
-    _parent: ?Container;
     _initState: Map<DependencyKey, any>;
 
     constructor(
@@ -50,7 +51,7 @@ export default class DefaultContainer {
         this._updater = updater
         this._plugins = plugins
         this._annotations = annotations
-        this._parent = parent || null
+        this.parent = parent || null
         this._privateCache = new SimpleMap()
         this._providerCache = new SimpleMap()
     }
@@ -147,8 +148,14 @@ export default class DefaultContainer {
         return dep.value
     }
 
-    beginInitialize(provider: Provider): void {
+    beginInitialize(annotatedDep: DependencyKey, provider: Provider): void {
+        this._privateCache.set(annotatedDep, provider)
+        this._providerCache.set(annotatedDep, provider)
         this._updater.begin(provider)
+    }
+
+    hasProvider(annotatedDep: DependencyKey): boolean {
+        return this._annotations.has(annotatedDep)
     }
 
     getProvider(annotatedDep: DependencyKey): Provider {
@@ -164,12 +171,12 @@ export default class DefaultContainer {
 
         const annotation: ?Annotation = this._annotations.get(annotatedDep);
         if (!annotation) {
-            if (!this._parent) {
+            if (!this.parent) {
                 throw new Error(
                     `Can't find annotation for ${getFunctionName(annotatedDep)}`
                 )
             }
-            provider = this._parent.getProvider(annotatedDep)
+            provider = this.parent.getProvider(annotatedDep)
             this._providerCache.set(annotatedDep, provider)
             return provider
         }
@@ -180,20 +187,20 @@ export default class DefaultContainer {
                 `Provider not found for annotation ${getFunctionName(annotation.target)}`
             )
         }
-        const container = plugin.createContainer(annotation, this)
         const updater = this._updater
         const l = updater.length
+
         provider = plugin.createProvider(
             annotation,
-            container,
+            this,
             this._initState.get(annotatedDep)
         )
+
         if (l !== updater.length) {
             updater.end(provider)
         }
 
         this._providerCache.set(annotatedDep, provider)
-        container._privateCache.set(annotatedDep, provider)
 
         return provider
     }

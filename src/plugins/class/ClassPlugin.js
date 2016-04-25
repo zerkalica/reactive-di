@@ -2,7 +2,7 @@
 import type {ClassAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     ArgumentHelper,
-    PipeProvider,
+    PassiveProvider,
     Container,
     Plugin
 } from 'reactive-di/i/coreInterfaces'
@@ -10,7 +10,7 @@ import type {
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class ClassProvider<V> extends BaseProvider {
-    type: 'pipe' = 'pipe';
+    type: 'passive' = 'passive';
     value: V;
 
     _helper: ArgumentHelper;
@@ -28,11 +28,7 @@ class ClassProvider<V> extends BaseProvider {
 class ClassPlugin {
     kind: 'klass' = 'klass';
 
-    createContainer(annotation: ClassAnnotation, container: Container): Container {
-        return container
-    }
-
-    createProvider(annotation: ClassAnnotation, container: Container): PipeProvider { // eslint-disable-line
+    createProvider(annotation: ClassAnnotation, container: Container): PassiveProvider {
         return new ClassProvider(annotation, container)
     }
 }

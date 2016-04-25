@@ -5,13 +5,13 @@ import type {
 import type {
     Plugin,
     Container,
-    ValueProvider as IValueProvider
+    PassiveProvider
 } from 'reactive-di/i/coreInterfaces'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class ValueProvider<V> extends BaseProvider {
-    type: 'value' = 'value';
+    type: 'passive' = 'passive';
     value: V;
 
     constructor(
@@ -22,21 +22,12 @@ class ValueProvider<V> extends BaseProvider {
         super(annotation, container)
         this.value = value || annotation.value
     }
-
-    set(value: V): boolean {
-        this.value = value
-        return true
-    }
 }
 
 class ValuePlugin {
     kind: 'value' = 'value';
 
-    createContainer(annotation: ValueAnnotation, container: Container): Container {
-        return container
-    }
-
-    createProvider(annotation: ValueAnnotation, container: Container, value: any): IValueProvider {
+    createProvider(annotation: ValueAnnotation, container: Container, value: any): PassiveProvider {
         return new ValueProvider(annotation, container, value)
     }
 }

@@ -4,14 +4,14 @@ import type {
     DepFn,
     Container,
     ArgumentHelper,
-    PipeProvider,
+    PassiveProvider,
     Plugin
 } from 'reactive-di/i/coreInterfaces'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class ComposeProvider<V> extends BaseProvider {
-    type: 'pipe' = 'pipe';
+    type: 'passive' = 'passive';
     value: DepFn<V>;
 
     constructor(annotation: ComposeAnnotation, container: Container) {
@@ -28,11 +28,7 @@ class ComposeProvider<V> extends BaseProvider {
 class ComposePlugin {
     kind: 'compose' = 'compose';
 
-    createContainer(annotation: ComposeAnnotation, container: Container): Container {
-        return container
-    }
-
-    createProvider(annotation: ComposeAnnotation, container: Container): PipeProvider {
+    createProvider(annotation: ComposeAnnotation, container: Container): PassiveProvider {
         return new ComposeProvider(annotation, container)
     }
 }

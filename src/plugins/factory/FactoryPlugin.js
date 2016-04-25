@@ -4,14 +4,14 @@ import type {FactoryAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
     ArgumentHelper,
     Container,
-    PipeProvider,
+    PassiveProvider,
     Plugin
 } from 'reactive-di/i/coreInterfaces'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 
 class FactoryProvider<V> extends BaseProvider {
-    type: 'pipe' = 'pipe';
+    type: 'passive' = 'passive';
     value: V;
     _helper: ArgumentHelper;
 
@@ -28,11 +28,7 @@ class FactoryProvider<V> extends BaseProvider {
 class FactoryPlugin {
     kind: 'factory' = 'factory';
 
-    createContainer(annotation: FactoryAnnotation, container: Container): Container {
-        return container
-    }
-
-    createProvider(annotation: FactoryAnnotation, container: Container): PipeProvider {
+    createProvider(annotation: FactoryAnnotation, container: Container): PassiveProvider {
         return new FactoryProvider(annotation, container)
     }
 }

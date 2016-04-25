@@ -8,9 +8,6 @@ import type {
 
 class AliasPlugin {
     kind: 'alias' = 'alias';
-    createContainer(annotation: AliasAnnotation, container: Container): Container {
-        return container
-    }
     createProvider(annotation: AliasAnnotation, container: Container): Provider {
         return container.getProvider(annotation.alias)
     }
