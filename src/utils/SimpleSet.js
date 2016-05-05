@@ -1,11 +1,12 @@
 /* @flow */
-import createIdCreator from 'reactive-di/utils/createIdCreator'
-import setProp from 'reactive-di/utils/setProp'
 
-const token = '__rdi__token'
+import createIdCreator from 'reactive-di/utils/createIdCreator'
+import createMetadataDriver from 'reactive-di/utils/createMetadataDriver'
 
 function createSet(): Class<Set> {
+    const driver = createMetadataDriver('design:__id')
     const createId: () => string = createIdCreator();
+
     class EmulatedSet<V: Function|Object> {
         _map: {[id: string]: V};
 
@@ -28,11 +29,13 @@ function createSet(): Class<Set> {
         }
 
         _getKey(value: V): string {
-            if (!value[token]) {
-                setProp((value: any), token, createId())
+            let key: string = driver.get(value);
+            if (!key) {
+                key = createId()
+                driver.set(value, key)
             }
 
-            return ((value: any)[token]: string)
+            return key
         }
 
         clear(): void {

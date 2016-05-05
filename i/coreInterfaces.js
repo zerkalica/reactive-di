@@ -1,5 +1,13 @@
 /* @flow */
 
+export type Target = Function|Object;
+export type Metadata = any;
+export type MetadataDriver = {
+    get(target: Target): any;
+    set(target: Target, metadata: Metadata): void;
+    has(target: Target): boolean;
+}
+
 export type Tag = string;
 export type DepFn<T> = (...x: any) => T;
 export type Dependency<T> = DepFn<T>|Class<T>;
@@ -13,15 +21,19 @@ export type Disposable = {
     isDisposed: boolean;
 }
 
+export type RawAnnotation = {
+    kind: any;
+    target?: DependencyKey;
+    tags?: Array<Tag>;
+    deps?: Array<DepItem>;
+}
+
 export type Annotation = {
     kind: any;
     displayName?: string;
     tags?: Array<Tag>;
     target: DependencyKey;
-}
-
-export type DepAnnotation = Annotation & {
-    deps: Array<DepItem>;
+    deps?: Array<DepItem>;
 }
 
 export type Provider<V, P: Provider> = {
@@ -102,7 +114,7 @@ export type ArgumentHelper = {
 
 export type Container<P: Provider> = {
     parent: ?Container;
-    createArgumentHelper(annotation: DepAnnotation): ArgumentHelper;
+    createArgumentHelper(annotation: Annotation): ArgumentHelper;
     beginInitialize(annotatedDep: DependencyKey, provider: P): void;
     get(annotatedDep: DependencyKey): any;
     hasProvider(annotatedDep: DependencyKey): boolean;
@@ -119,7 +131,7 @@ export type ContainerManager = {
     replace(oldDep: DependencyKey, newDep?: DependencyKey|Annotation): void;
 }
 
-export type CreateContainerManager = (config?: Array<Annotation>) => ContainerManager;
+export type CreateContainerManager = (config?: Array<RawAnnotation|DependencyKey>) => ContainerManager;
 
 export type RelationUpdater<P: Provider> = {
     length: number;

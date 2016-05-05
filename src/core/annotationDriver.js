@@ -1,18 +1,15 @@
 /* @flow */
+
 import type {
-    Annotation,
-    Dependency
+    MetadataDriver
 } from 'reactive-di/i/coreInterfaces'
-import setProp from 'reactive-di/utils/setProp'
 
-class AnnotationDriver {
-    annotate<Ann: Annotation>(annotatedDep: Dependency, annotation: Ann): void {
-        setProp(annotatedDep, '___rdi_meta', annotation)
-    }
+import createMetadataDriver from 'reactive-di/utils/createMetadataDriver'
 
-    getAnnotation(annotatedDep: Dependency): Annotation {
-        return annotatedDep.___rdi_meta
-    }
+const paramtypes: MetadataDriver = createMetadataDriver('design:paramtypes');
+const rdi: MetadataDriver = createMetadataDriver('design:reactive-di');
+
+export {
+    paramtypes,
+    rdi
 }
-
-export default new AnnotationDriver()

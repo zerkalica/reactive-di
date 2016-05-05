@@ -3,7 +3,7 @@
 import type {
     Tag,
     DependencyKey,
-    Annotation,
+    RawAnnotation,
     Plugin,
     CreatePlugin
 } from 'reactive-di/i/coreInterfaces'
@@ -17,7 +17,9 @@ import type {
 import normalizeMiddlewares from 'reactive-di/core/normalizeMiddlewares'
 import AnnotationMap from 'reactive-di/core/AnnotationMap'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
-import driver from 'reactive-di/core/annotationDriver'
+import {
+    rdi
+} from 'reactive-di/core/annotationDriver'
 import createPluginsMap from 'reactive-di/utils/createPluginsMap'
 import DiContainer from 'reactive-di/core/DiContainer'
 import defaultPlugins from 'reactive-di/plugins/defaultPlugins'
@@ -85,9 +87,9 @@ class DefaultContainerManager {
     replace(oldDep: DependencyKey, newDep?: DependencyKey|Annotation): void {
         this._delete(oldDep)
         if (newDep && this._annotations.has(oldDep)) {
-            const annotation: ?Annotation = typeof newDep === 'object'
+            const annotation: ?RawAnnotation = typeof newDep === 'object'
                 ? (newDep: Annotation)
-                : driver.getAnnotation((newDep: Dependency));
+                : rdi.get((newDep: Dependency));
 
             if (annotation) {
                 this._annotations.set(oldDep, annotation)
@@ -139,12 +141,12 @@ class DefaultContainerManager {
 export default function createManagerFactory(
     pluginsConfig?: Array<CreatePlugin> = defaultPlugins,
     createUpdater?: () => RelationUpdater = createDummyRelationUpdater
-): (config?: Array<Annotation>) => ContainerManager {
+): (config?: Array<RawAnnotation|DependencyKey>) => ContainerManager {
     let plugins: Map<string, Plugin>;
     const updater = createUpdater()
 
     function createContainerManager(
-        config?: Array<Annotation> = []
+        config?: Array<RawAnnotation|DependencyKey> = []
     ): ContainerManager {
         return new DefaultContainerManager(
             new AnnotationMap(config),
@@ -152,8 +154,8 @@ export default function createManagerFactory(
             updater
         );
     }
-
     plugins = createPluginsMap(createContainerManager, pluginsConfig)
+
 
     return createContainerManager
 }

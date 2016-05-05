@@ -9,8 +9,7 @@ import type {
     ArgsObject,
     Container,
     RelationUpdater,
-    Provider,
-    DepAnnotation
+    Provider
 } from 'reactive-di/i/coreInterfaces'
 import type AnnotationMap from 'reactive-di/core/AnnotationMap'
 
@@ -110,8 +109,8 @@ export default class DefaultContainer {
         }
     }
 
-    createArgumentHelper(annotation: DepAnnotation): ArgumentHelper {
-        const {deps, depNames} = this._getDeps(annotation.deps)
+    createArgumentHelper(annotation: Annotation): ArgumentHelper {
+        const {deps, depNames} = this._getDeps(annotation.deps || [])
         if (!annotation.tags) {
             throw new Error('Annotation without tags')
         }

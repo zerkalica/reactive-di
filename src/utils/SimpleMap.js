@@ -1,10 +1,9 @@
 /* @flow */
 import createIdCreator from 'reactive-di/utils/createIdCreator'
-import setProp from 'reactive-di/utils/setProp'
-
-const token = '__rdi__token'
+import createMetadataDriver from 'reactive-di/utils/createMetadataDriver'
 
 function createMap(): Class<Map> {
+    const driver = createMetadataDriver('design:__id')
     const createId: () => string = createIdCreator();
 
     class EmulatedMap<K: Function|Object, V> {
@@ -28,12 +27,14 @@ function createMap(): Class<Map> {
             }
         }
 
-        _getKey(key: K): string {
-            if (!key[token]) {
-                setProp((key: any), token, createId())
+        _getKey(value: K): string {
+            let key: string = driver.get(value);
+            if (!key) {
+                key = createId()
+                driver.set(value, key)
             }
 
-            return ((key: any)[token]: string)
+            return key
         }
 
         clear(): void {

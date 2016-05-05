@@ -1,72 +1,80 @@
 /* @flow */
 import type {
+    DepItem,
     DependencyKey,
+    RawAnnotation,
     Annotation
 } from 'reactive-di/i/coreInterfaces'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
-import driver from 'reactive-di/core/annotationDriver'
-
-function normalizeAnnotation(annotation: Annotation): Annotation {
-    if (!annotation.tags) {
-        /* eslint-disable no-param-reassign */
-        annotation.tags = []
-    }
-    if (!annotation.displayName) {
-        /* eslint-disable no-param-reassign */
-        const fnName: string = getFunctionName(annotation.target);
-        annotation.displayName = annotation.kind + '@' + fnName
-    }
-
-    return annotation
-}
+import {
+    paramtypes,
+    rdi
+} from 'reactive-di/core/annotationDriver'
 
 export default class AnnotationMap {
     _map: Map<DependencyKey, Annotation>;
 
     constructor(
-        config: Array<Annotation>
+        config: Array<RawAnnotation|DependencyKey>
     ) {
         this._map = new SimpleMap()
         for (let i = 0, l = config.length; i < l; i++) {
-            const annotation: Annotation = normalizeAnnotation(config[i]);
-            const oldAnnotation = this.get(annotation.target, false)
+            const conf = config[i]
+            let annotation: RawAnnotation;
+            let target: ?DependencyKey;
+            if (typeof conf === 'object') {
+                annotation = conf
+                target = annotation.target
+            } else {
+                annotation = rdi.get(conf)
+                target = conf
+            }
+            if (!target) {
+                throw new Error(`Target not set for annotation: ${Object.keys(annotation)}`)
+            }
+            const oldAnnotation: ?Annotation = this._map.get(target);
             if (oldAnnotation) {
                 throw new Error(`DependencyKey already registered, current: \
     ${oldAnnotation.kind}@${getFunctionName(oldAnnotation.target)}, \
-    new: ${annotation.kind}@${getFunctionName(annotation.target)}`)
+    new: ${annotation.kind}@${getFunctionName(target)}`)
             }
-            this.set(annotation.target, annotation)
+            this.set(target, annotation)
         }
     }
 
-    set(target: DependencyKey, value: Annotation): Map<DependencyKey, Annotation> {
-        return this._map.set(target, normalizeAnnotation(value))
+    _normalize(key: Dependency, raw: RawAnnotation): Annotation {
+        const target = raw.target || key
+        const deps: Array<DepItem> = raw.deps && raw.deps.length
+            ? raw.deps
+            : (paramtypes.get(target) || []);
+
+        return {
+            ...raw,
+            kind: raw.kind,
+            displayName: raw.kind + '@' + getFunctionName(target),
+            target,
+            deps,
+            tags: raw.tags || []
+        }
+    }
+
+    set(target: DependencyKey, annotation: any): void {
+        this._map.set(target, this._normalize(target, annotation))
     }
 
     has(target: DependencyKey): boolean {
-        if (!this._map.has(target)) {
-            return !!this._fromDriver(target)
-        }
-
-        return true
-    }
-
-    _fromDriver(target: DependencyKey): ?Annotation {
-        let annotation: ?Annotation;
-        const rawAnnotation = driver.getAnnotation(target)
-        if (rawAnnotation) {
-            annotation = normalizeAnnotation(rawAnnotation)
-            this._map.set(target, annotation)
-        }
-
-        return annotation
+        return this._map.has(target) && rdi.has(target)
     }
 
     get(target: DependencyKey): ?Annotation {
-        let annotation = this._map.get(target)
+        let annotation: ?Annotation = this._map.get(target);
         if (!annotation) {
-            annotation = this._fromDriver(target)
+            const raw: ?RawAnnotation = rdi.get(target);
+            if (raw) {
+                annotation = this._normalize(target, raw)
+                this._map.set(target, annotation)
+            }
         }
 
         return annotation

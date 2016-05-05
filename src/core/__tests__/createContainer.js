@@ -10,14 +10,14 @@ import {
 import type {
     Tag,
     DependencyKey,
-    Annotation,
+    RawAnnotation,
     Container,
     ContainerManager,
     CreateContainerManager
 } from 'reactive-di/i/coreInterfaces'
 
 export function createContainer(
-    config?: Array<Annotation>,
+    config?: Array<RawAnnotation|DependencyKey>,
     raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>,
     isHot: ?boolean = false
 ): Container {

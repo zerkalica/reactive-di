@@ -1,9 +1,14 @@
 /* @flow */
-import type {DependencyKey} from 'reactive-di/i/coreInterfaces'
-import type {AliasAnnotation} from 'reactive-di/i/pluginsInterfaces'
-import driver from 'reactive-di/core/annotationDriver'
+import type {
+    RawAnnotation,
+    DependencyKey
+} from 'reactive-di/i/coreInterfaces'
 
-export function alias(target: DependencyKey, aliasTarget: DependencyKey): AliasAnnotation {
+import {
+    rdi
+} from 'reactive-di/core/annotationDriver'
+
+export function alias(target: DependencyKey, aliasTarget: DependencyKey): RawAnnotation {
     return {
         kind: 'alias',
         target,
@@ -15,7 +20,10 @@ export function aliasAnn(
     aliasTarget: Dependency
 ): (target: Dependency) => Dependency {
     return function _alias(target: Dependency): Dependency {
-        driver.annotate(target, (alias(target, aliasTarget): Annotation))
+        rdi.set(target, {
+            kind: 'alias',
+            alias: aliasTarget
+        })
         return target
     }
 }

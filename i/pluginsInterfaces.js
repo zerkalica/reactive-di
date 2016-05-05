@@ -1,6 +1,5 @@
 /* @flow */
 import type {
-    DepAnnotation,
     Annotation,
     DependencyKey
 } from 'reactive-di/i/coreInterfaces'
@@ -10,15 +9,15 @@ export type AliasAnnotation = Annotation & {
     alias: DependencyKey;
 }
 
-export type ComposeAnnotation = DepAnnotation & {
+export type ComposeAnnotation = Annotation & {
     kind: 'compose';
 }
 
-export type FactoryAnnotation = DepAnnotation & {
+export type FactoryAnnotation = Annotation & {
     kind: 'factory';
 }
 
-export type ClassAnnotation = DepAnnotation & {
+export type ClassAnnotation = Annotation & {
     kind: 'klass';
 }
 

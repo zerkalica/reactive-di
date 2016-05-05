@@ -1,13 +1,18 @@
 /* @flow */
 
-import type {DepItem} from 'reactive-di/i/coreInterfaces'
-import type {ComposeAnnotation} from 'reactive-di/i/pluginsInterfaces'
-import driver from 'reactive-di/core/annotationDriver'
+import type {
+    RawAnnotation,
+    DepItem
+} from 'reactive-di/i/coreInterfaces'
+
+import {
+    rdi
+} from 'reactive-di/core/annotationDriver'
 
 export function compose(
     target: Function,
     ...deps: Array<DepItem>
-): ComposeAnnotation {
+): RawAnnotation {
     return {
         kind: 'compose',
         target,
@@ -19,7 +24,10 @@ export function composeAnn<V: Function>(
     ...deps: Array<DepItem>
 ): (target: V) => V {
     return function __compose(target: V): V {
-        driver.annotate(target, compose(target, ...deps))
+        rdi.set(target, {
+            kind: 'compose',
+            deps
+        })
         return target
     }
 }

@@ -1,13 +1,15 @@
 /* @flow */
 import type {
+    RawAnnotation,
     Dependency,
     DependencyKey
 } from 'reactive-di/i/coreInterfaces'
 
-import type {ValueAnnotation} from 'reactive-di/i/pluginsInterfaces'
-import driver from 'reactive-di/core/annotationDriver'
+import {
+    rdi
+} from 'reactive-di/core/annotationDriver'
 
-export function value(target: DependencyKey, val?: any): ValueAnnotation {
+export function value(target: DependencyKey, val?: any): RawAnnotation {
     return {
         kind: 'value',
         target,
@@ -19,7 +21,10 @@ export function valueAnn(
     val?: any
 ): (target: Dependency) => Dependency {
     return function _value(target: Dependency): Dependency {
-        driver.annotate(target, (value(target, val): Annotation))
+        rdi.set(target, {
+            kind: 'value',
+            value: val
+        })
         return target
     }
 }
