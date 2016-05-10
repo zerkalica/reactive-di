@@ -23,7 +23,10 @@ export default class AnnotationMap {
             const conf = config[i]
             let annotation: RawAnnotation;
             let target: ?DependencyKey;
-            if (typeof conf === 'object') {
+            if (Array.isArray(conf)) {
+                target = conf[0]
+                annotation = conf[1]
+            } else if (typeof conf === 'object') {
                 annotation = conf
                 target = annotation.target
             } else {
