@@ -6,7 +6,7 @@ import type {
     DepItem,
     Dependency,
     DependencyKey
-} from 'reactive-di/reactive-di-common'
+} from 'reactive-di'
 
 declare module 'reactive-di/configurations' {
     declare function alias(target: Dependency, aliasTarget: DependencyKey): RawAnnotation;
