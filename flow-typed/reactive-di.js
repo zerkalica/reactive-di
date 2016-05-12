@@ -1,5 +1,21 @@
 /* @flow */
 
+type Rdi$DepFn<T> = (...x: any) => T;
+type Rdi$Dependency<T> = Rdi$DepFn<T>|Class<T>;
+type Rdi$DependencyKey<T> = Rdi$Dependency<T>|string;
+type Rdi$ArgsObject = {
+    [name: string]: Rdi$DependencyKey;
+};
+type Rdi$Tag = string;
+type Rdi$DepItem = Rdi$DependencyKey|Rdi$ArgsObject;
+
+interface Rdi$RawAnnotation {
+    kind: any;
+    target?: Rdi$Dependency;
+    tags?: Array<Rdi$Tag>;
+    deps?: Array<Rdi$DepItem>;
+}
+
 declare module 'reactive-di' {
     declare type Target = Function|Object;
     declare interface MetadataDriver<Metadata> {
@@ -8,20 +24,18 @@ declare module 'reactive-di' {
         has(target: Target): boolean;
     }
 
-    declare type Tag = string;
-    declare type DepFn<T> = (...x: any) => T;
-    declare type Dependency<T> = DepFn<T>|Class<T>;
-    declare type DependencyKey<T> = Dependency<T>|string;
-    declare type ArgsObject = {
-        [name: string]: DependencyKey;
-    }
-    declare type DepItem = DependencyKey|ArgsObject;
+    declare type Tag = Rdi$Tag;
+    declare type DepFn<T> = Rdi$DepFn<T>;
+    declare type Dependency<T> = Rdi$Dependency<T>;
+    declare type DependencyKey<T> = Rdi$DependencyKey<T>;
+    declare type ArgsObject = Rdi$ArgsObject;
+    declare type DepItem = Rdi$DepItem;
 
     declare interface Disposable {
         isDisposed: boolean;
     }
 
-    declare type RawAnnotation = {
+    declare interface RawAnnotation {
         kind: any;
         target?: Dependency;
         tags?: Array<Tag>;
@@ -212,4 +226,26 @@ declare module 'reactive-di' {
         addDependency(dependency: P): void;
         addDependant(dependant: P): void;
     }
+}
+
+declare module 'reactive-di/inject' {
+    declare var exports: <V: Function>(...deps: Array<Rdi$DepItem>) => (target: V) => V;
+}
+
+declare module 'reactive-di/configurations' {
+    declare function alias(target: Rdi$Dependency, aliasTarget: Rdi$DependencyKey): Rdi$RawAnnotation;
+    declare function klass(arget: Rdi$Dependency, ...deps: Array<Rdi$DepItem>): Rdi$RawAnnotation;
+    declare function compose(target: Function, ...deps: Array<Rdi$DepItem>): Rdi$RawAnnotation;
+    declare function factory(target: Function, ...deps: Array<Rdi$DepItem>): Rdi$RawAnnotation;
+    declare function tag(annotation: Rdi$RawAnnotation, ...tags: Array<Rdi$Tag>): Rdi$RawAnnotation;
+    declare function value(target: Rdi$Dependency, val?: any): Rdi$RawAnnotation;
+}
+
+declare module 'reactive-di/annotations' {
+    declare function alias(aliasTarget: Rdi$Dependency): (target: Rdi$Dependency) => Rdi$Dependency;
+    declare function klass<V: Function>(...deps: Array<Rdi$DepItem>): (target: V) => V;
+    declare function compose<V: Function>(...deps: Array<Rdi$DepItem>): (target: V) => V;
+    declare function factory<V: Function>(...deps: Array<Rdi$DepItem>): (target: V) => V;
+    declare function tag(...tags: Array<Rdi$Tag>): (target: Rdi$Dependency) => Rdi$Dependency;
+    declare function valueAnn(val?: any): (target: Rdi$Dependency) => Rdi$Dependency;
 }

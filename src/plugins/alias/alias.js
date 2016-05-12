@@ -17,9 +17,7 @@ export function alias(target: Dependency, aliasTarget: DependencyKey): RawAnnota
     }
 }
 
-export function aliasAnn(
-    aliasTarget: Dependency
-): (target: Dependency) => Dependency {
+export function aliasAnn(aliasTarget: Dependency): (target: Dependency) => Dependency {
     return function _alias(target: Dependency): Dependency {
         rdi.set(target, {
             kind: 'alias',

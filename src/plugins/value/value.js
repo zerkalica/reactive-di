@@ -16,9 +16,7 @@ export function value(target: Dependency, val?: any): RawAnnotation {
     }
 }
 
-export function valueAnn(
-    val?: any
-): (target: Dependency) => Dependency {
+export function valueAnn(val?: any): (target: Dependency) => Dependency {
     return function _value(target: Dependency): Dependency {
         rdi.set(target, {
             kind: 'value',

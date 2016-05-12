@@ -10,10 +10,7 @@ import {
     rdi
 } from 'reactive-di/core/annotationDriver'
 
-export function klass(
-    target: Dependency,
-    ...deps: Array<DepItem>
-): RawAnnotation {
+export function klass(target: Dependency, ...deps: Array<DepItem>): RawAnnotation {
     return {
         kind: 'klass',
         target,
@@ -21,9 +18,7 @@ export function klass(
     }
 }
 
-export function klassAnn<V: Function>(
-    ...deps: Array<DepItem>
-): (target: V) => V {
+export function klassAnn<V: Function>(...deps: Array<DepItem>): (target: V) => V {
     return function __klass(target: V): V {
         rdi.set(target, {
             kind: 'klass',

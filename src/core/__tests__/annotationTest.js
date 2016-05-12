@@ -14,13 +14,20 @@ import type {
 
 import {
     factory,
-    klass,
-    inject
+    klass
 } from 'reactive-di/annotations'
+
+import {
+    paramtypes
+} from 'reactive-di/core/annotationDriver'
 
 import {
     klass as klassC
 } from 'reactive-di/configurations'
+
+function inject(meta, target: Function) {
+    paramtypes.set(target, meta)
+}
 
 describe('DiContainerAnnotationTest', () => {
     it('should resolve function factory once', () => {
@@ -39,7 +46,7 @@ describe('DiContainerAnnotationTest', () => {
     it('should resolve class via annotations without registration', () => {
         class A {}
         klass()(A)
-        inject()(A)
+        inject([], A)
 
         class B {
             a: A;
@@ -48,7 +55,7 @@ describe('DiContainerAnnotationTest', () => {
             }
         }
         klass()(B)
-        inject(A)(B)
+        inject([A], B)
 
         const newDi: Container = createContainer();
         const result = newDi.get(B)
@@ -59,7 +66,7 @@ describe('DiContainerAnnotationTest', () => {
     it('should resolve class via annotations with registration', () => {
         class A {}
         klass()(A)
-        inject()(A)
+        inject([], A)
 
         class B {
             a: A;
@@ -68,7 +75,7 @@ describe('DiContainerAnnotationTest', () => {
             }
         }
         klass()(B)
-        inject(A)(B)
+        inject([A], B)
 
         const newDi: Container = createContainer([
             A,
@@ -81,7 +88,7 @@ describe('DiContainerAnnotationTest', () => {
 
     it('should resolve class with deps via config and partially annotations', () => {
         class A {}
-        inject()(A)
+        inject([], A)
 
         class B {
             a: A;
@@ -89,7 +96,7 @@ describe('DiContainerAnnotationTest', () => {
                 this.a = a
             }
         }
-        inject(A)(B)
+        inject([A], B)
 
         const newDi: Container = createContainer([
             klassC(A),

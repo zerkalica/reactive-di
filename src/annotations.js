@@ -6,10 +6,8 @@ import {klassAnn as klass} from 'reactive-di/plugins/class/klass'
 import {valueAnn as value} from 'reactive-di/plugins/value/value'
 import {aliasAnn as alias} from 'reactive-di/plugins/alias/alias'
 import {tagAnn as tag} from 'reactive-di/plugins/tag/tag'
-import inject from 'reactive-di/plugins/inject'
 
 export {
-    inject,
     alias,
     tag,
     value,
