@@ -2,7 +2,7 @@
 import type {
     Provider,
     RelationUpdater
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 import SimpleSet from 'reactive-di/utils/SimpleSet'
 
 class HotRelationUpdater {

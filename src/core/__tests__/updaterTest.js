@@ -7,8 +7,9 @@ import {
     createContainer
 } from 'reactive-di/core/__tests__/createContainer'
 import type {
+    Provider,
     Container
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import {
     factory

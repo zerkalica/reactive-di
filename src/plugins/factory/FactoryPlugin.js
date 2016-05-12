@@ -1,12 +1,12 @@
 /* @flow */
 
-import type {FactoryAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
+    FactoryAnnotation,
     ArgumentHelper,
     Container,
     PassiveProvider,
     Plugin
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 

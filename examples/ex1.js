@@ -4,7 +4,7 @@ import type {
     Container,
     ContainerManager,
     CreateContainerManager
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import {
     createManagerFactory,

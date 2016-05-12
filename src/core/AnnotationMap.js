@@ -1,82 +1,108 @@
 /* @flow */
+
 import type {
+    MetadataDriver,
     DepItem,
+    Dependency,
     DependencyKey,
+    ConfigItem,
     RawAnnotation,
-    Annotation
-} from 'reactive-di/i/coreInterfaces'
+    Annotation as IAnnotation
+} from 'reactive-di'
+
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
-import {
-    paramtypes,
-    rdi
-} from 'reactive-di/core/annotationDriver'
 
-export default class AnnotationMap {
+export default class AnnotationMap<Annotation: IAnnotation> {
     _map: Map<DependencyKey, Annotation>;
+    _rdi: MetadataDriver<RawAnnotation>;
+    _paramtypes: MetadataDriver<Array<DepItem>>;
 
     constructor(
-        config: Array<RawAnnotation|DependencyKey>
+        config: Array<ConfigItem>,
+        rdi: MetadataDriver<RawAnnotation>,
+        paramtypes: MetadataDriver<Array<DepItem>>
     ) {
+        this._rdi = rdi
+        this._paramtypes = paramtypes
         this._map = new SimpleMap()
+        this.set(config)
+    }
+
+    set(config: Array<ConfigItem>): void {
+        const map = this._map
+        const driver = this._rdi
         for (let i = 0, l = config.length; i < l; i++) {
-            const conf = config[i]
-            let annotation: RawAnnotation;
-            let target: ?DependencyKey;
+            const conf: ConfigItem = config[i];
+
+            let raw: ?RawAnnotation;
+            let key: ?DependencyKey;
+            let target: ?Dependency;
+
             if (Array.isArray(conf)) {
-                target = conf[0]
-                annotation = conf[1]
+                key = conf[0]
+                raw = conf[1]
             } else if (typeof conf === 'object') {
-                annotation = conf
-                target = annotation.target
-            } else {
-                annotation = rdi.get(conf)
+                raw = conf
+            } else if (typeof conf === 'function') {
+                raw = driver.get(conf)
                 target = conf
             }
-            if (!target) {
-                throw new Error(`Target not set for annotation: ${Object.keys(annotation)}`)
+
+            if (!raw) {
+                throw new Error(`Can't find annotation: ${conf}`)
             }
-            const oldAnnotation: ?Annotation = this._map.get(target);
+
+            target = target || raw.target
+            if (!target) {
+                throw new Error(`Can't find annotation target: ${raw.kind}`)
+            }
+
+            key = key || (target: DependencyKey)
+
+            const oldAnnotation: ?Annotation = map.get(key);
             if (oldAnnotation) {
                 throw new Error(`DependencyKey already registered, current: \
     ${oldAnnotation.kind}@${getFunctionName(oldAnnotation.target)}, \
-    new: ${annotation.kind}@${getFunctionName(target)}`)
+    new: ${raw.kind}@${getFunctionName(target)}`)
             }
-            this.set(target, annotation)
+
+            map.set(key, this._createAnotation(target, raw))
         }
     }
 
-    _normalize(key: Dependency, raw: RawAnnotation): Annotation {
-        const target = raw.target || key
+    _createAnotation<R: RawAnnotation>(target: Dependency, raw: R): Annotation {
         const deps: Array<DepItem> = raw.deps && raw.deps.length
             ? raw.deps
-            : (paramtypes.get(target) || []);
+            : (this._paramtypes.get(target) || []);
 
-        return {
-            ...raw,
+        const annotation: Annotation = {
+            ...(raw: any),
             kind: raw.kind,
             displayName: raw.kind + '@' + getFunctionName(target),
             target,
             deps,
             tags: raw.tags || []
-        }
-    }
+        };
 
-    set(target: DependencyKey, annotation: any): void {
-        this._map.set(target, this._normalize(target, annotation))
+        return annotation
     }
 
     has(target: DependencyKey): boolean {
-        return this._map.has(target) && rdi.has(target)
+        return this._map.has(target) && (
+            typeof target === 'function'
+                ? this._rdi.has(target)
+                : false
+        )
     }
 
-    get(target: DependencyKey): ?Annotation {
-        let annotation: ?Annotation = this._map.get(target);
-        if (!annotation) {
-            const raw: ?RawAnnotation = rdi.get(target);
+    get(key: DependencyKey): ?Annotation {
+        let annotation: ?Annotation = this._map.get(key);
+        if (!annotation && typeof key === 'function') {
+            const raw: ?RawAnnotation = this._rdi.get(key);
             if (raw) {
-                annotation = this._normalize(target, raw)
-                this._map.set(target, annotation)
+                annotation = this._createAnotation(key, raw)
+                this._map.set(key, annotation)
             }
         }
 

@@ -18,8 +18,10 @@ export {
 
     createHotRelationUpdater,
     createDummyRelationUpdater,
+
     SimpleSet,
     SimpleMap,
+
     BaseProvider,
     createManagerFactory,
     defaultPlugins

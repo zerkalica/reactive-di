@@ -1,10 +1,10 @@
 /* @flow */
-import type {AliasAnnotation} from 'reactive-di/i/pluginsInterfaces'
 import type {
+    AliasAnnotation,
     Container,
     Provider,
     Plugin
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 class AliasPlugin {
     kind: 'alias' = 'alias';

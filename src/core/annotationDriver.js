@@ -2,7 +2,7 @@
 
 import type {
     MetadataDriver
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import createMetadataDriver from 'reactive-di/utils/createMetadataDriver'
 

@@ -2,7 +2,7 @@
 import type {
     Provider,
     RelationUpdater
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 class DummyRelationUpdater {
     length: number = 0;

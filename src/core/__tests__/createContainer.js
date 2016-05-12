@@ -9,15 +9,15 @@ import {
 
 import type {
     Tag,
+    ConfigItem,
     DependencyKey,
-    RawAnnotation,
     Container,
     ContainerManager,
     CreateContainerManager
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 export function createContainer(
-    config?: Array<RawAnnotation|DependencyKey>,
+    config?: Array<ConfigItem>,
     raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>,
     isHot: ?boolean = false
 ): Container {

@@ -3,21 +3,20 @@
 import type {
     Tag,
     DependencyKey,
-    RawAnnotation,
+    ConfigItem,
     Plugin,
-    CreatePlugin
-} from 'reactive-di/i/coreInterfaces'
-
-import type {
+    CreatePlugin,
+    CreateContainerManager,
     RelationUpdater,
     Container,
     ContainerManager
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import normalizeMiddlewares from 'reactive-di/core/normalizeMiddlewares'
 import AnnotationMap from 'reactive-di/core/AnnotationMap'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
 import {
+    paramtypes,
     rdi
 } from 'reactive-di/core/annotationDriver'
 import createPluginsMap from 'reactive-di/utils/createPluginsMap'
@@ -83,19 +82,6 @@ class DefaultContainerManager {
             containers[j].delete(oldDep)
         }
     }
-
-    replace(oldDep: DependencyKey, newDep?: DependencyKey|Annotation): void {
-        this._delete(oldDep)
-        if (newDep && this._annotations.has(oldDep)) {
-            const annotation: ?RawAnnotation = typeof newDep === 'object'
-                ? (newDep: Annotation)
-                : rdi.get((newDep: Dependency));
-
-            if (annotation) {
-                this._annotations.set(oldDep, annotation)
-            }
-        }
-    }
 }
 
 /**
@@ -141,15 +127,15 @@ class DefaultContainerManager {
 export default function createManagerFactory(
     pluginsConfig?: Array<CreatePlugin> = defaultPlugins,
     createUpdater?: () => RelationUpdater = createDummyRelationUpdater
-): (config?: Array<RawAnnotation|DependencyKey>) => ContainerManager {
+): CreateContainerManager {
     let plugins: Map<string, Plugin>;
     const updater = createUpdater()
 
     function createContainerManager(
-        config?: Array<RawAnnotation|DependencyKey> = []
+        config?: Array<ConfigItem> = []
     ): ContainerManager {
         return new DefaultContainerManager(
-            new AnnotationMap(config),
+            new AnnotationMap(config, rdi, paramtypes),
             plugins,
             updater
         );

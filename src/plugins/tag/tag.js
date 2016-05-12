@@ -3,7 +3,7 @@ import type {
     RawAnnotation,
     Tag,
     Dependency
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import {
     rdi

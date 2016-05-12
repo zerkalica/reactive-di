@@ -10,7 +10,7 @@ import type {
     Container,
     RelationUpdater,
     Provider
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 import type AnnotationMap from 'reactive-di/core/AnnotationMap'
 
 import ArgumentHelperImpl from 'reactive-di/core/ArgumentHelper'
@@ -123,13 +123,13 @@ export default class DefaultContainer {
         )
     }
 
-    delete(annotatedDep: DependencyKey): void {
-        this._providerCache.delete(annotatedDep)
-        const provider: ?Provider = this._privateCache.get(annotatedDep);
+    delete(key: DependencyKey): void {
+        this._providerCache.delete(key)
+        const provider: ?Provider = this._privateCache.get(key);
         if (provider) {
             provider.dispose()
         }
-        this._privateCache.delete(annotatedDep)
+        this._privateCache.delete(key)
     }
 
     dispose(): void {
@@ -137,8 +137,8 @@ export default class DefaultContainer {
         this._dispose()
     }
 
-    get(annotatedDep: DependencyKey): any {
-        const dep = this.getProvider(annotatedDep)
+    get(key: DependencyKey): any {
+        const dep = this.getProvider(key)
         if (!dep.isCached) {
             dep.update()
             dep.isCached = true
@@ -147,18 +147,18 @@ export default class DefaultContainer {
         return dep.value
     }
 
-    beginInitialize(annotatedDep: DependencyKey, provider: Provider): void {
-        this._privateCache.set(annotatedDep, provider)
-        this._providerCache.set(annotatedDep, provider)
+    beginInitialize(key: DependencyKey, provider: Provider): void {
+        this._privateCache.set(key, provider)
+        this._providerCache.set(key, provider)
         this._updater.begin(provider)
     }
 
-    hasProvider(annotatedDep: DependencyKey): boolean {
-        return this._annotations.has(annotatedDep)
+    hasProvider(key: DependencyKey): boolean {
+        return this._annotations.has(key)
     }
 
-    getProvider(annotatedDep: DependencyKey): Provider {
-        let provider: ?Provider = this._providerCache.get(annotatedDep);
+    getProvider(key: DependencyKey): Provider {
+        let provider: ?Provider = this._providerCache.get(key);
 
         if (provider) {
             if (this._updater.length) {
@@ -168,15 +168,15 @@ export default class DefaultContainer {
             return provider
         }
 
-        const annotation: ?Annotation = this._annotations.get(annotatedDep);
+        const annotation: ?Annotation = this._annotations.get(key);
         if (!annotation) {
             if (!this.parent) {
                 throw new Error(
-                    `Can't find annotation for ${getFunctionName(annotatedDep)}`
+                    `Can't find annotation for ${getFunctionName(key)}`
                 )
             }
-            provider = this.parent.getProvider(annotatedDep)
-            this._providerCache.set(annotatedDep, provider)
+            provider = this.parent.getProvider(key)
+            this._providerCache.set(key, provider)
             return provider
         }
 
@@ -192,14 +192,14 @@ export default class DefaultContainer {
         provider = plugin.createProvider(
             annotation,
             this,
-            this._initState.get(annotatedDep)
+            this._initState.get(key)
         )
 
         if (l !== updater.length) {
             updater.end(provider)
         }
 
-        this._providerCache.set(annotatedDep, provider)
+        this._providerCache.set(key, provider)
 
         return provider
     }

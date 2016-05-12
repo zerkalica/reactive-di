@@ -2,7 +2,7 @@
 
 import type {
     DepItem
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import {
     paramtypes

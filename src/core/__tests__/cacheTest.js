@@ -3,7 +3,7 @@
 
 import type {
     Container
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import sinon from 'sinon'
 import assert from 'power-assert'

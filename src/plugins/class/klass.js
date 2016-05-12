@@ -4,7 +4,7 @@ import type {
     Dependency,
     DepItem,
     RawAnnotation
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import {
     rdi

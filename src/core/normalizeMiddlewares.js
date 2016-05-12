@@ -2,7 +2,7 @@
 import type {
     Tag,
     DependencyKey
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import SimpleMap from 'reactive-di/utils/SimpleMap'
 

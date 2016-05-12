@@ -3,7 +3,7 @@ import type {
     CreateContainerManager,
     CreatePlugin,
     Plugin
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import SimpleMap from 'reactive-di/utils/SimpleMap'
 

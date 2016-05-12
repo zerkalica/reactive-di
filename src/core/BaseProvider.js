@@ -5,7 +5,7 @@ import type {
     Annotation,
     Provider,
     Container
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 
 export default class BaseProvider<P: Provider> {
@@ -15,7 +15,10 @@ export default class BaseProvider<P: Provider> {
     isCached: boolean;
     dependencies: Array<P>;
 
-    constructor(annotation: Annotation, container: Container) {
+    constructor(
+        annotation: Annotation,
+        container: Container
+    ) {
         this.dependencies = [(this: any)]
         this.isCached = false
         this.isDisposed = false

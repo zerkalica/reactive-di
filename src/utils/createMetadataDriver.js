@@ -2,9 +2,8 @@
 
 import type {
     Target,
-    Metadata,
     MetadataDriver
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 const isNativeReflect: boolean =
     typeof Reflect !== 'undefined'
@@ -32,7 +31,7 @@ function setProp(target: Target, name: string, value: any): void {
     })
 }
 
-class ReflectMetaDataDriver<K: Symbol|string> {
+class ReflectMetaDataDriver<K: Symbol|string, Metadata> {
     _metadataKey: K;
 
     constructor(metadataKey: K) {
@@ -54,7 +53,7 @@ class ReflectMetaDataDriver<K: Symbol|string> {
 
 const hasOwnProperty = Object.prototype.hasOwnProperty
 
-class EmulatedMetaDataDriver<K: Symbol|string> {
+class EmulatedMetaDataDriver<K: Symbol|string, Metadata> {
     _metadataKey: K;
 
     constructor(metadataKey: K) {

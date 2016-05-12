@@ -1,12 +1,10 @@
 /* @flow */
 import type {
-    ValueAnnotation
-} from 'reactive-di/i/pluginsInterfaces'
-import type {
+    ValueAnnotation,
     Plugin,
     Container,
     PassiveProvider
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
 

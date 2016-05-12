@@ -1,4 +1,0 @@
-#marker-rule: /function (\w+)/||%1||Function
-#marker-rule: /class (\w+)/||%1||Class
-#marker-rule: /type (.+?)[ <>.]+=/||%1||Types
-#marker-rule: disable=Variable

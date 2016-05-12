@@ -53,9 +53,8 @@
     ".flowconfig",
     "README.md",
     "LICENSE",
-    "lib",
-    "dist",
-    "i"
+    "flow-typed",
+    "dist"
   ],
   "devDependencies": {
     "babel-cli": "^6.8.0",

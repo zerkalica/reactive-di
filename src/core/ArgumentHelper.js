@@ -1,8 +1,9 @@
 /* @flow */
 
 import type {
-    Provider
-} from 'reactive-di/i/coreInterfaces'
+    Provider,
+    Dependency
+} from 'reactive-di'
 
 import {
     fastCall,

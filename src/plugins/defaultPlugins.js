@@ -1,7 +1,7 @@
 /* @flow */
 import type {
     CreatePlugin
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import ComposePlugin from 'reactive-di/plugins/compose/ComposePlugin'
 import FactoryPlugin from 'reactive-di/plugins/factory/FactoryPlugin'

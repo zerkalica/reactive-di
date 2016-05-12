@@ -10,7 +10,7 @@ import {
 
 import type {
     Container
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 import {
     factory,
