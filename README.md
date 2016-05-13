@@ -31,6 +31,8 @@ import type {
     IBrakes
 } from './interfaces'
 
+import {klass} from 'reactive-di/annotations'
+
 export class Engine {}
 export class Brakes {}
 export class Car {
@@ -40,6 +42,9 @@ export class Car {
     }
 }
 export class SomeClass {}
+
+@klass()
+export class SomeDecoratedClass {}
 ```
 
 ```js
@@ -57,7 +62,8 @@ import {
     Engine,
     Car,
     Brakes,
-    SomeClass
+    SomeClass,
+    SomeDecoratedClass
 } from './classes'
 
 import type {
@@ -70,7 +76,8 @@ const configuration: Array<ConfigItem> = [
     [(_: IEngine), klass(Engine)],
     [(_: IBrakes), klass(Brakes)],
     [(_: ICar), klass(Car)],
-    klass(SomeClass)
+    klass(SomeClass),
+    SomeDecoratedClass
 ];
 
 const container = createManagerFactory(defaultPlugins)(configuration).createContainer()
