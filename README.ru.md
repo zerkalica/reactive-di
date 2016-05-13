@@ -5,7 +5,7 @@ Reactive DI
     -	[Структура](#user-content-Структура)
         -	[Dependency](#dependency)
         -	[Configuration](#configuration)
-        -	[Annotation](#annotation)
+        -	[ConfigItem](#annotation)
         -	[Provider](#provider)
         -	[Plugin](#plugin)
         -	[Container](#container)
@@ -51,7 +51,7 @@ Reactive-di также
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {createManagerFactory} from 'reactive-di'
 import {klass} from 'reactive-di/configurations'
 
@@ -64,7 +64,7 @@ class Car {
     }
 }
 
-const configuration: Array<Annotation> = [
+const configuration: Array<ConfigItem> = [
     klass(Engine),
     klass(Brakes),
     klass(Car, Engine, Brakes)
@@ -134,7 +134,7 @@ const configuration = [
 
 Подробнее, типы конфигураций будут расмотренны далее.
 
-### Annotation
+### ConfigItem
 
 Другой способ описать зависимости, полностью повторяют возможности конфигураций.
 
@@ -184,7 +184,7 @@ configuration.getProvider(Car).getDependencies(); // [Provider<Engine>]
 configuration.getProvider(Engine).getDependants(); // [Provider<Car>]
 ```
 
-Подробнее см. Provider в [core interfaces](./i/coreInterfaces.js).
+Подробнее см. Provider в [core interfaces](..js).
 
 ### Plugin
 
@@ -275,7 +275,7 @@ export type ContainerManager = {
         raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
     ): ContainerManager;
     createContainer(parent?: Container): Container;
-    replace(oldDep: DependencyKey, newDep?: DependencyKey|Annotation): void;
+    replace(oldDep: DependencyKey, newDep?: DependencyKey|ConfigItem): void;
 }
 ```
 
@@ -283,7 +283,7 @@ export type ContainerManager = {
 
 Точка регистрации Plugins, RelationUpdater. Создает фабрику ContainerManager-ов.
 
-Подробнее об API в [core interfaces](./i/coreInterfaces.js) и [plugins interfaces](./i/pluginsInterfaces.js).
+Подробнее об API в [core interfaces](..js) и [plugins interfaces](./i/pluginsInterfaces.js).
 
 ![ReactiveDi class diagram](./docs/images/class-diagram.png)
 
@@ -307,7 +307,7 @@ import type {
     CreateContainerManager,
     ContainerManager,
     Container
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 
 const createContainerManager: CreateContainerManager = createManagerFactory(
     defaultPlugins,
@@ -349,7 +349,7 @@ container.get(Car)
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {createManagerFactory} from 'reactive-di'
 import {klass} from 'reactive-di/configurations'
 
@@ -362,7 +362,7 @@ class Car {
     }
 }
 
-const configuration: Array<Annotation> = [
+const configuration: Array<ConfigItem> = [
     klass(Engine),
     klass(Brakes),
     klass(Car, Engine, Brakes)
@@ -411,7 +411,7 @@ container.get(Car)
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {createManagerFactory} from 'reactive-di'
 import {klass, factory} from 'reactive-di/configurations'
 
@@ -422,7 +422,7 @@ function CarFactory(engine: Engine): Car {
     return new Car(engine)
 }
 
-const configuration: Array<Annotation> = [
+const configuration: Array<ConfigItem> = [
     klass(Engine),
     factory(CarFactory, Engine)
 ];
@@ -436,7 +436,7 @@ container.get(CarFactory)
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {createManagerFactory} from 'reactive-di'
 import {klass, factory} from 'reactive-di/annotations'
 
@@ -465,7 +465,7 @@ container.get(CarFactory)
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {createManagerFactory} from 'reactive-di'
 import {klass, compose} from 'reactive-di/configurations'
 
@@ -476,7 +476,7 @@ function CarFactory(engine: Engine, {power}: {power: number}): Car {
     return new Car(engine, power)
 }
 
-const configuration: Array<Annotation> = [
+const configuration: Array<ConfigItem> = [
     klass(Engine),
     compose(CarFactory, Engine)
 ];
@@ -489,7 +489,7 @@ const car: Car = createCar({33});
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {createManagerFactory} from 'reactive-di'
 import {klass, compose} from 'reactive-di/annotations'
 
@@ -518,7 +518,7 @@ const car: Car = createCar({33});
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {createManagerFactory} from 'reactive-di'
 import {klass, alias} from 'reactive-di/configurations'
 
@@ -530,7 +530,7 @@ class RedCar {
     color: string = 'red';
 }
 
-const configuration: Array<Annotation> = [
+const configuration: Array<ConfigItem> = [
     klass(Car),
     alias(AbstractCar, RedCar)
 ];
@@ -550,7 +550,7 @@ container.get(AbstractCar).color === 'red'
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {createManagerFactory} from 'reactive-di'
 import {klass, value} from 'reactive-di/configurations'
 
@@ -560,7 +560,7 @@ class Car {
     color: string = 'red';
 }
 
-const configuration: Array<Annotation> = [
+const configuration: Array<ConfigItem> = [
     klass(Car, CarColor),
     value(CarColor, 'red')
 ];
@@ -574,7 +574,7 @@ value, не имеет смысла описывать в аннотации, т
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {createManagerFactory} from 'reactive-di'
 import {klass} from 'reactive-di/annotations'
 import {value} from 'reactive-di/configurations'
@@ -590,7 +590,7 @@ class Car {
     }
 }
 
-const configuration: Array<Annotation> = [
+const configuration: Array<ConfigItem> = [
     value(CarColor, 'red')
 ];
 const container = createManagerFactory()(configuration).createContainer()
@@ -607,13 +607,13 @@ container.get(Car).color === 'red'
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {tag, klass} from 'reactive-di/configurations'
 
 class RedCar {
 }
 
-const configuration: Array<Annotation> = [
+const configuration: Array<ConfigItem> = [
     tag(klass(RedCar), 'machine', 'car')
 ];
 ```
@@ -622,7 +622,7 @@ const configuration: Array<Annotation> = [
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {tag, klass} from 'reactive-di/annotations'
 
 @tag('machine', 'car')
@@ -699,7 +699,7 @@ my.test2(1) // no console output
 
 ```js
 // @flow
-import type {Annotation} from 'reactive-di/i/coreInterfaces'
+import type {ConfigItem} from 'reactive-di'
 import {createManagerFactory} from 'reactive-di'
 import {klass} from 'reactive-di/annotations'
 import {value} from 'reactive-di/configurations'
@@ -715,7 +715,7 @@ class Car {
     }
 }
 
-const configuration: Array<Annotation> = [
+const configuration: Array<ConfigItem> = [
     value(CarColor, 'red')
 ];
 const cm = createManagerFactory()(configuration)
@@ -739,11 +739,11 @@ container.get(Car).color === 'blue'
 // @flow
 import type {
     DependencyKey,
-    Annotation,
+    ConfigItem,
     Container,
     Provider,
     Plugin
-} from 'reactive-di/i/coreInterfaces'
+} from 'reactive-di'
 import {
     annotationDriver,
     BaseProvider,
@@ -810,7 +810,7 @@ class Car {
         this.value = value
     }
 }
-const confugration: Array<Annotation> = [
+const confugration: Array<ConfigItem> = [
     myConfig(myValue, 'testValue')
 ];
 
@@ -842,12 +842,12 @@ constructor(token: any, {useClass, useValue, useExisting, useFactory, deps, mult
 })
 ```
 
-В reactive-di для этого есть связка Annotation, Plugin, Provider. Которая позволяет создавать более сложную логику настройки зависимостей на основе их связей.
+В reactive-di для этого есть связка ConfigItem, Plugin, Provider. Которая позволяет создавать более сложную логику настройки зависимостей на основе их связей.
 
 ```js
 // @flow
 
-export type Provider<Ann: Annotation> = {
+export type Provider<Ann: ConfigItem> = {
     kind: any;
     displayName: string;
     tags: Array<Tag>;
@@ -866,7 +866,7 @@ export type Provider<Ann: Annotation> = {
     addDependant(dependant: Provider): void;
 }
 
-export type Plugin<Ann: Annotation> = {
+export type Plugin<Ann: ConfigItem> = {
     kind: any;
     create(annotation: Ann): Provider;
 }
