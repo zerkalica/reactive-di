@@ -5,7 +5,7 @@ Reactive DI
     -	[Структура](#user-content-Структура)
         -	[Dependency](#dependency)
         -	[Configuration](#configuration)
-        -	[ConfigItem](#annotation)
+        -	[ConfigItem](#configitem)
         -	[Provider](#provider)
         -	[Plugin](#plugin)
         -	[Container](#container)
@@ -343,7 +343,8 @@ container.get(Car)
 Описывает класс с зависимостями.
 
 -	klass(Car, Engine, Brakes) - описывает класс Car с зависимостями Engine и Brakes
--	klass(Car, {engine: Engine, brakes: Brakes}) - options-объект, который придет в конструктор Car
+-	klass(Car, {engine: Engine, brakes: Brakes}) - зависимости описываются в options-объекте, который придет в конструктор Car
+-   klass(Car) - Без описания зависимостей, di попытается вытащить их из свойства Car[System.for('design:parameters')]. Который добавляется к любому классу через [babel metadata plugin](https://github.com/zerkalica/babel-plugin-transform-metadata)
 
 Через конфигурацию:
 
