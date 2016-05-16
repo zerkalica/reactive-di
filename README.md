@@ -566,5 +566,8 @@ di.get((_: IValue)) === 'some value'
 
 * [Ninject](https://github.com/ninject/Ninject) best dependency injector, writen in C#.
 * [inversify.io](http://inversify.io/) nice try of reimplementing Ninject in typescript.
-* [angular.io](https://angular.io) ideas of hierarchical injectors.
-* [babel-plugin-angular2-annotations](https://github.com/shuhei/babel-plugin-angular2-annotations) using metadata for resolving dependencies.
+* [angular2](https://angular.io) ideas of hierarchical injectors.
+* [mobx](http://mobxjs.github.io/mobx/) ideas of unobtrusive reactive state.
+* [redux](https://github.com/reactjs/redux) ideas of state modification in reducer.
+* [babel-plugin-angular2-annotations](https://github.com/shuhei/babel-plugin-angular2-annotations) ideas of metadata for resolving dependencies.
+* [babel-plugin-type-metadata](https://github.com/stephanos/babel-plugin-type-metadata) ideas of generating metadata for flowtypes.
