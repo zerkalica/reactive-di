@@ -561,3 +561,10 @@ const providers = createContainerManager([
 const di = providers.createContainer();
 di.get((_: IValue)) === 'some value'
 ```
+
+## Credits
+
+* [Ninject](https://github.com/ninject/Ninject) best dependency injector, writen in C#.
+* [inversify.io](http://inversify.io/) nice try of reimplementing Ninject in typescript.
+* [angular.io](https://angular.io) ideas of hierarchical injectors.
+* [babel-plugin-angular2-annotations](https://github.com/shuhei/babel-plugin-angular2-annotations) using metadata for resolving dependencies.
