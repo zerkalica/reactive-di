@@ -489,7 +489,7 @@ di.get(Engine) !== childDi.get(Engine);
 di.get(Car) === childDi.get(Car)
 ```
 
-### Creating container from preconfigured depenndencies
+### Creating container from preconfigured dependencies
 
 Angular2:
 
