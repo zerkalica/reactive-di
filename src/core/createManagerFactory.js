@@ -54,7 +54,7 @@ class DefaultContainerManager {
     }
 
     createContainer(parent?: Container, initState?: Array<[DependencyKey, any]>): Container {
-        let container: Container;
+        let container: Container
         const self = this
 
         function dispose(): void {
@@ -128,7 +128,7 @@ export default function createManagerFactory(
     pluginsConfig?: Array<CreatePlugin> = defaultPlugins,
     createUpdater?: () => RelationUpdater = createDummyRelationUpdater
 ): CreateContainerManager {
-    let plugins: Map<string, Plugin>;
+    let plugins: Map<string, Plugin>
     const updater = createUpdater()
 
     function createContainerManager(
@@ -141,7 +141,6 @@ export default function createManagerFactory(
         );
     }
     plugins = createPluginsMap(createContainerManager, pluginsConfig)
-
 
     return createContainerManager
 }

@@ -42,7 +42,7 @@ export default class ArgumentHelper {
     invokeComposed(args: Array<any>): any {
         const {deps, middlewares} = this._getArguments()
         const props = deps.concat(args)
-        const result = fastCall(this._target, props);
+        const result = fastCall(this._target, props)
         if (middlewares) {
             const middlewareProps = [result].concat(props)
             for (let i = 0, l = middlewares.length; i < l; i++) {
@@ -67,7 +67,7 @@ export default class ArgumentHelper {
     createObject<O: Object>(): O {
         const {deps, middlewares} = this._getArguments()
         let object: O;
-        object = fastCreateObject(this._target, deps);
+        object = fastCreateObject(this._target, deps)
         if (middlewares) {
             object = createObjectProxy(object, middlewares)
         }

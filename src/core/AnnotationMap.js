@@ -33,11 +33,11 @@ export default class AnnotationMap<Annotation: IAnnotation> {
         const map = this._map
         const driver = this._rdi
         for (let i = 0, l = config.length; i < l; i++) {
-            const conf: ConfigItem = config[i];
+            const conf: ConfigItem = config[i]
 
-            let raw: ?RawAnnotation;
-            let key: ?DependencyKey;
-            let target: ?Dependency;
+            let raw: ?RawAnnotation
+            let key: ?DependencyKey
+            let target: ?Dependency
 
             if (Array.isArray(conf)) {
                 key = conf[0]
@@ -60,7 +60,7 @@ export default class AnnotationMap<Annotation: IAnnotation> {
 
             key = key || (target: DependencyKey)
 
-            const oldAnnotation: ?Annotation = map.get(key);
+            const oldAnnotation: ?Annotation = map.get(key)
             if (oldAnnotation) {
                 throw new Error(`DependencyKey already registered, current: \
     ${oldAnnotation.kind}@${getFunctionName(oldAnnotation.target)}, \
@@ -74,7 +74,7 @@ export default class AnnotationMap<Annotation: IAnnotation> {
     _createAnotation<R: RawAnnotation>(target: Dependency, raw: R): Annotation {
         const deps: Array<DepItem> = raw.deps && raw.deps.length
             ? raw.deps
-            : (this._paramtypes.get(target) || []);
+            : (this._paramtypes.get(target) || [])
 
         const annotation: Annotation = {
             ...(raw: any),
@@ -83,7 +83,7 @@ export default class AnnotationMap<Annotation: IAnnotation> {
             target,
             deps,
             tags: raw.tags || []
-        };
+        }
 
         return annotation
     }
@@ -92,16 +92,17 @@ export default class AnnotationMap<Annotation: IAnnotation> {
         if (typeof key !== 'function') {
             throw new Error(`Can't get annotation fron non-function`)
         }
-        let annotation: ?Annotation;
-        const raw: ?RawAnnotation = this._rdi.get(key);
+        let annotation: ?Annotation
+        const raw: ?RawAnnotation = this._rdi.get(key)
         if (raw) {
             annotation = this._createAnotation(key, raw)
             this._map.set(key, annotation)
         }
+
         return annotation
     }
 
     get(key: DependencyKey): ?Annotation {
-        return this._map.get(key);
+        return this._map.get(key)
     }
 }

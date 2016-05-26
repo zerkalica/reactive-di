@@ -22,7 +22,7 @@ function disposeResolver(provider: Provider): void {
     provider.isDisposed = true // eslint-disable-line
 }
 
-export default class DefaultContainer {
+export default class DiContainer {
     _parent: ?Container;
 
     _providerCache: Map<DependencyKey, Provider>;
@@ -57,8 +57,8 @@ export default class DefaultContainer {
 
     _getMiddlewares(target: DependencyKey, tags: Array<Tag>): ?Array<Provider> {
         const {_middlewares: middlewares} = this
-        const ids: Array<DependencyKey|Tag> = [target].concat(tags);
-        const mdls: Array<Provider> = [];
+        const ids: Array<DependencyKey|Tag> = [target].concat(tags)
+        const mdls: Array<Provider> = []
         for (let i = 0, l = ids.length; i < l; i++) {
             const depMiddlewares: ?Array<DependencyKey> = middlewares.get(ids[i]);
             if (depMiddlewares) {
@@ -78,14 +78,14 @@ export default class DefaultContainer {
         deps: Array<Provider>;
         depNames: ?Array<string>;
     } {
-        let depNames: ?Array<string> = null;
-        const resolvedDeps: Array<Provider> = new Array(deps.length);
-        const l: number = deps.length;
+        let depNames: ?Array<string> = null
+        const resolvedDeps: Array<Provider> = new Array(deps.length)
+        const l: number = deps.length
         if (
             l === 1
             && typeof deps[0] === 'object'
         ) {
-            const argsObject: ArgsObject = (deps[0]: any);
+            const argsObject: ArgsObject = (deps[0]: any)
             const keys = Object.keys(argsObject)
             const k = keys.length
             resolvedDeps.length = k
@@ -98,7 +98,7 @@ export default class DefaultContainer {
         } else {
             for (let i = 0; i < l; i++) {
                 const dep: Provider =
-                    this.getProvider(((deps: any): Array<DependencyKey>)[i]);
+                    this.getProvider(((deps: any): Array<DependencyKey>)[i])
                 resolvedDeps[i] = dep
             }
         }
@@ -167,7 +167,7 @@ export default class DefaultContainer {
     }
 
     getProvider(key: DependencyKey): Provider {
-        let provider: ?Provider = this._providerCache.get(key);
+        let provider: ?Provider = this._providerCache.get(key)
 
         if (provider) {
             if (this._updater.length) {
@@ -177,7 +177,7 @@ export default class DefaultContainer {
             return provider
         }
 
-        let annotation: ?Annotation = this._annotations.get(key);
+        let annotation: ?Annotation = this._annotations.get(key)
         if (!annotation) {
             provider = this.getParentProvider(key)
             if (provider) {
@@ -192,7 +192,7 @@ export default class DefaultContainer {
             }
         }
 
-        const plugin: ?Plugin = this._plugins.get(annotation.kind);
+        const plugin: ?Plugin = this._plugins.get(annotation.kind)
         if (!plugin) {
             throw new Error(
                 `Provider not found for annotation ${getFunctionName(annotation.target)}`
