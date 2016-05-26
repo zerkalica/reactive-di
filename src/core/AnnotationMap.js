@@ -88,24 +88,20 @@ export default class AnnotationMap<Annotation: IAnnotation> {
         return annotation
     }
 
-    has(target: DependencyKey): boolean {
-        return this._map.has(target) && (
-            typeof target === 'function'
-                ? this._rdi.has(target)
-                : false
-        )
+    getFromDriver(key: DependencyKey): ?Annotation {
+        if (typeof key !== 'function') {
+            throw new Error(`Can't get annotation fron non-function`)
+        }
+        let annotation: ?Annotation;
+        const raw: ?RawAnnotation = this._rdi.get(key);
+        if (raw) {
+            annotation = this._createAnotation(key, raw)
+            this._map.set(key, annotation)
+        }
+        return annotation
     }
 
     get(key: DependencyKey): ?Annotation {
-        let annotation: ?Annotation = this._map.get(key);
-        if (!annotation && typeof key === 'function') {
-            const raw: ?RawAnnotation = this._rdi.get(key);
-            if (raw) {
-                annotation = this._createAnotation(key, raw)
-                this._map.set(key, annotation)
-            }
-        }
-
-        return annotation
+        return this._map.get(key);
     }
 }

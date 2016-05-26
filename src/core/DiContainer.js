@@ -9,9 +9,9 @@ import type {
     ArgsObject,
     Container,
     RelationUpdater,
-    Provider
+    Provider,
+    AnnotationMap
 } from 'reactive-di'
-import type AnnotationMap from 'reactive-di/core/AnnotationMap'
 
 import ArgumentHelperImpl from 'reactive-di/core/ArgumentHelper'
 import getFunctionName from 'reactive-di/utils/getFunctionName'
@@ -23,7 +23,7 @@ function disposeResolver(provider: Provider): void {
 }
 
 export default class DefaultContainer {
-    parent: ?Container;
+    _parent: ?Container;
 
     _providerCache: Map<DependencyKey, Provider>;
     _privateCache: Map<DependencyKey, Provider>;
@@ -50,7 +50,7 @@ export default class DefaultContainer {
         this._updater = updater
         this._plugins = plugins
         this._annotations = annotations
-        this.parent = parent || null
+        this._parent = parent || null
         this._privateCache = new SimpleMap()
         this._providerCache = new SimpleMap()
     }
@@ -153,8 +153,17 @@ export default class DefaultContainer {
         this._updater.begin(provider)
     }
 
-    hasProvider(key: DependencyKey): boolean {
-        return this._annotations.has(key)
+    getParentProvider(key: DependencyKey): ?Provider {
+        let di: Container = this
+        let annotation: ?Annotation = null
+        while (!annotation && di._parent) {
+            di = di._parent
+            annotation = di._annotations.get(key)
+        }
+
+        return annotation
+            ? di.getProvider(key)
+            : null
     }
 
     getProvider(key: DependencyKey): Provider {
@@ -168,16 +177,19 @@ export default class DefaultContainer {
             return provider
         }
 
-        const annotation: ?Annotation = this._annotations.get(key);
+        let annotation: ?Annotation = this._annotations.get(key);
         if (!annotation) {
-            if (!this.parent) {
+            provider = this.getParentProvider(key)
+            if (provider) {
+                this._providerCache.set(key, provider)
+                return provider
+            }
+            annotation = this._annotations.getFromDriver(key)
+            if (!annotation) {
                 throw new Error(
                     `Can't find annotation for ${getFunctionName(key)}`
                 )
             }
-            provider = this.parent.getProvider(key)
-            this._providerCache.set(key, provider)
-            return provider
         }
 
         const plugin: ?Plugin = this._plugins.get(annotation.kind);

@@ -117,12 +117,20 @@ declare module 'reactive-di' {
         createObject<O: Object>(): O;
     }
 
+    declare interface AnnotationMap<A: Annotation> {
+        get(key: DependencyKey): ?A;
+        getFromDriver(key: DependencyKey): ?A;
+        set(config: Array<ConfigItem>): void;
+    }
+
     declare interface Container<P: Provider> {
-        parent: ?Container;
+        _parent: ?Container;
+        _annotations: AnnotationMap;
+
         createArgumentHelper(annotation: Annotation): ArgumentHelper;
         beginInitialize(annotatedDep: DependencyKey, provider: P): void;
         get(annotatedDep: DependencyKey): any;
-        hasProvider(annotatedDep: DependencyKey): boolean;
+        getParentProvider(key: DependencyKey): ?Provider;
         getProvider(annotatedDep: DependencyKey): P;
         delete(annotatedDep: DependencyKey): void;
         dispose(): void;
