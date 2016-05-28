@@ -3,6 +3,7 @@ import type {
     ComposeAnnotation,
     DepFn,
     Container,
+    Provider,
     ArgumentHelper,
     PassiveProvider,
     Plugin
@@ -23,6 +24,8 @@ class ComposeProvider<V> extends BaseProvider {
             return helper.invokeComposed(args)
         }
     }
+
+    addDependency(dependency: Provider): void {} // eslint-disable-line
 }
 
 class ComposePlugin {
