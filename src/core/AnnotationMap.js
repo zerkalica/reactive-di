@@ -33,7 +33,7 @@ export default class AnnotationMap<Annotation: IAnnotation> {
         const map = this._map
         const driver = this._rdi
         for (let i = 0, l = config.length; i < l; i++) {
-            const conf: ConfigItem = config[i]
+            let conf: ConfigItem = config[i]
 
             let raw: ?RawAnnotation
             let key: ?DependencyKey
@@ -41,9 +41,12 @@ export default class AnnotationMap<Annotation: IAnnotation> {
 
             if (Array.isArray(conf)) {
                 key = conf[0]
-                raw = conf[1]
-            } else if (typeof conf === 'object') {
+                conf = conf[1]
+            }
+
+            if (typeof conf === 'object') {
                 raw = conf
+                target = raw.target
             } else if (typeof conf === 'function') {
                 raw = driver.get(conf)
                 target = conf
@@ -52,8 +55,6 @@ export default class AnnotationMap<Annotation: IAnnotation> {
             if (!raw) {
                 throw new Error(`Can't find annotation: ${conf}`)
             }
-
-            target = target || raw.target
             if (!target) {
                 throw new Error(`Can't find annotation target: ${raw.kind}`)
             }
