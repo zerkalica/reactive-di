@@ -91,7 +91,7 @@ export default class AnnotationMap<Annotation: IAnnotation> {
 
     getFromDriver(key: DependencyKey): ?Annotation {
         if (typeof key !== 'function') {
-            throw new Error(`Can't get annotation fron non-function`)
+            throw new Error(`Can't get annotation fron non-function: ${key}`)
         }
         let annotation: ?Annotation
         const raw: ?RawAnnotation = this._rdi.get(key)
