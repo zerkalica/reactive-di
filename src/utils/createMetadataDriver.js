@@ -5,10 +5,10 @@ import type {
     MetadataDriver
 } from 'reactive-di'
 
-const isNativeReflect: boolean =
-    typeof Reflect !== 'undefined'
-    && typeof Reflect.defineMetadata === 'function'
-    && typeof (Reflect: any).getOwnMetadata === 'function';
+const isNativeReflect: boolean = false
+    // typeof Reflect !== 'undefined'
+    // && typeof Reflect.defineMetadata === 'function'
+    // && typeof (Reflect: any).getOwnMetadata === 'function';
 
 const isSymbolSupported: boolean =
     typeof Symbol !== 'undefined'

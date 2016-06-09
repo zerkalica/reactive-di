@@ -33,7 +33,7 @@ export default class DiContainer {
     _updater: RelationUpdater;
     _plugins: Map<string, Plugin>;
     _annotations: AnnotationMap;
-    _initState: Map<DependencyKey, any>;
+    initState: Map<string, any>;
 
     constructor(
         dispose: () => void,
@@ -42,10 +42,10 @@ export default class DiContainer {
         plugins: Map<string, Plugin>,
         annotations: AnnotationMap,
         parent: ?Container,
-        initState: Map<DependencyKey, any>
+        initState: Map<string, any>
     ) {
         this._dispose = dispose
-        this._initState = initState
+        this.initState = initState
         this._middlewares = middlewares
         this._updater = updater
         this._plugins = plugins
@@ -177,19 +177,16 @@ export default class DiContainer {
             return provider
         }
 
-        let annotation: ?Annotation = this._annotations.get(key)
+        const annotation: ?Annotation = this._annotations.get(key)
         if (!annotation) {
             provider = this.getParentProvider(key)
             if (provider) {
                 this._providerCache.set(key, provider)
                 return provider
             }
-            annotation = this._annotations.getFromDriver(key)
-            if (!annotation) {
-                throw new Error(
-                    `Can't find annotation for ${getFunctionName(key)}`
-                )
-            }
+            throw new Error(
+                `Can't find annotation for ${getFunctionName(key)}`
+            )
         }
 
         const plugin: ?Plugin = this._plugins.get(annotation.kind)
@@ -203,8 +200,7 @@ export default class DiContainer {
 
         provider = plugin.createProvider(
             annotation,
-            this,
-            this._initState.get(key)
+            this
         )
 
         if (l !== updater.length) {

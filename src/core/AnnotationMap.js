@@ -67,15 +67,15 @@ export default class AnnotationMap<Annotation: IAnnotation> {
     ${oldAnnotation.kind}@${getFunctionName(oldAnnotation.target)}, \
     new: ${raw.kind}@${getFunctionName(target)}`)
             }
-
             map.set(key, this._createAnotation(target, raw))
         }
     }
 
     _createAnotation<R: RawAnnotation>(target: Dependency, raw: R): Annotation {
-        const deps: Array<DepItem> = raw.deps && raw.deps.length
-            ? raw.deps
-            : (this._paramtypes.get(target) || [])
+        let deps: Array<DepItem> = raw.deps || []
+        if (!deps.length && typeof target !== 'string') {
+            deps = this._paramtypes.get(target) || []
+        }
 
         const annotation: Annotation = {
             ...(raw: any),

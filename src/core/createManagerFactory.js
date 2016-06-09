@@ -53,7 +53,7 @@ class DefaultContainerManager {
         return this
     }
 
-    createContainer(parent?: Container, initState?: Array<[DependencyKey, any]>): Container {
+    createContainer(parent?: Container, initState?: Array<[string, mixed]>): Container {
         let container: Container
         const self = this
 

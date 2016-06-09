@@ -37,13 +37,13 @@ describe('DiContainerAnnotationTest', () => {
         const myFn = sinon.spy(_myFn)
         factory()(myFn)
 
-        const newDi: Container = createContainer();
+        const newDi: Container = createContainer([myFn]);
         const result = newDi.get(myFn)
 
         assert(result === 123)
     })
 
-    it('should resolve class via annotations without registration', () => {
+    it('should could not resolve class via annotations without registration', () => {
         class A {}
         klass()(A)
         inject([], A)
@@ -58,9 +58,9 @@ describe('DiContainerAnnotationTest', () => {
         inject([A], B)
 
         const newDi: Container = createContainer();
-        const result = newDi.get(B)
-        assert(result instanceof B)
-        assert(result.a instanceof A)
+        assert.throws(() => {
+            newDi.get(B)
+        })
     })
 
     it('should resolve class via annotations with registration', () => {

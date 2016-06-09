@@ -126,7 +126,7 @@ declare module 'reactive-di' {
     declare interface Container<P: Provider> {
         _parent: ?Container;
         _annotations: AnnotationMap;
-
+        initState: Map<string, mixed>;
         createArgumentHelper(annotation: Annotation): ArgumentHelper;
         beginInitialize(annotatedDep: DependencyKey, provider: P): void;
         get(annotatedDep: DependencyKey): any;
@@ -140,7 +140,7 @@ declare module 'reactive-di' {
         setMiddlewares(
             raw?: Array<[DependencyKey, Array<Tag|DependencyKey>]>
         ): ContainerManager;
-        createContainer(parent?: Container, state?: Array<[DependencyKey, any]>): Container;
+        createContainer(parent?: Container, state?: Array<[string, mixed]>): Container;
     }
 
     declare type CreateContainerManager = (
