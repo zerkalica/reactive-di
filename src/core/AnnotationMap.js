@@ -38,21 +38,34 @@ export default class AnnotationMap<Annotation: IAnnotation> {
             let raw: ?RawAnnotation
             let key: ?DependencyKey
             let target: ?Dependency
+            let def: ?RawAnnotation|Dependency;
             if (Array.isArray(conf)) {
                 key = conf[0]
-                raw = conf[1]
+                def = conf[1]
             } else {
-                key = (conf: any)
-                raw = driver.get(conf)
+                key = conf
+                def = conf
             }
+            if (typeof def === 'function') {
+                raw = driver.get(def)
+                target = raw.target || def
+            } else {
+                raw = def
+                target = raw.target || (typeof key === 'function' ? key : null)
+            }
+            if (target && typeof target !== 'function') {
+                throw new Error(`Need function or object, given ${def}, ${getFunctionName(raw)}`)
+            }
+
             if (!raw) {
                 throw new Error(`Can't find annotation: ${conf}`)
+            }
+            if (!raw.kind) {
+                throw new Error(`Can't find annotation type: ${getFunctionName(raw)}`)
             }
             if (!key) {
                 throw new Error(`Can't find annotation target: ${raw.kind}`)
             }
-            target = raw.target || key
-
             const oldAnnotation: ?Annotation = map.get(key)
             if (oldAnnotation) {
                 throw new Error(`DependencyKey already registered, current: \
@@ -65,7 +78,7 @@ export default class AnnotationMap<Annotation: IAnnotation> {
 
     _createAnotation<R: RawAnnotation>(target: Dependency, raw: R): Annotation {
         let deps: Array<DepItem> = raw.deps || []
-        if (!deps.length && typeof target === 'function' || typeof target === 'object') {
+        if (!deps.length && target) {
             deps = this._paramtypes.get(target) || []
         }
 
