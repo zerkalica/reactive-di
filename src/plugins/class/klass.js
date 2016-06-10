@@ -1,7 +1,6 @@
 /* @flow */
 
 import type {
-    Dependency,
     DepItem,
     RawAnnotation
 } from 'reactive-di'
@@ -10,10 +9,9 @@ import {
     rdi
 } from 'reactive-di/core/annotationDriver'
 
-export function klass(target: Dependency, ...deps: Array<DepItem>): RawAnnotation {
+export function klass(...deps: Array<DepItem>): RawAnnotation {
     return {
         kind: 'klass',
-        target,
         deps
     }
 }

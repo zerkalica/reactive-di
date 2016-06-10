@@ -9,10 +9,9 @@ import {
     rdi
 } from 'reactive-di/core/annotationDriver'
 
-export function factory(target: Function, ...deps: Array<DepItem>): RawAnnotation {
+export function factory(...deps: Array<DepItem>): RawAnnotation {
     return {
         kind: 'factory',
-        target,
         deps
     }
 }

@@ -9,10 +9,9 @@ import {
     rdi
 } from 'reactive-di/core/annotationDriver'
 
-export function compose(target: Function, ...deps: Array<DepItem>): RawAnnotation {
+export function compose(...deps: Array<DepItem>): RawAnnotation {
     return {
         kind: 'compose',
-        target,
         deps
     }
 }

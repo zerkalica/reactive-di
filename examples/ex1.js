@@ -58,8 +58,8 @@ const createContainerManager: CreateContainerManager
     = createManagerFactory(defaultPlugins, createDummyRelationUpdater);
 
 const cm: ContainerManager = createContainerManager([
-    value(DefaultWidth, 22),
-    alias(AbstractEngine, ConcreteEngine)
+    [DefaultWidth, value(22)],
+    [AbstractEngine, alias(ConcreteEngine)]
 ]);
 
 const di: Container = cm.createContainer();

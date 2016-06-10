@@ -99,8 +99,8 @@ describe('DiContainerAnnotationTest', () => {
         inject([A], B)
 
         const newDi: Container = createContainer([
-            klassC(A),
-            klassC(B)
+            [A, klassC()],
+            [B, klassC()]
         ]);
         const result = newDi.get(B)
         assert(result instanceof B)

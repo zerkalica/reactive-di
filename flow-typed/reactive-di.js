@@ -23,13 +23,11 @@ declare module 'reactive-di' {
 
     declare interface RawAnnotation {
         kind: any;
-        target?: Dependency;
         tags?: Array<Tag>;
         deps?: Array<DepItem>;
     }
 
     declare type ConfigItem =
-        RawAnnotation
         | [DependencyKey, RawAnnotation]
         | Dependency;
 

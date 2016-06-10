@@ -9,10 +9,9 @@ import {
     rdi
 } from 'reactive-di/core/annotationDriver'
 
-export function alias(target: Dependency, aliasTarget: DependencyKey): RawAnnotation {
+export function alias(aliasTarget: DependencyKey): RawAnnotation {
     return {
         kind: 'alias',
-        target,
         alias: aliasTarget
     }
 }

@@ -19,12 +19,12 @@ describe('getFunctionName', () => {
 
     it('should return empty name for empty object', () => {
         const b = {}
-        assert(getFunctionName(b) === '')
+        assert(getFunctionName(b) === 'Object {  }')
     })
 
     it('should return name, based on props for object', () => {
         const b = {aa: 123, bb: 1}
-        assert(getFunctionName(b) === 'aa,bb')
+        assert(getFunctionName(b) === 'Object { aa: 123, bb: 1 }')
     })
 
     it('should return empty function name for anonymous functions', () => {

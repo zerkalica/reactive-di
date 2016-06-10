@@ -76,13 +76,13 @@ const createContainerManager: CreateContainerManager = createManagerFactory(
 );
 
 const appManager: ContainerManager = createContainerManager([
-    factory(NotFoundController),
-    klass(Logger)
+    [NotFoundController, factory()],
+    [Logger, klass()]
 ]);
 
 const requestManager: ContainerManager = createContainerManager([
-    klass(Request),
-    factory(AppIndexController, Logger)
+    [Request, klass()],
+    [AppIndexController, factory(Logger)]
 ]);
 
 const appDi: Container = appManager.createContainer();

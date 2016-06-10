@@ -8,10 +8,9 @@ import {
     rdi
 } from 'reactive-di/core/annotationDriver'
 
-export function value(target: Dependency, val?: any): RawAnnotation {
+export function value(val?: any): RawAnnotation {
     return {
         kind: 'value',
-        target,
         value: val
     }
 }

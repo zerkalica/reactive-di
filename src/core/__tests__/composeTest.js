@@ -27,7 +27,7 @@ describe('DiContainerComposeTest', () => {
         const myFn = sinon.spy(_myFn)
 
         const newDi: Container = createContainer([
-            factory(myFn)
+            [myFn, factory()]
         ]);
 
         const result = newDi.get(myFn)
@@ -45,8 +45,8 @@ describe('DiContainerComposeTest', () => {
         const myFn = sinon.spy(_myFn)
 
         const newDi: Container = createContainer([
-            value(MyValue, 2),
-            factory(myFn, MyValue)
+            [MyValue, value(2)],
+            [myFn, factory(MyValue)]
         ]);
 
         const result = newDi.get(myFn)
@@ -63,8 +63,8 @@ describe('DiContainerComposeTest', () => {
         const myFn = sinon.spy(_myFn)
 
         const newDi: Container = createContainer([
-            value(MyValue, {a: 1, b: 2}),
-            factory(myFn, MyValue)
+            [MyValue, value({a: 1, b: 2})],
+            [myFn, factory(MyValue)]
         ]);
 
         const result = newDi.get(myFn)
@@ -81,8 +81,8 @@ describe('DiContainerComposeTest', () => {
             }
         }
         const newDi: Container = createContainer([
-            value(MyValue, '123'),
-            klass(MyClass, MyValue)
+            [MyValue, value('123')],
+            [MyClass, klass(MyValue)]
         ]);
         const result = newDi.get(MyClass)
         assert(result instanceof MyClass)
@@ -98,8 +98,8 @@ describe('DiContainerComposeTest', () => {
         const myFn = sinon.spy(_myFn)
 
         const newDi: Container = createContainer([
-            value(MyValue, 2),
-            compose(myFn, MyValue)
+            [MyValue, value(2)],
+            [myFn, compose(MyValue)]
         ]);
 
         const result = newDi.get(myFn)

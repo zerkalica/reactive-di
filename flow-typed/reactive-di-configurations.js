@@ -9,10 +9,10 @@ import type {
 } from 'reactive-di'
 
 declare module 'reactive-di/configurations' {
-    declare function alias(target: Dependency, aliasTarget: DependencyKey): RawAnnotation;
-    declare function klass(arget: Dependency, ...deps: Array<DepItem>): RawAnnotation;
-    declare function compose(target: Function, ...deps: Array<DepItem>): RawAnnotation;
-    declare function factory(target: Function, ...deps: Array<DepItem>): RawAnnotation;
+    declare function alias(aliasTarget: DependencyKey): RawAnnotation;
+    declare function klass(...deps: Array<DepItem>): RawAnnotation;
+    declare function compose(...deps: Array<DepItem>): RawAnnotation;
+    declare function factory(...deps: Array<DepItem>): RawAnnotation;
     declare function tag(annotation: RawAnnotation, ...tags: Array<Tag>): RawAnnotation;
-    declare function value(target: Dependency, val?: any): RawAnnotation;
+    declare function value(val?: any): RawAnnotation;
 }

@@ -22,7 +22,7 @@ describe('DiContainerCacheTest', () => {
         const myFn = sinon.spy(_myFn)
 
         const newDi: Container = createContainer([
-            factory(myFn)
+            [myFn, factory()]
         ])
         newDi.get(myFn)
         newDi.get(myFn)
@@ -33,7 +33,7 @@ describe('DiContainerCacheTest', () => {
     it('should cache resolvers', () => {
         const A = () => 1;
         const newDi: Container = createContainer([
-            factory(A)
+            [A, factory()]
         ])
         assert(newDi.getProvider(A) === newDi.getProvider(A))
     })

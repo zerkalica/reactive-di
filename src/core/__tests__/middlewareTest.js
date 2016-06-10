@@ -38,9 +38,9 @@ describe('DiContainerMiddlewareTest', () => {
         const myFnMiddleware = sinon.spy(_myFnMiddleware)
 
         const newDi: Container = createContainer([
-            value(MyValue, 2),
-            compose(myFn, MyValue),
-            compose(myFnMiddleware)
+            [MyValue, value(2)],
+            [myFn, compose(MyValue)],
+            [myFnMiddleware, compose()]
         ], [
             [myFnMiddleware, [myFn]]
         ])
@@ -73,8 +73,8 @@ describe('DiContainerMiddlewareTest', () => {
         }
 
         const newDi: Container = createContainer([
-            klass(MyClass),
-            klass(MyClassMiddleware)
+            [MyClass, klass()],
+            [MyClassMiddleware, klass()]
         ], [
             [MyClassMiddleware, [MyClass]]
         ])
@@ -107,9 +107,9 @@ describe('DiContainerMiddlewareTest', () => {
         const myFnMiddleware = sinon.spy(_myFnMiddleware)
 
         const newDi: Container = createContainer([
-            value(MyValue, 2),
-            tag(compose(myFn, MyValue), 'mytag'),
-            compose(myFnMiddleware)
+            [MyValue, value(2)],
+            [myFn, tag(compose(MyValue), 'mytag')],
+            [myFnMiddleware, compose()]
         ], [
             [myFnMiddleware, ['mytag']]
         ])
