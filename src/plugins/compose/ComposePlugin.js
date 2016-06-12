@@ -6,7 +6,7 @@ import type {
     Provider,
     ArgumentHelper,
     PassiveProvider,
-    Plugin
+    CreateContainerManager
 } from 'reactive-di'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
@@ -28,14 +28,11 @@ class ComposeProvider<V> extends BaseProvider {
     addDependency(dependency: Provider): void {} // eslint-disable-line
 }
 
-class ComposePlugin {
+export default class ComposePlugin {
     kind: 'compose' = 'compose';
+    createContainerManager: CreateContainerManager;
 
     createProvider(annotation: ComposeAnnotation, container: Container): PassiveProvider {
         return new ComposeProvider(annotation, container)
     }
-}
-
-export default function createComposePlugin(): Plugin {
-    return new ComposePlugin()
 }

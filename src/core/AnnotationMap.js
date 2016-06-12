@@ -12,11 +12,13 @@ import type {
 
 import getFunctionName from 'reactive-di/utils/getFunctionName'
 import SimpleMap from 'reactive-di/utils/SimpleMap'
+import createIdCreator from 'reactive-di/utils/createIdCreator'
 
 export default class AnnotationMap<Annotation: IAnnotation> {
     _map: Map<DependencyKey, Annotation>;
     _rdi: MetadataDriver<RawAnnotation>;
     _paramtypes: MetadataDriver<Array<DepItem>>;
+    _createId: () => string;
 
     constructor(
         config: Array<ConfigItem>,
@@ -25,6 +27,7 @@ export default class AnnotationMap<Annotation: IAnnotation> {
     ) {
         this._rdi = rdi
         this._paramtypes = paramtypes
+        this._createId = createIdCreator()
         this._map = new SimpleMap()
         this.set(config)
     }
@@ -81,11 +84,12 @@ export default class AnnotationMap<Annotation: IAnnotation> {
         if (!deps.length && target) {
             deps = this._paramtypes.get(target) || []
         }
-
+        const dn = getFunctionName(target)
         const annotation: Annotation = {
             ...(raw: any),
+            key: (raw.key || dn) + '_' + this._createId(),
             kind: raw.kind,
-            displayName: raw.kind + '@' + getFunctionName(target),
+            displayName: raw.kind + '@' + dn,
             target,
             deps,
             tags: raw.tags || []

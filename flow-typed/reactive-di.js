@@ -154,14 +154,14 @@ declare module 'reactive-di' {
 
     declare interface Plugin<State, A: Annotation, P: Provider> {
         kind: any;
+        createContainerManager: CreateContainerManager;
+
         createProvider(
             annotation: A,
             container: Container,
             initialState: ?State
         ): P;
     }
-
-    declare type CreatePlugin = (cm: CreateContainerManager) => Plugin;
 
     declare interface AliasAnnotation extends Annotation {
         kind: 'alias';
@@ -195,11 +195,11 @@ declare module 'reactive-di' {
     declare class SimpleSet<V> extends Set<V> {}
 
     declare function createManagerFactory(
-        pluginsConfig?: Array<CreatePlugin>,
+        pluginsConfig?: Array<Plugin>,
         createUpdater?: () => RelationUpdater
     ): CreateContainerManager;
 
-    declare var defaultPlugins: Array<Plugin>;
+    declare var defaultPlugins: Plugin[]
 
     declare class BaseProvider<P: Provider> {
         displayName: string;

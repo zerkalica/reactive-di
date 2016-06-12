@@ -3,16 +3,14 @@ import type {
     AliasAnnotation,
     Container,
     Provider,
-    Plugin
+    CreateContainerManager
 } from 'reactive-di'
 
-class AliasPlugin {
+export default class AliasPlugin {
     kind: 'alias' = 'alias';
+    createContainerManager: CreateContainerManager;
+
     createProvider(annotation: AliasAnnotation, container: Container): Provider {
         return container.getProvider(annotation.alias)
     }
-}
-
-export default function createAliasPlugin(): Plugin {
-    return new AliasPlugin()
 }

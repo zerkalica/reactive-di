@@ -5,7 +5,6 @@ import type {
     DependencyKey,
     ConfigItem,
     Plugin,
-    CreatePlugin,
     CreateContainerManager,
     RelationUpdater,
     Container,
@@ -21,7 +20,6 @@ import {
 } from 'reactive-di/core/annotationDriver'
 import createPluginsMap from 'reactive-di/utils/createPluginsMap'
 import DiContainer from 'reactive-di/core/DiContainer'
-import defaultPlugins from 'reactive-di/plugins/defaultPlugins'
 import createDummyRelationUpdater from 'reactive-di/core/updaters/createDummyRelationUpdater'
 
 // implements ContainerManager, ContainerHelper
@@ -125,7 +123,7 @@ class DefaultContainerManager {
  * ```
  */
 export default function createManagerFactory(
-    pluginsConfig?: Array<CreatePlugin> = defaultPlugins,
+    pluginsConfig: Array<Plugin>,
     createUpdater?: () => RelationUpdater = createDummyRelationUpdater
 ): CreateContainerManager {
     let plugins: Map<string, Plugin>

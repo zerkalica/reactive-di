@@ -1,6 +1,6 @@
 /* @flow */
 import type {
-    CreatePlugin
+    Plugin
 } from 'reactive-di'
 
 import ComposePlugin from 'reactive-di/plugins/compose/ComposePlugin'
@@ -9,12 +9,12 @@ import ClassPlugin from 'reactive-di/plugins/class/ClassPlugin'
 import ValuePlugin from 'reactive-di/plugins/value/ValuePlugin'
 import AliasPlugin from 'reactive-di/plugins/alias/AliasPlugin'
 
-const plugins: Array<CreatePlugin> = [
-    ComposePlugin,
-    FactoryPlugin,
-    ClassPlugin,
-    ValuePlugin,
-    AliasPlugin
+const plugins: Array<Plugin> = [
+    new ComposePlugin(),
+    new FactoryPlugin(),
+    new ClassPlugin(),
+    new ValuePlugin(),
+    new AliasPlugin()
 ];
 
 export default plugins

@@ -4,7 +4,7 @@ import type {
     ArgumentHelper,
     PassiveProvider,
     Container,
-    Plugin
+    CreateContainerManager
 } from 'reactive-di'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
@@ -25,14 +25,11 @@ class ClassProvider<V> extends BaseProvider {
     }
 }
 
-class ClassPlugin {
+export default class ClassPlugin {
     kind: 'klass' = 'klass';
+    createContainerManager: CreateContainerManager;
 
     createProvider(annotation: ClassAnnotation, container: Container): PassiveProvider {
         return new ClassProvider(annotation, container)
     }
-}
-
-export default function createClassPlugin(): Plugin {
-    return new ClassPlugin()
 }

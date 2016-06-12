@@ -1,9 +1,9 @@
 /* @flow */
 import type {
     ValueAnnotation,
-    Plugin,
     Container,
-    PassiveProvider
+    PassiveProvider,
+    CreateContainerManager
 } from 'reactive-di'
 
 import BaseProvider from 'reactive-di/core/BaseProvider'
@@ -22,14 +22,11 @@ class ValueProvider<V> extends BaseProvider {
     }
 }
 
-class ValuePlugin {
+export default class ValuePlugin {
     kind: 'value' = 'value';
+    createContainerManager: CreateContainerManager;
 
     createProvider(annotation: ValueAnnotation, container: Container, value: any): PassiveProvider {
         return new ValueProvider(annotation, container, value)
     }
-}
-
-export default function createValuePlugin(): Plugin {
-    return new ValuePlugin()
 }
