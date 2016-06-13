@@ -23,7 +23,7 @@ describe('DiContainerCacheTest', () => {
 
         const newDi: Container = createContainer([
             [myFn, factory()]
-        ])
+        ]).createContainer()
         newDi.get(myFn)
         newDi.get(myFn)
 
@@ -34,7 +34,7 @@ describe('DiContainerCacheTest', () => {
         const A = () => 1;
         const newDi: Container = createContainer([
             [A, factory()]
-        ])
+        ]).createContainer()
         assert(newDi.getProvider(A) === newDi.getProvider(A))
     })
 })

@@ -6,8 +6,7 @@ import url from 'url'
 
 import {
     createManagerFactory,
-    defaultPlugins,
-    createDummyRelationUpdater
+    defaultPlugins
 } from 'reactive-di/index'
 
 import type {
@@ -70,10 +69,7 @@ const controllerMap = {
     AppIndexController
 }
 
-const createContainerManager: CreateContainerManager = createManagerFactory(
-    defaultPlugins,
-    createDummyRelationUpdater
-);
+const createContainerManager: CreateContainerManager = createManagerFactory(defaultPlugins)
 
 const appManager: ContainerManager = createContainerManager([
     [NotFoundController, factory()],

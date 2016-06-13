@@ -1,11 +1,10 @@
 /* @flow */
 import type {
-    Provider,
-    RelationUpdater
+    Provider
 } from 'reactive-di'
 import SimpleSet from 'reactive-di/utils/SimpleSet'
 
-class HotRelationUpdater {
+export default class HotRelationUpdater {
     _dependants: Array<Set<Provider>> = [];
     length: number = 0;
 
@@ -44,8 +43,4 @@ class HotRelationUpdater {
             }
         }
     }
-}
-
-export default function createHotRelationUpdater(): RelationUpdater {
-    return new HotRelationUpdater()
 }

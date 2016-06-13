@@ -28,7 +28,7 @@ describe('DiContainerComposeTest', () => {
 
         const newDi: Container = createContainer([
             [myFn, factory()]
-        ]);
+        ]).createContainer()
 
         const result = newDi.get(myFn)
 
@@ -47,7 +47,7 @@ describe('DiContainerComposeTest', () => {
         const newDi: Container = createContainer([
             [MyValue, value(2)],
             [myFn, factory(MyValue)]
-        ]);
+        ]).createContainer()
 
         const result = newDi.get(myFn)
         assert(myFn.calledOnce)
@@ -65,7 +65,7 @@ describe('DiContainerComposeTest', () => {
         const newDi: Container = createContainer([
             [MyValue, value({a: 1, b: 2})],
             [myFn, factory(MyValue)]
-        ]);
+        ]).createContainer()
 
         const result = newDi.get(myFn)
         assert(myFn.calledOnce)
@@ -83,7 +83,7 @@ describe('DiContainerComposeTest', () => {
         const newDi: Container = createContainer([
             [MyValue, value('123')],
             [MyClass, klass(MyValue)]
-        ]);
+        ]).createContainer()
         const result = newDi.get(MyClass)
         assert(result instanceof MyClass)
         assert(result.v === '123')
@@ -100,7 +100,7 @@ describe('DiContainerComposeTest', () => {
         const newDi: Container = createContainer([
             [MyValue, value(2)],
             [myFn, compose(MyValue)]
-        ]);
+        ]).createContainer()
 
         const result = newDi.get(myFn)
 

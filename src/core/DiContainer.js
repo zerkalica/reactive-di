@@ -34,6 +34,7 @@ export default class DiContainer {
     _plugins: Map<string, Plugin>;
     _annotations: AnnotationMap;
     initState: Map<string, any>;
+    _parentChain: Container[];
 
     constructor(
         dispose: () => void,
@@ -53,6 +54,13 @@ export default class DiContainer {
         this._parent = parent || null
         this._privateCache = new SimpleMap()
         this._providerCache = new SimpleMap()
+
+        const parents: Container[] = this._parentChain = []
+        let current: ?Container = parent
+        while (current) {
+            parents.push(current)
+            current = current._parent
+        }
     }
 
     _getMiddlewares(target: DependencyKey, tags: Array<Tag>): ?Array<Provider> {
@@ -153,40 +161,13 @@ export default class DiContainer {
         this._updater.begin(provider)
     }
 
-    getParentProvider(key: DependencyKey): ?Provider {
-        let di: Container = this
-        let annotation: ?Annotation = null
-        while (!annotation && di._parent) {
-            di = di._parent
-            annotation = di._annotations.get(key)
-        }
-
-        return annotation
-            ? di.getProvider(key)
-            : null
-    }
-
-    getProvider(key: DependencyKey): Provider {
+    getOwnProvider(key: DependencyKey, annotation: Annotation): Provider {
         let provider: ?Provider = this._providerCache.get(key)
-
         if (provider) {
             if (this._updater.length) {
                 this._updater.addCached(provider)
             }
-
             return provider
-        }
-
-        const annotation: ?Annotation = this._annotations.get(key)
-        if (!annotation) {
-            provider = this.getParentProvider(key)
-            if (provider) {
-                this._providerCache.set(key, provider)
-                return provider
-            }
-            throw new Error(
-                `Can't find annotation for ${getFunctionName(key)}`
-            )
         }
 
         const plugin: ?Plugin = this._plugins.get(annotation.kind)
@@ -195,8 +176,8 @@ export default class DiContainer {
                 `Provider not found for annotation ${getFunctionName(annotation.target)}`
             )
         }
-        const updater = this._updater
-        const l = updater.length
+        const updater: RelationUpdater = this._updater
+        const l: number = updater.length
 
         provider = plugin.createProvider(
             annotation,
@@ -208,6 +189,46 @@ export default class DiContainer {
         }
 
         this._providerCache.set(key, provider)
+
+        return provider
+    }
+
+    getProvider(key: DependencyKey): Provider {
+        let provider: ?Provider = this._providerCache.get(key)
+        if (provider) {
+            if (this._updater.length) {
+                this._updater.addCached(provider)
+            }
+            return provider
+        }
+
+        let container: Container = this
+        let parentAnnotation: ?Annotation
+        const chain: Container[] = this._parentChain
+        for (let i = 0, l = chain.length; i < l; i++) {
+            container = chain[i]
+            parentAnnotation = container._annotations.get(key)
+            if (parentAnnotation) {
+                break
+            }
+        }
+
+        const currentAnnotation: ?Annotation = this._annotations.get(key)
+        let annotation: ?Annotation = parentAnnotation || currentAnnotation
+        const cntr: Container = currentAnnotation ? this : container
+        if (!annotation) {
+            annotation = this._annotations.getFromDriver(key)
+            if (!annotation) {
+                throw new Error(
+                    `Can't find annotation for ${getFunctionName(key)}`
+                )
+            }
+        }
+
+        provider = (cntr.getOwnProvider(key, annotation): any)
+        if (this !== cntr) {
+            this._providerCache.set(key, provider)
+        }
 
         return provider
     }

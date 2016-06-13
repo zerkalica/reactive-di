@@ -29,10 +29,10 @@ export default class AnnotationMap<Annotation: IAnnotation> {
         this._paramtypes = paramtypes
         this._createId = createIdCreator()
         this._map = new SimpleMap()
-        this.set(config)
+        this._set(config)
     }
 
-    set(config: Array<ConfigItem>): void {
+    _set(config: Array<ConfigItem>): void {
         const map = this._map
         const driver = this._rdi
         for (let i = 0, l = config.length; i < l; i++) {
@@ -100,7 +100,7 @@ export default class AnnotationMap<Annotation: IAnnotation> {
 
     getFromDriver(key: DependencyKey): ?Annotation {
         if (typeof key !== 'function') {
-            throw new Error(`Can't get annotation fron non-function: ${key}`)
+            return null
         }
         let annotation: ?Annotation
         const raw: ?RawAnnotation = this._rdi.get(key)

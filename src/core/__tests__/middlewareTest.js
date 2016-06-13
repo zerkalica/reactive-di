@@ -43,7 +43,7 @@ describe('DiContainerMiddlewareTest', () => {
             [myFnMiddleware, compose()]
         ], [
             [myFnMiddleware, [myFn]]
-        ])
+        ]).createContainer()
 
         const result = newDi.get(myFn)
         result(1, 2)
@@ -77,7 +77,7 @@ describe('DiContainerMiddlewareTest', () => {
             [MyClassMiddleware, klass()]
         ], [
             [MyClassMiddleware, [MyClass]]
-        ])
+        ]).createContainer()
         const testMethod = sinon.spy()
         newDi.get(MyClassMiddleware).test = testMethod
         const my = newDi.get(MyClass)
@@ -112,7 +112,7 @@ describe('DiContainerMiddlewareTest', () => {
             [myFnMiddleware, compose()]
         ], [
             [myFnMiddleware, ['mytag']]
-        ])
+        ]).createContainer()
 
         const result = newDi.get(myFn)
         result(1, 2)

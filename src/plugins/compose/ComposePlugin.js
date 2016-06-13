@@ -18,7 +18,7 @@ class ComposeProvider<V> extends BaseProvider {
     constructor(annotation: ComposeAnnotation, container: Container) {
         super(annotation, container)
         this.isCached = true
-        const helper: ArgumentHelper = container.createArgumentHelper(annotation);
+        const helper: ArgumentHelper = container.createArgumentHelper(annotation)
 
         this.value = function getValue(...args: Array<any>): V {
             return helper.invokeComposed(args)

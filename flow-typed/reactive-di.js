@@ -118,7 +118,6 @@ declare module 'reactive-di' {
     declare interface AnnotationMap<A: Annotation> {
         get(key: DependencyKey): ?A;
         getFromDriver(key: DependencyKey): ?A;
-        set(config: Array<ConfigItem>): void;
     }
 
     declare interface Container<P: Provider> {
@@ -128,7 +127,7 @@ declare module 'reactive-di' {
         createArgumentHelper(annotation: Annotation): ArgumentHelper;
         beginInitialize(annotatedDep: DependencyKey, provider: P): void;
         get(annotatedDep: DependencyKey): any;
-        getParentProvider(key: DependencyKey): ?Provider;
+        getOwnProvider(key: DependencyKey, annotation: Annotation): ?Provider;
         getProvider(annotatedDep: DependencyKey): P;
         delete(annotatedDep: DependencyKey): void;
         dispose(): void;
@@ -188,15 +187,12 @@ declare module 'reactive-di' {
     declare function fastCall<T>(fn: Function, args: Array<any>): T;
     declare function fastCreateObject<T>(target: Class<T>, args: Array<any>): T;
 
-    declare function createHotRelationUpdater(): RelationUpdater;
-    declare function createDummyRelationUpdater(): RelationUpdater;
-
     declare class SimpleMap<K, V> extends Map<K, V> {}
     declare class SimpleSet<V> extends Set<V> {}
 
     declare function createManagerFactory(
         pluginsConfig?: Array<Plugin>,
-        createUpdater?: () => RelationUpdater
+        updater?: RelationUpdater
     ): CreateContainerManager;
 
     declare var defaultPlugins: Plugin[]

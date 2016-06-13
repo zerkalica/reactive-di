@@ -27,7 +27,7 @@ describe('HotRelationUpdaterTest', () => {
         const di: Container = createContainer([
             [A, factory()],
             [B, factory(A)]
-        ], [], true);
+        ]).createContainer()
 
         const result = di.getProvider(B).dependencies.map(depName);
         // console.log(result, di.getProvider(B).displayName)
@@ -46,7 +46,7 @@ describe('HotRelationUpdaterTest', () => {
             [A, factory(A)],
             [C, factory(A)],
             [B, factory(C)]
-        ], [], true);
+        ]).createContainer()
 
         di.getProvider(C)
 
@@ -67,7 +67,7 @@ describe('HotRelationUpdaterTest', () => {
             [A, factory()],
             [C, factory(A)],
             [B, factory(C, A)]
-        ], [], true);
+        ]).createContainer()
 
 
         const result = di.getProvider(B).dependencies.map(depName);
@@ -87,7 +87,7 @@ describe('HotRelationUpdaterTest', () => {
             [A, factory()],
             [C, factory(A)],
             [B, factory(C)]
-        ], [], true);
+        ]).createContainer()
 
         const result = di.getProvider(B).dependencies.map(depName);
 

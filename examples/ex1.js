@@ -8,8 +8,7 @@ import type {
 
 import {
     createManagerFactory,
-    defaultPlugins,
-    createDummyRelationUpdater
+    defaultPlugins
 } from 'reactive-di/index'
 import assert from 'power-assert'
 import {alias, value} from 'reactive-di/configurations'
@@ -54,8 +53,7 @@ function createTire(defaultWidth: number, diameter: number): Tire {
 }
 factory(DefaultWidth)(createTire)
 
-const createContainerManager: CreateContainerManager
-    = createManagerFactory(defaultPlugins, createDummyRelationUpdater);
+const createContainerManager: CreateContainerManager = createManagerFactory(defaultPlugins)
 
 const cm: ContainerManager = createContainerManager([
     [DefaultWidth, value(22)],

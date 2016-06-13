@@ -20,7 +20,7 @@ import {
 } from 'reactive-di/core/annotationDriver'
 import createPluginsMap from 'reactive-di/utils/createPluginsMap'
 import DiContainer from 'reactive-di/core/DiContainer'
-import createDummyRelationUpdater from 'reactive-di/core/updaters/createDummyRelationUpdater'
+import HotRelationUpdater from 'reactive-di/core/updaters/HotRelationUpdater'
 
 // implements ContainerManager, ContainerHelper
 class DefaultContainerManager {
@@ -124,10 +124,9 @@ class DefaultContainerManager {
  */
 export default function createManagerFactory(
     pluginsConfig: Array<Plugin>,
-    createUpdater?: () => RelationUpdater = createDummyRelationUpdater
+    updater?: RelationUpdater = new HotRelationUpdater()
 ): CreateContainerManager {
     let plugins: Map<string, Plugin>
-    const updater = createUpdater()
 
     function createContainerManager(
         config?: Array<ConfigItem> = []
