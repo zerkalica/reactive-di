@@ -61,6 +61,7 @@ export default class DiContainer {
             parents.push(current)
             current = current._parent
         }
+        parents.push(this)
     }
 
     _getMiddlewares(target: DependencyKey, tags: Array<Tag>): ?Array<Provider> {
@@ -203,19 +204,16 @@ export default class DiContainer {
         }
 
         let container: Container = this
-        let parentAnnotation: ?Annotation
+        let annotation: ?Annotation = null
         const chain: Container[] = this._parentChain
         for (let i = 0, l = chain.length; i < l; i++) {
             container = chain[i]
-            parentAnnotation = container._annotations.get(key)
-            if (parentAnnotation) {
+            annotation = container._annotations.get(key)
+            if (annotation) {
                 break
             }
         }
 
-        const currentAnnotation: ?Annotation = this._annotations.get(key)
-        let annotation: ?Annotation = parentAnnotation || currentAnnotation
-        const cntr: Container = currentAnnotation ? this : container
         if (!annotation) {
             annotation = this._annotations.getFromDriver(key)
             if (!annotation) {
@@ -225,8 +223,8 @@ export default class DiContainer {
             }
         }
 
-        provider = (cntr.getOwnProvider(key, annotation): any)
-        if (this !== cntr) {
+        provider = (container.getOwnProvider(key, annotation): any)
+        if (this !== container) {
             this._providerCache.set(key, provider)
         }
 

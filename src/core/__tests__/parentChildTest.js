@@ -34,7 +34,7 @@ describe('DiContainerParentChildTest', () => {
         assert(newDi.get(Dep) instanceof A)
     })
 
-    it('child dependency in chain is new instance', () => {
+    it('child dependency in chain is parent instance', () => {
         class A {}
         klass()(A)
 
@@ -54,6 +54,6 @@ describe('DiContainerParentChildTest', () => {
         const a2: A = parentDi.get(Dep)
         assert(a1 instanceof A)
         assert(a2 instanceof A)
-        assert(a1 !== a2)
+        assert(a1 === a2)
     })
 })
