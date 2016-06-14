@@ -10,7 +10,8 @@ import type {
     Container,
     RelationUpdater,
     Provider,
-    AnnotationMap
+    AnnotationMap,
+    InjectorFindStrategy
 } from 'reactive-di'
 
 import ArgumentHelperImpl from 'reactive-di/core/ArgumentHelper'
@@ -34,7 +35,8 @@ export default class DiContainer {
     _plugins: Map<string, Plugin>;
     _annotations: AnnotationMap;
     initState: Map<string, any>;
-    _parentChain: Container[];
+    _injectorsChain: Container[];
+    _revInjectorsChain: Container[];
 
     constructor(
         dispose: () => void,
@@ -55,13 +57,26 @@ export default class DiContainer {
         this._privateCache = new SimpleMap()
         this._providerCache = new SimpleMap()
 
-        const parents: Container[] = this._parentChain = []
+        const chain: Container[] = this._injectorsChain = [this]
         let current: ?Container = parent
         while (current) {
-            parents.push(current)
+            chain.push(current)
             current = current._parent
         }
-        parents.push(this)
+        this._revInjectorsChain = ([].concat(chain)).reverse()
+    }
+
+    _getInjectorStrategy(strategy: InjectorFindStrategy): Container[] {
+        switch (strategy) {
+            case 'down':
+                return this._revInjectorsChain
+            case 'up':
+                return this._injectorsChain
+            case 'self':
+                return [this]
+            default:
+                return this._revInjectorsChain
+        }
     }
 
     _getMiddlewares(target: DependencyKey, tags: Array<Tag>): ?Array<Provider> {
@@ -194,7 +209,7 @@ export default class DiContainer {
         return provider
     }
 
-    getProvider(key: DependencyKey): Provider {
+    getProvider(key: DependencyKey, injectorsChain?: Container[]): Provider {
         let provider: ?Provider = this._providerCache.get(key)
         if (provider) {
             if (this._updater.length) {
@@ -202,11 +217,10 @@ export default class DiContainer {
             }
             return provider
         }
-
         let container: Container = this
-        let annotation: ?Annotation = null
-        const chain: Container[] = this._parentChain
-        for (let i = 0, l = chain.length; i < l; i++) {
+        let annotation: ?Annotation
+        const chain: Container[] = injectorsChain || this._revInjectorsChain
+        for (let i = 0, l = chain.length; i < l && !annotation; i++) {
             container = chain[i]
             annotation = container._annotations.get(key)
             if (annotation) {

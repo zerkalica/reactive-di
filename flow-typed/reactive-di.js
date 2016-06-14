@@ -20,9 +20,11 @@ declare module 'reactive-di' {
     declare interface Disposable {
         isDisposed: boolean;
     }
-
+    declare type InjectorFindStrategy = 'up' | 'down' | 'self'
     declare interface RawAnnotation {
         kind: any;
+        level?: number;
+        strategy?: InjectorFindStrategy;
         tags?: Array<Tag>;
         deps?: Array<DepItem>;
     }
@@ -34,6 +36,8 @@ declare module 'reactive-di' {
     declare interface Annotation {
         kind: any;
         displayName: string;
+        level: number;
+        strategy: InjectorFindStrategy;
         tags: Array<Tag>;
         target: Dependency;
         deps: Array<DepItem>;
