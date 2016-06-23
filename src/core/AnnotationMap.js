@@ -87,8 +87,6 @@ export default class AnnotationMap<Annotation: IAnnotation> {
         const dn = getFunctionName(target)
         const annotation: Annotation = {
             ...(raw: any),
-            level: raw.level || 0,
-            strategy: raw.strategy || 'down',
             kind: raw.kind,
             displayName: raw.kind + '@' + dn,
             target,

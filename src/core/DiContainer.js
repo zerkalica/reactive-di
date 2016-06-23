@@ -197,7 +197,8 @@ export default class DiContainer {
 
         provider = plugin.createProvider(
             annotation,
-            this
+            this,
+            key
         )
 
         if (l !== updater.length) {

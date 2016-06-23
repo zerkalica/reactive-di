@@ -8,18 +8,30 @@ import {
     rdi
 } from 'reactive-di/core/annotationDriver'
 
-export function value(val?: any): RawAnnotation {
+export function value(
+    rec: {
+        value?: mixed,
+        key?: string
+    } = {}
+): RawAnnotation {
     return {
         kind: 'value',
-        value: val
+        key: rec.key,
+        value: rec.value
     }
 }
 
-export function valueAnn(val?: any): (target: Dependency) => Dependency {
+export function valueAnn(
+    rec: {
+        value?: mixed,
+        key?: string
+    } = {}
+): (target: Dependency) => Dependency {
     return function _value(target: Dependency): Dependency {
         rdi.set(target, {
             kind: 'value',
-            value: val
+            value: rec.value,
+            key: rec.key
         })
         return target
     }

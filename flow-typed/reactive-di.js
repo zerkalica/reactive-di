@@ -162,7 +162,7 @@ declare module 'reactive-di' {
         createProvider(
             annotation: A,
             container: Container,
-            initialState: ?State
+            key: DependencyKey
         ): P;
     }
 

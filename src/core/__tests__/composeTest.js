@@ -45,7 +45,7 @@ describe('DiContainerComposeTest', () => {
         const myFn = sinon.spy(_myFn)
 
         const newDi: Container = createContainer([
-            [MyValue, value(2)],
+            [MyValue, value({value: 2})],
             [myFn, factory(MyValue)]
         ]).createContainer()
 
@@ -63,7 +63,7 @@ describe('DiContainerComposeTest', () => {
         const myFn = sinon.spy(_myFn)
 
         const newDi: Container = createContainer([
-            [MyValue, value({a: 1, b: 2})],
+            [MyValue, value({value: {a: 1, b: 2}})],
             [myFn, factory(MyValue)]
         ]).createContainer()
 
@@ -81,7 +81,7 @@ describe('DiContainerComposeTest', () => {
             }
         }
         const newDi: Container = createContainer([
-            [MyValue, value('123')],
+            [MyValue, value({value: '123'})],
             [MyClass, klass(MyValue)]
         ]).createContainer()
         const result = newDi.get(MyClass)
@@ -98,7 +98,7 @@ describe('DiContainerComposeTest', () => {
         const myFn = sinon.spy(_myFn)
 
         const newDi: Container = createContainer([
-            [MyValue, value(2)],
+            [MyValue, value({value: 2})],
             [myFn, compose(MyValue)]
         ]).createContainer()
 

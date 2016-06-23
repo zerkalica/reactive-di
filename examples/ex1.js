@@ -56,7 +56,7 @@ factory(DefaultWidth)(createTire)
 const createContainerManager: CreateContainerManager = createManagerFactory(defaultPlugins)
 
 const cm: ContainerManager = createContainerManager([
-    [DefaultWidth, value(22)],
+    [DefaultWidth, value({value: 22})],
     [AbstractEngine, alias(ConcreteEngine)]
 ]);
 
