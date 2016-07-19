@@ -42,7 +42,7 @@ describe('InitializerTest', () => {
                 new ModelA({val: dep.val})
             ]
         }
-        deps([Dep])(initA)
+        deps(Dep)(initA)
         factory(initA)
 
         source({key: 'ModelA', init: initA})(ModelA)
@@ -56,7 +56,7 @@ describe('InitializerTest', () => {
         })
         service(Service)
         klass(Service)
-        deps([ModelA])(Service)
+        deps(ModelA)(Service)
 
         const di = new Di()
         const s: Service = di.val(Service).get()
@@ -80,7 +80,7 @@ describe('InitializerTest', () => {
                 pmodelA
             ]
         }
-        deps([Dep])(initA)
+        deps(Dep)(initA)
         factory(initA)
 
         source({key: 'ModelA', init: initA})(ModelA)
@@ -94,7 +94,7 @@ describe('InitializerTest', () => {
         })
         service(Service)
         klass(Service)
-        deps([ModelA])(Service)
+        deps(ModelA)(Service)
 
         const di = new Di()
         const s: Service = di.val(Service).get()

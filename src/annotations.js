@@ -42,9 +42,9 @@ export function component<V: Function>(localDeps?: ArgDep[]): (target: V) => V {
     }
 }
 
-export function deps<V: Function>(args?: ArgDep[]): (target: V) => V {
+export function deps<V: Function>(...args: ArgDep[]): (target: V) => V {
     return (target: V) => {
-        if (args) {
+        if (args.length) {
             target[paramTypesKey] = args
         }
         return target

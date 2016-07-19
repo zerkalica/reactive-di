@@ -47,9 +47,9 @@ describe('ComponentTest', () => {
                 return h('div', null, 'test-' + this.state.m.val)
             }
         }
-        deps([{
+        deps({
             m: ModelA
-        }])(TestComponent)
+        })(TestComponent)
         component()(TestComponent)
 
         const di = new Di(createReactWidgetFactory(ReactComponent, () => {

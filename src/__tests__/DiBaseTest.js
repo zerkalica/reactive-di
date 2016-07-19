@@ -61,7 +61,7 @@ describe('Di.Base - class with one dependency', () => {
         })
         service(Service)
         klass(Service)
-        deps([ModelA])(Service)
+        deps(ModelA)(Service)
 
         const di = new Di()
         const s: Service = di.val(Service).get()
@@ -85,7 +85,7 @@ describe('Di.Base - class with one dependency', () => {
         })
         service(Service)
         klass(Service)
-        deps([ModelA])(Service)
+        deps(ModelA)(Service)
 
         const di = new Di()
         const s: Service = di.val(Service).get()
@@ -104,7 +104,7 @@ describe('Di.Base - class with one dependency', () => {
         })
         service(FactoryService)
         factory(FactoryService)
-        deps([ModelA])(FactoryService)
+        deps(ModelA)(FactoryService)
 
         const di = new Di()
         const fn = di.val(FactoryService).get()
@@ -122,7 +122,7 @@ describe('Di.Base - class with one dependency', () => {
         })
         service(FactoryService)
         factory(FactoryService)
-        deps([ModelA])(FactoryService)
+        deps(ModelA)(FactoryService)
 
         const di = new Di()
         const fn: FactoryService = di.val(FactoryService).get()

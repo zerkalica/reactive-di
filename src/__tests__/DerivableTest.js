@@ -41,7 +41,7 @@ describe('DerivableTest', () => {
             this.val = m.val
         }
     }
-    deps([ModelA])(Facet)
+    deps(ModelA)(Facet)
     klass(Facet)
 
     it('catch model changes in service throught facet', () => {
@@ -53,7 +53,7 @@ describe('DerivableTest', () => {
         })
         service(Service)
         klass(Service)
-        deps([Facet])(Service)
+        deps(Facet)(Service)
 
         const di = new Di()
         const s: Service = di.val(Service).get()
