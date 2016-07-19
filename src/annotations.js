@@ -16,8 +16,7 @@ export type Initializer<V> = (...x: any[]) => InitData<V>
 export class RdiMeta {
     key: ?string = null;
     construct: boolean = false;
-
-    isDerivable: boolean = false;
+    isService: boolean = false;
     initializer: ?Dep<Initializer<*>> = null;
     isComponent: boolean = false;
     localDeps: ?RegisterDepItem[] = null;
@@ -43,14 +42,6 @@ export function component<V: Function>(localDeps?: ArgDep[]): (target: V) => V {
     }
 }
 
-export function init<V, R: Class<V>>(initializer?: Initializer<V>): (target: R) => R {
-    return (target: R) => {
-        const meta = getMeta(target)
-        meta.initializer = initializer
-        return target
-    }
-}
-
 export function deps<V: Function>(args?: ArgDep[]): (target: V) => V {
     return (target: V) => {
         if (args) {
@@ -70,16 +61,22 @@ export function factory<V: Function>(target: V): V {
     return target
 }
 
-export function key<V: Function>(k: string, construct?: boolean): (target: V) => V {
+export function source<R, V: Class<R>>(rec: {
+    key: string,
+    init?: ?Initializer<V>,
+    construct?: boolean
+}): (target: V) => V {
     return (target: V) => {
         const meta = getMeta(target)
-        meta.key = k
-        meta.construct = construct || false
+        meta.key = rec.key
+        meta.isService = true
+        meta.initializer = rec.init || null
+        meta.construct = rec.construct || false
         return target
     }
 }
 
-export function derivable<V: Function>(target: V): V {
-    getMeta(target).isDerivable = true
+export function service<V: Function>(target: V): V {
+    getMeta(target).isService = true
     return target
 }

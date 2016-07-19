@@ -73,6 +73,8 @@
     "glob": "^7.0.5",
     "mocha": "^2.5.3",
     "power-assert": "^1.4.1",
+    "react": "^15.2.1",
+    "react-dom": "^15.2.1",
     "sinon": "^1.17.4"
   },
   "dependencies": {

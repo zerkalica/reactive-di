@@ -1,64 +1,105 @@
 // @flow
-import {
-    paramTypesKey,
-    metaKey,
-    RdiMeta
-} from './annotations'
-import type {
-    Initializer,
-    RegisterDepItem,
-    DepAlias,
-    Dep,
-    ArgDep,
-    InitData
-} from './annotations'
+
+import {paramTypesKey, metaKey, RdiMeta} from './annotations'
+import type {Initializer, RegisterDepItem, DepAlias, Dep, ArgDep, InitData} from './annotations'
 import debugName from './utils/debugName'
-import {
-    fastCallMethod,
-    fastCall,
-    fastCreateObject
-} from './utils/fastCall'
-
+import {fastCallMethod, fastCall, fastCreateObject} from './utils/fastCall'
 import derivableAtomAdapter from './adapters/derivableAtomAdapter'
-import type {Adapter, Reactor, Atom, Derivable, DerivableArg, DerivableDict} from './adapters/Adapter'
-import ComponentState from './ComponentState'
-import type {DiResolver, InjectComponent} from './ComponentState'
+import type {Adapter, Reactor, Atom, Derivable, DerivableArg, DerivableDict, CreateWidget} from './adapters/Adapter'
 
-function pass<V>(state: ComponentState<V>): V {
-    return state.target
+function pass<V: Function>(target: V, depsAtom: Derivable<V>): V {
+    return target(depsAtom)
 }
 
 type CacheMap = Map<Function|string, Derivable<any>>
 
-export default class Di<Component> {
-    _cache: CacheMap;
-    _regMap: Map<Dep<*>, Di<Component>>;
-    _adapter: Adapter = derivableAtomAdapter;
-    _reactors: Reactor<*>[] = [];
-    _createComponent: InjectComponent<Component, *>;
-    _registered: RegisterDepItem[];
+type Meta = [Function, ArgDep[], RdiMeta]
 
+function metaFromTarget(target: Function): Meta {
+    return [
+        target,
+        target[paramTypesKey] || [],
+        target[metaKey]
+    ]
+}
+
+export default class Di {
+    _cache: CacheMap;
+    _componentCache: CacheMap;
+
+    _scopeMap: Map<Dep<*>, Di>;
+    _childScopeMap: Map<Dep<*>, Di>;
+    _metaMap: Map<Dep<*>, Meta>;
+
+    _adapter: Adapter;
+    _createComponent: CreateWidget<*, *, *>;
+
+    _registered: RegisterDepItem[];
     _values: {[id: string]: any};
 
+    _stopped: Atom<boolean>;
+
     constructor(
-        createComponent: InjectComponent<Component, *> = pass,
-        _regMap?: Map<Dep<*>, Di<Component>> = new Map()
+        createComponent?: CreateWidget<*, *, *> = pass,
+        adapter?: Adapter = derivableAtomAdapter,
+        _scopeMap?: Map<Dep<*>, Di> = new Map(),
+        _componentCache?: CacheMap = new Map(),
+        _metaMap?: Map<Dep<*>, Meta> = new Map()
     ) {
+        this._adapter = adapter
         this._cache = new Map()
+        this._componentCache = _componentCache
         this._values = {}
         this._createComponent = createComponent
         this._registered = []
-        this._regMap = _regMap
+        this._scopeMap = _scopeMap
+        this._metaMap = _metaMap
+        this._childScopeMap = new Map(this._scopeMap)
+        this._stopped = adapter.atom(false)
     }
 
-    values(values: {[id: string]: any}): Di<Component> {
-        this._values = values
+    stop(): Di {
+        this._stopped.set(true)
         return this
     }
 
-    register(registered?: RegisterDepItem[] = []): Di<Component> {
-        this._registered = registered
+    values(values?: ?{[id: string]: any}): Di {
+        this._values = values || {}
         return this
+    }
+
+    register(registered?: ?RegisterDepItem[]): Di {
+        if (!registered) {
+            return this
+        }
+
+        const childScopeMap = this._childScopeMap
+        const metaMap = this._metaMap
+        for (let i = 0, l = registered.length; i < l; i++) {
+            const pr: RegisterDepItem = registered[i]
+            if (Array.isArray(pr)) {
+                if (pr.length !== 2) {
+                    throw new Error(`Provide tuple of two items in register()`)
+                }
+                childScopeMap.set(pr[0], this)
+                metaMap.set(pr[0], metaFromTarget(pr[1]))
+            } else {
+                childScopeMap.set(pr, this)
+                metaMap.set(pr, metaFromTarget(pr))
+            }
+        }
+
+        return this
+    }
+
+    create(): Di {
+        return (new Di(
+            this._createComponent,
+            this._adapter,
+            this._childScopeMap,
+            this._componentCache,
+            new Map(this._metaMap)
+        )).values(this._values)
     }
 
     _resolveDeps(deps: ArgDep[]): Derivable<any> {
@@ -79,44 +120,25 @@ export default class Di<Component> {
         return this._adapter.struct(resolvedArgs)
     }
 
-    create(): Di<Component> {
-        const m = new Map(this._regMap)
-        const parentRegistered = this._registered
-        for (let i = 0, l = parentRegistered.length; i < l; i++) {
-            const pr = parentRegistered[i]
-            if (Array.isArray(pr)) {
-                m.set(pr[0], this)
-            } else {
-                m.set(pr, this)
-            }
-        }
-        return new Di(
-            this._createComponent,
-            m
-        )
-    }
-
     val<V>(key: Dep<V>): Derivable<V>|Atom<V> {
         let atom: ?(Derivable<V>|Atom<V>) = this._cache.get(key)
         if (atom) {
             return atom
         }
-
-        const parentDi: ?Di<Component> = this._regMap.get(key)
+        const parentDi: ?Di = this._scopeMap.get(key)
         if (parentDi) {
             return parentDi.val(key)
         }
 
-        const target: Dep<V> = key
-        const deps: ArgDep[] = (target: Function)[paramTypesKey] || []
-        const meta: ?RdiMeta = (target: Function)[metaKey]
+        const [target, deps, meta]: Meta = this._metaMap.get(key) || metaFromTarget(key)
         if (!meta) {
             throw new Error(`RdiMeta not found: "${debugName(target)}"`)
         }
         const adapter: Adapter = this._adapter
+
         if (meta.key) {
             const value = this._values[meta.key]
-            if (value) {
+            if (value !== undefined) {
                 if (meta.initializer) {
                     // if has initializer - preload data from values registry only once
                     // on next call - run initializer and fill models
@@ -124,14 +146,15 @@ export default class Di<Component> {
                 }
                 if (meta.construct) {
                     atom = adapter.isAtom(value)
-                        ? value.derive((raw) => new target(raw))
-                        : adapter.atom(new target(value))
-                } else if (!adapter.isAtom(value)) {
-                    atom = adapter.atom(value)
+                        ? value.derive((v: V) => new (target: Function)(value))
+                        : adapter.atom(new (target: Function)(value)) // eslint-disable-line
                 } else {
-                    atom = value
+                    atom = adapter.isAtom(value)
+                        ? value
+                        : adapter.atom(value)
                 }
                 this._cache.set(key, atom)
+
                 return atom
             }
         }
@@ -142,36 +165,40 @@ export default class Di<Component> {
 
             atom = adapter.atomFromObservable(data, obs)
             this._cache.set(key, atom)
+
             return atom
         }
 
-        const depsAtom: Derivable<mixed[]> = this._resolveDeps(deps)
-
         if (meta.isComponent) {
-            const container: Di<Component> = meta.localDeps
-                ? this.create().register(meta.localDeps)
-                : this
-            const component = this._createComponent(new ComponentState((target: any), depsAtom))
-            atom = adapter.atom((component: any))
+            atom = this._componentCache.get(key)
+            if (!atom) {
+                const container: Di = meta.localDeps
+                    ? this.create().register(meta.localDeps)
+                    : this
+                const depsAtom: Derivable<mixed[]> = container._resolveDeps(deps)
+                atom = adapter.atom((this._createComponent((target: any), depsAtom): any))
+                this._componentCache.set(key, atom)
+            }
             this._cache.set(key, atom)
 
             return atom
         }
 
+        const depsAtom: Derivable<mixed[]> = this._resolveDeps(deps)
         if (meta.isFactory) {
-            if (meta.isDerivable) {
-                atom = depsAtom.derive((deps: mixed[]) => fastCall(target, deps))
-            } else {
+            if (meta.isService) {
                 atom = adapter.atom(this._createFactory(target, depsAtom))
+            } else {
+                atom = depsAtom.derive((deps: mixed[]) => fastCall(target, deps))
             }
         } else {
-            if (meta.isDerivable) {
+            if (meta.isService) {
+                atom = adapter.atom(this._createObject(target, depsAtom))
+            } else {
                 atom = depsAtom.derive((deps: mixed[]) => fastCreateObject(
                     ((target: any): Class<V>),
                     deps
                 ))
-            } else {
-                atom = adapter.atom(this._createObject(target, depsAtom))
             }
         }
 
@@ -181,13 +208,14 @@ export default class Di<Component> {
     }
 
     _createObject<V>(target: Dep<V>, depsAtom: Derivable<mixed[]>): V {
-        const value: V = fastCreateObject(((target: any): Class<V>), depsAtom.get())
+        const value: V = fastCreateObject(((target: Function): Class<V>), depsAtom.get())
         const onChange = (deps: mixed[]) => {
             fastCallMethod((value: any), target, deps)
         }
-        const reactor: Reactor<mixed[]> = depsAtom.reactor(onChange)
-        reactor.start()
-        this._reactors.push(reactor)
+        depsAtom.react(onChange, {
+            skipFirst: true,
+            until: this._stopped
+        })
 
         return value
     }
@@ -198,9 +226,11 @@ export default class Di<Component> {
         function onChange(deps: mixed[]): void {
             value = fastCall(target, deps)
         }
-        const reactor: Reactor<mixed[]> = depsAtom.reactor(onChange)
-        reactor.start()
-        this._reactors.push(reactor)
+
+        depsAtom.react(onChange, {
+            skipFirst: true,
+            until: this._stopped
+        })
 
         function factory(...args: mixed[]): mixed {
             return fastCall(value, args)
@@ -208,20 +238,5 @@ export default class Di<Component> {
         factory.displayName = `wrap@${debugName(target)}`
 
         return (factory: any)
-    }
-
-    start(): void {
-        const r = this._reactors
-        for (let i = 0, l = r.length; i < l; i++) {
-            r[i].start()
-        }
-    }
-
-    stop(): void {
-        this._cache = new Map()
-        const r = this._reactors
-        for (let i = 0, l = r.length; i < l; i++) {
-            r[i].stop()
-        }
     }
 }

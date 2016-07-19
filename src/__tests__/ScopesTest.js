@@ -5,13 +5,9 @@ import {spy, match} from 'sinon'
 import assert from 'power-assert'
 
 import {
-    RdiMeta,
-    paramTypesKey,
-    metaKey,
-    factory,
-    derivable,
+    source,
+    service,
     deps,
-    init,
     klass
 } from '../annotations'
 import type {
@@ -34,6 +30,7 @@ describe('ScopesTest', () => {
             };
             copy: (rec: ModelARec) => ModelA;
         }
+        source({key: 'ModelA'})(ModelA)
         klass(ModelA)
 
         const Service = spy(class {
@@ -42,6 +39,7 @@ describe('ScopesTest', () => {
                 this.val = m.val
             }
         })
+        service(Service)
         klass(Service)
         deps([ModelA])(Service)
 
@@ -60,6 +58,7 @@ describe('ScopesTest', () => {
             };
             copy: (rec: ModelARec) => ModelA;
         }
+        source({key: 'ModelA'})(ModelA)
         klass(ModelA)
 
         const Service = spy(class {
@@ -69,6 +68,7 @@ describe('ScopesTest', () => {
             }
         })
         klass(Service)
+        service(Service)
         deps([ModelA])(Service)
 
         const di = new Di()
@@ -90,6 +90,7 @@ describe('ScopesTest', () => {
             };
             copy: (rec: ModelARec) => ModelA;
         }
+        source({key: 'ModelA'})(ModelA)
         klass(ModelA)
 
         const Service = spy(class {
@@ -99,6 +100,7 @@ describe('ScopesTest', () => {
             }
         })
         klass(Service)
+        service(Service)
         deps([ModelA])(Service)
 
         const di = new Di()

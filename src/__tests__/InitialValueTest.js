@@ -5,14 +5,9 @@ import {spy, match} from 'sinon'
 import assert from 'power-assert'
 
 import {
-    RdiMeta,
-    paramTypesKey,
-    metaKey,
-    factory,
-    key,
+    source,
     derivable,
     deps,
-    init,
     klass
 } from '../annotations'
 import type {
@@ -37,7 +32,7 @@ describe('InitialValueTest', () => {
             };
             copy: (rec: ModelARec) => ModelA;
         }
-        key('modelA')(ModelA)
+        source({key: 'modelA'})(ModelA)
         klass(ModelA)
 
         const Service = spy(class {
@@ -67,7 +62,7 @@ describe('InitialValueTest', () => {
             };
             copy: (rec: ModelARec) => ModelA;
         }
-        key('modelA', true)(ModelA)
+        source({key: 'modelA', construct: true})(ModelA)
         klass(ModelA)
 
         const Service = spy(class {
@@ -97,7 +92,41 @@ describe('InitialValueTest', () => {
             };
             copy: (rec: ModelARec) => ModelA;
         }
-        key('modelA', true)(ModelA)
+        source({key: 'modelA'})(ModelA)
+        klass(ModelA)
+
+        const Service = spy(class {
+            val: string;
+            constructor(m: ModelA) {
+                this.val = m.val
+            }
+        })
+        klass(Service)
+        deps([ModelA])(Service)
+
+        const am = atom(new ModelA({
+            val: 'outside'
+        }))
+
+        const di = (new Di()).values({
+            modelA: am
+        })
+
+        assert(di.val(ModelA).get().val === 'outside')
+        am.set({val: 'outside2'})
+        assert(di.val(ModelA).get().val === 'outside2')
+    })
+
+
+    it('init atom value with construct', () => {
+        class ModelA extends BaseModel<ModelARec> {
+            val: string;
+            static defaults: ModelARec = {
+                val: 'test'
+            };
+            copy: (rec: ModelARec) => ModelA;
+        }
+        source({key: 'modelA', construct: true})(ModelA)
         klass(ModelA)
 
         const Service = spy(class {
@@ -117,8 +146,6 @@ describe('InitialValueTest', () => {
             modelA: am
         })
 
-        assert(di.val(ModelA).get().val === 'outside')
-        am.set({val: 'outside2'})
-        assert(di.val(ModelA).get().val === 'outside2')
+        assert(di.val(ModelA).get() instanceof ModelA)
     })
 })

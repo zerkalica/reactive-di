@@ -5,12 +5,10 @@ import {spy, match} from 'sinon'
 import assert from 'power-assert'
 
 import {
-    RdiMeta,
-    paramTypesKey,
-    metaKey,
+    service,
     deps,
-    derivable,
     klass,
+    source,
     factory
 } from '../annotations'
 import type {
@@ -47,6 +45,7 @@ describe('Di.Base - class with one dependency', () => {
         copy: (rec: ModelARec) => ModelA;
     }
     klass(ModelA)
+    source({key: 'ModelA'})(ModelA)
 
     it('create service from class', () => {
         const Service = spy(class {
@@ -60,6 +59,7 @@ describe('Di.Base - class with one dependency', () => {
                 return this._modelA.val
             }
         })
+        service(Service)
         klass(Service)
         deps([ModelA])(Service)
 
@@ -83,6 +83,7 @@ describe('Di.Base - class with one dependency', () => {
                 return this._modelA.val
             }
         })
+        service(Service)
         klass(Service)
         deps([ModelA])(Service)
 
@@ -101,6 +102,7 @@ describe('Di.Base - class with one dependency', () => {
         const FactoryService = spy(function (modelA: ModelA) {
             return () => modelA.val
         })
+        service(FactoryService)
         factory(FactoryService)
         deps([ModelA])(FactoryService)
 
@@ -118,6 +120,7 @@ describe('Di.Base - class with one dependency', () => {
         const FactoryService = spy(function factoryService(modelA: ModelA): () => string {
             return () => modelA.val
         })
+        service(FactoryService)
         factory(FactoryService)
         deps([ModelA])(FactoryService)
 

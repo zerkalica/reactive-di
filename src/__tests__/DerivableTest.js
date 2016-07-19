@@ -6,10 +6,9 @@ import assert from 'power-assert'
 
 import {
     RdiMeta,
-    paramTypesKey,
-    metaKey,
-    derivable,
+    service,
     deps,
+    source,
     klass,
     factory
 } from '../annotations'
@@ -34,6 +33,7 @@ describe('DerivableTest', () => {
         copy: (rec: ModelARec) => ModelA;
     }
     klass(ModelA)
+    source({key: 'ModelA'})(ModelA)
 
     class Facet {
         val: string;
@@ -42,7 +42,6 @@ describe('DerivableTest', () => {
         }
     }
     deps([ModelA])(Facet)
-    derivable(Facet)
     klass(Facet)
 
     it('catch model changes in service throught facet', () => {
@@ -52,6 +51,7 @@ describe('DerivableTest', () => {
                 this.val = facet.val
             }
         })
+        service(Service)
         klass(Service)
         deps([Facet])(Service)
 

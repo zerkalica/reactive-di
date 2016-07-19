@@ -4,74 +4,76 @@
 import {spy, match} from 'sinon'
 import assert from 'power-assert'
 
+import {Component as ReactComponent, createElement as h} from 'react'
+import ReactDOM from 'react-dom/server'
+
 import {
-    RdiMeta,
-    paramTypesKey,
-    metaKey,
-    factory,
     component,
-    derivable,
+    source,
     deps,
-    init,
     klass
-} from '../annotations'
-import type {
-    InitData
 } from '../annotations'
 
 import type {
     Derivable
 } from '../adapters/Adapter'
-
+import {Component} from '../index'
 import Di from '../Di'
 import BaseModel from '../BaseModel'
-import ComponentState from '../ComponentState'
+
+import createReactWidgetFactory from '../createReactWidgetFactory'
 
 describe('ComponentTest', () => {
     type ModelARec = {
         val?: string;
     }
 
-    it('component mount', () => {
+    it('component state changes', () => {
         class ModelA extends BaseModel<ModelARec> {
             val: string;
             static defaults: ModelARec = {
-                val: '1'
+                val: 'state-value'
             };
             copy: (rec: ModelARec) => ModelA;
         }
         klass(ModelA)
+        source({key: 'ModelA'})(ModelA)
 
-        const Component = spy(class {
-        })
-        component()(Component)
-        klass(Component)
-
-        function createComponent<State>(state: ComponentState<State>) {
-            return class WrappedComponent extends state.target {
-                _deps: Derivable<[State]>;
-                constructor(props: any) {
-                    super()
-                    this._deps = state.deps
-                    this.state = this._deps.get()[0]
-                }
-
-                setState(state: State): void {
-                    this.state = state
-                }
-
-                componentDidMount() {
-                    this._deps.react(([state]) => {
-                        this.setState(state)
-                    })
-                }
-
-                componentWillUnmount() {
-                }
+        // theme()(TestComponent)
+        class TestComponent extends Component<Props, State> {
+            props: Props;
+            state: State;
+            render() {
+                return h('div', null, 'test-' + this.state.m.val)
             }
         }
+        deps([{
+            m: ModelA
+        }])(TestComponent)
+        component()(TestComponent)
 
-        const di = new Di(createComponent)
-        const c = di.val(Component).get()
+        const di = new Di(createReactWidgetFactory(ReactComponent, () => {
+            throw new Error('get dom element not supported on server')
+        }))
+
+        const c = di.val(TestComponent).get()
+
+        assert(
+            ReactDOM.renderToString(h(c, {
+                prop: 'test'
+            }))
+            ===
+            '<div data-reactroot="" data-reactid="1" data-react-checksum="-1437592142">test-state-value</div>'
+        )
+
+        di.val(ModelA).set(new ModelA({val: '123'}))
+
+        assert(
+            ReactDOM.renderToString(h(c, {
+                prop: 'test'
+            }))
+            ===
+            '<div data-reactroot="" data-reactid="1" data-react-checksum="-19066403">test-123</div>'
+        )
     })
 })
