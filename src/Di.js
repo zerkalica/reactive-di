@@ -1,11 +1,21 @@
 // @flow
 
 import {paramTypesKey, metaKey, RdiMeta} from './annotations'
-import type {Initializer, RegisterDepItem, DepAlias, Dep, ArgDep, InitData} from './annotations'
+import type {
+    DepFn,
+    Key,
+    Initializer, RegisterDepItem, DepAlias, ArgDep, InitData,
+    Adapter, Reactor, Atom, Derivable, DerivableArg, DerivableDict, CreateWidget,
+    StyleSheet, CreateStyleSheet, RawStyleSheet
+} from './interfaces'
 import debugName from './utils/debugName'
 import {fastCallMethod, fastCall, fastCreateObject} from './utils/fastCall'
 import derivableAtomAdapter from './adapters/derivableAtomAdapter'
-import type {Adapter, Reactor, Atom, Derivable, DerivableArg, DerivableDict, CreateWidget} from './adapters/Adapter'
+import createThemesReactor from './createThemesReactor'
+
+function passAny<V>(v: V): V {
+    return v
+}
 
 function pass<V: Function>(target: V, depsAtom: Derivable<V>): V {
     return target(depsAtom)
@@ -13,7 +23,7 @@ function pass<V: Function>(target: V, depsAtom: Derivable<V>): V {
 
 type CacheMap = Map<Function|string, Derivable<any>>
 
-type Meta = [Function, ArgDep[], RdiMeta]
+type Meta = [Function, ArgDep[], RdiMeta<*>]
 
 function metaFromTarget(target: Function): Meta {
     return [
@@ -23,13 +33,15 @@ function metaFromTarget(target: Function): Meta {
     ]
 }
 
+type Result<V> = Derivable<V> | Atom<V>
+
 export default class Di {
     _cache: CacheMap;
     _componentCache: CacheMap;
 
-    _scopeMap: Map<Dep<*>, Di>;
-    _childScopeMap: Map<Dep<*>, Di>;
-    _metaMap: Map<Dep<*>, Meta>;
+    _scopeMap: Map<Key, Di>;
+    _childScopeMap: Map<Key, Di>;
+    _metaMap: Map<Key, Meta>;
 
     _adapter: Adapter;
     _createComponent: CreateWidget<*, *, *>;
@@ -39,14 +51,18 @@ export default class Di {
 
     _stopped: Atom<boolean>;
 
+    _createSheet: CreateStyleSheet;
+
     constructor(
         createComponent?: CreateWidget<*, *, *> = pass,
+        createSheet: CreateStyleSheet = passAny,
         adapter?: Adapter = derivableAtomAdapter,
-        _scopeMap?: Map<Dep<*>, Di> = new Map(),
+        _scopeMap?: Map<Key, Di> = new Map(),
         _componentCache?: CacheMap = new Map(),
-        _metaMap?: Map<Dep<*>, Meta> = new Map()
+        _metaMap?: Map<Key, Meta> = new Map()
     ) {
         this._adapter = adapter
+        this._createSheet = createSheet
         this._cache = new Map()
         this._componentCache = _componentCache
         this._values = {}
@@ -63,7 +79,7 @@ export default class Di {
         return this
     }
 
-    values(values?: ?{[id: string]: any}): Di {
+    values(values?: ?{[id: string]: mixed}): Di {
         this._values = values || {}
         return this
     }
@@ -79,12 +95,19 @@ export default class Di {
             const pr: RegisterDepItem = registered[i]
             if (Array.isArray(pr)) {
                 if (pr.length !== 2) {
-                    throw new Error(`Provide tuple of two items in register()`)
+                    throw new Error(`Provide tuple of two items in register() ${this._debugStr(pr)}`)
                 }
                 childScopeMap.set(pr[0], this)
-                metaMap.set(pr[0], metaFromTarget(pr[1]))
+                if (typeof pr[1] === 'function') {
+                    metaMap.set(pr[0], metaFromTarget(pr[1]))
+                } else {
+                    throw new Error(`Only function as register target, given: ${this._debugStr(pr[1])}`)
+                }
             } else {
                 childScopeMap.set(pr, this)
+                if (typeof pr !== 'function') {
+                    throw new Error(`Only function as register target, given: ${this._debugStr(pr)}`)
+                }
                 metaMap.set(pr, metaFromTarget(pr))
             }
         }
@@ -95,6 +118,7 @@ export default class Di {
     create(): Di {
         return (new Di(
             this._createComponent,
+            this._createSheet,
             this._adapter,
             this._childScopeMap,
             this._componentCache,
@@ -102,26 +126,36 @@ export default class Di {
         )).values(this._values)
     }
 
-    _resolveDeps(deps: ArgDep[]): Derivable<any> {
+    _resolveDeps(deps: ArgDep[], _themes?: ?Derivable<RawStyleSheet>[]): Derivable<any> {
         const resolvedArgs: DerivableArg[] = []
         for (let i = 0, l = deps.length; i < l; i++) {
             const argDep: ArgDep = deps[i]
             if (typeof argDep === 'object') {
                 const result: DerivableDict = {}
                 for (let prop in argDep) {
-                    result[prop] = this.val(argDep[prop])
+                    result[prop] = this.val(argDep[prop], _themes)
                 }
                 resolvedArgs.push(result)
             } else {
-                resolvedArgs.push(this.val(argDep))
+                resolvedArgs.push(this.val(argDep, _themes))
             }
         }
 
         return this._adapter.struct(resolvedArgs)
     }
 
-    val<V>(key: Dep<V>): Derivable<V>|Atom<V> {
-        let atom: ?(Derivable<V>|Atom<V>) = this._cache.get(key)
+    _paths: string[] = [];
+
+    _debugStr(sub: ?mixed): string {
+        return `${debugName(sub)} [${this._paths.join('.')}]`
+    }
+
+    atom<V>(key: Key): Atom<V> {
+        return (this.val(key): any)
+    }
+
+    val<V>(key: Key, _themes?: ?Derivable<RawStyleSheet>[]): Result<V> {
+        let atom: ?Result<V> = this._cache.get(key)
         if (atom) {
             return atom
         }
@@ -130,9 +164,18 @@ export default class Di {
             return parentDi.val(key)
         }
 
-        const [target, deps, meta]: Meta = this._metaMap.get(key) || metaFromTarget(key)
+        let rec: ?Meta = this._metaMap.get(key)
+        if (!rec) {
+            if (typeof key === 'function') {
+                rec = metaFromTarget(key)
+            } else {
+                throw new Error(`Can't read annotation from ${this._debugStr(key)}`)
+            }
+            this._metaMap.set(key, rec)
+        }
+        const [target, deps, meta] = rec
         if (!meta) {
-            throw new Error(`RdiMeta not found: "${debugName(target)}"`)
+            throw new Error(`RdiMeta not found: "${this._debugStr(target)}"`)
         }
         const adapter: Adapter = this._adapter
 
@@ -146,8 +189,8 @@ export default class Di {
                 }
                 if (meta.construct) {
                     atom = adapter.isAtom(value)
-                        ? value.derive((v: V) => new (target: Function)(value))
-                        : adapter.atom(new (target: Function)(value)) // eslint-disable-line
+                        ? value.derive((v: V) => new target(value))
+                        : adapter.atom(new target(value)) // eslint-disable-line
                 } else {
                     atom = adapter.isAtom(value)
                         ? value
@@ -175,8 +218,13 @@ export default class Di {
                 const container: Di = meta.localDeps
                     ? this.create().register(meta.localDeps)
                     : this
-                const depsAtom: Derivable<mixed[]> = container._resolveDeps(deps)
-                atom = adapter.atom((this._createComponent((target: any), depsAtom): any))
+                const themes: Derivable<RawStyleSheet>[] = []
+                const depsAtom: Derivable<mixed[]> = container._resolveDeps(deps, themes)
+                atom = adapter.atom((this._createComponent(
+                    target,
+                    depsAtom,
+                    createThemesReactor(adapter.struct(themes))
+                ): any))
                 this._componentCache.set(key, atom)
             }
             this._cache.set(key, atom)
@@ -185,21 +233,28 @@ export default class Di {
         }
 
         const depsAtom: Derivable<mixed[]> = this._resolveDeps(deps)
+        const preprocess: (v: any) => any = meta.isTheme ? this.__createSheet : passAny
         if (meta.isFactory) {
             if (meta.isService) {
                 atom = adapter.atom(this._createFactory(target, depsAtom))
             } else {
-                atom = depsAtom.derive((deps: mixed[]) => fastCall(target, deps))
+                atom = depsAtom.derive((deps: mixed[]) => preprocess(fastCall(target, deps)))
             }
         } else {
             if (meta.isService) {
                 atom = adapter.atom(this._createObject(target, depsAtom))
             } else {
-                atom = depsAtom.derive((deps: mixed[]) => fastCreateObject(
-                    ((target: any): Class<V>),
-                    deps
-                ))
+                atom = depsAtom.derive((deps: mixed[]) => preprocess(fastCreateObject(target, deps)))
             }
+        }
+        if (meta.isTheme) {
+            if (meta.isService) {
+                throw new Error(`Them can't be an @service annotated: ${this._debugStr(key)}`)
+            }
+            if (!_themes) {
+                throw new Error(`Theme used as dep not for component: ${this._debugStr(key)}`)
+            }
+            _themes.push(atom)
         }
 
         this._cache.set(key, atom)
@@ -207,10 +262,21 @@ export default class Di {
         return atom
     }
 
-    _createObject<V>(target: Dep<V>, depsAtom: Derivable<mixed[]>): V {
-        const value: V = fastCreateObject(((target: Function): Class<V>), depsAtom.get())
+    __createSheet: (theme: any) => RawStyleSheet = (theme: any) => {
+        if (!theme || typeof theme !== 'object' || !theme.__css) {
+            throw new Error(`Provide this.__css property with jss styles in theme ${this._debugStr(theme)}`)
+        }
+        const styles: StyleSheet = this._createSheet(theme.__css)
+        theme.__styles = styles
+        Object.assign(theme, styles.classes)
+
+        return (theme: RawStyleSheet)
+    };
+
+    _createObject<V: Object>(target: Class<V>, depsAtom: Derivable<mixed[]>): V {
+        const value: V = fastCreateObject(target, depsAtom.get())
         const onChange = (deps: mixed[]) => {
-            fastCallMethod((value: any), target, deps)
+            fastCallMethod(value, target, deps)
         }
         depsAtom.react(onChange, {
             skipFirst: true,
@@ -220,8 +286,8 @@ export default class Di {
         return value
     }
 
-    _createFactory<V>(target: Dep<V>, depsAtom: Derivable<mixed[]>): V {
-        let value: V & Function = fastCall(target, depsAtom.get())
+    _createFactory<V>(target: DepFn<DepFn<V>>, depsAtom: Derivable<mixed[]>): DepFn<V> {
+        let value: DepFn<V>  = fastCall(target, depsAtom.get())
 
         function onChange(deps: mixed[]): void {
             value = fastCall(target, deps)
@@ -232,11 +298,11 @@ export default class Di {
             until: this._stopped
         })
 
-        function factory(...args: mixed[]): mixed {
+        function factory(...args: mixed[]): V {
             return fastCall(value, args)
         }
         factory.displayName = `wrap@${debugName(target)}`
 
-        return (factory: any)
+        return factory
     }
 }

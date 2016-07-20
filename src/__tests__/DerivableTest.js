@@ -14,8 +14,7 @@ import {
 } from '../annotations'
 import type {
     ArgDep,
-    Dep
-} from '../annotations'
+} from '../interfaces'
 
 import Di from '../Di'
 import BaseModel from '../BaseModel'
@@ -58,7 +57,7 @@ describe('DerivableTest', () => {
         const di = new Di()
         const s: Service = di.val(Service).get()
         assert(s.val === '1')
-        di.val(ModelA).set(new ModelA({val: '123'}))
+        di.atom(ModelA).set(new ModelA({val: '123'}))
         assert(s.val === '123')
         assert(s === di.val(Service).get())
     })

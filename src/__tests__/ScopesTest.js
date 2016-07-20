@@ -12,7 +12,7 @@ import {
 } from '../annotations'
 import type {
     InitData
-} from '../annotations'
+} from '../interfaces'
 
 import Di from '../Di'
 import BaseModel from '../BaseModel'
@@ -41,12 +41,12 @@ describe('ScopesTest', () => {
         })
         service(Service)
         klass(Service)
-        deps([ModelA])(Service)
+        deps(ModelA)(Service)
 
         const di = (new Di()).register([ModelA])
         let newDi = di.create()
         // modify ModelA in parent di
-        newDi.val(ModelA).set(new ModelA({val: 'test1'}))
+        newDi.atom(ModelA).set(new ModelA({val: 'test1'}))
         assert(di.val(ModelA).get().val === 'test1')
     })
 
@@ -69,14 +69,14 @@ describe('ScopesTest', () => {
         })
         klass(Service)
         service(Service)
-        deps([ModelA])(Service)
+        deps(ModelA)(Service)
 
         const di = new Di()
 
         let newDi = di.create().register([ModelA])
 
         // modify ModelA in parent di
-        newDi.val(ModelA).set(new ModelA({val: 'test1'}))
+        newDi.atom(ModelA).set(new ModelA({val: 'test1'}))
 
         assert(di.val(ModelA).get().val === 'test')
         assert(newDi.val(ModelA).get().val === 'test1')
@@ -101,13 +101,13 @@ describe('ScopesTest', () => {
         })
         klass(Service)
         service(Service)
-        deps([ModelA])(Service)
+        deps(ModelA)(Service)
 
         const di = new Di()
         let newDi = di.create()
 
         // modify ModelA in parent di
-        newDi.val(ModelA).set(new ModelA({val: 'test1'}))
+        newDi.atom(ModelA).set(new ModelA({val: 'test1'}))
 
         assert(di.val(ModelA).get().val === 'test')
         assert(newDi.val(ModelA).get().val === 'test1')

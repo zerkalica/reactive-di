@@ -5,12 +5,12 @@ import type {
     Atom,
     Derivable,
     CreateWidget,
-    SrcComponent
-} from './adapters/Adapter'
+    SrcComponent,
+    CreateThemesReactor
+} from '../interfaces'
 
-import derivableAtomAdapter from './adapters/derivableAtomAdapter'
-import debugName from './utils/debugName'
-
+import derivableAtomAdapter from './derivableAtomAdapter'
+import debugName from '../utils/debugName'
 type ReactComponent<Props, State> = React$Component<*, Props, State>
 type CreateReactWidget<Props, State> = CreateWidget<Props, State, Class<ReactComponent<Props, State>>>
 
@@ -18,18 +18,20 @@ const dp = Object.defineProperty
 
 function createReactWidget<Props, State>(
     RC: Class<ReactComponent<Props, State>>,
-    getDom: (component: ReactComponent<Props, State>) => HTMLElement,
+    findDOMElement: (component: ReactComponent<Props, State>) => HTMLElement,
     adapter: Adapter,
     Target: Class<SrcComponent<Props, State>>,
-    atom: Derivable<[State]>
+    atom: Derivable<[State]>,
+    createReactor: CreateThemesReactor
 ): any {
     return class WrappedComponent extends RC {
         static displayName: string = `wrap@${debugName(Target)}`;
         state: State;
         props: Props;
-        _mounted: ?Atom<boolean>;
         _target: Target;
+
         _setState = ([state]: [State]) => this.setState(state);
+        _unmounted: Atom<boolean>;
 
         componentWillMount(): void {
             this.state = atom.get()[0]
@@ -37,15 +39,18 @@ function createReactWidget<Props, State>(
             target.props = this.props
             target.state = this.state
             dp(target, '$', {
-                get: getDom
+                get: () => findDOMElement(this)
             })
+            this._unmounted = adapter.atom(false)
         }
 
         componentDidMount() {
-            this._mounted = adapter.atom(true)
             atom.react(this._setState, {
-                until: this._mounted.not()
+                skipFirst: true,
+                until: this._unmounted
             })
+            createReactor(this._unmounted)
+
             const target =  this._target
             if (target.componentDidMount) {
                 target.props = this.props
@@ -64,9 +69,7 @@ function createReactWidget<Props, State>(
         }
 
         componentWillUnmount(): void {
-            if (this._mounted) {
-                this._mounted.set(false)
-            }
+            this._unmounted.set(true)
             const target =  this._target
             if (target.componentWillUnmount) {
                 target.props = this.props
@@ -86,11 +89,12 @@ function createReactWidget<Props, State>(
 
 export default function createReactWidgetFactory<Props, State>(
     ReactComponent: Class<ReactComponent<Props, State>>,
-    getDom: (component: ReactComponent<Props, State>) => HTMLElement,
+    findDOMElement: (component: ReactComponent<Props, State>) => HTMLElement,
     adapter: Adapter = derivableAtomAdapter
 ): CreateReactWidget<Props, State> {
     return (
         Target: Class<SrcComponent<Props, State>>,
-        atom: Derivable<[State]>
-    ) => createReactWidget(ReactComponent, getDom, adapter, Target, atom)
+        atom: Derivable<[State]>,
+        createReactor: CreateThemesReactor
+    ) => createReactWidget(ReactComponent, findDOMElement, adapter, Target, atom, createReactor)
 }

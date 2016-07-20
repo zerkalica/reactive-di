@@ -13,7 +13,7 @@ import {
 } from '../annotations'
 import type {
     InitData
-} from '../annotations'
+} from '../interfaces'
 
 import Di from '../Di'
 import BaseModel from '../BaseModel'

@@ -6,13 +6,12 @@ import assert from 'power-assert'
 
 import {
     source,
-    derivable,
     deps,
     klass
 } from '../annotations'
 import type {
     InitData
-} from '../annotations'
+} from '../interfaces'
 
 import Di from '../Di'
 import BaseModel from '../BaseModel'
@@ -42,7 +41,7 @@ describe('InitialValueTest', () => {
             }
         })
         klass(Service)
-        deps([ModelA])(Service)
+        deps(ModelA)(Service)
 
         const di = (new Di()).values({
             modelA: {
@@ -72,7 +71,7 @@ describe('InitialValueTest', () => {
             }
         })
         klass(Service)
-        deps([ModelA])(Service)
+        deps(ModelA)(Service)
 
         const di = (new Di()).values({
             modelA: {
@@ -102,7 +101,7 @@ describe('InitialValueTest', () => {
             }
         })
         klass(Service)
-        deps([ModelA])(Service)
+        deps(ModelA)(Service)
 
         const am = atom(new ModelA({
             val: 'outside'
@@ -136,7 +135,7 @@ describe('InitialValueTest', () => {
             }
         })
         klass(Service)
-        deps([ModelA])(Service)
+        deps(ModelA)(Service)
 
         const am = atom({
             val: 'outside'

@@ -1,3 +1,6 @@
+[ignore]
+.*fbjs.*
+
 [options]
 munge_underscores=true
 esproposal.decorators=ignore

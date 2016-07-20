@@ -13,8 +13,7 @@ import {
 } from '../annotations'
 import type {
     ArgDep,
-    Dep
-} from '../annotations'
+} from '../interfaces'
 
 import Di from '../Di'
 import BaseModel from '../BaseModel'
@@ -89,7 +88,7 @@ describe('Di.Base - class with one dependency', () => {
 
         const di = new Di()
         const s: Service = di.val(Service).get()
-        const modelA = di.val(ModelA)
+        const modelA = di.atom(ModelA)
         assert(s.getValue() === '1')
         modelA.set(modelA.get().copy({val: '123'}))
         assert(s.getValue() === '123')
@@ -126,7 +125,7 @@ describe('Di.Base - class with one dependency', () => {
 
         const di = new Di()
         const fn: FactoryService = di.val(FactoryService).get()
-        const modelA = di.val(ModelA)
+        const modelA = di.atom(ModelA)
         assert(fn() === '1')
         modelA.set(modelA.get().copy({val: '123'}))
 

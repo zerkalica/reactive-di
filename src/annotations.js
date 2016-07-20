@@ -1,37 +1,29 @@
 // @flow
-
-export type Dep<V> = ((...a: any) => V)|Class<V>
-export type DepDict = {[k: string]: Dep<any>}
-export type ArgDep = Dep<any>
-
-export type DepAlias = [Dep<*>, Dep<*>]
-export type RegisterDepItem = Dep<*>
+import type {DepFn, DepDict, ArgDep, DepAlias, RegisterDepItem, InitData, Initializer} from './interfaces'
 
 export const paramTypesKey: Symbol = Symbol.for('design:paramtypes')
 export const metaKey: Symbol = Symbol.for('rdi:meta')
 
-export type InitData<V> = [V, ?(Promise<V>|Observable<V, Error>)]
-export type Initializer<V> = (...x: any[]) => InitData<V>
-
-export class RdiMeta {
+export class RdiMeta<V> {
     key: ?string = null;
     construct: boolean = false;
+    isTheme: boolean = false;
     isService: boolean = false;
-    initializer: ?Dep<Initializer<*>> = null;
+    initializer: ?Initializer<V> = null;
     isComponent: boolean = false;
     localDeps: ?RegisterDepItem[] = null;
     isFactory: boolean = false;
 }
 
-export function getMeta<V: Function>(target: V): RdiMeta {
-    let meta: ?RdiMeta = target[metaKey]
+export function getMeta<V: Function>(target: V): RdiMeta<*> {
+    let meta: ?RdiMeta<*> = target[metaKey]
     if (!meta) {
         meta = target[metaKey] = new RdiMeta()
     }
     return meta
 }
 
-export function component<V: Function>(localDeps?: ArgDep[]): (target: V) => V {
+export function component<V: Function>(localDeps?: RegisterDepItem[]): (target: V) => V {
     return (target: V) => {
         const meta = getMeta(target)
         if (localDeps) {
@@ -61,9 +53,14 @@ export function factory<V: Function>(target: V): V {
     return target
 }
 
+export function theme<V: Function>(target: V): V {
+    getMeta(target).isTheme = true
+    return target
+}
+
 export function source<R, V: Class<R>>(rec: {
     key: string,
-    init?: ?Initializer<V>,
+    init?: ?Initializer<R>,
     construct?: boolean
 }): (target: V) => V {
     return (target: V) => {

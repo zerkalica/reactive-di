@@ -1,5 +1,5 @@
 // @flow
-import type {Atom, Adapter} from './Adapter'
+import type {Atom, Adapter} from '../interfaces'
 
 import {
     atom,

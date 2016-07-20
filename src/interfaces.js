@@ -12,15 +12,30 @@ export interface SrcComponent<Props, State> extends React$Component<void, Props,
     componentWillUnmount: () => void;
 }
 
+export interface StyleSheet {
+    attach(): void;
+    detach(): void;
+    classes: {[id: string]: string};
+}
+
+export interface RawStyleSheet {
+    __css: ?{[id: string]: Object};
+    __styles: StyleSheet;
+}
+
+export type CreateStyleSheet = (css: {[id: string]: Object}) => StyleSheet;
+export type CreateThemesReactor = (unmounted: Derivable<boolean>) => void;
+
 export type CreateWidget<Props, State, Component> = (
     Target: Class<SrcComponent<Props, State>>,
-    atom: Derivable<*>
+    atom: Derivable<*>,
+    createReactor: CreateThemesReactor
 ) => Component
 
 export interface LifeCycle {
-    until?: ?Derivable<boolean>;
-    onStart?: ?() => void;
-    onStop?: ?() => void;
+    until?: Derivable<boolean>;
+    onStart?: () => void;
+    onStop?: () => void;
 }
 
 export interface Reactor<T> {
@@ -30,10 +45,8 @@ export interface Reactor<T> {
 
 export interface Derivable<V> {
     get(): V;
-    not(): Derivable<boolean>;
     derive<E>(f: (value: V) => E): Derivable<E>;
     react(fn: (v: V) => void, lc?: ?LifeCycle): void;
-    reactor<T>(fn: ((v: T) => void)|Reactor<T>): Reactor<T>;
 }
 
 export interface Atom<V> extends Derivable<V> {
@@ -41,12 +54,23 @@ export interface Atom<V> extends Derivable<V> {
 }
 
 export type Result<V> = Derivable<V>|Atom<V>
-export type DerivableDict = {[id: string]: Result<*>}
-export type DerivableArg = Result<*> | DerivableDict
+export type DerivableDict = {[id: string]: Derivable<*>}
+export type DerivableArg = any
 
 export interface Adapter {
     isAtom(v: mixed): boolean;
     atom<V>(value: V): Atom<V>;
     atomFromObservable<V>(value: V, observable: (Promise<V> | Observable<V, Error>)): Atom<V>;
-    struct<T>(value: DerivableArg[]): Derivable<T>;
+    struct<R>(value: DerivableArg[]): Derivable<R>;
 }
+
+export type Key = Function|string
+
+export type DepFn<V> = (...a: any) => V
+export type DepDict = {[k: string]: Key}
+export type ArgDep = Key | DepDict
+
+export type DepAlias = [Key, Key]
+export type RegisterDepItem = DepAlias | Key
+export type InitData<V> = [V, ?(Promise<V> | Observable<V, Error>)]
+export type Initializer<V> = DepFn<InitData<V>>

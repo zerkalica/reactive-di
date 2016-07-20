@@ -12,14 +12,14 @@ function propToStr(prop: mixed): string {
 }
 
 export default function debugName(
-    func: ?Function|string|number|Object
+    func: ?mixed
 ): string {
     if (
         func === null
         || typeof func !== 'object'
         && typeof func !== 'function'
     ) {
-        return JSON.stringify(func)
+        return (typeof func) + ' ' + JSON.stringify(func)
     }
 
     if (Array.isArray(func)) {
