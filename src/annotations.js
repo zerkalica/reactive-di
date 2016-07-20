@@ -1,40 +1,79 @@
-/* @flow */
+// @flow
+import type {DepFn, DepDict, ArgDep, DepAlias, RegisterDepItem, InitData, Initializer} from './interfaces'
 
-import {klassAnnotation, klass} from 'reactive-di/plugins/class/klass'
-import {factoryAnnotation, factory} from 'reactive-di/plugins/factory/factory'
-import {meta} from 'reactive-di/plugins/meta/meta'
-import {modelAnnotation, model} from 'reactive-di/plugins/model/model'
-import {
-    loaderAnnotation,
-    loader,
-    pendingLoader,
-    pendingLoaderAnnotation
-} from 'reactive-di/plugins/loader/loader'
-import {resetAnnotation, reset} from 'reactive-di/plugins/loader/reset'
-import {observableAnnotation, observable} from 'reactive-di/plugins/observable/observable'
-import {asyncsetterAnnotation, asyncsetter} from 'reactive-di/plugins/setter/asyncsetter'
-import {syncsetterAnnotation, syncsetter} from 'reactive-di/plugins/setter/syncsetter'
-import {alias} from 'reactive-di/plugins/alias/alias'
+export const paramTypesKey: Symbol = Symbol.for('design:paramtypes')
+export const metaKey: Symbol = Symbol.for('rdi:meta')
 
-export {
-    alias,
-    klass,
-    klassAnnotation,
-    meta,
-    factoryAnnotation,
-    factory,
-    modelAnnotation,
-    model,
-    loaderAnnotation,
-    loader,
-    pendingLoader,
-    pendingLoaderAnnotation,
-    resetAnnotation,
-    reset,
-    observableAnnotation,
-    observable,
-    asyncsetterAnnotation,
-    asyncsetter,
-    syncsetterAnnotation,
-    syncsetter
+export class RdiMeta<V> {
+    key: ?string = null;
+    construct: boolean = false;
+    isTheme: boolean = false;
+    isService: boolean = false;
+    initializer: ?Initializer<V> = null;
+    isComponent: boolean = false;
+    localDeps: ?RegisterDepItem[] = null;
+    isFactory: boolean = false;
+}
+
+export function getMeta<V: Function>(target: V): RdiMeta<*> {
+    let meta: ?RdiMeta<*> = target[metaKey]
+    if (!meta) {
+        meta = target[metaKey] = new RdiMeta()
+    }
+    return meta
+}
+
+export function component<V: Function>(localDeps?: RegisterDepItem[]): (target: V) => V {
+    return (target: V) => {
+        const meta = getMeta(target)
+        if (localDeps) {
+            meta.localDeps = localDeps
+        }
+        meta.isComponent = true
+        return target
+    }
+}
+
+export function deps<V: Function>(...args: ArgDep[]): (target: V) => V {
+    return (target: V) => {
+        if (args.length) {
+            target[paramTypesKey] = args
+        }
+        return target
+    }
+}
+
+export function klass<V, R: Class<V>>(target: R): R {
+    getMeta(target)
+    return target
+}
+
+export function factory<V: Function>(target: V): V {
+    getMeta(target).isFactory = true
+    return target
+}
+
+export function theme<V: Function>(target: V): V {
+    getMeta(target).isTheme = true
+    return target
+}
+
+export function source<R, V: Class<R>>(rec: {
+    key: string,
+    init?: ?Initializer<R>,
+    construct?: boolean
+}): (target: V) => V {
+    return (target: V) => {
+        const meta = getMeta(target)
+        meta.key = rec.key
+        meta.isService = true
+        meta.initializer = rec.init || null
+        meta.construct = rec.construct || false
+        return target
+    }
+}
+
+export function service<V: Function>(target: V): V {
+    getMeta(target).isService = true
+    return target
 }

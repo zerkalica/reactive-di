@@ -4,3 +4,4 @@
 **/dist/*
 **/conf/*
 **/node_modules/*
+**/flow-typed/*

@@ -10,7 +10,6 @@
         "syntax-flow",
         "espower",
         "flow-comments",
-        "transform-flow-strip-types",
-        "transform-runtime"
+        "transform-flow-strip-types"
     ]
 }
