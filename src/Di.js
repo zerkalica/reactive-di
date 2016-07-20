@@ -5,7 +5,7 @@ import type {
     DepFn,
     Key,
     Initializer, RegisterDepItem, DepAlias, ArgDep, InitData,
-    Adapter, Reactor, Atom, Derivable, DerivableArg, DerivableDict, CreateWidget,
+    Adapter, Atom, Derivable, DerivableArg, DerivableDict, CreateWidget,
     StyleSheet, CreateStyleSheet, RawStyleSheet
 } from './interfaces'
 import debugName from './utils/debugName'

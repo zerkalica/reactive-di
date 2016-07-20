@@ -38,11 +38,6 @@ export interface LifeCycle {
     onStop?: () => void;
 }
 
-export interface Reactor<T> {
-    start(): void;
-    stop(): void;
-}
-
 export interface Derivable<V> {
     get(): V;
     derive<E>(f: (value: V) => E): Derivable<E>;
