@@ -254,7 +254,7 @@ export default class Di {
             if (!_themes) {
                 throw new Error(`Theme used as dep not for component: ${this._debugStr(key)}`)
             }
-            _themes.push(atom)
+            _themes.push(((atom: any): Derivable<RawStyleSheet>))
         }
 
         this._cache.set(key, atom)
@@ -270,7 +270,7 @@ export default class Di {
         theme.__styles = styles
         Object.assign(theme, styles.classes)
 
-        return (theme: RawStyleSheet)
+        return (theme)
     };
 
     _createObject<V: Object>(target: Class<V>, depsAtom: Derivable<mixed[]>): V {

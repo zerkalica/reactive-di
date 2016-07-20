@@ -12,7 +12,7 @@ export interface SrcComponent<Props, State> extends React$Component<void, Props,
     componentWillUnmount: () => void;
 }
 
-export interface StyleSheet {
+export type StyleSheet = {
     attach(): void;
     detach(): void;
     classes: {[id: string]: string};
