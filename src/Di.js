@@ -161,7 +161,7 @@ export default class Di {
         }
         const parentDi: ?Di = this._scopeMap.get(key)
         if (parentDi) {
-            return parentDi.val(key)
+            return parentDi.val(key, _themes)
         }
 
         let rec: ?Meta = this._metaMap.get(key)

@@ -6,7 +6,7 @@ import type {
     Derivable,
     CreateWidget,
     SrcComponent,
-    CreateThemesReactor
+    CreateComponentReactor
 } from '../interfaces'
 
 import derivableAtomAdapter from './derivableAtomAdapter'
@@ -22,7 +22,7 @@ function createReactWidget<Props, State>(
     adapter: Adapter,
     Target: Class<SrcComponent<Props, State>>,
     atom: Derivable<[State]>,
-    createReactor: CreateThemesReactor
+    CreateComponentReactor: CreateComponentReactor
 ): any {
     return class WrappedComponent extends RC {
         static displayName: string = `wrap@${debugName(Target)}`;
@@ -49,7 +49,7 @@ function createReactWidget<Props, State>(
                 skipFirst: true,
                 until: this._unmounted
             })
-            createReactor(this._unmounted)
+            CreateComponentReactor(this._unmounted)
 
             const target =  this._target
             if (target.componentDidMount) {
@@ -95,6 +95,6 @@ export default function createReactWidgetFactory<Props, State>(
     return (
         Target: Class<SrcComponent<Props, State>>,
         atom: Derivable<[State]>,
-        createReactor: CreateThemesReactor
-    ) => createReactWidget(ReactComponent, findDOMElement, adapter, Target, atom, createReactor)
+        CreateComponentReactor: CreateComponentReactor
+    ) => createReactWidget(ReactComponent, findDOMElement, adapter, Target, atom, CreateComponentReactor)
 }

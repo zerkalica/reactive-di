@@ -1,5 +1,5 @@
 // @flow
-import type {CreateThemesReactor, StyleSheet, RawStyleSheet, Derivable} from './interfaces'
+import type {CreateComponentReactor, StyleSheet, RawStyleSheet, Derivable} from './interfaces'
 
 function themesReact(themes: Derivable<RawStyleSheet[]>, unmounted: Derivable<boolean>): void {
     let oldStyles: RawStyleSheet[] = []
@@ -21,9 +21,9 @@ function themesReact(themes: Derivable<RawStyleSheet[]>, unmounted: Derivable<bo
     })
 }
 
-export default function createThemesReactorFactory(
+export default function CreateComponentReactorFactory(
     themes: Derivable<RawStyleSheet[]>
-): CreateThemesReactor {
+): CreateComponentReactor {
     return (unmounted: Derivable<boolean>) => {
         themesReact(themes, unmounted)
     }

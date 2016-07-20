@@ -24,12 +24,12 @@ export interface RawStyleSheet {
 }
 
 export type CreateStyleSheet = (css: {[id: string]: Object}) => StyleSheet;
-export type CreateThemesReactor = (unmounted: Derivable<boolean>) => void;
+export type CreateComponentReactor = (unmounted: Derivable<boolean>) => void;
 
 export type CreateWidget<Props, State, Component> = (
     Target: Class<SrcComponent<Props, State>>,
     atom: Derivable<*>,
-    createReactor: CreateThemesReactor
+    createReactor: CreateComponentReactor
 ) => Component
 
 export interface LifeCycle {
