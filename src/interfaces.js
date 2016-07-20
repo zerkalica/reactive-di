@@ -1,7 +1,6 @@
 // @flow
 
 export interface SrcComponent<Props, State> extends React$Component<void, Props, State> {
-    static constructor(state: State): SrcComponent<Props, State>;
     props: Props;
     state: State;
     $: HTMLElement;
