@@ -19,7 +19,7 @@ export default function debugName(
         || typeof func !== 'object'
         && typeof func !== 'function'
     ) {
-        return (typeof func) + ' ' + JSON.stringify(func)
+        return String(func)
     }
 
     if (Array.isArray(func)) {

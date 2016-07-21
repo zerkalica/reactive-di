@@ -11,9 +11,7 @@ import {
     source,
     klass
 } from '../annotations'
-import type {
-    InitData
-} from '../interfaces'
+import type {InitData} from '../interfaces/deps'
 
 import Di from '../Di'
 import BaseModel from '../BaseModel'

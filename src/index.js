@@ -4,6 +4,14 @@ import Di from './Di'
 import createReactWidgetFactory from './adapters/createReactWidgetFactory'
 import derivableAtomAdapter from './adapters/derivableAtomAdapter'
 import BaseModel from './BaseModel'
+import Updater from './Updater'
+
+export type {
+    RegisterDepItem,
+    Key,
+    Initializer,
+    InitData
+} from './interfaces/deps'
 
 export type {
     SrcComponent,
@@ -11,19 +19,27 @@ export type {
     RawStyleSheet,
     CreateStyleSheet,
     CreateComponentReactor,
-    CreateWidget,
+    CreateWidget
+} from './interfaces/component'
 
+export type {
+    Adapter,
     Derivable,
     Atom,
-    Adapter,
-    LifeCycle,
-    Key,
-    Initializer,
-    InitData
-} from './interfaces'
+    LifeCycle
+} from './interfaces/atom'
+
+export type {
+    KeyValueSyncUpdate,
+    SyncUpdate,
+    AsyncUpdate,
+    AsyncUpdateThunk,
+    Transaction
+} from './Updater'
 
 export {
     Di,
+    Updater,
     BaseModel,
     derivableAtomAdapter,
     createReactWidgetFactory

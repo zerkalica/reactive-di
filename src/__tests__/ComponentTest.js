@@ -15,10 +15,7 @@ import {
     klass
 } from '../annotations'
 
-import type {
-    StyleSheet,
-    Derivable
-} from '../interfaces'
+import type {StyleSheet} from '../interfaces/component'
 
 import {Component} from 'fake-react'
 import Di from '../Di'

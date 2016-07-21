@@ -1,13 +1,9 @@
 // @flow
 
 import {paramTypesKey, metaKey, RdiMeta} from './annotations'
-import type {
-    DepFn,
-    Key,
-    Initializer, RegisterDepItem, DepAlias, ArgDep, InitData,
-    Adapter, Atom, Derivable, DerivableArg, DerivableDict, CreateWidget,
-    StyleSheet, CreateStyleSheet, RawStyleSheet
-} from './interfaces'
+import type {DepFn, Key, Initializer, RegisterDepItem, DepAlias, ArgDep, InitData} from './interfaces/deps'
+import type {CreateWidget, StyleSheet, CreateStyleSheet, RawStyleSheet} from './interfaces/component'
+import type {Adapter, Atom, Derivable, DerivableArg, DerivableDict} from './interfaces/atom'
 import debugName from './utils/debugName'
 import {fastCallMethod, fastCall, fastCreateObject} from './utils/fastCall'
 import derivableAtomAdapter from './adapters/derivableAtomAdapter'
@@ -25,11 +21,13 @@ type CacheMap = Map<Function|string, Derivable<any>>
 
 type Meta = [Function, ArgDep[], RdiMeta<*>]
 
+const defaultMeta: RdiMeta<*> = new RdiMeta()
+
 function metaFromTarget(target: Function): Meta {
     return [
         target,
         target[paramTypesKey] || [],
-        target[metaKey]
+        target[metaKey] || defaultMeta
     ]
 }
 
@@ -144,10 +142,10 @@ export default class Di {
         return this._adapter.struct(resolvedArgs)
     }
 
-    _paths: string[] = [];
+    _path: string[] = [];
 
     _debugStr(sub: ?mixed): string {
-        return `${debugName(sub)} [${this._paths.join('.')}]`
+        return `${debugName(sub)} [${this._path.join('.')}]`
     }
 
     atom<V>(key: Key): Atom<V> {
@@ -157,6 +155,11 @@ export default class Di {
     val<V>(key: Key, _themes?: ?Derivable<RawStyleSheet>[]): Result<V> {
         let atom: ?Result<V> = this._cache.get(key)
         if (atom) {
+            return atom
+        }
+        if (key === this.constructor) {
+            atom = this._adapter.atom((this: any))
+            this._cache.set(key, atom)
             return atom
         }
         const parentDi: ?Di = this._scopeMap.get(key)
@@ -177,6 +180,7 @@ export default class Di {
         if (!meta) {
             throw new Error(`RdiMeta not found: "${this._debugStr(target)}"`)
         }
+        this._path.push(debugName(key))
         const adapter: Adapter = this._adapter
 
         if (meta.key) {
@@ -198,6 +202,7 @@ export default class Di {
                 }
                 this._cache.set(key, atom)
 
+                this._path.pop()
                 return atom
             }
         }
@@ -209,6 +214,7 @@ export default class Di {
             atom = adapter.atomFromObservable(data, obs)
             this._cache.set(key, atom)
 
+            this._path.pop()
             return atom
         }
 
@@ -229,6 +235,7 @@ export default class Di {
             }
             this._cache.set(key, atom)
 
+            this._path.pop()
             return atom
         }
 
@@ -236,7 +243,7 @@ export default class Di {
         const preprocess: (v: any) => any = meta.isTheme ? this.__createSheet : passAny
         if (meta.isFactory) {
             if (meta.isService) {
-                atom = adapter.atom(this._createFactory(target, depsAtom))
+                atom = adapter.atom((this._createFactory(target, depsAtom): any))
             } else {
                 atom = depsAtom.derive((deps: mixed[]) => preprocess(fastCall(target, deps)))
             }
@@ -258,6 +265,7 @@ export default class Di {
         }
 
         this._cache.set(key, atom)
+        this._path.pop()
 
         return atom
     }

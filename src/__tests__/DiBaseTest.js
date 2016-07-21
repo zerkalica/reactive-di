@@ -11,9 +11,6 @@ import {
     source,
     factory
 } from '../annotations'
-import type {
-    ArgDep,
-} from '../interfaces'
 
 import Di from '../Di'
 import BaseModel from '../BaseModel'

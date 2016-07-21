@@ -1,5 +1,5 @@
 // @flow
-import type {DepFn, DepDict, ArgDep, DepAlias, RegisterDepItem, InitData, Initializer} from './interfaces'
+import type {DepFn, DepDict, ArgDep, DepAlias, RegisterDepItem, InitData, Initializer} from './interfaces/deps'
 
 export const paramTypesKey: Symbol = Symbol.for('design:paramtypes')
 export const metaKey: Symbol = Symbol.for('rdi:meta')

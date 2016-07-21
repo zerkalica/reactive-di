@@ -1,13 +1,14 @@
 // @flow
-
 import type {
     Adapter,
     Atom,
-    Derivable,
+    Derivable
+} from '../interfaces/atom'
+import type {
     CreateWidget,
     SrcComponent,
     CreateComponentReactor
-} from '../interfaces'
+} from '../interfaces/component'
 
 import derivableAtomAdapter from './derivableAtomAdapter'
 import debugName from '../utils/debugName'
@@ -82,7 +83,7 @@ function createReactWidget<Props, State>(
             const target = this._target
             target.props = this.props
             target.state = this.state
-            return target.render()
+            return target.render(this.props, this.state)
         }
     }
 }
@@ -95,6 +96,6 @@ export default function createReactWidgetFactory<Props, State>(
     return (
         Target: Class<SrcComponent<Props, State>>,
         atom: Derivable<[State]>,
-        CreateComponentReactor: CreateComponentReactor
-    ) => createReactWidget(ReactComponent, findDOMElement, adapter, Target, atom, CreateComponentReactor)
+        createComponentReactor: CreateComponentReactor
+    ) => createReactWidget(ReactComponent, findDOMElement, adapter, Target, atom, createComponentReactor)
 }

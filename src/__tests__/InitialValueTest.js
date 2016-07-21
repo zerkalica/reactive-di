@@ -9,9 +9,6 @@ import {
     deps,
     klass
 } from '../annotations'
-import type {
-    InitData
-} from '../interfaces'
 
 import Di from '../Di'
 import BaseModel from '../BaseModel'

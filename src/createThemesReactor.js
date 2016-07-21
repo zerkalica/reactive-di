@@ -1,5 +1,6 @@
 // @flow
-import type {CreateComponentReactor, StyleSheet, RawStyleSheet, Derivable} from './interfaces'
+import type {CreateComponentReactor, StyleSheet, RawStyleSheet} from './interfaces/component'
+import type {Derivable} from './interfaces/atom'
 
 function themesReact(themes: Derivable<RawStyleSheet[]>, unmounted: Derivable<boolean>): void {
     let oldStyles: RawStyleSheet[] = []
