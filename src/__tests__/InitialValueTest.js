@@ -6,8 +6,7 @@ import assert from 'power-assert'
 
 import {
     source,
-    deps,
-    klass
+    deps
 } from '../annotations'
 
 import Di from '../Di'
@@ -29,7 +28,6 @@ describe('InitialValueTest', () => {
             copy: (rec: ModelARec) => ModelA;
         }
         source({key: 'modelA'})(ModelA)
-        klass(ModelA)
 
         const Service = spy(class {
             val: string;
@@ -37,7 +35,6 @@ describe('InitialValueTest', () => {
                 this.val = m.val
             }
         })
-        klass(Service)
         deps(ModelA)(Service)
 
         const di = (new Di()).values({
@@ -59,7 +56,6 @@ describe('InitialValueTest', () => {
             copy: (rec: ModelARec) => ModelA;
         }
         source({key: 'modelA', construct: true})(ModelA)
-        klass(ModelA)
 
         const Service = spy(class {
             val: string;
@@ -67,7 +63,6 @@ describe('InitialValueTest', () => {
                 this.val = m.val
             }
         })
-        klass(Service)
         deps(ModelA)(Service)
 
         const di = (new Di()).values({
@@ -89,7 +84,6 @@ describe('InitialValueTest', () => {
             copy: (rec: ModelARec) => ModelA;
         }
         source({key: 'modelA'})(ModelA)
-        klass(ModelA)
 
         const Service = spy(class {
             val: string;
@@ -97,7 +91,6 @@ describe('InitialValueTest', () => {
                 this.val = m.val
             }
         })
-        klass(Service)
         deps(ModelA)(Service)
 
         const am = atom(new ModelA({
@@ -123,7 +116,6 @@ describe('InitialValueTest', () => {
             copy: (rec: ModelARec) => ModelA;
         }
         source({key: 'modelA', construct: true})(ModelA)
-        klass(ModelA)
 
         const Service = spy(class {
             val: string;
@@ -131,7 +123,6 @@ describe('InitialValueTest', () => {
                 this.val = m.val
             }
         })
-        klass(Service)
         deps(ModelA)(Service)
 
         const am = atom({

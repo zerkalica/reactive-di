@@ -11,8 +11,7 @@ import {
     theme,
     component,
     source,
-    deps,
-    klass
+    deps
 } from '../annotations'
 
 import type {StyleSheet} from '../interfaces/component'
@@ -36,7 +35,6 @@ describe('ComponentTest', () => {
             };
             copy: (rec: ModelARec) => ModelA;
         }
-        klass(ModelA)
         source({key: 'ModelA'})(ModelA)
 
         interface Props {}
@@ -87,7 +85,6 @@ describe('ComponentTest', () => {
             };
             copy: (rec: ModelARec) => ModelA;
         }
-        klass(ModelA)
         source({key: 'ModelA'})(ModelA)
 
         class TestComponentTheme {
@@ -101,7 +98,6 @@ describe('ComponentTest', () => {
                 }
             }
         }
-        klass(TestComponentTheme)
         theme(TestComponentTheme)
 
         interface Props {

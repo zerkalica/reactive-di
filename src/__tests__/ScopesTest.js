@@ -7,8 +7,7 @@ import assert from 'power-assert'
 import {
     source,
     service,
-    deps,
-    klass
+    deps
 } from '../annotations'
 
 import Di from '../Di'
@@ -28,7 +27,6 @@ describe('ScopesTest', () => {
             copy: (rec: ModelARec) => ModelA;
         }
         source({key: 'ModelA'})(ModelA)
-        klass(ModelA)
 
         const Service = spy(class {
             val: string;
@@ -37,7 +35,6 @@ describe('ScopesTest', () => {
             }
         })
         service(Service)
-        klass(Service)
         deps(ModelA)(Service)
 
         const di = (new Di()).register([ModelA])
@@ -56,7 +53,6 @@ describe('ScopesTest', () => {
             copy: (rec: ModelARec) => ModelA;
         }
         source({key: 'ModelA'})(ModelA)
-        klass(ModelA)
 
         const Service = spy(class {
             val: string;
@@ -64,7 +60,6 @@ describe('ScopesTest', () => {
                 this.val = m.val
             }
         })
-        klass(Service)
         service(Service)
         deps(ModelA)(Service)
 
@@ -88,7 +83,6 @@ describe('ScopesTest', () => {
             copy: (rec: ModelARec) => ModelA;
         }
         source({key: 'ModelA'})(ModelA)
-        klass(ModelA)
 
         const Service = spy(class {
             val: string;
@@ -96,7 +90,6 @@ describe('ScopesTest', () => {
                 this.val = m.val
             }
         })
-        klass(Service)
         service(Service)
         deps(ModelA)(Service)
 

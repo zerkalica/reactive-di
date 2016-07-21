@@ -9,7 +9,6 @@ import {
     service,
     deps,
     source,
-    klass,
     factory
 } from '../annotations'
 
@@ -28,7 +27,6 @@ describe('DerivableTest', () => {
         };
         copy: (rec: ModelARec) => ModelA;
     }
-    klass(ModelA)
     source({key: 'ModelA'})(ModelA)
 
     class Facet {
@@ -38,7 +36,6 @@ describe('DerivableTest', () => {
         }
     }
     deps(ModelA)(Facet)
-    klass(Facet)
 
     it('catch model changes in service throught facet', () => {
         const Service = spy(class {
@@ -48,7 +45,6 @@ describe('DerivableTest', () => {
             }
         })
         service(Service)
-        klass(Service)
         deps(Facet)(Service)
 
         const di = new Di()

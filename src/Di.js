@@ -152,6 +152,20 @@ export default class Di {
         return (this.val(key): any)
     }
 
+    getMeta(key: Key): Meta {
+        let rec: ?Meta = this._metaMap.get(key)
+        if (!rec) {
+            if (typeof key === 'function') {
+                rec = metaFromTarget(key)
+            } else {
+                throw new Error(`Can't read annotation from ${this._debugStr(key)}`)
+            }
+            this._metaMap.set(key, rec)
+        }
+
+        return rec
+    }
+
     val<V>(key: Key, _themes?: ?Derivable<RawStyleSheet>[]): Result<V> {
         let atom: ?Result<V> = this._cache.get(key)
         if (atom) {
@@ -167,19 +181,7 @@ export default class Di {
             return parentDi.val(key, _themes)
         }
 
-        let rec: ?Meta = this._metaMap.get(key)
-        if (!rec) {
-            if (typeof key === 'function') {
-                rec = metaFromTarget(key)
-            } else {
-                throw new Error(`Can't read annotation from ${this._debugStr(key)}`)
-            }
-            this._metaMap.set(key, rec)
-        }
-        const [target, deps, meta] = rec
-        if (!meta) {
-            throw new Error(`RdiMeta not found: "${this._debugStr(target)}"`)
-        }
+        const [target, deps, meta] = this.getMeta(key)
         this._path.push(debugName(key))
         const adapter: Adapter = this._adapter
 
@@ -242,20 +244,20 @@ export default class Di {
         const depsAtom: Derivable<mixed[]> = this._resolveDeps(deps)
         const preprocess: (v: any) => any = meta.isTheme ? this.__createSheet : passAny
         if (meta.isFactory) {
-            if (meta.isService) {
+            if (meta.writable) {
                 atom = adapter.atom((this._createFactory(target, depsAtom): any))
             } else {
                 atom = depsAtom.derive((deps: mixed[]) => preprocess(fastCall(target, deps)))
             }
         } else {
-            if (meta.isService) {
+            if (meta.writable) {
                 atom = adapter.atom(this._createObject(target, depsAtom))
             } else {
                 atom = depsAtom.derive((deps: mixed[]) => preprocess(fastCreateObject(target, deps)))
             }
         }
         if (meta.isTheme) {
-            if (meta.isService) {
+            if (meta.writable) {
                 throw new Error(`Them can't be an @service annotated: ${this._debugStr(key)}`)
             }
             if (!_themes) {

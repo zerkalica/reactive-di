@@ -5,7 +5,7 @@ import type {Adapter, Atom, Derivable} from './interfaces/atom'
 import Di from './Di'
 import promiseToObservable from './utils/promiseToObservable'
 import debugName from './utils/debugName'
-import {deps} from './annotations'
+import {RdiMeta, deps} from './annotations'
 
 export type KeyValueSyncUpdate = [Key, mixed]
 export type SyncUpdate = KeyValueSyncUpdate | Object
@@ -42,8 +42,10 @@ class OperationObserver {
         this._cancel = cancel
     }
 
-    next(ops: SyncUpdate[]): void {
-        this._parentObserver.next(ops)
+    next(ops: ?SyncUpdate[]): void {
+        if (ops) {
+            this._parentObserver.next(ops)
+        }
     }
 
     error(err: Error): void {
@@ -169,7 +171,7 @@ class UpdaterObserver {
         throw error
     }
 
-    next(transactions: Transaction[]): void {
+    next(transactions: Transaction | Transaction[]): void {
         const adapter = this._adapter
         const qeue = this._qeue
         const status = this.status
@@ -182,6 +184,13 @@ class UpdaterObserver {
             } else if (typeof tr === 'function') {
                 asyncUpdates.push(tr)
             } else {
+                if (typeof tr !== 'object') {
+                    throw new Error(`Not an object ${debugName(tr)}`)
+                }
+                const [target, deps, meta] = this._di.getMeta(tr.constructor)
+                if (!meta || !meta.key) {
+                    throw new Error(`Not @source annotated class: ${debugName(tr.constructor)}`)
+                }
                 syncUpdates.push([tr.constructor, tr])
             }
         }
@@ -220,8 +229,8 @@ export default class Updater {
         this.status = this._uo.status
     }
 
-    set(transactions: Transaction[]): void {
+    set(transactions: Transaction | Transaction[]): void {
         this._uo.next(transactions)
     }
 }
-deps(Di)(UpdaterObserver)
+deps(Di)(Updater)

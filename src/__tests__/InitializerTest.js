@@ -8,8 +8,7 @@ import {
     factory,
     service,
     deps,
-    source,
-    klass
+    source
 } from '../annotations'
 import type {InitData} from '../interfaces/deps'
 
@@ -24,7 +23,6 @@ describe('InitializerTest', () => {
     class Dep {
         val: string = 'test';
     }
-    klass(Dep)
 
     it('catch sync model changes in service throught facet', () => {
         class ModelA extends BaseModel<ModelARec> {
@@ -44,7 +42,6 @@ describe('InitializerTest', () => {
         factory(initA)
 
         source({key: 'ModelA', init: initA})(ModelA)
-        klass(ModelA)
 
         const Service = spy(class {
             val: string;
@@ -53,7 +50,6 @@ describe('InitializerTest', () => {
             }
         })
         service(Service)
-        klass(Service)
         deps(ModelA)(Service)
 
         const di = new Di()
@@ -82,7 +78,6 @@ describe('InitializerTest', () => {
         factory(initA)
 
         source({key: 'ModelA', init: initA})(ModelA)
-        klass(ModelA)
 
         const Service = spy(class {
             val: string;
@@ -91,7 +86,6 @@ describe('InitializerTest', () => {
             }
         })
         service(Service)
-        klass(Service)
         deps(ModelA)(Service)
 
         const di = new Di()

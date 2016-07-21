@@ -8,7 +8,7 @@ export class RdiMeta<V> {
     key: ?string = null;
     construct: boolean = false;
     isTheme: boolean = false;
-    isService: boolean = false;
+    writable: boolean = false;
     initializer: ?Initializer<V> = null;
     isComponent: boolean = false;
     localDeps: ?RegisterDepItem[] = null;
@@ -43,11 +43,6 @@ export function deps<V: Function>(...args: ArgDep[]): (target: V) => V {
     }
 }
 
-export function klass<V, R: Class<V>>(target: R): R {
-    getMeta(target)
-    return target
-}
-
 export function factory<V: Function>(target: V): V {
     getMeta(target).isFactory = true
     return target
@@ -66,7 +61,7 @@ export function source<R, V: Class<R>>(rec: {
     return (target: V) => {
         const meta = getMeta(target)
         meta.key = rec.key
-        meta.isService = true
+        meta.writable = true
         meta.initializer = rec.init || null
         meta.construct = rec.construct || false
         return target
@@ -74,6 +69,6 @@ export function source<R, V: Class<R>>(rec: {
 }
 
 export function service<V: Function>(target: V): V {
-    getMeta(target).isService = true
+    getMeta(target).writable = true
     return target
 }

@@ -7,7 +7,6 @@ import assert from 'power-assert'
 import {
     service,
     deps,
-    klass,
     source,
     factory
 } from '../annotations'
@@ -40,7 +39,6 @@ describe('Di.Base - class with one dependency', () => {
         };
         copy: (rec: ModelARec) => ModelA;
     }
-    klass(ModelA)
     source({key: 'ModelA'})(ModelA)
 
     it('create service from class', () => {
@@ -56,7 +54,6 @@ describe('Di.Base - class with one dependency', () => {
             }
         })
         service(Service)
-        klass(Service)
         deps(ModelA)(Service)
 
         const di = new Di()
@@ -80,7 +77,6 @@ describe('Di.Base - class with one dependency', () => {
             }
         })
         service(Service)
-        klass(Service)
         deps(ModelA)(Service)
 
         const di = new Di()
