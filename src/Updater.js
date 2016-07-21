@@ -168,10 +168,14 @@ class UpdaterObserver {
             retry,
             error
         })
-        throw error
+        const pd = this._prevData
+        if (pd) {
+            this._adapter.transact(() => this._updateSync(pd, false))
+        }
+        this._prevData = []
     }
 
-    next(transactions: Transaction | Transaction[]): void {
+    next(transactions: Transaction[]): void {
         const adapter = this._adapter
         const qeue = this._qeue
         const status = this.status
@@ -229,7 +233,7 @@ export default class Updater {
         this.status = this._uo.status
     }
 
-    set(transactions: Transaction | Transaction[]): void {
+    set(transactions: Transaction[]): void {
         this._uo.next(transactions)
     }
 }
