@@ -23,6 +23,5 @@ export interface Adapter {
     isAtom(v: mixed): boolean;
     transact(f: () => void): void;
     atom<V>(value: V): Atom<V>;
-    atomFromObservable<V>(value: V, observable: (Promise<V> | Observable<V, Error>)): Atom<V>;
     struct<R>(value: DerivableArg[]): Derivable<R>;
 }

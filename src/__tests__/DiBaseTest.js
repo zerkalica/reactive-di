@@ -27,7 +27,7 @@ function createFn(): typeof FN {
 }
 createFn()('1')
 
-describe('Di.Base - class with one dependency', () => {
+describe('DiBase - class with one dependency', () => {
     type ModelARec = {
         val?: string;
     }

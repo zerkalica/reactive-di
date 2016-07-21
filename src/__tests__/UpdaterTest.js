@@ -10,7 +10,6 @@ import {
     deps,
     source
 } from '../annotations'
-import type {InitData} from '../interfaces/deps'
 
 import Di from '../Di'
 import Updater from '../Updater'
@@ -25,7 +24,7 @@ describe('UpdaterTest', () => {
         val: string;
         static defaults: ModelARec = {
             val: '1'
-        };
+            };
         copy: (rec: ModelARec) => ModelA;
     }
     source({key: 'ModelA'})(ModelA)

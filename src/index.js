@@ -8,9 +8,7 @@ import Updater from './Updater'
 
 export type {
     RegisterDepItem,
-    Key,
-    Initializer,
-    InitData
+    Key
 } from './interfaces/deps'
 
 export type {

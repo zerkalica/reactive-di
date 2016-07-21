@@ -10,9 +10,9 @@ import {
     deps,
     source
 } from '../annotations'
-import type {InitData} from '../interfaces/deps'
 
 import Di from '../Di'
+import Updater from '../Updater'
 import BaseModel from '../BaseModel'
 
 describe('InitializerTest', () => {
@@ -33,12 +33,12 @@ describe('InitializerTest', () => {
             copy: (rec: ModelARec) => ModelA;
         }
 
-        function initA(dep: Dep): InitData<ModelA> {
-            return [
+        function initA(dep: Dep, updater: Updater): void {
+            updater.set([
                 new ModelA({val: dep.val})
-            ]
+            ])
         }
-        deps(Dep)(initA)
+        deps(Dep, Updater)(initA)
         factory(initA)
 
         source({key: 'ModelA', init: initA})(ModelA)
@@ -65,16 +65,16 @@ describe('InitializerTest', () => {
             };
             copy: (rec: ModelARec) => ModelA;
         }
-
-        const pmodelA = Promise.resolve(new ModelA({val: 'from promise'}))
-
-        function initA(dep: Dep): InitData<ModelA> {
-            return [
+        let resolve: () => void
+        const pmodelA = Promise.resolve([new ModelA({val: 'from promise'})])
+        const resolved = new Promise(r => {resolve = r})
+        function initA(dep: Dep, updater: Updater): void {
+            updater.set([
                 new ModelA({val: dep.val}),
-                pmodelA
-            ]
+                () => pmodelA
+            ])
         }
-        deps(Dep)(initA)
+        deps(Dep, Updater)(initA)
         factory(initA)
 
         source({key: 'ModelA', init: initA})(ModelA)
@@ -91,6 +91,7 @@ describe('InitializerTest', () => {
         const di = new Di()
         const s: Service = di.val(Service).get()
         assert(s.val === 'test')
+
         return pmodelA
             .then(() => {
                 assert(s.val === 'from promise')

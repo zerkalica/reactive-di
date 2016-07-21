@@ -7,5 +7,3 @@ export type ArgDep = Key | DepDict
 
 export type DepAlias = [Key, Key]
 export type RegisterDepItem = DepAlias | Key
-export type InitData<V> = [V, ?(Promise<V> | Observable<V, Error>)]
-export type Initializer<V> = DepFn<InitData<V>>

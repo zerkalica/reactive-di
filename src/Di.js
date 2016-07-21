@@ -1,7 +1,7 @@
 // @flow
 
 import {paramTypesKey, metaKey, RdiMeta} from './annotations'
-import type {DepFn, Key, Initializer, RegisterDepItem, DepAlias, ArgDep, InitData} from './interfaces/deps'
+import type {DepFn, Key, RegisterDepItem, DepAlias, ArgDep} from './interfaces/deps'
 import type {CreateWidget, StyleSheet, CreateStyleSheet, RawStyleSheet} from './interfaces/component'
 import type {Adapter, Atom, Derivable, DerivableArg, DerivableDict} from './interfaces/atom'
 import debugName from './utils/debugName'
@@ -209,17 +209,6 @@ export default class Di {
             }
         }
 
-        if (meta.initializer) {
-            const initData = this.val(meta.initializer)
-            const [data, obs] = initData.get()
-
-            atom = adapter.atomFromObservable(data, obs)
-            this._cache.set(key, atom)
-
-            this._path.pop()
-            return atom
-        }
-
         if (meta.isComponent) {
             atom = this._componentCache.get(key)
             if (!atom) {
@@ -267,6 +256,10 @@ export default class Di {
         }
 
         this._cache.set(key, atom)
+
+        if (meta.initializer) {
+            this.val(meta.initializer).get()
+        }
         this._path.pop()
 
         return atom

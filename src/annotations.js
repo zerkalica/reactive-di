@@ -1,5 +1,5 @@
 // @flow
-import type {DepFn, DepDict, ArgDep, DepAlias, RegisterDepItem, InitData, Initializer} from './interfaces/deps'
+import type {DepFn, Key, DepDict, ArgDep, DepAlias, RegisterDepItem} from './interfaces/deps'
 
 export const paramTypesKey: Symbol = Symbol.for('design:paramtypes')
 export const metaKey: Symbol = Symbol.for('rdi:meta')
@@ -9,7 +9,7 @@ export class RdiMeta<V> {
     construct: boolean = false;
     isTheme: boolean = false;
     writable: boolean = false;
-    initializer: ?Initializer<V> = null;
+    initializer: ?Key = null;
     isComponent: boolean = false;
     localDeps: ?RegisterDepItem[] = null;
     isFactory: boolean = false;
@@ -55,7 +55,7 @@ export function theme<V: Function>(target: V): V {
 
 export function source<R, V: Class<R>>(rec: {
     key: string,
-    init?: ?Initializer<R>,
+    init?: ?Key,
     construct?: boolean
 }): (target: V) => V {
     return (target: V) => {
