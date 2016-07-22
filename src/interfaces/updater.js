@@ -17,7 +17,7 @@ export interface IUpdaterStatus {
 }
 
 export interface IUpdater {
-    static pending: boolean;
+    // static pending: boolean;
 
     status: Derivable<IUpdaterStatus>;
     set(transactions: Transaction[]): void;
