@@ -1,6 +1,7 @@
 // @flow
 
 import {paramTypesKey, metaKey, RdiMeta} from './annotations'
+import type {IUpdater, IUpdaterStatus} from './interfaces/updater'
 import type {DepFn, Key, RegisterDepItem, DepAlias, ArgDep} from './interfaces/deps'
 import type {CreateWidget, StyleSheet, CreateStyleSheet, RawStyleSheet} from './interfaces/component'
 import type {Adapter, Atom, Derivable, DerivableArg, DerivableDict} from './interfaces/atom'
@@ -8,6 +9,7 @@ import debugName from './utils/debugName'
 import {fastCallMethod, fastCall, fastCreateObject} from './utils/fastCall'
 import derivableAtomAdapter from './adapters/derivableAtomAdapter'
 import createThemesReactor from './createThemesReactor'
+import UpdaterStatus from './UpdaterStatus'
 
 function passAny<V>(v: V): V {
     return v
@@ -32,6 +34,14 @@ function metaFromTarget(target: Function): Meta {
 }
 
 type Result<V> = Derivable<V> | Atom<V>
+
+function mapToStatus(upd: IUpdater): Derivable<IUpdaterStatus> {
+    return upd.status
+}
+
+function mergeStatuses(statuses: IUpdaterStatus[]): IUpdaterStatus {
+    return (new UpdaterStatus()).merge(statuses)
+}
 
 export default class Di {
     _cache: CacheMap;
@@ -255,14 +265,28 @@ export default class Di {
             _themes.push(((atom: any): Derivable<RawStyleSheet>))
         }
 
+        if (meta.updaters) {
+            atom = (this._updaterStatus(meta.updaters): any)
+        }
+
         this._cache.set(key, atom)
 
+        // Place after cache.set to avoid curcular deps
+        // initializer can use model, resolved above.
         if (meta.initializer) {
             this.val(meta.initializer).get()
         }
         this._path.pop()
 
         return atom
+    }
+
+    _updaterStatus(updaterKeys: Key[]): Derivable<IUpdaterStatus> {
+        const statuses: Derivable<Derivable<IUpdaterStatus>>[] = []
+        for (let i = 0; i < updaterKeys.length; i++) {
+            statuses.push(this.val(updaterKeys[i]).derive(mapToStatus))
+        }
+        return this._adapter.struct(statuses).derive(mergeStatuses)
     }
 
     __createSheet: (theme: any) => RawStyleSheet = (theme: any) => {

@@ -11,8 +11,11 @@ export class RdiMeta<V> {
     writable: boolean = false;
     initializer: ?Key = null;
     isComponent: boolean = false;
+    isUpdater: boolean = false;
     localDeps: ?RegisterDepItem[] = null;
     isFactory: boolean = false;
+
+    updaters: ?Key[] = null;
 }
 
 export function getMeta<V: Function>(target: V): RdiMeta<*> {
@@ -64,6 +67,14 @@ export function source<R, V: Class<R>>(rec: {
         meta.writable = true
         meta.initializer = rec.init || null
         meta.construct = rec.construct || false
+        return target
+    }
+}
+
+export function updaters<V: Function>(...updaters: Key[]): (target: V) => V {
+    return (target: V) => {
+        const meta = getMeta(target)
+        meta.updaters = updaters
         return target
     }
 }

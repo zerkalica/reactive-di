@@ -5,6 +5,7 @@ import createReactWidgetFactory from './adapters/createReactWidgetFactory'
 import derivableAtomAdapter from './adapters/derivableAtomAdapter'
 import BaseModel from './BaseModel'
 import Updater from './Updater'
+import UpdaterStatus from './UpdaterStatus'
 
 export type {
     RegisterDepItem,
@@ -33,11 +34,12 @@ export type {
     AsyncUpdate,
     AsyncUpdateThunk,
     Transaction
-} from './Updater'
+} from './interfaces/updater'
 
 export {
     Di,
     Updater,
+    UpdaterStatus,
     BaseModel,
     derivableAtomAdapter,
     createReactWidgetFactory

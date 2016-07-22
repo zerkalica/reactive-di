@@ -8,11 +8,13 @@ import {
     factory,
     service,
     deps,
-    source
+    source,
+    updaters
 } from '../annotations'
 
 import Di from '../Di'
 import Updater from '../Updater'
+import UpdaterStatus from '../UpdaterStatus'
 import BaseModel from '../BaseModel'
 
 type ModelARec = {
@@ -28,6 +30,22 @@ describe('UpdaterTest', () => {
         copy: (rec: ModelARec) => ModelA;
     }
     source({key: 'ModelA'})(ModelA)
+
+    it('custom updater with status', () => {
+        const di = new Di()
+        class MyUpdater1 extends Updater {
+            static pending: boolean = true;
+        }
+        class MyUpdater2 extends Updater {
+            static pending: boolean = false;
+        }
+
+        class MyUpdaterStatus extends UpdaterStatus {}
+        updaters(MyUpdater1, MyUpdater2)(MyUpdaterStatus)
+
+        const u: UpdaterStatus = di.val(MyUpdaterStatus).get()
+        assert(u.type === 'pending')
+    })
 
     it('sync update, using model.constructor', () => {
         const di = new Di()

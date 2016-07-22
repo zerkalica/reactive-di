@@ -1,39 +1,31 @@
 // @flow
 import type {Key} from './interfaces/deps'
 import type {Adapter, Atom, Derivable} from './interfaces/atom'
-
+import type {
+    KeyValueSyncUpdate,
+    SyncUpdate,
+    AsyncUpdate,
+    AsyncUpdateThunk,
+    Transaction,
+    UpdaterStatusType,
+    IUpdater,
+    IUpdaterStatus
+} from './interfaces/updater'
 import Di from './Di'
 import promiseToObservable from './utils/promiseToObservable'
 import debugName from './utils/debugName'
 import {RdiMeta, deps} from './annotations'
-
-export type KeyValueSyncUpdate = [Key, mixed]
-export type SyncUpdate = KeyValueSyncUpdate | Object
-export type AsyncUpdate = Promise<SyncUpdate[]> | Observable<SyncUpdate[], Error>
-export type AsyncUpdateThunk = () => AsyncUpdate
-export type Transaction = SyncUpdate | AsyncUpdateThunk
-export type AsyncErrorResult = {
-    type: 'error';
-    error: Error;
-    retry(): void;
-}
-export type UpdaterStatus = {
-    type: 'pending';
-}
-| {
-    type: 'complete';
-}
-| AsyncErrorResult
+import UpdaterStatus from './UpdaterStatus'
 
 function noop() {}
 
 class OperationObserver {
-    _parentObserver: Observer<Transaction[], AsyncErrorResult>;
+    _parentObserver: Observer<Transaction[], Error>;
     _unsubscribe: () => void;
     _cancel: () => void;
 
     constructor(
-        parentObserver: Observer<Transaction[], AsyncErrorResult>,
+        parentObserver: Observer<Transaction[], Error>,
         unsubscribe: () => void,
         cancel: () => void
     ) {
@@ -51,11 +43,7 @@ class OperationObserver {
     error(err: Error): void {
         this._unsubscribe()
         this._cancel()
-        this._parentObserver.error({
-            type: 'error',
-            error: err,
-            retry: noop
-        })
+        this._parentObserver.error(err)
     }
 
     complete(ops?: SyncUpdate[]): void {
@@ -68,13 +56,13 @@ class AsyncQeue {
     _maxQeueSize: number;
     _qeue: AsyncUpdateThunk[] = [];
     _subscriptions: Subscription[] = [];
-    _parentObserver: Observer<Transaction[], AsyncErrorResult>;
+    _parentObserver: Observer<Transaction[], Error>;
 
     // Readonly qeue size
     size: number = 0;
 
     constructor(
-        parentObserver: Observer<Transaction[], AsyncErrorResult>,
+        parentObserver: Observer<Transaction[], Error>,
         maxQeueSize: number = 1
     ) {
         this._maxQeueSize = maxQeueSize
@@ -141,37 +129,28 @@ class UpdaterObserver {
     _prevData: KeyValueSyncUpdate[] = [];
     _qeue: AsyncQeue;
 
-    status: Atom<UpdaterStatus>;
+    status: Atom<IUpdaterStatus>;
 
-    constructor(di: Di) {
+    constructor(di: Di, pending: boolean) {
         this._di = di
         this._adapter = di._adapter
         this._qeue = new AsyncQeue(this)
-        this.status = this._adapter.atom({
-            type: 'complete'
-        })
+        this.status = this._adapter.atom(new UpdaterStatus(pending ? 'pending' : 'complete'))
     }
 
     complete(transactions: ?Transaction[]): void {
         if (transactions) {
             this.next(transactions)
         }
-        this.status.set({
-            type: 'complete'
-        })
+        this.status.set(new UpdaterStatus('complete'))
         this._prevData = []
     }
 
-    error({error, retry}: AsyncErrorResult) {
-        this.status.set({
-            type: 'error',
-            retry,
-            error
+    error(error: Error) {
+        this._adapter.transact(() => {
+            this.status.set(new UpdaterStatus('error', error, noop))
+            this._updateSync(this._prevData, false)
         })
-        const pd = this._prevData
-        if (pd) {
-            this._adapter.transact(() => this._updateSync(pd, false))
-        }
         this._prevData = []
     }
 
@@ -200,9 +179,7 @@ class UpdaterObserver {
         }
         if (asyncUpdates.length) {
             if (qeue.size === 0 && status.get().type !== 'pending') {
-                status.set({
-                    type: 'pending'
-                })
+                status.set(new UpdaterStatus('pending'))
             }
             qeue.add(asyncUpdates)
         }
@@ -222,14 +199,17 @@ class UpdaterObserver {
         }
     }
 }
-if (0) ((new UpdaterObserver(...(0: any))): Observer<Transaction[], AsyncErrorResult>)
+if (0) ((new UpdaterObserver(...(0: any))): Observer<Transaction[], Error>)
 
 export default class Updater {
     _uo: UpdaterObserver;
-    status: Derivable<UpdaterStatus>;
+
+    static pending: boolean;
+
+    status: Derivable<IUpdaterStatus>;
 
     constructor(di: Di) {
-        this._uo = new UpdaterObserver(di)
+        this._uo = new UpdaterObserver(di, this.constructor.pending || false)
         this.status = this._uo.status
     }
 
@@ -238,3 +218,4 @@ export default class Updater {
     }
 }
 deps(Di)(Updater)
+if (0) ((new Updater(...(0: any))): IUpdater)
