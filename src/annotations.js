@@ -26,10 +26,10 @@ export function getMeta<V: Function>(target: V): RdiMeta<*> {
     return meta
 }
 
-export function component<V: Function>(localDeps?: RegisterDepItem[]): (target: V) => V {
+export function component<V: Function>(...localDeps: RegisterDepItem[]): (target: V) => V {
     return (target: V) => {
         const meta = getMeta(target)
-        if (localDeps) {
+        if (localDeps.length) {
             meta.localDeps = localDeps
         }
         meta.isComponent = true
