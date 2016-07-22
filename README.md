@@ -2,7 +2,7 @@
 
 Definitely complete solution for dependency injection, state-to-css, state-to-dom rendering, data loading, optimistic updates and rollbacks.
 
-[Dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) with [flowtype](http://flowtype.org/) support, based on [ds300 derivablejs](ds300.github.io/derivablejs/). For old browsers needs Map, Symbol, Observable, Promise polyfills.
+[Dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) with [flowtype](http://flowtype.org/) support, based on [ds300 derivablejs](https://ds300.github.io/derivablejs/). For old browsers needs Map, Symbol, Observable, Promise polyfills.
 
 No statics, no singletones, abstract everything, configure everything.
 
@@ -134,16 +134,6 @@ class UserComponentTheme {
     }
 }
 
-interface UserComponentProps {
-    children?: mixed;
-}
-
-interface UserComponentState {
-    theme: UserComponentTheme;
-    user: User;
-    loading: SomeUpdaterStatus;
-}
-
 class UserComponentActions {
     _updater: ThemeVarsUpdater;
 
@@ -156,6 +146,17 @@ class UserComponentActions {
             new ThemeVars({color: 'green'})
         ])
     }
+}
+
+interface UserComponentProps {
+    children?: mixed;
+}
+
+interface UserComponentState {
+    theme: UserComponentTheme;
+    user: User;
+    loading: SomeUpdaterStatus;
+    actions: UserComponentActions;
 }
 
 // Looks like react widget, flow compatible props
