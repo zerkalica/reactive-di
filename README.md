@@ -185,7 +185,7 @@ class UserComponent extends Component<UserComponentProps, UserComponentState> {
         } = this.state
 
         return <div className={theme.wrapper}>
-            <span className={theme.status}Loading status: ${loading.type}</span>
+            <span className={theme.status}>Loading status: {loading.type}</span>
             <span className={theme.name}>Name: {user.name}</span>
             {children}
             <button onClick={actions.changeColor}</button>
