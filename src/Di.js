@@ -282,10 +282,12 @@ export default class Di {
     }
 
     _updaterStatus(updaterKeys: Key[]): Derivable<IUpdaterStatus> {
-        const statuses: Derivable<Derivable<IUpdaterStatus>>[] = []
+        const statuses: Derivable<IUpdaterStatus>[] = []
         for (let i = 0; i < updaterKeys.length; i++) {
-            statuses.push(this.val(updaterKeys[i]).derive(mapToStatus))
+            // @todo: remove .get() after https://github.com/ds300/derivablejs/issues/45
+            statuses.push(this.val(updaterKeys[i]).get().status)
         }
+
         return this._adapter.struct(statuses).derive(mergeStatuses)
     }
 
