@@ -1,8 +1,10 @@
 // @flow
 import type {DepFn, Key, DepDict, ArgDep, DepAlias, RegisterDepItem} from './interfaces/deps'
+import CustomReflect from './CustomReflect'
 
-export const paramTypesKey: Symbol = Symbol.for('design:paramtypes')
-export const metaKey: Symbol = Symbol.for('rdi:meta')
+export const paramTypesKey: string = 'design:paramtypes'
+export const functionTypesKey: string = 'design:function'
+export const metaKey: string = 'rdi:meta'
 
 export class RdiMeta<V> {
     key: ?string = null;
@@ -13,15 +15,18 @@ export class RdiMeta<V> {
     isComponent: boolean = false;
     isUpdater: boolean = false;
     localDeps: ?RegisterDepItem[] = null;
-    isFactory: boolean = false;
 
     updaters: ?Key[] = null;
 }
 
-export function getMeta<V: Function>(target: V): RdiMeta<*> {
-    let meta: ?RdiMeta<*> = target[metaKey]
+const dm = CustomReflect.defineMetadata
+const gm = CustomReflect.getMetadata
+
+function getMeta<V: Function>(target: V): RdiMeta<*> {
+    let meta: ?RdiMeta<*> = gm(metaKey, target)
     if (!meta) {
-        meta = target[metaKey] = new RdiMeta()
+        meta = new RdiMeta()
+        dm(metaKey, meta, target)
     }
     return meta
 }
@@ -40,14 +45,14 @@ export function component<V: Function>(...localDeps: RegisterDepItem[]): (target
 export function deps<V: Function>(...args: ArgDep[]): (target: V) => V {
     return (target: V) => {
         if (args.length) {
-            target[paramTypesKey] = args
+            dm(paramTypesKey, args, target)
         }
         return target
     }
 }
 
 export function factory<V: Function>(target: V): V {
-    getMeta(target).isFactory = true
+    dm(functionTypesKey, true, target)
     return target
 }
 

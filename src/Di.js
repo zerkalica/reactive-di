@@ -1,6 +1,6 @@
 // @flow
 
-import {paramTypesKey, metaKey, RdiMeta} from './annotations'
+import {paramTypesKey, functionTypesKey, metaKey, RdiMeta} from './annotations'
 import type {IUpdater, IUpdaterStatus} from './interfaces/updater'
 import type {DepFn, Key, RegisterDepItem, DepAlias, ArgDep} from './interfaces/deps'
 import type {CreateWidget, StyleSheet, CreateStyleSheet, RawStyleSheet} from './interfaces/component'
@@ -10,6 +10,7 @@ import {fastCallMethod, fastCall, fastCreateObject} from './utils/fastCall'
 import derivableAtomAdapter from './adapters/derivableAtomAdapter'
 import createThemesReactor from './createThemesReactor'
 import UpdaterStatus from './UpdaterStatus'
+import CustomReflect from './CustomReflect'
 
 function passAny<V>(v: V): V {
     return v
@@ -21,15 +22,20 @@ function pass<V: Function>(target: V, depsAtom: Derivable<V>): V {
 
 type CacheMap = Map<Function|string, Derivable<any>>
 
-type Meta = [Function, ArgDep[], RdiMeta<*>]
+type Meta = [Function, ArgDep[], RdiMeta<*>, boolean]
 
 const defaultMeta: RdiMeta<*> = new RdiMeta()
+
+const defaultArr: ArgDep[] = []
+
+const gm = CustomReflect.getMetadata
 
 function metaFromTarget(target: Function): Meta {
     return [
         target,
-        target[paramTypesKey] || [],
-        target[metaKey] || defaultMeta
+        gm(paramTypesKey, target) || defaultArr,
+        gm(metaKey, target) || defaultMeta,
+        gm(functionTypesKey, target) || false
     ]
 }
 
@@ -191,7 +197,7 @@ export default class Di {
             return parentDi.val(key, _themes)
         }
 
-        const [target, deps, meta] = this.getMeta(key)
+        const [target, deps, meta, isFactory] = this.getMeta(key)
         this._path.push(debugName(key))
         const adapter: Adapter = this._adapter
 
@@ -242,7 +248,7 @@ export default class Di {
 
         const depsAtom: Derivable<mixed[]> = this._resolveDeps(deps)
         const preprocess: (v: any) => any = meta.isTheme ? this.__createSheet : passAny
-        if (meta.isFactory) {
+        if (isFactory) {
             if (meta.writable) {
                 atom = adapter.atom((this._createFactory(target, depsAtom): any))
             } else {
