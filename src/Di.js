@@ -41,8 +41,8 @@ function metaFromTarget(target: Function): Meta {
 
 type Result<V> = Derivable<V> | Atom<V>
 
-function mapToStatus(upd: IUpdater): Derivable<IUpdaterStatus> {
-    return upd.status
+function mapToStatus(upd: IUpdater): IUpdaterStatus {
+    return upd.status.get()
 }
 
 function mergeStatuses(statuses: IUpdaterStatus[]): IUpdaterStatus {
@@ -280,7 +280,9 @@ export default class Di {
         // Place after cache.set to avoid curcular deps
         // initializer can use model, resolved above.
         if (meta.initializer) {
-            this.val(meta.initializer).get()
+            const initializer: Derivable<() => void> = this.val(meta.initializer)
+            const fn: () => void = initializer.get()
+            fn()
         }
         this._path.pop()
 
@@ -290,8 +292,7 @@ export default class Di {
     _updaterStatus(updaterKeys: Key[]): Derivable<IUpdaterStatus> {
         const statuses: Derivable<IUpdaterStatus>[] = []
         for (let i = 0; i < updaterKeys.length; i++) {
-            // @todo: remove .get() after https://github.com/ds300/derivablejs/issues/45
-            statuses.push(this.val(updaterKeys[i]).get().status)
+            statuses.push(this.val(updaterKeys[i]).derive(mapToStatus))
         }
 
         return this._adapter.struct(statuses).derive(mergeStatuses)

@@ -8,9 +8,9 @@ export interface SrcComponent<Props, State> extends React$Component<void, Props,
     $: HTMLElement;
 
     render(): any;
-    componentDidMount: () => void;
-    componentDidUpdate: (nextProps: Props, nextState: State) => void;
-    componentWillUnmount: () => void;
+    componentDidMount(): void;
+    componentDidUpdate(nextProps: Props, nextState: State): void;
+    componentWillUnmount(): void;
 }
 
 export type StyleSheet = {

@@ -2,7 +2,7 @@
 
 Definitely complete solution for dependency injection, state-to-css, state-to-dom rendering, data loading, optimistic updates and rollbacks.
 
-[Dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) with [flowtype](http://flowtype.org/) support, based on [ds300 derivablejs](https://ds300.github.io/derivablejs/). For old browsers needs Map, Symbol, Observable, Promise polyfills.
+[Dependency injection](https://en.wikipedia.org/wiki/Dependency_injection) with [flowtype](http://flowtype.org/) support, based on [ds300 derivablejs](https://ds300.github.io/derivablejs/). For old browsers needs Map, Observable, Promise and optionally Reflect, Symbol polyfills.
 
 No statics, no singletones, abstract everything, configure everything.
 
@@ -20,15 +20,20 @@ Features:
 -   About 2500 SLOC with tests, 1000 without
 -   Suitable for both node and the browser
 
+## Flow
+
+<img src="docs/flow.png" alt="reactive-di flow diagram" />
+
 ## Basic entities
 
 -   source(key, init, construct) - atom source: model with data or service, can be injected from outside and changed in runtime.
--   factory(func: Function) - mark function factory
+-   factory - mark function factory, if not used [babel metadata plugin](https://github.com/zerkalica/babel-plugin-transform-metadata)
 -   deps(...deps: mixed[]) - declare dependencies, if not used [babel metadata plugin](https://github.com/zerkalica/babel-plugin-transform-metadata)
 -   component(...deps: Function[]) - any visual component
 -   theme - jss-like style
 -   updater(...updaters: Updater[]) - create loading status from updater services
--   service - do not recalculate, if dependencies changed, only call constructor with new deps
+-   service - for optimisations, do not recalculate, if dependencies changed, only call constructor with new deps
+
 
 ## Complete example
 
@@ -79,7 +84,6 @@ function userLoader(fetcher: Fetcher, updater: UserUpdater): void {
         () => fetcher.fetch('/user')
     ])
 }
-factory(userLoader)
 
 // Model User, could be injected from outside by key 'User' as UserRec
 @source({key: 'User', init: userLoader, construct: true})
@@ -99,7 +103,6 @@ function themeVarsLoader(fetcher: Fetcher, updater: ThemeVarsUpdater) {
         () => fetcher.fetch('/theme-vars')
     ])
 }
-factory(themeVarsLoader)
 
 // Model ThemeVars, could be injected from outside by key 'ThemeVars' as ThemeVarsRec
 @source({key: 'ThemeVars', init: themeVarsLoader, construct: true})
@@ -225,6 +228,20 @@ More docs and examples coming soon.
 
 ### component
 
+## Manifest
+
+-   DI as a glue, metaframework, abstraction from any framework, like react, angular, etc
+-   Each dependency resolved by class definition to atom or derivable
+-   Each dependency can be redefined at entry point
+-   Do not use atoms, promises, observables, rxjs and another wrappers in you business code - move them to DI. Keep business code clean.
+-   Do not use interfaces as dependency key - use abstract classes or real classes (you can redefine them at entry point)
+-   Most of widgets has an own context - state, do not pass properties from hi-order to low-order, bind as dependency
+-   Minimum pure stateless widgets - only for low-level primitives
+-   Widget class must be flow-compatible (autocomplete props)
+-   Hooks componentDidMount and etc - only for raw dom manipulation, move data-loading to state/action layer
+-   No difference between html or css - all controlled via state, do not use cssmodules, sass, less, stylus - all them are static, use js classes or functions with all OOP features as interfaces, compositions.
+-   JSX and CSSX better than template strings for parsing and ast manipulations
+-   DI abstraction powerfull, redux is unnecessary. Use interceptors instead of middlewares, use atoms instead of reducers, use di-injected functions of classes instead of ugly dispatcher + action struct.
 
 ## Credits
 

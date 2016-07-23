@@ -33,8 +33,8 @@ describe('InitializerTest', () => {
             copy: (rec: ModelARec) => ModelA;
         }
 
-        function initA(dep: Dep, updater: Updater): void {
-            updater.set([
+        function initA(dep: Dep, updater: Updater): () => void {
+            return () => updater.set([
                 new ModelA({val: dep.val})
             ])
         }
@@ -68,8 +68,8 @@ describe('InitializerTest', () => {
         let resolve: () => void
         const pmodelA = Promise.resolve([new ModelA({val: 'from promise'})])
         const resolved = new Promise(r => {resolve = r})
-        function initA(dep: Dep, updater: Updater): void {
-            updater.set([
+        function initA(dep: Dep, updater: Updater): () => void {
+            return () => updater.set([
                 new ModelA({val: dep.val}),
                 () => pmodelA
             ])
