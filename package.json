@@ -49,6 +49,7 @@
   "files": [
     "*.map",
     "*.js",
+    "*.flow",
     ".flowconfig",
     "README.md",
     "LICENSE",
