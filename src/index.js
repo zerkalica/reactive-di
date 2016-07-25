@@ -9,7 +9,8 @@ import UpdaterStatus from './UpdaterStatus'
 
 export type {
     RegisterDepItem,
-    Key
+    Key,
+    ResultOf
 } from './interfaces/deps'
 
 export type {

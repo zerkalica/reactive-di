@@ -7,3 +7,6 @@ export type ArgDep = Key | DepDict
 
 export type DepAlias = [Key, Key]
 export type RegisterDepItem = DepAlias | Key
+
+export type ResultOf<F> = _ResultOf<*, F>
+type _ResultOf<V, F: (...x: any[]) => V> = V
