@@ -1,0 +1,6 @@
+// @flow
+
+import CustomRelect from './src/CustomReflect'
+
+export default CustomReflect
+

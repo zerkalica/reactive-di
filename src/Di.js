@@ -20,7 +20,7 @@ function pass<V: Function>(target: V, depsAtom: Derivable<V>): V {
     return target(depsAtom)
 }
 
-type CacheMap = Map<Function|string, Derivable<any>>
+type CacheMap = Map<Function|string, ?Derivable<any>>
 
 type Meta = [Function, ArgDep[], RdiMeta<*>, boolean]
 
@@ -147,10 +147,17 @@ export default class Di {
             if (typeof argDep === 'object') {
                 const result: DerivableDict = {}
                 for (let prop in argDep) {
-                    result[prop] = this.val(argDep[prop], _themes)
+                    const dep: Key = argDep[prop]
+                    if (!dep) {
+                        throw new Error(`Not a dependency, need a function: ${debugName(prop || i)}`)
+                    }
+                    result[prop] = this.val(dep, _themes)
                 }
                 resolvedArgs.push(result)
             } else {
+                if (!argDep) {
+                    throw new Error(`Not a dependency, need a function: ${debugName(i)}`)
+                }
                 resolvedArgs.push(this.val(argDep, _themes))
             }
         }
@@ -186,7 +193,10 @@ export default class Di {
         let atom: ?Result<V> = this._cache.get(key)
         if (atom) {
             return atom
+        } else if (atom === null) {
+            throw new Error(`Circular-dependency detected: ${this._debugStr(key)}`)
         }
+
         if (key === this.constructor) {
             atom = this._adapter.atom((this: any))
             this._cache.set(key, atom)
@@ -196,6 +206,7 @@ export default class Di {
         if (parentDi) {
             return parentDi.val(key, _themes)
         }
+        this._cache.set(key, null)
 
         const [target, deps, meta, isFactory] = this.getMeta(key)
         this._path.push(debugName(key))
@@ -282,6 +293,9 @@ export default class Di {
         if (meta.initializer) {
             const initializer: Derivable<() => void> = this.val(meta.initializer)
             const fn: () => void = initializer.get()
+            if (typeof fn !== 'function') {
+                throw new Error(`Initializer must be a function: ${this._debugStr(meta.initializer)}`)
+            }
             fn()
         }
         this._path.pop()
