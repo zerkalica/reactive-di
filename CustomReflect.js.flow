@@ -1,6 +1,5 @@
 // @flow
 
-import CustomRelect from './src/CustomReflect'
+import CustomReflect from './src/CustomReflect'
 
 export default CustomReflect
-
