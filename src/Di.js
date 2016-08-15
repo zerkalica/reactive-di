@@ -211,30 +211,7 @@ export default class Di {
         const [target, deps, meta, isFactory] = this.getMeta(key)
         this._path.push(debugName(key))
         const adapter: Adapter = this._adapter
-
-        if (meta.key) {
-            const value = this._values[meta.key]
-            if (value !== undefined) {
-                if (meta.initializer) {
-                    // if has initializer - preload data from values registry only once
-                    // on next call - run initializer and fill models
-                    this._values[meta.key] = null
-                }
-                if (meta.construct) {
-                    atom = adapter.isAtom(value)
-                        ? value.derive((v: V) => new target(value))
-                        : adapter.atom(new target(value)) // eslint-disable-line
-                } else {
-                    atom = adapter.isAtom(value)
-                        ? value
-                        : adapter.atom(value)
-                }
-                this._cache.set(key, atom)
-
-                this._path.pop()
-                return atom
-            }
-        }
+        const value = this._values[meta.key || '']
 
         if (meta.isComponent) {
             atom = this._componentCache.get(key)
@@ -251,27 +228,34 @@ export default class Di {
                 ): any))
                 this._componentCache.set(key, atom)
             }
-            this._cache.set(key, atom)
-
-            this._path.pop()
-            return atom
-        }
-
-        const depsAtom: Derivable<mixed[]> = this._resolveDeps(deps)
-        const preprocess: (v: any) => any = meta.isTheme ? this.__createSheet : passAny
-        if (isFactory) {
-            if (meta.writable) {
-                atom = adapter.atom((this._createFactory(target, depsAtom): any))
+        } else if (meta.key) {
+            if (meta.construct) {
+                atom = adapter.isAtom(value)
+                    ? value.derive((v: V) => new target(value))
+                    : adapter.atom(new target(value)) // eslint-disable-line
             } else {
-                atom = depsAtom.derive((deps: mixed[]) => preprocess(fastCall(target, deps)))
+                atom = adapter.isAtom(value)
+                    ? value
+                    : adapter.atom(value || new target())
             }
         } else {
-            if (meta.writable) {
-                atom = adapter.atom(this._createObject(target, depsAtom))
+            const depsAtom: Derivable<mixed[]> = this._resolveDeps(deps)
+            const preprocess: (v: any) => any = meta.isTheme ? this.__createSheet : passAny
+            if (isFactory) {
+                if (meta.writable) {
+                    atom = adapter.atom((this._createFactory(target, depsAtom): any))
+                } else {
+                    atom = depsAtom.derive((deps: mixed[]) => preprocess(fastCall(target, deps)))
+                }
             } else {
-                atom = depsAtom.derive((deps: mixed[]) => preprocess(fastCreateObject(target, deps)))
+                if (meta.writable) {
+                    atom = adapter.atom(this._createObject(target, depsAtom))
+                } else {
+                    atom = depsAtom.derive((deps: mixed[]) => preprocess(fastCreateObject(target, deps)))
+                }
             }
         }
+
         if (meta.isTheme) {
             if (meta.writable) {
                 throw new Error(`Them can't be an @service annotated: ${this._debugStr(key)}`)
@@ -290,7 +274,7 @@ export default class Di {
 
         // Place after cache.set to avoid curcular deps
         // initializer can use model, resolved above.
-        if (meta.initializer) {
+        if (meta.initializer && value === undefined) {
             const initializer: Derivable<() => void> = this.val(meta.initializer)
             const fn: () => void = initializer.get()
             if (typeof fn !== 'function') {
