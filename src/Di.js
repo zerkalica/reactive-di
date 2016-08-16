@@ -49,6 +49,11 @@ function mergeStatuses(statuses: IUpdaterStatus[]): IUpdaterStatus {
     return (new UpdaterStatus()).merge(statuses)
 }
 
+const fakeStyles = {
+    attach() {},
+    detach() {}
+}
+
 export default class Di {
     _cache: CacheMap;
     _componentCache: CacheMap;
@@ -300,11 +305,15 @@ export default class Di {
         if (!theme || typeof theme !== 'object' || !theme.__css) {
             throw new Error(`Provide this.__css property with jss styles in theme ${this._debugStr(theme)}`)
         }
-        const styles: StyleSheet = this._createSheet(theme.__css)
-        theme.__styles = styles
-        Object.assign(theme, styles.classes)
+        if (Object.keys(theme.__css).length > 0) {
+            const styles: StyleSheet = this._createSheet(theme.__css)
+            theme.__styles = styles
+            Object.assign(theme, styles.classes)
+        } else {
+            theme.__styles = fakeStyles
+        }
 
-        return (theme)
+        return theme
     };
 
     _createObject<V: Object>(target: Class<V>, depsAtom: Derivable<mixed[]>): V {

@@ -15,7 +15,6 @@ export class RdiMeta<V> {
     isComponent: boolean = false;
     isUpdater: boolean = false;
     localDeps: ?RegisterDepItem[] = null;
-
     updaters: ?Key[] = null;
 }
 
@@ -31,11 +30,15 @@ function getMeta<V: Function>(target: V): RdiMeta<*> {
     return meta
 }
 
-export function component<V: Function>(...localDeps: RegisterDepItem[]): (target: V) => V {
+export function component<V: Function>(
+    rec?: {
+        deps?: RegisterDepItem[]
+    } = {}
+): (target: V) => V {
     return (target: V) => {
         const meta = getMeta(target)
-        if (localDeps.length) {
-            meta.localDeps = localDeps
+        if (rec.deps && rec.deps.length) {
+            meta.localDeps = rec.deps
         }
         meta.isComponent = true
         return target
