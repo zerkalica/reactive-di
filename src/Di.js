@@ -55,6 +55,7 @@ const fakeStyles = {
 }
 
 export default class Di {
+    displayName: string;
     _cache: CacheMap;
     _componentCache: CacheMap;
 
@@ -78,8 +79,10 @@ export default class Di {
         adapter?: Adapter = derivableAtomAdapter,
         _scopeMap?: Map<Key, Di> = new Map(),
         _componentCache?: CacheMap = new Map(),
-        _metaMap?: Map<Key, Meta> = new Map()
+        _metaMap?: Map<Key, Meta> = new Map(),
+        displayName?: string = 'rootDi'
     ) {
+        this.displayName = displayName
         this._adapter = adapter
         this._createSheet = createSheet
         this._cache = new Map()
@@ -134,14 +137,15 @@ export default class Di {
         return this
     }
 
-    create(): Di {
+    create(displayName?: string): Di {
         return (new Di(
             this._createComponent,
             this._createSheet,
             this._adapter,
             this._childScopeMap,
             this._componentCache,
-            new Map(this._metaMap)
+            new Map(this._metaMap),
+            displayName
         )).values(this._values)
     }
 
@@ -217,12 +221,11 @@ export default class Di {
         this._path.push(debugName(key))
         const adapter: Adapter = this._adapter
         const value = this._values[meta.key || '']
-
         if (meta.isComponent) {
             atom = this._componentCache.get(key)
             if (!atom) {
                 const container: Di = meta.localDeps
-                    ? this.create().register(meta.localDeps)
+                    ? this.create(debugName(key) + 'Di').register(meta.localDeps)
                     : this
                 const themes: Derivable<RawStyleSheet>[] = []
                 const depsAtom: Derivable<mixed[]> = container._resolveDeps(deps, themes)
@@ -276,6 +279,9 @@ export default class Di {
         }
 
         this._cache.set(key, atom)
+        if (key !== target) {
+            this._cache.set(target, atom)
+        }
 
         // Place after cache.set to avoid curcular deps
         // initializer can use model, resolved above.
