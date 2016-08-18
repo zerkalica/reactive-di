@@ -22,7 +22,7 @@ function themesReact(themes: Derivable<RawStyleSheet[]>, unmounted: Derivable<bo
     })
 }
 
-export default function CreateComponentReactorFactory(
+export default function createThemesReactorFactory(
     themes: Derivable<RawStyleSheet[]>
 ): CreateComponentReactor {
     return (unmounted: Derivable<boolean>) => {

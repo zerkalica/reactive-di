@@ -6,6 +6,7 @@ import derivableAtomAdapter from './adapters/derivableAtomAdapter'
 import BaseModel from './BaseModel'
 import Updater from './Updater'
 import UpdaterStatus from './UpdaterStatus'
+import StyleAttachOptimizer from './StyleAttachOptimizer'
 
 export type {
     RegisterDepItem,
@@ -39,6 +40,7 @@ export type {
 
 export {
     Di,
+    StyleAttachOptimizer,
     Updater,
     UpdaterStatus,
     BaseModel,

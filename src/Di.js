@@ -311,13 +311,9 @@ export default class Di {
         if (!theme || typeof theme !== 'object' || !theme.__css) {
             throw new Error(`Provide this.__css property with jss styles in theme ${this._debugStr(theme)}`)
         }
-        if (Object.keys(theme.__css).length > 0) {
-            const styles: StyleSheet = this._createSheet(theme.__css)
-            theme.__styles = styles
-            Object.assign(theme, styles.classes)
-        } else {
-            theme.__styles = fakeStyles
-        }
+        const styles: StyleSheet = this._createSheet(theme.__css)
+        theme.__styles = styles
+        Object.assign(theme, styles.classes)
 
         return theme
     };
