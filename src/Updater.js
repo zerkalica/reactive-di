@@ -207,7 +207,9 @@ export default class Updater {
     static pending: boolean;
 
     status: Derivable<IUpdaterStatus>;
-
+    set __di(di) {
+        this._uo.__di = di
+    }
     constructor(di: Di) {
         this._uo = new UpdaterObserver(di, this.constructor.pending || false)
         this.status = this._uo.status
