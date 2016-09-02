@@ -1,15 +1,16 @@
 {
     "presets": ["es2015-loose", "stage-0"],
     "plugins": [
-        ["babel-plugin-module-alias", [
+        ["module-resolver", [
             {
-                "src": "./src",
-                "expose": "reactive-di"
+                "root": ["./src"],
+                "alias": {
+                    "reactive-di": '.'
+                }
             }
         ]],
         "syntax-flow",
         "espower",
-        "flow-comments",
         "transform-flow-strip-types"
     ]
 }

@@ -58,8 +58,8 @@ export default class ComponentHandler {
         if (atom) {
             return atom
         }
-        const container: IContext = meta.deps
-            ? ctx.create(name).register(meta.deps)
+        const container: IContext = meta.register
+            ? ctx.create(name).register(meta.register)
             : ctx
 
         const themes: Derivable<RawStyleSheet>[] = []

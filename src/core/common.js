@@ -15,14 +15,14 @@ export class ThemeMeta {
 }
 
 export interface ComponentMetaRec {
-    deps?: ?RegisterDepItem[]
+    register?: ?RegisterDepItem[]
 }
 export class ComponentMeta {
     type: 'component' = 'component'
-    deps: ?RegisterDepItem[]
+    register: ?RegisterDepItem[]
 
     constructor(rec: ComponentMetaRec) {
-        this.deps = rec.deps && rec.deps.length ? rec.deps : null
+        this.register = rec.register && rec.register.length ? rec.register : null
     }
 }
 export class AbstractMeta {

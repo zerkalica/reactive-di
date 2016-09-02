@@ -6,7 +6,7 @@ import derivableAtomAdapter from './adapters/derivableAtomAdapter'
 import BaseModel from './BaseModel'
 import Updater, {UpdaterStatus} from './Updater'
 
-import createHandlers from './core/createHandlers'
+import createHandlers from 'reactive-di/core/createHandlers'
 
 export type {
     RegisterDepItem,

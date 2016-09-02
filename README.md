@@ -45,8 +45,8 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import jss from 'jss'
 
-import {Updater, UpdaterStatus, Di, createReactWidgetFactory} from 'reactive-di'
-import {theme, component, updaters, source, factory, updater} from 'reactive-di/annotations'
+import {Updater, UpdaterStatus, Di, createHandlers, createReactWidgetFactory} from 'reactive-di'
+import {theme, component, updaters, source} from 'reactive-di/annotations'
 import {Component} from 'fake-react'
 
 // Fetcher service, could be injected from outside by key 'Fetcher' as is
@@ -59,56 +59,38 @@ class Fetcher {
 }
 
 // Create updater qeue for ThemeVars loader
-class ThemeVarsUpdater extends Updater {
-    // by default status is complete
-    static pending: boolean = false;
-}
+class ThemeVarsUpdater extends Updater {}
 
 // Create separate updater qeue for user
-class UserUpdater extends Updater {
-    // by default status is pending
-    static pending: boolean = true;
-}
+class UserUpdater extends Updater {}
 
 // Get and combine pending/complete/error status from updater
 @updaters(UserUpdater, ThemeVarsUpdater)
 class SomeUpdaterStatus extends UpdaterStatus {}
 
-interface UserRec {
-    name?: string;
-}
-
 // Invokes once at User resolving, if no 'User' value specified at di.values(), calls Updater and fetch data
-function userLoader(fetcher: Fetcher, updater: UserUpdater): void {
-    updater.set([
-        () => fetcher.fetch('/user')
-    ])
+function userLoader(fetcher: Fetcher): () => Promise<$Shape<User>> {
+    return () => fetcher.fetch('/user')
 }
 
 // Model User, could be injected from outside by key 'User' as UserRec
-@source({key: 'User', init: userLoader, construct: true})
+@source({key: 'User', updater: UserUpdater, loader: userLoader})
 class User  {
     name: string;
-    constructor(r?: UserRec = {}) {
+    constructor(r?: $Shape<User> = {}) {
         this.name = r.name || 'unknown'
     }
 }
 
-interface ThemeVarsRec {
-    color?: string;
-}
-
-function themeVarsLoader(fetcher: Fetcher, updater: ThemeVarsUpdater) {
-    updater.set([
-        () => fetcher.fetch('/theme-vars')
-    ])
+function themeVarsLoader(fetcher: Fetcher): () => Promise<$Shape<ThemeVars>> {
+    return () => fetcher.fetch('/theme-vars')
 }
 
 // Model ThemeVars, could be injected from outside by key 'ThemeVars' as ThemeVarsRec
-@source({key: 'ThemeVars', init: themeVarsLoader, construct: true})
+@source({key: 'ThemeVars', updater: ThemeVarsUpdater, loader: themeVarsLoader})
 class ThemeVars {
-    color: string;
-    constructor(r?: ThemeVarsRec = {}) {
+    color: string
+    constructor(r?: $Shape<ThemeVars> = {}) {
         this.color = r.color || 'red'
     }
 }
@@ -116,11 +98,11 @@ class ThemeVars {
 // Provide class names and data for jss in __css property
 @theme
 class UserComponentTheme {
-    wrapper: string;
-    status: string;
-    name: string;
+    wrapper: string
+    status: string
+    name: string
 
-    __css: mixed;
+    __css: mixed
 
     constructor(vars: ThemeVars) {
         this.__css = {
@@ -138,16 +120,14 @@ class UserComponentTheme {
 }
 
 class UserComponentActions {
-    _updater: ThemeVarsUpdater;
+    _updater: ThemeVarsUpdater
 
     constructor(updater: ThemeVarsUpdater) {
         this._updater = updater
     }
 
     changeColor(): void {
-        this._updater.set([
-            new ThemeVars({color: 'green'})
-        ])
+        this._updater.setSingle(new ThemeVars({color: 'green'}))
     }
 }
 
@@ -163,7 +143,11 @@ interface UserComponentState {
 }
 
 // Looks like react widget, flow compatible props
-@component(UserComponentActions)
+@component({
+    register: [
+        UserComponentActions
+    ]
+})
 class UserComponent extends Component<UserComponentProps, UserComponentState> {
     props: UserComponentProps;
     state: UserComponentState;
@@ -200,8 +184,10 @@ const node: HTMLElement = window.document.getElementById('app')
 const render = (widget: Class<Component>, attrs: ?Object) => ReactDOM.render(React.createElement(widget, attrs), node)
 
 const di = (new Di(
-    createReactWidgetFactory(React.Component, ReactDOM.findDOMNode),
-    (styles) => jss.createStyleSheet(styles)
+    creaateHandlers(
+        createReactWidgetFactory(React.Component, ReactDOM.findDOMNode),
+        (styles) => jss.createStyleSheet(styles)
+    )
 ))
     .values({
         Fetcher: new Fetcher()

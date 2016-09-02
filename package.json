@@ -58,25 +58,24 @@
     "dist"
   ],
   "devDependencies": {
-    "babel-cli": "^6.11.4",
-    "babel-core": "^6.11.4",
+    "babel-cli": "^6.14.0",
+    "babel-core": "^6.14.0",
     "babel-plugin-espower": "^2.3.1",
-    "babel-plugin-flow-comments": "^6.3.19",
-    "babel-plugin-module-alias": "^1.5.0",
-    "babel-plugin-syntax-decorators": "^6.8.0",
-    "babel-plugin-syntax-flow": "^6.8.0",
-    "babel-plugin-transform-flow-strip-types": "^6.8.0",
-    "babel-polyfill": "^6.9.1",
-    "babel-preset-es2015": "^6.9.0",
+    "babel-plugin-module-resolver": "^2.2.0",
+    "babel-plugin-syntax-decorators": "^6.13.0",
+    "babel-plugin-syntax-flow": "^6.13.0",
+    "babel-plugin-transform-flow-strip-types": "^6.14.0",
+    "babel-polyfill": "^6.13.0",
+    "babel-preset-es2015": "^6.14.0",
     "babel-preset-es2015-loose": "^7.0.0",
     "babel-preset-stage-0": "^6.5.0",
     "fake-react": "^1.1.0",
-    "glob": "^7.0.5",
-    "mocha": "^2.5.3",
+    "glob": "^7.0.6",
+    "mocha": "^3.0.2",
     "power-assert": "^1.4.1",
-    "react": "^15.2.1",
-    "react-dom": "^15.2.1",
-    "sinon": "^1.17.4"
+    "react": "^15.3.1",
+    "react-dom": "^15.3.1",
+    "sinon": "^1.17.5"
   },
   "dependencies": {
     "derivable": "^0.12.1"
