@@ -14,6 +14,7 @@ export interface Derivable<V> {
 
 export interface Atom<V> extends Derivable<V> {
     set(v: V): void;
+    swap<E>(f: (v: V) => E): void;
 }
 
 export type DerivableDict = {[id: string]: Derivable<*>}
@@ -25,3 +26,5 @@ export interface Adapter {
     atom<V>(value: V): Atom<V>;
     struct<R>(value: DerivableArg[]): Derivable<R>;
 }
+
+export type CacheMap = Map<Function|string, ?Atom<*>>

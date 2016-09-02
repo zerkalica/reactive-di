@@ -1,0 +1,21 @@
+@startuml
+
+(*)-->[events] Action
+    -->Updater
+    -->[modify] Source
+    -->[combine\nupdater status] UpdaterStatus
+
+Source-->[on construct] Initializer
+Initializer-->[modify] Source
+Source-->[updates] Computed
+
+UpdaterStatus-->Computed
+Computed-->Component
+
+Value-->Source
+
+Styles-->[class names] Component
+Component-->[mount/unmount] Styles
+Component-->[events] Action
+
+@enduml

@@ -5,7 +5,6 @@ import {spy, match} from 'sinon'
 import assert from 'power-assert'
 
 import {
-    RdiMeta,
     service,
     deps,
     source,
@@ -50,7 +49,7 @@ describe('DerivableTest', () => {
         const di = new Di()
         const s: Service = di.val(Service).get()
         assert(s.val === '1')
-        di.atom(ModelA).set(new ModelA({val: '123'}))
+        di.val(ModelA).set(new ModelA({val: '123'}))
         assert(s.val === '123')
         assert(s === di.val(Service).get())
     })

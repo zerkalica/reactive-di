@@ -22,11 +22,11 @@ type ModelARec = {
 
 describe('UpdaterTest', () => {
     class ModelA extends BaseModel<ModelARec> {
-        val: string;
+        val: string
         static defaults: ModelARec = {
             val: '1'
-            };
-        copy: (rec: ModelARec) => ModelA;
+        }
+        copy: (rec: ModelARec) => ModelA
     }
     source({key: 'ModelA'})(ModelA)
 
@@ -39,7 +39,7 @@ describe('UpdaterTest', () => {
         u.set([
             new ModelA({val})
         ])
-        assert(u.status.get().type === 'complete')
+        assert(u.status.get().complete)
         assert(di.val(ModelA).get().val === val)
     })
 
@@ -52,7 +52,7 @@ describe('UpdaterTest', () => {
         u.set([
             [ModelA, new ModelA({val})]
         ])
-        assert(u.status.get().type === 'complete')
+        assert(u.status.get().complete)
         assert(di.val(ModelA).get().val === val)
     })
 
@@ -98,12 +98,12 @@ describe('UpdaterTest', () => {
 
         return promise1
             .then(() => {
-                assert(u.status.get().type === 'pending')
+                assert(u.status.get().pending)
                 assert(di.val(ModelA).get().val === val)
                 return promise2
             })
             .then(() => {
-                assert(u.status.get().type === 'complete')
+                assert(u.status.get().complete)
                 assert(di.val(ModelA).get().val === val2)
             })
     })

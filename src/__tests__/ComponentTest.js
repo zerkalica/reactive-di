@@ -21,6 +21,7 @@ import Di from '../Di'
 import BaseModel from '../BaseModel'
 
 import createReactWidgetFactory from '../adapters/createReactWidgetFactory'
+import createHandlers from '../core/createHandlers'
 
 describe('ComponentTest', () => {
     type ModelARec = {
@@ -53,9 +54,14 @@ describe('ComponentTest', () => {
         deps({m: ModelA})(TestComponent)
         component()(TestComponent)
 
-        const di = new Di(createReactWidgetFactory(ReactComponent, () => {
-            throw new Error('get dom element not supported on server')
-        }))
+        const handlers = createHandlers(
+            createReactWidgetFactory(ReactComponent, () => {
+                throw new Error('get dom element not simport createHandlers unsupported on server')
+            })
+        )
+
+        const di = new Di(handlers)
+
         const c = di.val(TestComponent).get()
 
         assert(
@@ -66,7 +72,7 @@ describe('ComponentTest', () => {
             '<div data-reactroot="" data-reactid="1" data-react-checksum="-1437592142">test-state-value</div>'
         )
 
-        di.atom(ModelA).set(new ModelA({val: '123'}))
+        di.val(ModelA).set(new ModelA({val: '123'}))
 
         assert(
             ReactDOM.renderToString(h(c, {
@@ -129,9 +135,11 @@ describe('ComponentTest', () => {
         const createSheet = spy((css: {[id: string]: Object}) => {
             return fakeSheet
         })
-        const di = new Di(createReactWidgetFactory(ReactComponent, () => {
-            throw new Error('get dom element not supported on server')
-        }), createSheet)
+        const widgetMock = () => {
+            throw new Error('get dom element not simport createHandlers unsupported on server')
+        }
+        const widgetFactory = createReactWidgetFactory(ReactComponent, widgetMock)
+        const di = new Di(createHandlers(widgetFactory, createSheet))
 
         const c = di.val(TestComponent).get()
         assert(di.val(TestComponentTheme).get().mainStyle === fakeSheet.classes.mainStyle)

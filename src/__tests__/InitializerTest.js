@@ -6,6 +6,7 @@ import assert from 'power-assert'
 
 import {
     factory,
+    updaters,
     service,
     deps,
     source
@@ -14,87 +15,100 @@ import {
 import Di from '../Di'
 import Updater from '../Updater'
 import BaseModel from '../BaseModel'
+import type {Derivable} from '../interfaces/atom'
+import type {SingleUpdate} from '../interfaces/updater'
 
 describe('InitializerTest', () => {
-    type ModelARec = {
-        val?: string;
-    }
-
     class Dep {
-        val: string = 'test';
+        val: string = 'test'
     }
 
-    it('catch sync model changes in service throught facet', () => {
-        class ModelA extends BaseModel<ModelARec> {
-            val: string;
-            static defaults: ModelARec = {
-                val: '1'
-            };
-            copy: (rec: ModelARec) => ModelA;
+    class BaseModel {
+        val: string
+        static defaults: $Shape<BaseModel> = {
+            val: ''
         }
+        constructor(props?: $Shape<BaseModel> = {}) {
+            Object.assign((this: Object), this.constructor.defaults, props)
+        }
+        copy(props: $Shape<BaseModel>): BaseModel {
+            return new this.constructor({...(this: Object), ...props})
+        }
+    }
 
-        function initA(dep: Dep, updater: Updater): () => void {
-            return () => updater.set([
-                new ModelA({val: dep.val})
-            ])
+    it('sync model changes in service throught facet', () => {
+        class ModelA extends BaseModel {}
+        function initA(dep: Dep): $Shape<ModelA> {
+            return {
+                val: dep.val
+            }
         }
-        deps(Dep, Updater)(initA)
         factory(initA)
-
-        source({key: 'ModelA', init: initA})(ModelA)
+        deps(Dep)(initA)
+        source({key: 'ModelA', updater: Updater, loader: initA})(ModelA)
 
         const Service = spy(class {
-            val: string;
+            m: ModelA
             constructor(m: ModelA) {
-                this.val = m.val
+                this.m = m
             }
         })
-        service(Service)
         deps(ModelA)(Service)
 
         const di = new Di()
         const s: Service = di.val(Service).get()
-        assert(s.val === 'test')
+
+        assert(s.m.val === 'test')
+        assert(s.m instanceof ModelA)
     })
 
-    it('catch async model changes in service throught facet', () => {
-        class ModelA extends BaseModel<ModelARec> {
-            val: string;
-            static defaults: ModelARec = {
-                val: '1'
-            };
-            copy: (rec: ModelARec) => ModelA;
+    it('async model changes', () => {
+        class ModelA extends BaseModel {}
+        const result = Promise.resolve({val: 'test2'})
+
+        function initA(dep: Dep): () => Promise<$Shape<ModelA>> {
+            return () => result
         }
-        let resolve: () => void
-        const pmodelA = Promise.resolve([new ModelA({val: 'from promise'})])
-        const resolved = new Promise(r => {resolve = r})
-        function initA(dep: Dep, updater: Updater): () => void {
-            return () => updater.set([
-                new ModelA({val: dep.val}),
-                () => pmodelA
-            ])
-        }
-        deps(Dep, Updater)(initA)
         factory(initA)
-
-        source({key: 'ModelA', init: initA})(ModelA)
-
-        const Service = spy(class {
-            val: string;
-            constructor(m: ModelA) {
-                this.val = m.val
-            }
-        })
-        service(Service)
-        deps(ModelA)(Service)
+        deps(Dep, Updater)(initA)
+        source({key: 'ModelA', updater: Updater, loader: initA})(ModelA)
 
         const di = new Di()
-        const s: Service = di.val(Service).get()
-        assert(s.val === 'test')
+        const m: Derivable<ModelA> = di.val(ModelA)
+        const firstInstance = m.get()
+        assert(firstInstance.val === '')
 
-        return pmodelA
-            .then(() => {
-                assert(s.val === 'from promise')
-            })
+        return result.then(() => {
+            const secondInstance = m.get()
+            assert(secondInstance.val === 'test2')
+            assert(secondInstance instanceof ModelA)
+            assert(secondInstance !== firstInstance)
+        })
+    })
+
+    it('mixed async and sync model changes', () => {
+        class ModelA extends BaseModel {}
+        const result = Promise.resolve({val: 'test2'})
+
+        function initA(dep: Dep): [$Shape<ModelA>, () => Promise<$Shape<ModelA>>] {
+            return [
+                {
+                    val: dep.val
+                },
+                () => result
+            ]
+        }
+        factory(initA)
+        deps(Dep, Updater)(initA)
+        source({key: 'ModelA', updater: Updater, loader: initA})(ModelA)
+
+        const di = new Di()
+        const m: Derivable<ModelA> = di.val(ModelA)
+        assert(m.get().val === 'test')
+
+        return result.then(() => {
+            assert(m.get().val === 'test2')
+            assert(m.get() instanceof ModelA)
+        })
     })
 })

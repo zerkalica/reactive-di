@@ -4,9 +4,9 @@ import Di from './Di'
 import createReactWidgetFactory from './adapters/createReactWidgetFactory'
 import derivableAtomAdapter from './adapters/derivableAtomAdapter'
 import BaseModel from './BaseModel'
-import Updater from './Updater'
-import UpdaterStatus from './UpdaterStatus'
-import StyleAttachOptimizer from './StyleAttachOptimizer'
+import Updater, {UpdaterStatus} from './Updater'
+
+import createHandlers from './core/createHandlers'
 
 export type {
     RegisterDepItem,
@@ -19,7 +19,6 @@ export type {
     StyleSheet,
     RawStyleSheet,
     CreateStyleSheet,
-    CreateComponentReactor,
     CreateWidget
 } from './interfaces/component'
 
@@ -31,16 +30,13 @@ export type {
 } from './interfaces/atom'
 
 export type {
-    KeyValueSyncUpdate,
-    SyncUpdate,
-    AsyncUpdate,
-    AsyncUpdateThunk,
-    Transaction
+    MultiUpdate,
+    SingleUpdate
 } from './interfaces/updater'
 
 export {
     Di,
-    StyleAttachOptimizer,
+    createHandlers,
     Updater,
     UpdaterStatus,
     BaseModel,

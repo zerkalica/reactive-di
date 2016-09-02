@@ -1,167 +1,85 @@
 // @flow
 
-import {paramTypesKey, functionTypesKey, metaKey, RdiMeta} from './annotations'
-import type {IUpdater, IUpdaterStatus} from './interfaces/updater'
-import type {DepFn, Key, RegisterDepItem, DepAlias, ArgDep} from './interfaces/deps'
-import type {CreateWidget, StyleSheet, CreateStyleSheet, RawStyleSheet} from './interfaces/component'
-import type {Adapter, Atom, Derivable, DerivableArg, DerivableDict} from './interfaces/atom'
+import {DepInfo} from './core'
+import type {IHandler, IContext, RdiMetaType, Collector, RdiMeta} from './core'
+
+import {deps} from './annotations'
+
+import type {RegisterDepItem, Key, ArgDep} from './interfaces/deps'
+import type {Adapter, Atom, Derivable, DerivableArg, DerivableDict, CacheMap} from './interfaces/atom'
 import debugName from './utils/debugName'
-import {fastCallMethod, fastCall, fastCreateObject} from './utils/fastCall'
 import derivableAtomAdapter from './adapters/derivableAtomAdapter'
-import createThemesReactor from './createThemesReactor'
-import UpdaterStatus from './UpdaterStatus'
-import CustomReflect from './CustomReflect'
-
-function passAny<V>(v: V): V {
-    return v
-}
-
-function pass<V: Function>(target: V, depsAtom: Derivable<V>): V {
-    return target(depsAtom)
-}
-
-type CacheMap = Map<Function|string, ?Derivable<any>>
-
-type Meta = [Function, ArgDep[], RdiMeta<*>, boolean, Function, Di]
-
-const defaultMeta: RdiMeta<*> = new RdiMeta()
-
-const defaultArr: ArgDep[] = []
-
-const gm = CustomReflect.getMetadata
-
-function metaFromTarget(target: Function, di: Di): Meta {
-    return [
-        target,
-        gm(paramTypesKey, target) || defaultArr,
-        gm(metaKey, target) || defaultMeta,
-        gm(functionTypesKey, target) || false,
-        target,
-        di
-    ]
-}
-
-type Result<V> = Derivable<V> | Atom<V>
-
-function mapToStatus(upd: IUpdater): IUpdaterStatus {
-    return upd.status.get()
-}
-
-function mergeStatuses(statuses: IUpdaterStatus[]): IUpdaterStatus {
-    return (new UpdaterStatus()).merge(statuses)
-}
-
-const fakeStyles = {
-    attach() {},
-    detach() {}
-}
-
-type PreprocessFn<V> = <V>(entity: DepFn<V>) => DepFn<V>
+import createHandlers from './core/createHandlers'
+import MetaRegistry from './MetaRegistry'
+import Updater from './Updater'
 
 export default class Di {
-    displayName: string;
-    _cache: CacheMap;
-    _componentCache: CacheMap;
+    displayName: string
+    cache: CacheMap
+    adapter: Adapter
+    defaults: {[id: string]: any};
+    stopped: Atom<boolean>
 
-    _metaMap: Map<Key, Meta>;
-
-    _adapter: Adapter;
-    _createComponent: CreateWidget<*, *, *>;
-
-    _registered: RegisterDepItem[];
-    _values: {[id: string]: any};
-
-    _stopped: Atom<boolean>;
-
-    _createSheet: CreateStyleSheet;
+    _metaRegistry: MetaRegistry
+    _handlers: Map<RdiMetaType, IHandler<*, *>>
+    _path: string[] = []
 
     constructor(
-        createComponent?: CreateWidget<*, *, *> = pass,
-        createSheet: CreateStyleSheet = passAny,
-        adapter?: Adapter = derivableAtomAdapter,
-        _componentCache?: CacheMap = new Map(),
-        _metaMap?: Map<Key, Meta> = new Map(),
-        displayName?: string = 'rootDi'
+        handlers?: Map<RdiMetaType, IHandler<*, *>>,
+        adapter?: Adapter,
+        metaRegistry?: MetaRegistry,
+        displayName?: string
     ) {
-        this.displayName = displayName
-        this._adapter = adapter
-        this._createSheet = createSheet
-        this._cache = new Map()
-        this._componentCache = _componentCache
-        this._values = {}
-        this._createComponent = createComponent
-        this._registered = []
-        this._metaMap = _metaMap
-        this._stopped = adapter.atom(false)
+        this.displayName = displayName || 'rootDi'
+        this.adapter = adapter || derivableAtomAdapter
+        this._handlers = handlers || createHandlers()
+        this._metaRegistry = metaRegistry || new MetaRegistry()
+        this._metaRegistry.setContext(this)
+        this.stopped = this.adapter.atom(false)
+        this.cache = new Map()
+        this.defaults = {}
     }
 
     stop(): Di {
-        this._stopped.set(true)
+        this.stopped.set(true)
         return this
     }
 
-    values(values?: ?{[id: string]: mixed}): Di {
-        this._values = values || {}
+    values(values?: ?{[id: string]: mixed}): IContext {
+        this.defaults = values || {}
         return this
     }
 
-    register(registered?: ?RegisterDepItem[]): Di {
-        if (!registered) {
-            return this
-        }
-
-        const metaMap = this._metaMap
-        let key: Key|string
-        let targetKey: Key
-        let di: ?Di
-        for (let i = 0, l = registered.length; i < l; i++) {
-            const pr: RegisterDepItem = registered[i]
-            if (Array.isArray(pr)) {
-                if (pr.length !== 2) {
-                    throw new Error(`Provide tuple of two items in register() ${this._debugStr(pr)}`)
-                }
-                key = pr[0]
-                targetKey = pr[1]
-                if (typeof targetKey !== 'function') {
-                    throw new Error(`Only function as register target, given: ${this._debugStr(targetKey)}`)
-                }
-            } else {
-                if (typeof pr !== 'function') {
-                    throw new Error(`Only function as register target, given: ${this._debugStr(pr)}`)
-                }
-                key = pr
-                targetKey = pr
-            }
-
-            if (
-                targetKey !== key
-                && typeof key === 'function'
-                && (gm(metaKey, key) || defaultMeta).isAbstract
-            ) {
-                const rec = metaMap.get(targetKey)
-                di = (rec ? rec[5] : null) || this
-            } else {
-                di = this
-            }
-            const meta: Meta = metaFromTarget(targetKey, di)
-            metaMap.set(key, meta)
-        }
-
+    register(registered?: ?RegisterDepItem[]): IContext {
+        this._metaRegistry.add(registered)
         return this
     }
 
-    create(displayName?: string): Di {
+    create(displayName?: string): IContext {
         return (new Di(
-            this._createComponent,
-            this._createSheet,
-            this._adapter,
-            this._componentCache,
-            new Map(this._metaMap),
+            this._handlers,
+            this.adapter,
+            this._metaRegistry.copy(),
             displayName
-        )).values(this._values)
+        )).values(this.defaults)
     }
 
-    _resolveDeps(deps: ArgDep[], _themes?: ?Derivable<RawStyleSheet>[]): Derivable<any> {
+    debugStr(sub: ?mixed): string {
+        return `${debugName(sub)} [${this._path.join('.')}]`
+    }
+
+    preprocess(entity: any): any {
+        if (entity && typeof entity === 'object') {
+            entity.__di = this.displayName
+        }
+        return entity
+    }
+
+    getMeta(key: Key): DepInfo<RdiMeta> {
+        return this._metaRegistry.getMeta(key)
+    }
+
+    resolveDeps(deps: ArgDep[], collector?: Collector): Derivable<mixed[]> {
         const resolvedArgs: DerivableArg[] = []
         for (let i = 0, l = deps.length; i < l; i++) {
             const argDep: ArgDep = deps[i]
@@ -172,206 +90,71 @@ export default class Di {
                     if (!dep) {
                         throw new Error(`Not a dependency, need a function: ${debugName(prop || i)}`)
                     }
-                    result[prop] = this.val(dep, _themes)
+                    result[prop] = this.val(dep, collector)
                 }
                 resolvedArgs.push(result)
             } else {
                 if (!argDep) {
                     throw new Error(`Not a dependency, need a function: ${debugName(i)}`)
                 }
-                resolvedArgs.push(this.val(argDep, _themes))
+                resolvedArgs.push(this.val(argDep, collector))
             }
         }
 
-        return this._adapter.struct(resolvedArgs)
+        return this.adapter.struct(resolvedArgs)
     }
 
-    _path: string[] = [];
-
-    _debugStr(sub: ?mixed): string {
-        return `${debugName(sub)} [${this._path.join('.')}]`
-    }
-
-    atom<V>(key: Key): Atom<V> {
-        return (this.val(key): any)
-    }
-
-    getMeta(key: Key): Meta {
-        let rec: ?Meta = this._metaMap.get(key)
-        if (!rec) {
-            if (typeof key === 'function') {
-                rec = metaFromTarget(key, this)
-            } else {
-                throw new Error(`Can't read annotation from ${this._debugStr(key)}`)
-            }
-            this._metaMap.set(key, rec)
-        }
-
-        return rec
-    }
-
-    __preprocess: (entity: mixed) => mixed = (entity: mixed) => {
-        if (entity && typeof entity === 'object') {
-            entity.__di = this.displayName
-        }
-        return entity
-    };
-
-    val<V>(key: Key, _themes?: ?Derivable<RawStyleSheet>[]): Result<V> {
-        let atom: ?Result<V> = this._cache.get(key)
+    val<V>(key: Key, collector?: Collector): Atom<V> {
+        let atom: ?Atom<V> = this.cache.get(key)
         if (atom) {
+            if (collector) {
+                collector.add(this.getMeta(key), atom)
+            }
             return atom
         } else if (atom === null) {
-            throw new Error(`Circular-dependency detected: ${this._debugStr(key)}`)
+            throw new Error(`Circular-dependency detected: ${this.debugStr(key)}`)
         }
 
-        const cache = this._cache
+        const cache = this.cache
         if (key === this.constructor) {
-            atom = this._adapter.atom((this: any))
+            atom = this.adapter.atom(this)
             cache.set(key, atom)
             return atom
         }
-        const [target, deps, meta, isFactory, targetKey, ownDi] = this.getMeta(key)
-        if (ownDi && ownDi !== this) {
-            return ownDi.val(targetKey, _themes)
+        const depInfo: DepInfo<RdiMeta> = this.getMeta(key)
+        const {ctx, target, meta, name} = depInfo
+        if (ctx !== this) {
+            return ctx.val(target, collector)
         }
-        cache.set(targetKey, null)
-        if (key !== targetKey) {
+        cache.set(target, null)
+        if (key !== target) {
             cache.set(key, null)
         }
-        const name: string = debugName(key)
+
         this._path.push(name)
-        const adapter: Adapter = this._adapter
-        const value = this._values[meta.key || '']
-        if (meta.isComponent) {
-            atom = this._componentCache.get(key)
-            if (!atom) {
-                const container: Di = meta.deps
-                    ? this.create(`${name}#Di`).register(meta.deps)
-                    : this
-                const themes: Derivable<RawStyleSheet>[] = []
-                const depsAtom: Derivable<mixed[]> = container._resolveDeps(deps, themes)
-                atom = adapter.atom((this._createComponent(
-                    target,
-                    depsAtom,
-                    createThemesReactor(adapter.struct(themes))
-                ): any))
-                this._componentCache.set(key, atom)
-            }
-        } else if (meta.key) {
-            if (meta.construct) {
-                atom = adapter.isAtom(value)
-                    ? value.derive((v: V) => this.__preprocess(new target(value)))
-                    : adapter.atom(this.__preprocess(new target(value))) // eslint-disable-line
-            } else {
-                atom = adapter.isAtom(value)
-                    ? value
-                    : adapter.atom(this.__preprocess(value || new target()))
-            }
-        } else {
-            const depsAtom: Derivable<mixed[]> = this._resolveDeps(deps)
-            const preprocess: (v: any) => any = meta.isTheme
-                ? this.__createSheet
-                : this.__preprocess
-            if (isFactory) {
-                if (meta.writable) {
-                    atom = adapter.atom((this._createFactory(target, depsAtom): any))
-                } else {
-                    atom = depsAtom.derive((deps: mixed[]) => preprocess(fastCall(target, deps)))
-                }
-            } else {
-                if (meta.writable) {
-                    atom = adapter.atom(this._createObject(target, depsAtom))
-                } else {
-                    atom = depsAtom.derive((deps: mixed[]) => preprocess(fastCreateObject(target, deps)))
-                }
-            }
-        }
 
-        if (meta.isTheme) {
-            if (meta.writable) {
-                throw new Error(`Them can't be an @service annotated: ${this._debugStr(key)}`)
-            }
-            if (!_themes) {
-                throw new Error(`Theme used as dep not for component: ${this._debugStr(key)}`)
-            }
-            _themes.push(((atom: any): Derivable<RawStyleSheet>))
-        }
+        const adapter: Adapter = this.adapter
 
-        if (meta.updaters) {
-            atom = (this._updaterStatus(meta.updaters): any)
+        let depsAtom: ?Derivable<mixed[]>
+        const handler: ?IHandler<RdiMeta, any> = this._handlers.get(meta.type)
+        if (!handler) {
+            throw new Error(`Handler not found for type: ${this.debugStr(meta.type)}`)
         }
-
+        atom = handler.handle(depInfo, collector)
         cache.set(key, atom)
-        if (targetKey !== key) {
-            cache.set(targetKey, atom)
+        if (target !== key) {
+            cache.set(target, atom)
         }
+        handler.postHandle(depInfo, atom)
 
-        // Place after cache.set to avoid curcular deps
-        // initializer can use model, resolved above.
-        if (meta.initializer && value === undefined) {
-            const initializer: Derivable<() => void> = this.val(meta.initializer)
-            const fn: () => void = initializer.get()
-            if (typeof fn !== 'function') {
-                throw new Error(`Initializer must be a function: ${this._debugStr(meta.initializer)}`)
-            }
-            fn()
+        if (collector) {
+            collector.add(depInfo, atom)
         }
         this._path.pop()
 
         return atom
     }
-
-    _updaterStatus(updaterKeys: Key[]): Derivable<IUpdaterStatus> {
-        const statuses: Derivable<IUpdaterStatus>[] = []
-        for (let i = 0; i < updaterKeys.length; i++) {
-            statuses.push(this.val(updaterKeys[i]).derive(mapToStatus))
-        }
-
-        return this._adapter.struct(statuses).derive(mergeStatuses)
-    }
-
-    __createSheet: (theme: any) => RawStyleSheet = (theme: any) => {
-        if (!theme || typeof theme !== 'object' || !theme.__css) {
-            throw new Error(`Provide this.__css property with jss styles in theme ${this._debugStr(theme)}`)
-        }
-        const styles: StyleSheet = this._createSheet(theme.__css)
-        theme.__styles = styles
-        Object.assign(theme, styles.classes)
-
-        return theme
-    };
-
-    _createObject<V: Object>(target: Class<V>, depsAtom: Derivable<mixed[]>): V {
-        const value: V = fastCreateObject(target, depsAtom.get())
-        const onChange = (deps: mixed[]) => {
-            fastCallMethod(value, target, deps)
-        }
-        depsAtom.react(onChange, {
-            skipFirst: true,
-            until: this._stopped
-        })
-
-        return value
-    }
-
-    _createFactory<V>(target: DepFn<DepFn<V>>, depsAtom: Derivable<mixed[]>): mixed {
-        let value: DepFn<V>  = fastCall(target, depsAtom.get())
-
-        function onChange(deps: mixed[]): void {
-            value = fastCall(target, deps)
-        }
-
-        depsAtom.react(onChange, {
-            skipFirst: true,
-            until: this._stopped
-        })
-
-        function factory(...args: mixed[]): V {
-            return fastCall(value, args)
-        }
-        factory.displayName = `wrap@${debugName(target)}`
-
-        return this.__preprocess(factory)
-    }
 }
+if (0) ((new Di(...(0: any))): IContext)
+
+deps(Di)(Updater)

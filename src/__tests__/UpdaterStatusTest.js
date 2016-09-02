@@ -13,8 +13,7 @@ import {
 } from '../annotations'
 
 import Di from '../Di'
-import Updater from '../Updater'
-import UpdaterStatus from '../UpdaterStatus'
+import Updater, {UpdaterStatus} from '../Updater'
 import BaseModel from '../BaseModel'
 
 type ModelARec = {
@@ -23,137 +22,83 @@ type ModelARec = {
 
 describe('UpdaterStatusTest', () => {
     class ModelA extends BaseModel<ModelARec> {
-        val: string;
+        val: string
         static defaults: ModelARec = {
             val: '1'
-            };
-        copy: (rec: ModelARec) => ModelA;
+        }
+        copy: (rec: ModelARec) => ModelA
     }
     source({key: 'ModelA'})(ModelA)
+
     class ModelB extends BaseModel<ModelARec> {
-        val: string;
+        val: string
         static defaults: ModelARec = {
             val: '1'
-            };
-        copy: (rec: ModelARec) => ModelB;
+        }
+        copy: (rec: ModelARec) => ModelB
     }
     source({key: 'ModelB'})(ModelB)
 
     it('pending to complete status change', () => {
-        const di = new Di()
-        class MyUpdater1 extends Updater {
-            static pending: boolean = true;
-        }
-        const promise = Promise.resolve(new ModelA({val: 'testA'}))
-        function loadModelA(updater: MyUpdater1): () => void {
-            return () => {
-                updater.set([
-                    () => promise
-                ])
-            }
-        }
-        deps(MyUpdater1)(loadModelA)
-
+        class MyUpdater1 extends Updater {}
         class MyUpdaterStatus extends UpdaterStatus {}
         updaters(MyUpdater1)(MyUpdaterStatus)
 
-        const u: UpdaterStatus = di.val(MyUpdaterStatus).get()
-        assert(u.type === 'pending')
-        di.val(loadModelA).get()()
+        const di = new Di()
+        const promise = Promise.resolve({val: 'testA'})
+        assert(di.val(MyUpdaterStatus).get().complete)
+        di.val(MyUpdater1).get().setSingle(() => promise)
+        assert(di.val(MyUpdaterStatus).get().pending)
 
         return promise.then(() => {
-            const u2: UpdaterStatus = di.val(MyUpdaterStatus).get()
-            assert(u2.type === 'complete')
+            assert(di.val(MyUpdaterStatus).get().complete)
         })
     })
 
-    it('initial status from two updaters with different initial statuses', () => {
-        const di = new Di()
-        class MyUpdater1 extends Updater {
-            static pending: boolean = true;
-        }
-        class MyUpdater2 extends Updater {
-            static pending: boolean = false;
-        }
-
+    it('pending to complete status change from first used and second not used updater', () => {
+        class MyUpdater1 extends Updater {}
+        class MyUpdater2 extends Updater {}
         class MyUpdaterStatus extends UpdaterStatus {}
         updaters(MyUpdater1, MyUpdater2)(MyUpdaterStatus)
 
-        const u: UpdaterStatus = di.val(MyUpdaterStatus).get()
-        assert(u.type === 'pending')
-    })
-
-    it('pending to complete status change from two updaters with different initial statuses', () => {
         const di = new Di()
-        class MyUpdater1 extends Updater {
-            static pending: boolean = true;
-        }
-        class MyUpdater2 extends Updater {
-            static pending: boolean = false;
-        }
-        const promise = Promise.resolve(new ModelA({val: 'testA'}))
-        function loadModelA(updater: MyUpdater1): () => void {
-            return () => {
-                updater.set([
-                    () => promise
-                ])
-            }
-        }
-        deps(MyUpdater1)(loadModelA)
-
-        class MyUpdaterStatus extends UpdaterStatus {}
-        updaters(MyUpdater1, MyUpdater2)(MyUpdaterStatus)
+        const promise = Promise.resolve({val: 'testA'})
+        di.val(MyUpdater1).get().setSingle(() => promise)
 
         const u: UpdaterStatus = di.val(MyUpdaterStatus).get()
-        assert(u.type === 'pending')
-        di.val(loadModelA).get()()
+        assert(u.pending)
 
         return promise.then(() => {
-            const u2: UpdaterStatus = di.val(MyUpdaterStatus).get()
-            assert(u2.type === 'complete')
+            assert(di.val(MyUpdaterStatus).get().complete)
         })
     })
 
-    it('pending to complete status change from two updaters with pending initial statuses', () => {
-        const di = new Di()
-        class MyUpdater1 extends Updater {
-            static pending: boolean = true;
-        }
-        class MyUpdater2 extends Updater {
-            static pending: boolean = true;
-        }
-        const promise1 = Promise.resolve(new ModelA({val: 'testA'}))
-        const promise2 = Promise.resolve(new ModelB({val: 'testB'}))
-        function loadModelA(updater: MyUpdater1): () => void {
-            return () => {
-                updater.set([
-                    () => promise1
-                ])
-            }
-        }
-        deps(MyUpdater1)(loadModelA)
-        function loadModelB(updater: MyUpdater2): () => void {
-            return () => {
-                updater.set([
-                    () => promise2
-                ])
-            }
-        }
-        deps(MyUpdater2)(loadModelB)
-
+    it('pending to complete status change from both used updaters', () => {
+        class MyUpdater1 extends Updater {}
+        class MyUpdater2 extends Updater {}
         class MyUpdaterStatus extends UpdaterStatus {}
         updaters(MyUpdater1, MyUpdater2)(MyUpdaterStatus)
 
-        di.val(loadModelA).get()()
-        di.val(loadModelB).get()()
+        const di = new Di()
+        const promiseA = Promise.resolve({val: 'testA'})
+        di.val(MyUpdater1).get().setSingle(() => promiseA)
 
-        return promise1
-            .then(() => {
-                return promise2
+        let resolveFn: Function
+        const promiseB = new Promise(resolve => {
+            resolveFn = resolve
+        })
+        di.val(MyUpdater2).get().setSingle(() => promiseB)
+
+        const u: UpdaterStatus = di.val(MyUpdaterStatus).get()
+        assert(u.pending)
+
+        return promiseA.then(() => {
+            assert(di.val(MyUpdaterStatus).get().pending)
+            resolveFn({val: 'testB'})
+
+            return promiseB.then(() => {
+                assert(di.val(MyUpdaterStatus).get().complete)
             })
-            .then(() => {
-                const u2: UpdaterStatus = di.val(MyUpdaterStatus).get()
-                assert(u2.type === 'complete')
-            })
+        })
     })
 })

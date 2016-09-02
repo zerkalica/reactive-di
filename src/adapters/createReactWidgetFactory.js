@@ -6,8 +6,7 @@ import type {
 } from '../interfaces/atom'
 import type {
     CreateWidget,
-    SrcComponent,
-    CreateComponentReactor
+    SrcComponent
 } from '../interfaces/component'
 
 import derivableAtomAdapter from './derivableAtomAdapter'
@@ -50,11 +49,11 @@ function createReactWidget<Props: Object, State: Object> (
     findDOMElement: (component: ReactComponent<Props, State> ) => HTMLElement,
     adapter: Adapter,
     Target: Class<SrcComponent<Props, State>>,
-    atom: Derivable<[State]>,
-    CreateComponentReactor: CreateComponentReactor
+    stateAtom: Derivable<[State]>,
+    isMounted: Atom<boolean>
 ): any {
     return class WrappedComponent extends RC {
-        static displayName: string = `wrap@${debugName(Target)}`;
+        static displayName: string = `${debugName(Target)}`;
         state: State
         props: Props
         _target: Target
@@ -63,7 +62,7 @@ function createReactWidget<Props: Object, State: Object> (
         _unmounted: Atom<boolean>;
 
         componentWillMount(): void {
-            this.state = atom.get()[0]
+            this.state = stateAtom.get()[0]
             const target: Target = this._target = new Target(this.state)
             target.props = this.props
             target.state = this.state
@@ -74,11 +73,11 @@ function createReactWidget<Props: Object, State: Object> (
         }
 
         componentDidMount() {
-            atom.react(this._setState, {
+            stateAtom.react(this._setState, {
                 skipFirst: true,
                 until: this._unmounted
             })
-            CreateComponentReactor(this._unmounted)
+            isMounted.set(true)
 
             const target = this._target
             if (target.componentDidMount) {
@@ -108,6 +107,7 @@ function createReactWidget<Props: Object, State: Object> (
         }
 
         componentWillUnmount(): void {
+            isMounted.set(false)
             this._unmounted.set(true)
             const target = this._target
             if (target.componentWillUnmount) {
@@ -153,14 +153,14 @@ export default function createReactWidgetFactory<Props:  Object, State: Object> 
 ): CreateReactWidget<Props, State> {
     return (
         Target: Class<SrcComponent<Props, State>>,
-        atom: Derivable<[State]>,
-        createComponentReactor: CreateComponentReactor
+        stateAtom: Derivable<[State]>,
+        isMounted: Atom<boolean>
     ) => createReactWidget(
         ReactComponent,
         findDOMElement,
         adapter,
         Target,
-        atom,
-        createComponentReactor
+        stateAtom,
+        isMounted
     )
 }

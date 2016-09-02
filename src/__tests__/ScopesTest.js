@@ -40,7 +40,7 @@ describe('ScopesTest', () => {
         const di = (new Di()).register([ModelA])
         let newDi = di.create()
         // modify ModelA in parent di
-        newDi.atom(ModelA).set(new ModelA({val: 'test1'}))
+        newDi.val(ModelA).set(new ModelA({val: 'test1'}))
         assert(di.val(ModelA).get().val === 'test1')
     })
 
@@ -68,7 +68,7 @@ describe('ScopesTest', () => {
         let newDi = di.create().register([ModelA])
 
         // modify ModelA in parent di
-        newDi.atom(ModelA).set(new ModelA({val: 'test1'}))
+        newDi.val(ModelA).set(new ModelA({val: 'test1'}))
 
         assert(di.val(ModelA).get().val === 'test')
         assert(newDi.val(ModelA).get().val === 'test1')
@@ -97,7 +97,7 @@ describe('ScopesTest', () => {
         let newDi = di.create()
 
         // modify ModelA in parent di
-        newDi.atom(ModelA).set(new ModelA({val: 'test1'}))
+        newDi.val(ModelA).set(new ModelA({val: 'test1'}))
 
         assert(di.val(ModelA).get().val === 'test')
         assert(newDi.val(ModelA).get().val === 'test1')

@@ -4,6 +4,14 @@ import {fastCall, fastCallMethod} from './fastCall'
 export type MiddlewareFn = (result: any, ...args: Array<any>) => void;
 export type MiddlewareMap = {[method: string]: MiddlewareFn};
 
+export function cloneInstance<Instance: Object>(target: Instance, props: $Shape<Instance>): Instance {
+    return new target.constructor({...target, ...props})
+}
+
+export function setProps(obj: Object, props: Object): void {
+    Object.assign(obj, obj.constructor.defaults, props)
+}
+
 export function createFunctionProxy<T: Function>(
     source: Function,
     middlewares: Array<MiddlewareFn>
@@ -49,8 +57,8 @@ function createMethodProxy(
 }
 
 export function createObjectProxy<T: Object>(source: T, middlewares: Array<MiddlewareMap>): T {
-    const props: Object = Object.create(source);
-    const methods: Array<string> = Object.getOwnPropertyNames(Object.getPrototypeOf(source));
+    const props: Object = Object.create(source)
+    const methods: Array<string> = Object.getOwnPropertyNames(Object.getPrototypeOf(source))
     for (let i = 0, j = methods.length; i < j; i++) {
         const name = methods[i]
         const method = source[name]

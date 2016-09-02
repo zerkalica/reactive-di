@@ -6,8 +6,7 @@ import {
     atom,
     isAtom,
     struct,
-    transact,
-    Reactor
+    transact
 } from 'derivable'
 
 export default ({

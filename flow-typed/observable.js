@@ -16,7 +16,7 @@ declare interface Subscription {
     unsubscribe(): void;
 }
 
-declare function SubscriberFunction(observer: SubscriptionObserver): (() => void)|Subscription;
+declare function SubscriberFunction(observer: SubscriptionObserver<*, *>): (() => void)|Subscription;
 
 declare class $SymbolHasInstance mixins Symbol {}
 declare class $SymboIsConcatSpreadable mixins Symbol {}
@@ -66,5 +66,5 @@ declare class Observable<V, E> {
     // Converts items to an Observable
     static of<VV, EE>(...items: any) : Observable<VV, EE>;
     // Converts an observable or iterable to an Observable
-    static from<V, E>(observable: Observable|Iterator|$ObservableObject<V, E>): Observable<V, E>;
+    static from<V, E>(observable: Observable<V, E>|Iterator<V>|$ObservableObject<V, E>): Observable<V, E>;
 }

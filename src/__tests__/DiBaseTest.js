@@ -27,7 +27,7 @@ function createFn(): typeof FN {
 }
 createFn()('1')
 
-describe('DiBase - class with one dependency', () => {
+describe('DiBaseTest', () => {
     type ModelARec = {
         val?: string;
     }
@@ -81,7 +81,7 @@ describe('DiBase - class with one dependency', () => {
 
         const di = new Di()
         const s: Service = di.val(Service).get()
-        const modelA = di.atom(ModelA)
+        const modelA = di.val(ModelA)
         assert(s.getValue() === '1')
         modelA.set(modelA.get().copy({val: '123'}))
         assert(s.getValue() === '123')
@@ -118,7 +118,7 @@ describe('DiBase - class with one dependency', () => {
 
         const di = new Di()
         const fn: FactoryService = di.val(FactoryService).get()
-        const modelA = di.atom(ModelA)
+        const modelA = di.val(ModelA)
         assert(fn() === '1')
         modelA.set(modelA.get().copy({val: '123'}))
 

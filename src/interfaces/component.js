@@ -1,6 +1,6 @@
 // @flow
 
-import type {Derivable} from './atom'
+import type {Atom, Derivable} from './atom'
 
 export interface SrcComponent<Props, State> extends React$Component<void, Props, State> {
     props: Props;
@@ -25,10 +25,9 @@ export interface RawStyleSheet {
 }
 
 export type CreateStyleSheet = (css: {[id: string]: Object}) => StyleSheet;
-export type CreateComponentReactor = (unmounted: Derivable<boolean>) => void;
 
 export type CreateWidget<Props, State, Component> = (
     Target: Class<SrcComponent<Props, State>>,
     atom: Derivable<*>,
-    createReactor: CreateComponentReactor
+    isMounted: Atom<boolean>
 ) => Component

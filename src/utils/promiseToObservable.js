@@ -1,8 +1,12 @@
 // @flow
 
 export default function promiseToObservable<V, E>(
-    promise: Promise<V>
+    promise: any
 ): Observable<V, E> {
+    if (typeof promise.subscribe === 'function') {
+        return (promise: Observable<V, E>)
+    }
+
     if (typeof promise.then !== 'function') {
         throw new TypeError('promise argument is not a Promise')
     }
