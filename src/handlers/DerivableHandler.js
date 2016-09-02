@@ -1,9 +1,9 @@
 //@flow
 
-import {DepInfo, DerivableMeta, IHandler, Collector} from '../common'
-import type {Atom, Adapter, CacheMap, Derivable} from '../../interfaces/atom'
+import {DepInfo, DerivableMeta, IHandler, Collector} from 'reactive-di/common'
+import type {Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
 
-import {fastCall, fastCreateObject} from '../../utils/fastCall'
+import {fastCall, fastCreateObject} from 'reactive-di/utils/fastCall'
 
 export default class DerivableHandler {
     handle({

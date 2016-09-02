@@ -1,6 +1,6 @@
 // @flow
-import type {Key} from './interfaces/deps'
-import type {Adapter, Atom, Derivable} from './interfaces/atom'
+import type {Key} from 'reactive-di/interfaces/deps'
+import type {Adapter, Atom, Derivable} from 'reactive-di/interfaces/atom'
 import type {
     MultiSyncUpdate,
     MultiAsyncUpdate,
@@ -11,11 +11,11 @@ import type {
     SingleAsyncUpdate,
     SingleUpdate,
     SingleAsyncUpdateResult
-} from './interfaces/updater'
-import type {IContext} from './core'
-import {cloneInstance} from './utils/createProxy'
-import promiseToObservable from './utils/promiseToObservable'
-import debugName from './utils/debugName'
+} from 'reactive-di/interfaces/updater'
+import type {IContext} from 'reactive-di/common'
+import {cloneInstance} from 'reactive-di/utils/createProxy'
+import promiseToObservable from 'reactive-di/utils/promiseToObservable'
+import debugName from 'reactive-di/utils/debugName'
 
 type NormalizedSyncUpdate = [Key, Object]
 

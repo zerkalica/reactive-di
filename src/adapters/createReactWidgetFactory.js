@@ -3,14 +3,15 @@ import type {
     Adapter,
     Atom,
     Derivable
-} from '../interfaces/atom'
+} from 'reactive-di/interfaces/atom'
 import type {
     CreateWidget,
     SrcComponent
-} from '../interfaces/component'
+} from 'reactive-di/interfaces/component'
 
-import derivableAtomAdapter from './derivableAtomAdapter'
-import debugName from '../utils/debugName'
+import derivableAtomAdapter from 'reactive-di/adapters/derivableAtomAdapter'
+import debugName from 'reactive-di/utils/debugName'
+
 type ReactComponent<Props, State> = React$Component<*, Props, State>
 type CreateReactWidget<Props, State> = CreateWidget<Props, State, Class<ReactComponent<Props, State>>>
 

@@ -10,11 +10,11 @@ import {
     deps,
     source,
     updaters
-} from '../annotations'
+} from 'reactive-di/annotations'
 
-import Di from '../Di'
-import Updater from '../Updater'
-import BaseModel from '../BaseModel'
+import Di from 'reactive-di/Di'
+import Updater from 'reactive-di/Updater'
+import BaseModel from 'reactive-di/utils/BaseModel'
 
 type ModelARec = {
     val?: string;

@@ -1,6 +1,6 @@
 // @flow
 
-import type {Atom, Derivable} from './atom'
+import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
 
 export interface SrcComponent<Props, State> extends React$Component<void, Props, State> {
     props: Props;

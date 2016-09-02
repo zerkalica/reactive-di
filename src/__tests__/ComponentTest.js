@@ -12,16 +12,16 @@ import {
     component,
     source,
     deps
-} from '../annotations'
+} from 'reactive-di/annotations'
 
-import type {StyleSheet} from '../interfaces/component'
+import type {StyleSheet} from 'reactive-di/interfaces/component'
 
 import {Component} from 'fake-react'
-import Di from '../Di'
-import BaseModel from '../BaseModel'
+import Di from 'reactive-di/Di'
+import BaseModel from 'reactive-di/utils/BaseModel'
 
-import createReactWidgetFactory from '../adapters/createReactWidgetFactory'
-import createHandlers from '../core/createHandlers'
+import createReactWidgetFactory from 'reactive-di/adapters/createReactWidgetFactory'
+import createHandlers from 'reactive-di/createHandlers'
 
 describe('ComponentTest', () => {
     type ModelARec = {

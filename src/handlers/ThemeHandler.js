@@ -1,9 +1,9 @@
 //@flow
 
-import {DepInfo, ThemeMeta, IHandler, IContext} from '../common'
-import type {Atom, Adapter, CacheMap, Derivable} from '../../interfaces/atom'
-import type {CreateWidget, StyleSheet, CreateStyleSheet, RawStyleSheet} from '../../interfaces/component'
-import {fastCreateObject} from '../../utils/fastCall'
+import {DepInfo, ThemeMeta, IHandler, IContext} from 'reactive-di/common'
+import type {Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
+import type {CreateWidget, StyleSheet, CreateStyleSheet, RawStyleSheet} from 'reactive-di/interfaces/component'
+import {fastCreateObject} from 'reactive-di/utils/fastCall'
 
 class StyleAttachOptimizer {
     _sheet: StyleSheet

@@ -1,17 +1,17 @@
 // @flow
 
-import {DepInfo} from './core'
-import type {IHandler, IContext, RdiMetaType, Collector, RdiMeta} from './core'
+import {DepInfo} from 'reactive-di/common'
+import type {IHandler, IContext, RdiMetaType, Collector, RdiMeta} from 'reactive-di/common'
 
-import {deps} from './annotations'
+import {deps} from 'reactive-di/annotations'
 
-import type {RegisterDepItem, Key, ArgDep} from './interfaces/deps'
-import type {Adapter, Atom, Derivable, DerivableArg, DerivableDict, CacheMap} from './interfaces/atom'
-import debugName from './utils/debugName'
-import derivableAtomAdapter from './adapters/derivableAtomAdapter'
-import createHandlers from './core/createHandlers'
-import MetaRegistry from './MetaRegistry'
-import Updater from './Updater'
+import type {RegisterDepItem, Key, ArgDep} from 'reactive-di/interfaces/deps'
+import type {Adapter, Atom, Derivable, DerivableArg, DerivableDict, CacheMap} from 'reactive-di/interfaces/atom'
+import debugName from 'reactive-di/utils/debugName'
+import derivableAtomAdapter from 'reactive-di/adapters/derivableAtomAdapter'
+import createHandlers from 'reactive-di/createHandlers'
+import MetaRegistry from 'reactive-di/MetaRegistry'
+import Updater from 'reactive-di/Updater'
 
 export default class Di {
     displayName: string

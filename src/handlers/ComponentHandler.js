@@ -1,9 +1,9 @@
 //@flow
 
-import {DepInfo, ComponentMeta, IContext, IHandler} from '../common'
-import type {RdiMeta} from '../common'
-import type {Atom, Derivable, CacheMap} from '../../interfaces/atom'
-import type {CreateWidget, RawStyleSheet} from '../../interfaces/component'
+import {DepInfo, ComponentMeta, IContext, IHandler} from 'reactive-di/common'
+import type {RdiMeta} from 'reactive-di/common'
+import type {Atom, Derivable, CacheMap} from 'reactive-di/interfaces/atom'
+import type {CreateWidget, RawStyleSheet} from 'reactive-di/interfaces/component'
 
 function createThemesReactor(): (rec: [RawStyleSheet[], boolean]) => void {
     let oldThemes: RawStyleSheet[] = []

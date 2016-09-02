@@ -1,14 +1,14 @@
 //@flow
 
-import {DepInfo, AbstractMeta, IHandler} from '../common'
-import type {Atom} from '../../interfaces/atom'
+import {DepInfo, AbstractMeta, IHandler} from 'reactive-di/common'
+import type {Atom} from 'reactive-di/interfaces/atom'
 
 export default class AbstractHandler {
     handle({
         target,
         ctx
     }: DepInfo<AbstractMeta>): Atom<*> {
-        throw new Error(`Need register Abstract entity @componend({deps: []}) ${ctx.debugStr(target)}`)
+        throw new Error(`Need register Abstract entity ${ctx.debugStr(target)}`)
     }
 
     postHandle(): void {}

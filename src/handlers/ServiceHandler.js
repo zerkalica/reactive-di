@@ -1,11 +1,11 @@
 //@flow
 
-import {DepInfo, ServiceMeta, IHandler, IContext} from '../common'
-import type {Atom, Derivable} from '../../interfaces/atom'
-import type {DepFn} from '../../interfaces/deps'
+import {DepInfo, ServiceMeta, IHandler, IContext} from 'reactive-di/common'
+import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
+import type {DepFn} from 'reactive-di/interfaces/deps'
 
-import debugName from '../../utils/debugName'
-import {fastCall, fastCallMethod, fastCreateObject} from '../../utils/fastCall'
+import debugName from 'reactive-di/utils/debugName'
+import {fastCall, fastCallMethod, fastCreateObject} from 'reactive-di/utils/fastCall'
 
 export default class ServiceHandler {
     handle({

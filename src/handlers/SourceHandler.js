@@ -1,9 +1,9 @@
 //@flow
 
-import {DepInfo, SourceMeta, IHandler} from '../common'
-import type {Atom, Adapter, CacheMap, Derivable} from '../../interfaces/atom'
-import type {SingleUpdate} from '../../interfaces/updater'
-import Updater from '../../Updater'
+import {DepInfo, SourceMeta, IHandler} from 'reactive-di/common'
+import type {Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
+import type {SingleUpdate} from 'reactive-di/interfaces/updater'
+import Updater from 'reactive-di/Updater'
 
 type AsyncThunk<V: Object> = () => Promise<V>|Observable<V, Error>
 
@@ -39,9 +39,7 @@ export default class SourceHandler {
         let atom: Atom<*>
         const value: any = ctx.defaults[meta.key]
         if (meta.construct) {
-            atom = ctx.adapter.isAtom(value)
-                ? value.derive((v: mixed) => ctx.preprocess(new target(value)))
-                : ctx.adapter.atom(ctx.preprocess(new target(value))) // eslint-disable-line
+            atom = ctx.adapter.atom(ctx.preprocess(new target(value)))
         } else {
             atom = ctx.adapter.isAtom(value)
                 ? value

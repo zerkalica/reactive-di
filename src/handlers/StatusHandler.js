@@ -1,8 +1,8 @@
 //@flow
 
-import {DepInfo, StatusMeta, IHandler} from '../common'
-import type {Derivable} from '../../interfaces/atom'
-import Updater, {UpdaterStatus} from '../../Updater'
+import {DepInfo, StatusMeta, IHandler} from 'reactive-di/common'
+import type {Derivable} from 'reactive-di/interfaces/atom'
+import Updater, {UpdaterStatus} from 'reactive-di/Updater'
 
 function mergeStatus(target: Class<UpdaterStatus>, updaters: UpdaterStatus[]): UpdaterStatus {
     const us: UpdaterStatus = new target('complete')

@@ -1,6 +1,6 @@
 // @flow
-import type {Derivable} from './atom'
-import type {Key} from './deps'
+import type {Derivable} from 'reactive-di/interfaces/atom'
+import type {Key} from 'reactive-di/interfaces/deps'
 
 export type SingleSyncUpdate = Object
 export type SingleAsyncUpdateResult = Promise<SingleSyncUpdate> | Observable<SingleSyncUpdate, Error>

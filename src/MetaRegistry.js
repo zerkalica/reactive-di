@@ -1,8 +1,8 @@
 // @flow
 
-import type {RegisterDepItem, Key} from './interfaces/deps'
-import type {IContext} from './core'
-import {DepInfo, isAbstract} from './core'
+import type {RegisterDepItem, Key} from 'reactive-di/interfaces/deps'
+import type {IContext} from 'reactive-di/common'
+import {DepInfo, isAbstract} from 'reactive-di/common'
 
 export default class MetaRegistry {
     _context: IContext

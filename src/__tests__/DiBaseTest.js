@@ -9,10 +9,10 @@ import {
     deps,
     source,
     factory
-} from '../annotations'
+} from 'reactive-di/annotations'
 
-import Di from '../Di'
-import BaseModel from '../BaseModel'
+import Di from 'reactive-di/Di'
+import BaseModel from 'reactive-di/utils/BaseModel'
 
 type Atom = {
     set: any

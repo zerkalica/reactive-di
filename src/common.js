@@ -1,10 +1,10 @@
 // @flow
 
-import type {DepFn, Key, DepDict, ArgDep, DepAlias, RegisterDepItem} from '../interfaces/deps'
-import type {Atom, Adapter, CacheMap, Derivable} from '../interfaces/atom'
-import debugName from '../utils/debugName'
-import CustomReflect from '../CustomReflect'
-import Updater from '../Updater'
+import type {DepFn, Key, DepDict, ArgDep, DepAlias, RegisterDepItem} from 'reactive-di/interfaces/deps'
+import type {Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
+import debugName from 'reactive-di/utils/debugName'
+import CustomReflect from 'reactive-di/CustomReflect'
+import Updater from 'reactive-di/Updater'
 
 export const paramTypesKey: string = 'design:paramtypes'
 export const functionTypesKey: string = 'design:function'
@@ -68,11 +68,16 @@ export class StatusMeta {
 }
 
 export type RdiMeta = ThemeMeta | ComponentMeta | AbstractMeta | SourceMeta | ServiceMeta | DerivableMeta | StatusMeta
+export type RdiMetaType = 'theme' | 'component' | 'abstract' | 'source' | 'service' | 'derivable' | 'status'
+
+export function isAbstract(key: Key): boolean {
+    return typeof key === 'function' && gm(metaKey, key)
+}
+
 
 const defaultArr: ArgDep[] = []
 const gm = CustomReflect.getMetadata
-
-export const defaultMeta: any = new DerivableMeta()
+const defaultMeta: any = new DerivableMeta()
 
 export interface Collector {
     add(info: DepInfo<*>, atom: Atom<*>|Derivable<*>): void;
@@ -113,12 +118,6 @@ export class DepInfo<Meta> {
         this.ctx = ctx
     }
 }
-
-export function isAbstract(key: Key): boolean {
-    return typeof key === 'function' && gm(metaKey, key)
-}
-
-export type RdiMetaType = 'theme' | 'component' | 'abstract' | 'source' | 'service' | 'derivable' | 'status'
 
 export interface IHandler<Meta, Result> {
     handle(info: DepInfo<Meta>, collector?: Collector): Result;

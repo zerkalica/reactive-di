@@ -1,5 +1,5 @@
 /* @flow */
-import {fastCall, fastCallMethod} from './fastCall'
+import {fastCall, fastCallMethod} from 'reactive-di/utils/fastCall'
 
 export type MiddlewareFn = (result: any, ...args: Array<any>) => void;
 export type MiddlewareMap = {[method: string]: MiddlewareFn};

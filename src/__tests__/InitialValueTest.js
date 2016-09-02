@@ -7,10 +7,10 @@ import assert from 'power-assert'
 import {
     source,
     deps
-} from '../annotations'
+} from 'reactive-di/annotations'
 
-import Di from '../Di'
-import BaseModel from '../BaseModel'
+import Di from 'reactive-di/Di'
+import BaseModel from 'reactive-di/utils/BaseModel'
 
 import {atom} from 'derivable'
 

@@ -8,10 +8,10 @@ import {
     source,
     service,
     deps
-} from '../annotations'
+} from 'reactive-di/annotations'
 
-import Di from '../Di'
-import BaseModel from '../BaseModel'
+import Di from 'reactive-di/Di'
+import BaseModel from 'reactive-di/utils/BaseModel'
 
 describe('ScopesTest', () => {
     type ModelARec = {
@@ -67,7 +67,7 @@ describe('ScopesTest', () => {
 
         let newDi = di.create().register([ModelA])
 
-        // modify ModelA in parent di
+        // modify ModelA in child di
         newDi.val(ModelA).set(new ModelA({val: 'test1'}))
 
         assert(di.val(ModelA).get().val === 'test')

@@ -10,13 +10,13 @@ import {
     service,
     deps,
     source
-} from '../annotations'
+} from 'reactive-di/annotations'
 
-import Di from '../Di'
-import Updater from '../Updater'
-import BaseModel from '../BaseModel'
-import type {Derivable} from '../interfaces/atom'
-import type {SingleUpdate} from '../interfaces/updater'
+import Di from 'reactive-di/Di'
+import Updater from 'reactive-di/Updater'
+import BaseModel from 'reactive-di/utils/BaseModel'
+import type {Derivable} from 'reactive-di/interfaces/atom'
+import type {SingleUpdate} from 'reactive-di/interfaces/updater'
 
 describe('InitializerTest', () => {
     class Dep {

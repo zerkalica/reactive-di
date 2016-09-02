@@ -1,15 +1,15 @@
 // @flow
 
-import type {RdiMeta, IHandler, RdiMetaType} from './common'
-import type {CreateStyleSheet, CreateWidget} from '../interfaces/component'
+import type {RdiMeta, IHandler, RdiMetaType} from 'reactive-di/common'
+import type {CreateStyleSheet, CreateWidget} from 'reactive-di/interfaces/component'
 
-import SourceHandler from './plugins/SourceHandler'
-import DerivableHandler from './plugins/DerivableHandler'
-import ServiceHandler from './plugins/ServiceHandler'
-import ThemeHandler from './plugins/ThemeHandler'
-import StatusHandler from './plugins/StatusHandler'
-import AbstractHandler from './plugins/AbstractHandler'
-import ComponentHandler from './plugins/ComponentHandler'
+import SourceHandler from 'reactive-di/handlers/SourceHandler'
+import DerivableHandler from 'reactive-di/handlers/DerivableHandler'
+import ServiceHandler from 'reactive-di/handlers/ServiceHandler'
+import ThemeHandler from 'reactive-di/handlers/ThemeHandler'
+import StatusHandler from 'reactive-di/handlers/StatusHandler'
+import AbstractHandler from 'reactive-di/handlers/AbstractHandler'
+import ComponentHandler from 'reactive-di/handlers/ComponentHandler'
 
 export default function createHandlers(
     createWidget?: CreateWidget<*, *, *>,

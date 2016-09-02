@@ -1,5 +1,5 @@
 // @flow
-import CustomReflect from './CustomReflect'
+import CustomReflect from 'reactive-di/CustomReflect'
 import {
     paramTypesKey,
     metaKey,
@@ -11,10 +11,10 @@ import {
     StatusMeta,
     ServiceMeta,
     AbstractMeta
-} from './core'
-import type {ArgDep} from './interfaces/deps'
-import Updater from './Updater'
-import type {ComponentMetaRec, SourceMetaRec} from './core'
+} from 'reactive-di/common'
+import type {ArgDep} from 'reactive-di/interfaces/deps'
+import Updater from 'reactive-di/Updater'
+import type {ComponentMetaRec, SourceMetaRec} from 'reactive-di/common'
 
 const dm = CustomReflect.defineMetadata
 
