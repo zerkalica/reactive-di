@@ -6,27 +6,45 @@ import type {Atom, Derivable, CacheMap, Adapter} from 'reactive-di/interfaces/at
 import type {ArgDep} from 'reactive-di/interfaces/deps'
 import type {CreateControllable, IComponentControllable, CreateWidget, RawStyleSheet} from 'reactive-di/interfaces/component'
 
-type ThemesReactor = (rec: [RawStyleSheet[], boolean]) => void
-function createThemesReactor(): ThemesReactor {
-    let oldThemes: RawStyleSheet[] = []
-    let mountCount: number = 0
+class ThemesReactor {
+    _count: number = 0
+    _oldThemes: RawStyleSheet[] = []
+    _themes: RawStyleSheet[] = []
 
-    return function themesReactor([themes, isMounted]: [RawStyleSheet[], boolean]): void {
-        const themesChanged: boolean = themes !== oldThemes
-        if (!themesChanged) {
-            mountCount = mountCount + (isMounted ? 1 : -1)
+    setThemes: (themes: RawStyleSheet[]) => void = (themes: RawStyleSheet[]) => {
+        this._themes = themes
+        if (this._count && themes !== this._oldThemes) {
+            this._update()
         }
+    }
 
-        if (mountCount === 0 || themesChanged) {
-            for (let i = 0; i < oldThemes.length; i++) {
-                oldThemes[i].__styles.detach()
-            }
+    _attach(): void {
+        const themes = this._themes
+        for (let i = 0; i < themes.length; i++) {
+            themes[i].__styles.attach()
         }
-        if (mountCount === 1 || themesChanged) {
-            for (let i = 0; i < themes.length; i++) {
-                themes[i].__styles.attach()
-            }
-            oldThemes = themes
+        this._oldThemes = themes
+    }
+
+    _detach(): void {
+        const oldThemes = this._oldThemes
+        for (let i = 0; i < oldThemes.length; i++) {
+            oldThemes[i].__styles.detach()
+        }
+    }
+
+    _update(): void {
+        this._detach()
+        this._attach()
+    }
+
+    onMount: (isMounted: boolean) => void = (isMounted: boolean) => {
+        const cnt: number = this._count + (isMounted ? 1 : -1)
+        this._count = cnt
+        if (cnt === 0) {
+            this._detach()
+        } else if (isMounted && cnt === 1) {
+            this._attach()
         }
     }
 }
@@ -78,13 +96,13 @@ class ComponentControllable<State> {
         }
 
         if (tc && tc.themes.length) {
-            ad
-                .struct([ad.struct(tc.themes), this._isMounted])
-                .react(themesReactor, {
-                    from: this._isMounted,
-                    while: this._isMounted,
-                    until: (isDisposed: Derivable<boolean>)
-                })
+            ad.struct(tc.themes).react(themesReactor.setThemes, {
+                until: (isDisposed: Derivable<boolean>)
+            })
+            this._isMounted.react(themesReactor.onMount, {
+                skipFirst: true,
+                until: (isDisposed: Derivable<boolean>)
+            })
         }
     }
 
@@ -117,8 +135,8 @@ export default class ComponentHandler {
         if (atom) {
             return atom
         }
-        const themesReactor = createThemesReactor()
 
+        const themesReactor: ThemesReactor = new ThemesReactor()
         function createControllable<State>(setState: (state: State) => void): IComponentControllable<State> {
             return new ComponentControllable(depInfo, themesReactor, setState)
         }
