@@ -26,8 +26,15 @@ export interface RawStyleSheet {
 
 export type CreateStyleSheet = (css: {[id: string]: Object}) => StyleSheet;
 
+export interface IComponentControllable<State> {
+    getState(): State;
+    onUnmount(): void;
+    onMount(): void;
+}
+
+export type CreateControllable<State> = (setState: (state: State) => void) => IComponentControllable<State>
+
 export type CreateWidget<Props, State, Component> = (
     Target: Class<SrcComponent<Props, State>>,
-    atom: Derivable<*>,
-    isMounted: Atom<boolean>
+    createControllable: CreateControllable<State>
 ) => Component

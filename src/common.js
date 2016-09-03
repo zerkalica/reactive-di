@@ -93,7 +93,7 @@ export interface IContext {
     debugStr(data: mixed): string;
     val<V>(key: Key, collector?: Collector): Atom<V>;
     preprocess<V: any>(data: V): V;
-
+    stop(): IContext;
     create(displayName: string): IContext;
     register(registered?: ?RegisterDepItem[]): IContext;
     getMeta(key: Key): DepInfo<*>;

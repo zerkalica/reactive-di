@@ -38,7 +38,7 @@ describe('ScopesTest', () => {
         deps(ModelA)(Service)
 
         const di = (new Di()).register([ModelA])
-        let newDi = di.create()
+        let newDi = di.create('child')
         // modify ModelA in parent di
         newDi.val(ModelA).set(new ModelA({val: 'test1'}))
         assert(di.val(ModelA).get().val === 'test1')
@@ -65,7 +65,7 @@ describe('ScopesTest', () => {
 
         const di = new Di()
 
-        let newDi = di.create().register([ModelA])
+        let newDi = di.create('child').register([ModelA])
 
         // modify ModelA in child di
         newDi.val(ModelA).set(new ModelA({val: 'test1'}))
@@ -94,7 +94,7 @@ describe('ScopesTest', () => {
         deps(ModelA)(Service)
 
         const di = new Di()
-        let newDi = di.create()
+        let newDi = di.create('child')
 
         // modify ModelA in parent di
         newDi.val(ModelA).set(new ModelA({val: 'test1'}))

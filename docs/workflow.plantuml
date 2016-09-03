@@ -1,21 +1,33 @@
 @startuml
 
-(*)-->[events] Action
-    -->Updater
-    -->[modify] Source
-    -->[combine\nupdater status] UpdaterStatus
+actor User as User
+(Just a function.\nValidate, fetch,\ncall Updater.) as Action <<Action>>
+(Async qeue\nof state updates) as Updater <<Updater>>
+(pending,\nerror,\ncomplete,\nretry source) as UpdaterStatus <<UpdaterStatus>>
+(view model,\nfacet) as Computed <<Computed>>
+(render,\nmount,\nunmount) as Component <<Component>>
+(class with jss styles) as Styles <<Styles>>
+(domain model) as Source <<Source>>
+(async loading data\non model access) as Loader <<Loader>>
+(initial state from server) as Value <<Value>>
 
-Source-->[on construct] Initializer
-Initializer-->[modify] Source
-Source-->[updates] Computed
+User --> Action: events
+Action --> Updater: model instances,\npromises,\nobservables
+Updater --> UpdaterStatus: combine\nloading status\nfrom many updaters
+UpdaterStatus --> Computed: updates
+Computed --> Component: trigger
+Component --> Styles: mount/unmount
 
-UpdaterStatus-->Computed
-Computed-->Component
+Updater --> Source: modify
+Source-->Computed: updates
 
-Value-->Source
+Styles --> Component: provide class names
+Source-->Loader: call on first access
 
-Styles-->[class names] Component
-Component-->[mount/unmount] Styles
-Component-->[events] Action
+Loader-->Updater: call
+
+Value-->Source: pass to constructor
+
+Component-->Action: events to action calls
 
 @enduml

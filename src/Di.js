@@ -40,7 +40,7 @@ export default class Di {
         this.defaults = {}
     }
 
-    stop(): Di {
+    stop(): IContext {
         this.stopped.set(true)
         return this
     }
@@ -55,7 +55,7 @@ export default class Di {
         return this
     }
 
-    create(displayName?: string): IContext {
+    create(displayName: string): IContext {
         return (new Di(
             this._handlers,
             this.adapter,
