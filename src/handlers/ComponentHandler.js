@@ -28,39 +28,36 @@ function createSetState<State: Object>(
     }
 }
 
-function createLcsNotifier(lcs: InternalLifeCycle<*>[]): (isMounted: boolean) => void {
-    return function notifyLcs(isMounted: boolean): void {
-        if (isMounted) {
-            for (let i = 0, l = lcs.length; i < l; i++) {
-                lcs[i].onMount()
-            }
-        } else {
-            for (let i = 0, l = lcs.length; i < l; i++) {
-                lcs[i].onUnmount()
-            }
-        }
-    }
-}
-
 class ComponentControllable<State: Object> {
+    displayName: string
     _isDisposed: Atom<boolean>
     _isMounted: Atom<boolean>
     _stateAtom: ?Derivable<State>
+    _lcs: InternalLifeCycle<*>[]
+    _container: ?IContext
+    _stopped: boolean = false
 
     constructor<V>(
         {deps, meta, ctx, name}: DepInfo<V, ComponentMeta>,
         setState: (state: State) => void
     ) {
-        const container: IContext = meta.register
-            ? ctx.create(name).register(meta.register)
-            : ctx
+        this.displayName = name
+        let container: IContext
+        if (meta.register) {
+            container = ctx.create(name).register(meta.register)
+            this._container = container
+        } else {
+            container = ctx
+            this._container = null
+        }
+
         const ad: Adapter = ctx.adapter
-        const isDisposed: Atom<boolean> = ad.atom(false)
+        const isDisposed: Atom<boolean> = ctx.stopped
         this._isMounted = ad.atom(false)
 
-        const lcs: InternalLifeCycle<*>[] = []
+        this._lcs = []
         if (deps.length) {
-            this._stateAtom = container.resolveDeps(deps, lcs).derive(pickFirstArg)
+            this._stateAtom = container.resolveDeps(deps, this._lcs).derive(pickFirstArg)
             this._stateAtom
                 .react(createSetState(setState), {
                     skipFirst: true,
@@ -69,25 +66,43 @@ class ComponentControllable<State: Object> {
                     until: (isDisposed: Derivable<boolean>)
                 })
         }
-
-        if (lcs.length) {
-            this._isMounted.react(createLcsNotifier(lcs), {
-                skipFirst: true,
-                until: (isDisposed: Derivable<boolean>)
-            })
-        }
     }
 
-    getState(): State {
-        return this._stateAtom ? this._stateAtom.get() : ({}: any)
+    getState(): ?State {
+        if (this._stopped) {
+            throw new Error(`componentDidMount called after componentWillUnmount: ${this.displayName}`)
+        }
+
+        return this._stateAtom ? this._stateAtom.get() : null
     }
 
     onUnmount(): void {
         this._isMounted.set(false)
+        const lcs = this._lcs
+        for (let i = 0, l = lcs.length; i < l; i++) {
+            const lc = lcs[i]
+            if (!lc.isDisposed) {
+                lc.onUnmount()
+            }
+        }
+        if (this._container) {
+            this._container.stop()
+        }
+        this._stopped = true
     }
 
     onMount(): void {
+        if (this._stopped) {
+            throw new Error(`componentDidMount called after componentWillUnmount: ${this.displayName}`)
+        }
         this._isMounted.set(true)
+        const lcs = this._lcs
+        for (let i = 0, l = lcs.length; i < l; i++) {
+            const lc = lcs[i]
+            if (!lc.isDisposed) {
+                lc.onMount()
+            }
+        }
     }
 }
 if (0) ((new ComponentControllable(...(0: any))): IComponentControllable<*>)

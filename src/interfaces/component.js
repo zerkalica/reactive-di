@@ -27,7 +27,7 @@ export interface RawStyleSheet {
 export type CreateStyleSheet = (css: {[id: string]: Object}) => StyleSheet;
 
 export interface IComponentControllable<State> {
-    getState(): State;
+    getState(): ?State;
     onUnmount(): void;
     onMount(): void;
 }

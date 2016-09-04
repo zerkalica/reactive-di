@@ -148,7 +148,7 @@ export default class Di {
         }
         let lc: ?InternalLifeCycle<V>
         if (info.lc) {
-            lc = new InternalLifeCycle(ctx.val(info.lc).get())
+            lc = new InternalLifeCycle(ctx.val(info.lc).get(), ctx.stopped)
             value.react(lc.update, {
                 until: this.stopped
             })

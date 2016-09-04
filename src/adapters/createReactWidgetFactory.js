@@ -32,7 +32,11 @@ class ComponentMixin<State: Object, Props: Object> {
         const ctx = this.constructor.__rdiCtx
         const setState: (state: State) => void = (state: State) => this.setState(state)
         this._controllable = ctx.createControllable(setState)
-        this.state = this._controllable.getState()
+
+        const state: ?State = this._controllable.getState()
+        if (state) {
+            this.state = state
+        }
         const target: SrcComponent<Props, State> = this._target = new ctx.Target(this.state)
         target.props = this.props
         target.state = this.state

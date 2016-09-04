@@ -7,26 +7,23 @@ import assert from 'power-assert'
 import {
     factory,
     updaters,
-    service,
+    component,
+    hooks,
     deps,
     source
 } from 'reactive-di/annotations'
 
-import Di from 'reactive-di/Di'
-import Updater from 'reactive-di/Updater'
+import {Di, createHandlers, Updater} from 'reactive-di/index'
 import BaseModel from 'reactive-di/utils/BaseModel'
+import type {CreateControllable, IComponentControllable} from 'reactive-di/interfaces/component'
 import type {Derivable} from 'reactive-di/interfaces/atom'
 import type {SingleUpdate} from 'reactive-di/interfaces/updater'
 
 describe('InitializerTest', () => {
-    class Dep {
-        val: string = 'test'
-    }
-
     class BaseModel {
         val: string
         static defaults: $Shape<BaseModel> = {
-            val: ''
+            val: 'null'
         }
         constructor(props?: $Shape<BaseModel> = {}) {
             Object.assign((this: Object), this.constructor.defaults, props)
@@ -36,79 +33,116 @@ describe('InitializerTest', () => {
         }
     }
 
-    it('sync model changes in service throught facet', () => {
-        class ModelA extends BaseModel {}
-        function initA(dep: Dep): $Shape<ModelA> {
-            return {
-                val: dep.val
+    function createComponent(update) {
+        @deps(Di)
+        class ModelAUpdater extends Updater {}
+
+        @source({key: 'ModelA'})
+        class ModelA extends BaseModel {
+            static Updater: Class<Updater> = ModelAUpdater
+        }
+
+        @hooks(ModelA)
+        @deps(ModelAUpdater)
+        class ModelALC {
+            _updater: Updater
+
+            constructor(updater: ModelAUpdater) {
+                this._updater = updater
+            }
+
+            onUpdate() {}
+
+            onMount() {
+                this._updater.setSingle(update, ModelA)
+            }
+
+            onUnmount() {
+                this._updater.cancel()
             }
         }
-        factory(initA)
-        deps(Dep)(initA)
-        source({key: 'ModelA', updater: Updater, loader: initA})(ModelA)
 
-        const Service = spy(class {
+        @component()
+        @deps({m: ModelA})
+        class Component {
             m: ModelA
-            constructor(m: ModelA) {
-                this.m = m
+            ctl: IComponentControllable<*>
+            static createControllable: CreateControllable<*>
+
+            constructor() {
+                this.ctl = this.constructor.createControllable((state: Object) => {
+                    Object.assign(this, state)
+                })
+                Object.assign(this, this.ctl.getState())
             }
+        }
+
+        function createFakeComponent(target: Function, createControllable: CreateControllable<*>) {
+            target.createControllable = createControllable
+            return target
+        }
+        const di = new Di(createHandlers(createFakeComponent))
+        const C: Class<Component> = di.val(Component).get()
+        const c = new C()
+        return c
+    }
+
+    it('sync model changes on component mount', () => {
+        const c = createComponent({
+            val: 'updated'
         })
-        deps(ModelA)(Service)
+        assert(c.m.val === 'null')
+        c.ctl.onMount()
+        assert(c.m.val === 'updated')
+        c.ctl.onUnmount()
+    })
 
-        const di = new Di()
-        const s: Service = di.val(Service).get()
+    it('cancel on unmount async model changes', () => {
+        const result = Promise.resolve({val: 'async-updated'})
 
-        assert(s.m.val === 'test')
-        assert(s.m instanceof ModelA)
+        const c = createComponent(
+            () => result
+        )
+        assert(c.m.val === 'null')
+        c.ctl.onMount()
+        assert(c.m.val === 'null')
+        c.ctl.onUnmount()
+
+        return result.then(() => {
+            assert(c.m.val === 'null')
+        })
     })
 
     it('async model changes', () => {
-        class ModelA extends BaseModel {}
-        const result = Promise.resolve({val: 'test2'})
+        const result = Promise.resolve({val: 'async-updated'})
 
-        function initA(dep: Dep): () => Promise<$Shape<ModelA>> {
-            return () => result
-        }
-        factory(initA)
-        deps(Dep, Updater)(initA)
-        source({key: 'ModelA', updater: Updater, loader: initA})(ModelA)
-
-        const di = new Di()
-        const m: Derivable<ModelA> = di.val(ModelA)
-        const firstInstance = m.get()
-        assert(firstInstance.val === '')
+        const c = createComponent(
+            () => result
+        )
+        assert(c.m.val === 'null')
+        c.ctl.onMount()
+        assert(c.m.val === 'null')
 
         return result.then(() => {
-            const secondInstance = m.get()
-            assert(secondInstance.val === 'test2')
-            assert(secondInstance instanceof ModelA)
-            assert(secondInstance !== firstInstance)
+            assert(c.m.val === 'async-updated')
+            c.ctl.onUnmount()
         })
     })
 
-    it('mixed async and sync model changes', () => {
-        class ModelA extends BaseModel {}
-        const result = Promise.resolve({val: 'test2'})
+    it('async and sync model changes', () => {
+        const result = Promise.resolve({val: 'async-updated'})
 
-        function initA(dep: Dep): [$Shape<ModelA>, () => Promise<$Shape<ModelA>>] {
-            return [
-                {
-                    val: dep.val
-                },
-                () => result
-            ]
-        }
-        factory(initA)
-        deps(Dep, Updater)(initA)
-        source({key: 'ModelA', updater: Updater, loader: initA})(ModelA)
-
-        const di = new Di()
-        const m: Derivable<ModelA> = di.val(ModelA)
-        assert(m.get().val === 'test')
+        const c = createComponent([
+            {val: 'sync-updated'},
+            () => result
+        ])
+        assert(c.m.val === 'null')
+        c.ctl.onMount()
+        assert(c.m.val === 'sync-updated')
 
         return result.then(() => {
-            assert(m.get().val === 'test2')
-            assert(m.get() instanceof ModelA)
+            assert(c.m.val === 'async-updated')
+            c.ctl.onUnmount()
         })
     })
 })

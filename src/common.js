@@ -35,25 +35,18 @@ export class AbstractMeta {
 export interface SourceMetaRec {
     key: string;
     construct?: boolean;
-    updater?: ?Class<Updater>;
-    loader?: Function;
 }
 
 export class SourceMeta {
     type: 'source' = 'source'
     key: string
     construct: boolean
-    updater: ?Class<Updater>
-    loader: ?Key
-
     constructor(rec: SourceMetaRec) {
         if (!rec.key) {
             throw new Error(`@source has no key property`)
         }
         this.key = rec.key
-        this.construct = rec.construct || !!rec.loader || false
-        this.updater = rec.updater || null
-        this.loader = rec.loader || null
+        this.construct = rec.construct || false
     }
 }
 export class ServiceMeta {
@@ -102,8 +95,8 @@ class ThemeLifeCycle {
     }
 
     onUpdate(oldSheet: RawStyleSheet, newSheet: RawStyleSheet): void {
-        oldSheet.__styles.attach()
-        newSheet.__styles.detach()
+        oldSheet.__styles.detach()
+        newSheet.__styles.attach()
     }
 
     onUnmount(sheet: RawStyleSheet): void {
@@ -115,13 +108,17 @@ export class InternalLifeCycle<V> {
     _count: number = 0
     _entity: V
     _lc: LifeCycle<V>
+    isDisposed: boolean
 
-    constructor(lc: LifeCycle<V>) {
+    constructor(lc: LifeCycle<V>, isDisposedAtom: Derivable<boolean>) {
         this._lc = lc
-    }
-
-    static create(lc: LifeCycle<V>): InternalLifeCycle<V> {
-        return new InternalLifeCycle(lc)
+        this.isDisposed = false
+        isDisposedAtom.react((isDisposed: boolean) => {
+            this.isDisposed = isDisposed
+        }, {
+            skipFirst: true,
+            once: true
+        })
     }
 
     update: (newValue: V) => void = (newValue: V) => {
