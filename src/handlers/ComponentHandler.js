@@ -1,77 +1,54 @@
 //@flow
 
-import {DepInfo, ComponentMeta, IContext, IHandler} from 'reactive-di/common'
+import {DepInfo, InternalLifeCycle, ComponentMeta, IContext, IHandler} from 'reactive-di/common'
 import type {RdiMeta} from 'reactive-di/common'
 import type {Atom, Derivable, CacheMap, Adapter} from 'reactive-di/interfaces/atom'
 import type {ArgDep} from 'reactive-di/interfaces/deps'
-import type {CreateControllable, IComponentControllable, CreateWidget, RawStyleSheet} from 'reactive-di/interfaces/component'
-
-class ThemesReactor {
-    _count: number = 0
-    _oldThemes: RawStyleSheet[] = []
-    _themes: RawStyleSheet[] = []
-
-    setThemes: (themes: RawStyleSheet[]) => void = (themes: RawStyleSheet[]) => {
-        this._themes = themes
-        if (this._count && themes !== this._oldThemes) {
-            this._update()
-        }
-    }
-
-    _attach(): void {
-        const themes = this._themes
-        for (let i = 0; i < themes.length; i++) {
-            themes[i].__styles.attach()
-        }
-        this._oldThemes = themes
-    }
-
-    _detach(): void {
-        const oldThemes = this._oldThemes
-        for (let i = 0; i < oldThemes.length; i++) {
-            oldThemes[i].__styles.detach()
-        }
-    }
-
-    _update(): void {
-        this._detach()
-        this._attach()
-    }
-
-    onMount: (isMounted: boolean) => void = (isMounted: boolean) => {
-        const cnt: number = this._count + (isMounted ? 1 : -1)
-        this._count = cnt
-        if (cnt === 0) {
-            this._detach()
-        } else if (isMounted && cnt === 1) {
-            this._attach()
-        }
-    }
-}
-
-class ThemesCollector {
-    themes: Derivable<RawStyleSheet>[] = []
-    add(di: DepInfo<*>, atom: Derivable<RawStyleSheet>) {
-        if (di.meta.type === 'theme') {
-            this.themes.push(atom)
-        }
-    }
-}
+import type {
+    CreateControllable,
+    IComponentControllable,
+    CreateWidget,
+    RawStyleSheet
+} from 'reactive-di/interfaces/component'
+import shallowEqual from 'reactive-di/utils/shallowEqual'
 
 function pickFirstArg<V>(v: any[]): V {
     return v[0]
 }
 
-function noop() {}
+function createSetState<State: Object>(
+    setState: (state: State) => void
+): (state: State) => void {
+    let oldState: State = ({}: any)
+    return function equalSetState(state: State): void {
+        if (!shallowEqual(oldState, state)) {
+            oldState = state
+            setState(state)
+        }
+    }
+}
 
-class ComponentControllable<State> {
+function createLcsNotifier(lcs: InternalLifeCycle<*>[]): (isMounted: boolean) => void {
+    return function notifyLcs(isMounted: boolean): void {
+        if (isMounted) {
+            for (let i = 0, l = lcs.length; i < l; i++) {
+                lcs[i].onMount()
+            }
+        } else {
+            for (let i = 0, l = lcs.length; i < l; i++) {
+                lcs[i].onUnmount()
+            }
+        }
+    }
+}
+
+class ComponentControllable<State: Object> {
     _isDisposed: Atom<boolean>
     _isMounted: Atom<boolean>
     _stateAtom: ?Derivable<State>
 
-    constructor(
-        {deps, meta, ctx, name}: DepInfo<ComponentMeta>,
-        themesReactor: ThemesReactor,
+    constructor<V>(
+        {deps, meta, ctx, name}: DepInfo<V, ComponentMeta>,
         setState: (state: State) => void
     ) {
         const container: IContext = meta.register
@@ -81,13 +58,11 @@ class ComponentControllable<State> {
         const isDisposed: Atom<boolean> = ad.atom(false)
         this._isMounted = ad.atom(false)
 
-        let tc: ?ThemesCollector
-
+        const lcs: InternalLifeCycle<*>[] = []
         if (deps.length) {
-            tc = new ThemesCollector()
-            this._stateAtom = container.resolveDeps(deps, tc).derive(pickFirstArg)
+            this._stateAtom = container.resolveDeps(deps, lcs).derive(pickFirstArg)
             this._stateAtom
-                .react(setState, {
+                .react(createSetState(setState), {
                     skipFirst: true,
                     from: this._isMounted,
                     while: this._isMounted,
@@ -95,11 +70,8 @@ class ComponentControllable<State> {
                 })
         }
 
-        if (tc && tc.themes.length) {
-            ad.struct(tc.themes).react(themesReactor.setThemes, {
-                until: (isDisposed: Derivable<boolean>)
-            })
-            this._isMounted.react(themesReactor.onMount, {
+        if (lcs.length) {
+            this._isMounted.react(createLcsNotifier(lcs), {
                 skipFirst: true,
                 until: (isDisposed: Derivable<boolean>)
             })
@@ -130,21 +102,22 @@ export default class ComponentHandler {
         this._createComponent = createComponent
     }
 
-    handle(depInfo: DepInfo<ComponentMeta>): Atom<*> {
-        let atom: ?Atom<*> = this._componentCache.get(depInfo.key)
+    handle<V>(depInfo: DepInfo<V, ComponentMeta>): Atom<V> {
+        let atom: ?Atom<V> = this._componentCache.get(depInfo.key)
         if (atom) {
             return atom
         }
 
-        const themesReactor: ThemesReactor = new ThemesReactor()
-        function createControllable<State>(setState: (state: State) => void): IComponentControllable<State> {
-            return new ComponentControllable(depInfo, themesReactor, setState)
+        function createControllable<State>(
+            setState: (state: State) => void
+        ): IComponentControllable<State> {
+            return new ComponentControllable(depInfo, setState)
         }
 
-        atom = depInfo.ctx.adapter.atom((this._createComponent(
+        atom = depInfo.ctx.adapter.atom(this._createComponent(
             depInfo.target,
-            createControllable
-        ): any))
+            (createControllable: CreateControllable<*>)
+        ))
 
         this._componentCache.set(depInfo.key, atom)
 
@@ -154,4 +127,4 @@ export default class ComponentHandler {
     postHandle(): void {}
 }
 
-if (0) ((new ComponentHandler(...(0: any))): IHandler<ComponentMeta, Atom<*>>)
+if (0) ((new ComponentHandler(...(0: any))): IHandler)

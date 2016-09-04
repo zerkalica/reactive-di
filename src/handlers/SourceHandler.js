@@ -31,29 +31,29 @@ function createUpdateSource<V: Object, Raw: Object>(target: Class<V>): (rec: [Up
 }
 
 export default class SourceHandler {
-    handle({
+    handle<V, C: Class<V>>({
         meta,
         target,
         ctx
-    }: DepInfo<SourceMeta>): Atom<*> {
-        let atom: Atom<*>
+    }: DepInfo<C, SourceMeta>): Atom<V> {
+        let atom: Atom<V>
         const value: any = ctx.defaults[meta.key]
         if (meta.construct) {
-            atom = ctx.adapter.atom(ctx.preprocess(new target(value)))
+            atom = ctx.adapter.atom(ctx.preprocess((new target(value): any)))
         } else {
             atom = ctx.adapter.isAtom(value)
                 ? value
-                : ctx.adapter.atom(ctx.preprocess(value || new target()))
+                : ctx.adapter.atom(ctx.preprocess(value || (new target(): any)))
         }
 
         return atom
     }
 
-    postHandle({
+    postHandle<V, C: Class<V>>({
         meta,
         target,
         ctx
-    }: DepInfo<SourceMeta>): void {
+    }: DepInfo<C, SourceMeta>): void {
         if (!meta.updater) {
             return
         }
@@ -70,4 +70,4 @@ export default class SourceHandler {
     }
 }
 
-if (0) ((new SourceHandler(...(0: any))): IHandler<SourceMeta, Atom<*>>)
+if (0) ((new SourceHandler(...(0: any))): IHandler)

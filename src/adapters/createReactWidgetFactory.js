@@ -85,11 +85,8 @@ class ComponentMixin<State: Object, Props: Object> {
         }
     }
 
-    shouldComponentUpdate(nextProps: Object, nextState: Object): boolean {
-        return (
-            !shallowEqual(this.props, nextProps) ||
-            !shallowEqual(this.state, nextState)
-        )
+    shouldComponentUpdate(nextProps: Object): boolean {
+        return !shallowEqual(this.props, nextProps)
     }
 
     render(): React$Element<*> {

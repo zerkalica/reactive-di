@@ -7,11 +7,11 @@ export default class AbstractHandler {
     handle({
         target,
         ctx
-    }: DepInfo<AbstractMeta>): Atom<*> {
+    }: DepInfo<any, AbstractMeta>): Atom<*> {
         throw new Error(`Need register Abstract entity ${ctx.debugStr(target)}`)
     }
 
     postHandle(): void {}
 }
 
-if (0) ((new AbstractHandler(...(0: any))): IHandler<AbstractMeta, Atom<*>>)
+if (0) ((new AbstractHandler(...(0: any))): IHandler)

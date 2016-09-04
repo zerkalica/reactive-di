@@ -5,31 +5,11 @@ import type {Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/at
 import type {CreateWidget, StyleSheet, CreateStyleSheet, RawStyleSheet} from 'reactive-di/interfaces/component'
 import {fastCreateObject} from 'reactive-di/utils/fastCall'
 
-class StyleAttachOptimizer {
-    _sheet: StyleSheet
-    _hasStyles: boolean
-
-    classes: {[id: string]: string};
-
-    constructor(sheet: StyleSheet) {
-        this._sheet = sheet
-        this.classes = sheet.classes
-        this._hasStyles = Object.keys(sheet.classes).length > 0
-    }
-
-    attach(): void {
-        if (!this._hasStyles) {
-            return
-        }
-        this._sheet.attach()
-    }
-
-    detach(): void {
-        if (!this._hasStyles) {
-            return
-        }
-        this._sheet.detach()
-    }
+function noop() {}
+const fakeStyles: StyleSheet = {
+    attach: noop,
+    detach: noop,
+    classes: {}
 }
 
 export default class ThemeHandler {
@@ -41,15 +21,15 @@ export default class ThemeHandler {
         this._createSheet = createSheet
     }
 
-    handle({
+    handle<V>({
         deps,
         target,
         ctx
-    }: DepInfo<ThemeMeta>): Derivable<RawStyleSheet> {
+    }: DepInfo<V, ThemeMeta>): Atom<V> {
         const depsAtom: Derivable<mixed[]> = ctx.resolveDeps(deps)
         const createTheme = (args: mixed[]) => this._createTheme(target, args, ctx)
 
-        return depsAtom.derive(createTheme)
+        return (depsAtom.derive(createTheme): any)
     }
 
     _createTheme(target: Class<RawStyleSheet>, deps: mixed[], ctx: IContext): RawStyleSheet {
@@ -58,7 +38,7 @@ export default class ThemeHandler {
             throw new Error(`Provide this.__css property with jss styles in theme ${ctx.debugStr(theme)}`)
         }
         const styles: StyleSheet = this._createSheet(theme.__css)
-        theme.__styles = new StyleAttachOptimizer(styles)
+        theme.__styles = Object.keys(styles.classes).length > 0 ? styles : fakeStyles
         Object.assign(theme, styles.classes)
 
         return ctx.preprocess(theme)
@@ -67,4 +47,4 @@ export default class ThemeHandler {
     postHandle(): void {}
 }
 
-if (0) ((new ThemeHandler(...(0: any))): IHandler<ThemeMeta, Derivable<RawStyleSheet>>)
+if (0) ((new ThemeHandler(...(0: any))): IHandler)

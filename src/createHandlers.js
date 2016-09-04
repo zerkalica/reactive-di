@@ -14,8 +14,8 @@ import ComponentHandler from 'reactive-di/handlers/ComponentHandler'
 export default function createHandlers(
     createWidget?: CreateWidget<*, *, *>,
     createStyleSheet?: CreateStyleSheet
-): Map<RdiMetaType, IHandler<any, *>> {
-    const plugins: [RdiMetaType, IHandler<any, *>][] = [
+): Map<RdiMetaType, IHandler> {
+    const plugins: [RdiMetaType, IHandler][] = [
         ['abstract', new AbstractHandler()],
         ['source', new SourceHandler()],
         ['derivable', new DerivableHandler()],

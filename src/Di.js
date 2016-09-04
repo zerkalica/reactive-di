@@ -1,34 +1,36 @@
 // @flow
 
-import {DepInfo} from 'reactive-di/common'
-import type {IHandler, IContext, RdiMetaType, Collector, RdiMeta} from 'reactive-di/common'
+import {DepInfo, InternalLifeCycle} from 'reactive-di/common'
+import type {IHandler, IContext, RdiMetaType, RdiMeta} from 'reactive-di/common'
 
 import {deps} from 'reactive-di/annotations'
 
-import type {RegisterDepItem, Key, ArgDep} from 'reactive-di/interfaces/deps'
+import type {RegisterDepItem, Key, ArgDep, LifeCycle} from 'reactive-di/interfaces/deps'
 import type {Adapter, Atom, Derivable, DerivableArg, DerivableDict, CacheMap} from 'reactive-di/interfaces/atom'
 import debugName from 'reactive-di/utils/debugName'
 import derivableAtomAdapter from 'reactive-di/adapters/derivableAtomAdapter'
 import createHandlers from 'reactive-di/createHandlers'
 import MetaRegistry from 'reactive-di/MetaRegistry'
 import Updater from 'reactive-di/Updater'
+import Collector from 'reactive-di/Collector'
 
 export default class Di {
     displayName: string
-    cache: CacheMap
     adapter: Adapter
     defaults: {[id: string]: any};
     stopped: Atom<boolean>
 
     _metaRegistry: MetaRegistry
-    _handlers: Map<RdiMetaType, IHandler<*, *>>
+    _handlers: Map<RdiMetaType, IHandler>
     _path: string[] = []
+    _collector: Collector<InternalLifeCycle<*>>
 
     constructor(
-        handlers?: Map<RdiMetaType, IHandler<*, *>>,
+        handlers?: Map<RdiMetaType, IHandler>,
         adapter?: Adapter,
         metaRegistry?: MetaRegistry,
-        displayName?: string
+        displayName?: string,
+        collector?: Collector<InternalLifeCycle<*>>
     ) {
         this.displayName = displayName || 'rootDi'
         this.adapter = adapter || derivableAtomAdapter
@@ -36,8 +38,8 @@ export default class Di {
         this._metaRegistry = metaRegistry || new MetaRegistry()
         this._metaRegistry.setContext(this)
         this.stopped = this.adapter.atom(false)
-        this.cache = new Map()
         this.defaults = {}
+        this._collector = collector || new Collector()
     }
 
     stop(): IContext {
@@ -60,7 +62,8 @@ export default class Di {
             this._handlers,
             this.adapter,
             this._metaRegistry.copy(),
-            displayName
+            displayName,
+            this._collector
         )).values(this.defaults)
     }
 
@@ -75,12 +78,11 @@ export default class Di {
         return entity
     }
 
-    getMeta(key: Key): DepInfo<RdiMeta> {
-        return this._metaRegistry.getMeta(key)
-    }
-
-    resolveDeps(deps: ArgDep[], collector?: Collector): Derivable<mixed[]> {
+    resolveDeps(deps: ArgDep[], lcs?: InternalLifeCycle<*>[]): Derivable<mixed[]> {
         const resolvedArgs: DerivableArg[] = []
+        if (lcs) {
+            this._collector.begin()
+        }
         for (let i = 0, l = deps.length; i < l; i++) {
             const argDep: ArgDep = deps[i]
             if (typeof argDep === 'object') {
@@ -90,69 +92,74 @@ export default class Di {
                     if (!dep) {
                         throw new Error(`Not a dependency, need a function: ${debugName(prop || i)}`)
                     }
-                    result[prop] = this.val(dep, collector)
+                    result[prop] = this.val(dep)
                 }
                 resolvedArgs.push(result)
             } else {
                 if (!argDep) {
                     throw new Error(`Not a dependency, need a function: ${debugName(i)}`)
                 }
-                resolvedArgs.push(this.val(argDep, collector))
+                resolvedArgs.push(this.val(argDep))
             }
+        }
+        if (lcs) {
+            this._collector.end(lcs)
         }
 
         return this.adapter.struct(resolvedArgs)
     }
 
-    val<V>(key: Key, collector?: Collector): Atom<V> {
-        let atom: ?Atom<V> = this.cache.get(key)
-        if (atom) {
-            if (collector) {
-                collector.add(this.getMeta(key), atom)
-            }
-            return atom
-        } else if (atom === null) {
-            throw new Error(`Circular-dependency detected: ${this.debugStr(key)}`)
+    val<V>(key: Key, noCache?: boolean): Atom<V> {
+        const collector: Collector<InternalLifeCycle<*>> = this._collector
+        const info: DepInfo<V, RdiMeta> = this._metaRegistry.getMeta(key)
+        if (info.value) {
+            collector.addCached(info.lcs)
+            // $FlowIssue: info.value not null here
+            return info.value
+        } else if (info.resolving) {
+            throw new Error(`Circular dependency detected: ${this.debugStr(key)}`)
         }
 
-        const cache = this.cache
         if (key === this.constructor) {
-            atom = this.adapter.atom(this)
-            cache.set(key, atom)
-            return atom
+            info.value = this.adapter.atom(((this: any): V))
+            collector.addCached(info.lcs)
+            // $FlowIssue: info.value not null here
+            return info.value
         }
-        const depInfo: DepInfo<RdiMeta> = this.getMeta(key)
-        const {ctx, target, meta, name} = depInfo
+        const cache = this._metaRegistry
+        const {ctx, target, meta, name} = info
         if (ctx !== this) {
-            return ctx.val(target, collector)
+            return ctx.val(target, noCache)
         }
-        cache.set(target, null)
-        if (key !== target) {
-            cache.set(key, null)
-        }
+        info.resolving = true
 
         this._path.push(name)
-
+        collector.begin()
         const adapter: Adapter = this.adapter
 
         let depsAtom: ?Derivable<mixed[]>
-        const handler: ?IHandler<RdiMeta, any> = this._handlers.get(meta.type)
+        const handler: ?IHandler = this._handlers.get(meta.type)
         if (!handler) {
             throw new Error(`Handler not found for type: ${this.debugStr(meta.type)}`)
         }
-        atom = handler.handle(depInfo, collector)
-        cache.set(key, atom)
-        if (target !== key) {
-            cache.set(target, atom)
+        const value: Atom<V> = handler.handle(info)
+        if (!noCache) {
+            info.value = value
         }
-        handler.postHandle(depInfo, atom)
+        let lc: ?InternalLifeCycle<V>
+        if (info.lc) {
+            lc = new InternalLifeCycle(ctx.val(info.lc).get())
+            value.react(lc.update, {
+                until: this.stopped
+            })
+        }
+        collector.end(info.lcs, lc)
+        handler.postHandle(info)
+        info.resolving = false
 
-        if (collector) {
-            collector.add(depInfo, atom)
-        }
         this._path.pop()
 
-        return atom
+        return value
     }
 }
 if (0) ((new Di(...(0: any))): IContext)

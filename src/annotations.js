@@ -4,6 +4,7 @@ import {
     paramTypesKey,
     metaKey,
     functionTypesKey,
+    lcKey,
 
     ComponentMeta,
     ThemeMeta,
@@ -12,7 +13,7 @@ import {
     ServiceMeta,
     AbstractMeta
 } from 'reactive-di/common'
-import type {ArgDep} from 'reactive-di/interfaces/deps'
+import type {ArgDep, LifeCycle} from 'reactive-di/interfaces/deps'
 import Updater from 'reactive-di/Updater'
 import type {ComponentMetaRec, SourceMetaRec} from 'reactive-di/common'
 
@@ -66,4 +67,12 @@ export function service<V: Function>(target: V): V {
 export function abstract<V: Function>(target: V): V {
     dm(metaKey, new AbstractMeta(), target)
     return target
+}
+
+export function hooks<V: Function>(target: V): (lc: Class<LifeCycle<*>>) => V {
+    return (lc: Class<LifeCycle<*>>) => {
+        dm(lcKey, lc, target)
+        dm(metaKey, new ServiceMeta(), lc)
+        return target
+    }
 }

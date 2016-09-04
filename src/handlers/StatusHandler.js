@@ -1,7 +1,7 @@
 //@flow
 
 import {DepInfo, StatusMeta, IHandler} from 'reactive-di/common'
-import type {Derivable} from 'reactive-di/interfaces/atom'
+import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
 import Updater, {UpdaterStatus} from 'reactive-di/Updater'
 
 function mergeStatus(target: Class<UpdaterStatus>, updaters: UpdaterStatus[]): UpdaterStatus {
@@ -26,21 +26,21 @@ function mapToStatus(upd: Updater): UpdaterStatus {
 }
 
 export default class StatusHandler {
-    handle({
+    handle<V>({
         meta,
         target,
         ctx
-    }: DepInfo<StatusMeta>): Derivable<UpdaterStatus> {
+    }: DepInfo<V, StatusMeta>): Atom<V> {
         const updaterKeys = meta.updaters
         const statuses: Derivable<UpdaterStatus>[] = []
         for (let i = 0; i < updaterKeys.length; i++) {
             statuses.push(ctx.val(updaterKeys[i]).derive(mapToStatus))
         }
         const merge = (updaters: UpdaterStatus[]) => mergeStatus(target, updaters)
-        return ctx.adapter.struct(statuses).derive(merge)
+        return (ctx.adapter.struct(statuses).derive(merge): any)
     }
 
     postHandle(): void {}
 }
 
-if (0) ((new StatusHandler(...(0: any))): IHandler<StatusMeta, Derivable<UpdaterStatus>>)
+if (0) ((new StatusHandler(...(0: any))): IHandler)

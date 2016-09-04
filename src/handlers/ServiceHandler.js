@@ -8,12 +8,12 @@ import debugName from 'reactive-di/utils/debugName'
 import {fastCall, fastCallMethod, fastCreateObject} from 'reactive-di/utils/fastCall'
 
 export default class ServiceHandler {
-    handle({
+    handle<V>({
         deps,
         isFactory,
         target,
         ctx
-    }: DepInfo<ServiceMeta>): Atom<*> {
+    }: DepInfo<V, ServiceMeta>): Atom<V> {
         const depsAtom: Derivable<mixed[]> = ctx.resolveDeps(deps)
 
         return ctx.adapter.atom(isFactory
@@ -60,4 +60,4 @@ export default class ServiceHandler {
     postHandle(): void {}
 }
 
-if (0) ((new ServiceHandler(...(0: any))): IHandler<ServiceMeta, Atom<*>>)
+if (0) ((new ServiceHandler(...(0: any))): IHandler)

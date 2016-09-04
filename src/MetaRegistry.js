@@ -1,17 +1,16 @@
 // @flow
 
-import type {RegisterDepItem, Key} from 'reactive-di/interfaces/deps'
-import type {IContext} from 'reactive-di/common'
+import type {Derivable} from 'reactive-di/interfaces/atom'
+import type {LifeCycle, RegisterDepItem, Key} from 'reactive-di/interfaces/deps'
+import type {RdiMeta, IContext} from 'reactive-di/common'
 import {DepInfo, isAbstract} from 'reactive-di/common'
 
 export default class MetaRegistry {
     _context: IContext
-    _metaMap: Map<Key, DepInfo<*>>
+    _metaMap: Map<Key, DepInfo<any, any>>
 
-    constructor(
-        metaMap?: Map<Key, DepInfo<*>> = new Map()
-    ) {
-        this._metaMap = metaMap
+    constructor(metaMap?: Map<Key, DepInfo<*, *>>) {
+        this._metaMap = metaMap || new Map()
     }
 
     setContext(context: IContext): MetaRegistry {
@@ -53,7 +52,7 @@ export default class MetaRegistry {
             }
 
             if (target !== key && isAbstract(key)) {
-                const rec: ?DepInfo<*> = metaMap.get(target)
+                const rec: ?DepInfo<*, *> = metaMap.get(target)
                 di = (rec ? rec.ctx : null) || ctx
             } else {
                 di = ctx
@@ -62,8 +61,8 @@ export default class MetaRegistry {
         }
     }
 
-    getMeta(key: Key): DepInfo<*> {
-        let rec: ?DepInfo<*> = this._metaMap.get(key)
+    getMeta<V, M>(key: Key): DepInfo<V, M> {
+        let rec: ?DepInfo<V, M> = this._metaMap.get(key)
         if (!rec) {
             if (typeof key === 'function') {
                 rec = new DepInfo(key, key, this._context)
@@ -71,6 +70,9 @@ export default class MetaRegistry {
                 throw new Error(`Can't read annotation from ${this._context.debugStr(key)}`)
             }
             this._metaMap.set(key, rec)
+        }
+        if (key !== rec.target) {
+            this._metaMap.set(rec.target, rec)
         }
 
         return rec
