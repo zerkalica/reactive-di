@@ -141,7 +141,7 @@ class OperationObserver {
         if (ops) {
             this._parentObserver.next(
                 this._op.type === 'single'
-                    ? new SingleUpdateBucket((ops: SingleUpdate), this._op.target)
+                    ? new SingleUpdateBucket((ops: any), this._op.target)
                     : new MultiUpdateBucket(((ops: any): MultiUpdate[]))
             )
         }
@@ -165,7 +165,7 @@ class OperationObserver {
 
         this._parentObserver.complete(
             this._op.type === 'single'
-                ? new SingleUpdateBucket((ops: SingleUpdate), this._op.target)
+                ? new SingleUpdateBucket((ops: any), this._op.target)
                 : new MultiUpdateBucket(((ops: any): MultiUpdate[]))
         )
     }
@@ -291,7 +291,7 @@ class UpdaterObserver {
             this._qeue.add(this._errorUpdates)
             this._errorUpdates = []
         }
-    }
+    };
 
     error({error, op}: OperationErrorRec) {
         this._errorUpdates.push(op)

@@ -114,8 +114,7 @@ export default class Di {
         const info: DepInfo<V, RdiMeta> = this._metaRegistry.getMeta(key)
         if (info.value) {
             collector.addCached(info.lcs)
-            // $FlowIssue: info.value not null here
-            return info.value
+            return (info.value: any)
         } else if (info.resolving) {
             throw new Error(`Circular dependency detected: ${this.debugStr(key)}`)
         }
@@ -123,8 +122,7 @@ export default class Di {
         if (key === this.constructor) {
             info.value = this.adapter.atom(((this: any): V))
             collector.addCached(info.lcs)
-            // $FlowIssue: info.value not null here
-            return info.value
+            return (info.value: any)
         }
         const cache = this._metaRegistry
         const {ctx, target, meta, name} = info

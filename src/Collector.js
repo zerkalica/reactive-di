@@ -3,7 +3,7 @@
 import type {LifeCycle} from 'reactive-di/interfaces/deps'
 
 export default class Collector<T> {
-    _parents: Set<T>[] = []
+    _parents: Set<T>[] = [];
 
     begin(): void {
         this._parents.push(new Set())
@@ -12,7 +12,7 @@ export default class Collector<T> {
     _items: T[]
     _updateItems: (item: T) => void = (item: T) => {
         this._items.push(item)
-    }
+    };
 
     end(items: T[], t: ?T): void {
         const deps = this._parents
