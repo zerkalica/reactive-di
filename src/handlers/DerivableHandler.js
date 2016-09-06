@@ -1,6 +1,6 @@
 //@flow
 
-import {DepInfo, DerivableMeta, IHandler} from 'reactive-di/common'
+import {DepInfo, DerivableMeta, IHandler} from 'reactive-di/core/common'
 import type {Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
 
 import {fastCall, fastCreateObject} from 'reactive-di/utils/fastCall'

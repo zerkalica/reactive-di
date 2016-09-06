@@ -1,17 +1,16 @@
 // @flow
 
-import Di from 'reactive-di/Di'
+import Di from 'reactive-di/core/Di'
 import createReactWidgetFactory from 'reactive-di/adapters/createReactWidgetFactory'
-import derivableAtomAdapter from 'reactive-di/adapters/derivableAtomAdapter'
 import BaseModel from 'reactive-di/utils/BaseModel'
-import Updater, {UpdaterStatus} from 'reactive-di/Updater'
-
-import createHandlers from 'reactive-di/createHandlers'
+import Updater, {UpdaterStatus} from 'reactive-di/core/Updater'
+import type {IDi} from 'reactive-di/interfaces/internal'
 
 export type {
     RegisterDepItem,
     Key,
-    ResultOf
+    ResultOf,
+    LifeCycle
 } from 'reactive-di/interfaces/deps'
 
 export type {
@@ -19,15 +18,9 @@ export type {
     StyleSheet,
     RawStyleSheet,
     CreateStyleSheet,
-    CreateWidget
+    CreateWidget,
+    IComponentControllable
 } from 'reactive-di/interfaces/component'
-
-export type {
-    Adapter,
-    Derivable,
-    Atom,
-    LifeCycle
-} from 'reactive-di/interfaces/atom'
 
 export type {
     MultiUpdate,
@@ -36,10 +29,8 @@ export type {
 
 export {
     Di,
-    createHandlers,
     Updater,
     UpdaterStatus,
     BaseModel,
-    derivableAtomAdapter,
     createReactWidgetFactory
 }

@@ -1,6 +1,6 @@
 //@flow
 
-import {DepInfo, SourceMeta, IHandler} from 'reactive-di/common'
+import {DepInfo, SourceMeta, IHandler} from 'reactive-di/core/common'
 import type {Atom} from 'reactive-di/interfaces/atom'
 
 export default class SourceHandler {
@@ -21,8 +21,6 @@ export default class SourceHandler {
 
         return atom
     }
-
-    postHandle(): void {}
 }
 
 if (0) ((new SourceHandler(...(0: any))): IHandler)

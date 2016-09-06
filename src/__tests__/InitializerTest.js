@@ -13,7 +13,7 @@ import {
     source
 } from 'reactive-di/annotations'
 
-import {Di, createHandlers, Updater} from 'reactive-di/index'
+import {Di, Updater} from 'reactive-di/index'
 import BaseModel from 'reactive-di/utils/BaseModel'
 import type {CreateControllable, IComponentControllable} from 'reactive-di/interfaces/component'
 import type {Derivable} from 'reactive-di/interfaces/atom'
@@ -61,13 +61,12 @@ describe('InitializerTest', () => {
                 this._updater.cancel()
             }
         }
-
         @component()
         @deps({m: ModelA})
         class Component {
             m: ModelA
-            ctl: IComponentControllable<*>
-            static createControllable: CreateControllable<*>
+            ctl: IComponentControllable<*, *>
+            static createControllable: CreateControllable<*, *>
 
             constructor() {
                 this.ctl = this.constructor.createControllable((state: Object) => {
@@ -77,12 +76,12 @@ describe('InitializerTest', () => {
             }
         }
 
-        function createFakeComponent(target: Function, createControllable: CreateControllable<*>) {
+        function createFakeComponent(target: Function, createControllable: CreateControllable<*, *>) {
             target.createControllable = createControllable
             return target
         }
-        const di = new Di(createHandlers(createFakeComponent))
-        const C: Class<Component> = di.val(Component).get()
+        const di = new Di(createFakeComponent)
+        const C: Class<Component> = di.wrapComponent(Component)
         const c = new C()
         return c
     }

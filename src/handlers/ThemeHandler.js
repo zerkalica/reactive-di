@@ -1,6 +1,8 @@
 //@flow
 
-import {DepInfo, ThemeMeta, IHandler, IContext} from 'reactive-di/common'
+import {DepInfo, ThemeMeta, IHandler} from 'reactive-di/core/common'
+
+import type {IContext} from 'reactive-di/interfaces/internal'
 import type {Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
 import type {CreateWidget, StyleSheet, CreateStyleSheet, RawStyleSheet} from 'reactive-di/interfaces/component'
 import {fastCreateObject} from 'reactive-di/utils/fastCall'
@@ -43,8 +45,6 @@ export default class ThemeHandler {
 
         return ctx.preprocess(theme)
     }
-
-    postHandle(): void {}
 }
 
 if (0) ((new ThemeHandler(...(0: any))): IHandler)

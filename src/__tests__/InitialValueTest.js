@@ -9,7 +9,7 @@ import {
     deps
 } from 'reactive-di/annotations'
 
-import Di from 'reactive-di/Di'
+import Di from 'reactive-di/core/Di'
 import BaseModel from 'reactive-di/utils/BaseModel'
 
 import {atom} from 'derivable'

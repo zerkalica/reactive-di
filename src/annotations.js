@@ -12,10 +12,10 @@ import {
     StatusMeta,
     ServiceMeta,
     AbstractMeta
-} from 'reactive-di/common'
+} from 'reactive-di/core/common'
 import type {ArgDep, LifeCycle} from 'reactive-di/interfaces/deps'
-import Updater from 'reactive-di/Updater'
-import type {ComponentMetaRec, SourceMetaRec} from 'reactive-di/common'
+import Updater from 'reactive-di/core/Updater'
+import type {ComponentMetaRec, SourceMetaRec} from 'reactive-di/core/common'
 
 const dm = CustomReflect.defineMetadata
 

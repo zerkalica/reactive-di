@@ -17,11 +17,10 @@ import {
 import type {StyleSheet} from 'reactive-di/interfaces/component'
 
 import {Component} from 'fake-react'
-import Di from 'reactive-di/Di'
+import Di from 'reactive-di/core/Di'
 import BaseModel from 'reactive-di/utils/BaseModel'
 
 import createReactWidgetFactory from 'reactive-di/adapters/createReactWidgetFactory'
-import createHandlers from 'reactive-di/createHandlers'
 
 import {renderIntoDocument} from 'react-addons-test-utils'
 import {findDOMNode} from 'react-dom'
@@ -55,11 +54,10 @@ describe('ComponentTest', () => {
         }
         deps({m: ModelA})(TestComponent)
         component()(TestComponent)
-        const handlers = createHandlers(createReactWidgetFactory(React))
 
-        const di = new Di(handlers)
+        const di = new Di(createReactWidgetFactory(React))
 
-        const TestComponentEl = di.val(TestComponent).get()
+        const TestComponentEl = di.wrapComponent(TestComponent)
         const componentA = render(TestComponentEl)
         assert(findDOMNode(componentA).textContent === 'state-value')
     })

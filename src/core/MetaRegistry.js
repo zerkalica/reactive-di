@@ -2,8 +2,8 @@
 
 import type {Derivable} from 'reactive-di/interfaces/atom'
 import type {LifeCycle, RegisterDepItem, Key} from 'reactive-di/interfaces/deps'
-import type {RdiMeta, IContext} from 'reactive-di/common'
-import {DepInfo, isAbstract} from 'reactive-di/common'
+import type {IContext} from 'reactive-di/interfaces/internal'
+import {DepInfo, isAbstract} from 'reactive-di/core/common'
 
 export default class MetaRegistry {
     _context: IContext

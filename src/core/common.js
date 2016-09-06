@@ -2,11 +2,12 @@
 
 import type {DepFn, Key, DepDict, ArgDep, DepAlias, RegisterDepItem, LifeCycle} from 'reactive-di/interfaces/deps'
 import type {Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
+import type {IContext} from 'reactive-di/interfaces/internal'
 import type {RawStyleSheet} from 'reactive-di/interfaces/component'
 
 import debugName from 'reactive-di/utils/debugName'
 import CustomReflect from 'reactive-di/CustomReflect'
-import Updater from 'reactive-di/Updater'
+import Updater from 'reactive-di/core/Updater'
 
 export const paramTypesKey: string = 'design:paramtypes'
 export const functionTypesKey: string = 'design:function'
@@ -64,7 +65,6 @@ export class StatusMeta {
 }
 
 export type RdiMeta = ThemeMeta | ComponentMeta | AbstractMeta | SourceMeta | ServiceMeta | DerivableMeta | StatusMeta
-export type RdiMetaType = 'theme' | 'component' | 'abstract' | 'source' | 'service' | 'derivable' | 'status'
 
 export function isAbstract(key: Key): boolean {
     return typeof key === 'function' && gm(metaKey, key)
@@ -72,21 +72,7 @@ export function isAbstract(key: Key): boolean {
 
 const defaultArr: ArgDep[] = []
 const gm = CustomReflect.getMetadata
-const defaultMeta: any = new DerivableMeta()
-
-export interface IContext {
-    adapter: Adapter;
-    defaults: {[id: string]: mixed};
-    stopped: Atom<boolean>;
-    displayName: string;
-    resolveDeps(deps: ArgDep[]): Derivable<mixed[]>;
-    debugStr(data: mixed): string;
-    val<V>(key: Key): Atom<V>;
-    preprocess<V: any>(data: V): V;
-    stop(): IContext;
-    create(displayName: string): IContext;
-    register(registered?: ?RegisterDepItem[]): IContext;
-}
+const defaultMeta = new DerivableMeta()
 
 class ThemeLifeCycle {
     onMount(sheet: RawStyleSheet): void {
@@ -160,7 +146,7 @@ export class DepInfo<V, M> {
         this.name = debugName(key)
         this.lc = gm(lcKey, target) || null
         this.deps = gm(paramTypesKey, target) || defaultArr
-        this.meta = gm(metaKey, target) || defaultMeta
+        this.meta = gm(metaKey, target) || (defaultMeta: any)
         this.isFactory = gm(functionTypesKey, target) || false
         if (this.meta.type === 'theme') {
             this.lc = ThemeLifeCycle
@@ -174,5 +160,4 @@ export class DepInfo<V, M> {
 
 export interface IHandler {
     handle(info: DepInfo<*, *>): Atom<*>;
-    postHandle(info: DepInfo<*, *>): void;
 }

@@ -22,7 +22,6 @@ import {Component} from 'fake-react'
 import {Di, Updater} from 'reactive-di/index'
 
 import createReactWidgetFactory from 'reactive-di/adapters/createReactWidgetFactory'
-import createHandlers from 'reactive-di/createHandlers'
 
 function render(raw) {
     return renderIntoDocument(React.createElement(raw))
@@ -106,11 +105,10 @@ describe('LifeCycleInDepsTest', () => {
         deps({m: ModelA})(ComponentB)
         component()(ComponentB)
 
-        const handlers = createHandlers(createReactWidgetFactory(React))
-        const di = new Di(handlers)
+        const di = new Di(createReactWidgetFactory(React))
 
-        const ComponentAEl = di.val(ComponentA).get()
-        const ComponentBEl = di.val(ComponentB).get()
+        const ComponentAEl = di.wrapComponent(ComponentA)
+        const ComponentBEl = di.wrapComponent(ComponentB)
         const componentA = render(ComponentAEl)
         console.log(findDOMNode(componentA).textContent)
         assert(findDOMNode(componentA).textContent === 'testA-1')

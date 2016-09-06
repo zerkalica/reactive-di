@@ -12,8 +12,8 @@ import {
     updaters
 } from 'reactive-di/annotations'
 
-import Di from 'reactive-di/Di'
-import Updater, {UpdaterStatus} from 'reactive-di/Updater'
+import Di from 'reactive-di/core/Di'
+import Updater, {UpdaterStatus} from 'reactive-di/core/Updater'
 import BaseModel from 'reactive-di/utils/BaseModel'
 
 type ModelARec = {

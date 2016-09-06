@@ -1,17 +1,13 @@
 //@flow
 
-import {DepInfo, InternalLifeCycle, ComponentMeta, IContext, IHandler} from 'reactive-di/common'
-import type {RdiMeta} from 'reactive-di/common'
-import type {Atom, Derivable, CacheMap, Adapter} from 'reactive-di/interfaces/atom'
-import type {LifeCycle, ArgDep} from 'reactive-di/interfaces/deps'
-import type {
-    CreateControllable,
-    IComponentControllable,
-    CreateWidget,
-    RawStyleSheet,
-    CreateElement
-} from 'reactive-di/interfaces/component'
 import shallowEqual from 'reactive-di/utils/shallowEqual'
+
+import {DepInfo, InternalLifeCycle, ComponentMeta} from 'reactive-di/core/common'
+
+import type {Atom, Derivable, Adapter} from 'reactive-di/interfaces/atom'
+import type {Key, LifeCycle} from 'reactive-di/interfaces/deps'
+import type {SrcComponent, IComponentControllable} from 'reactive-di/interfaces/component'
+import type {IContext} from 'reactive-di/interfaces/internal'
 
 function pickFirstArg<V>(v: any[]): V {
     return v[0]
@@ -36,7 +32,7 @@ class ComponentLifeCycle<Component> extends InternalLifeCycle<Component> {
     }
 }
 
-class ComponentControllable<State: Object> {
+export default class ComponentControllable<State: Object, Component> {
     displayName: string
     _isDisposed: Atom<boolean>
     _isMounted: Atom<boolean>
@@ -48,8 +44,7 @@ class ComponentControllable<State: Object> {
 
     constructor<V>(
         {deps, meta, ctx, name, lc}: DepInfo<V, ComponentMeta>,
-        setState: (state: State) => void,
-        component: mixed
+        setState: (state: State) => void
     ) {
         this.displayName = name
         let container: IContext
@@ -68,8 +63,7 @@ class ComponentControllable<State: Object> {
         this._lcs = []
 
         if (lc) {
-            const internalLc = new ComponentLifeCycle(container.val(lc).get())
-            this._lcs.push(internalLc)
+            this._lcs.push(new ComponentLifeCycle(container.val(lc).get()))
         }
 
         if (deps.length) {
@@ -84,7 +78,9 @@ class ComponentControllable<State: Object> {
         }
     }
 
-    wrapElement: (tag: Function) => Function = (tag: Function) => this._container.val(tag).get()
+    wrapComponent: (tag: SrcComponent<*, State>) => Component = (
+        tag: SrcComponent<*, State>
+    )=> this._container.wrapComponent(tag)
 
     getState(): ?State {
         if (this._stopped) {
@@ -94,11 +90,11 @@ class ComponentControllable<State: Object> {
         return this._stateAtom ? this._stateAtom.get() : null
     }
 
-    onUpdate(): void {
+    onUpdate(component: Component): void {
         const lcs = this._lcs
         for (let i = 0, l = lcs.length; i < l; i++) {
             const lc = lcs[i]
-            lc.onUpdate()
+            lc.onUpdate(component)
         }
     }
 
@@ -127,42 +123,4 @@ class ComponentControllable<State: Object> {
         }
     }
 }
-if (0) ((new ComponentControllable(...(0: any))): IComponentControllable<*>)
-
-export default class ComponentHandler {
-    _componentCache: CacheMap = new Map()
-    _createComponent: CreateWidget<*, *, *>
-
-    constructor(
-        createComponent: CreateWidget<*, *, *>
-    ) {
-        this._createComponent = createComponent
-    }
-
-    handle<V>(depInfo: DepInfo<V, ComponentMeta>): Atom<V> {
-        let atom: ?Atom<V> = this._componentCache.get(depInfo.key)
-        if (atom) {
-            return atom
-        }
-
-        function createControllable<State, Component: Object>(
-            setState: (state: State) => void,
-            component: mixed
-        ): IComponentControllable<State> {
-            return new ComponentControllable(depInfo, setState, component)
-        }
-
-        atom = depInfo.ctx.adapter.atom((this._createComponent(
-            depInfo.target,
-            (createControllable: CreateControllable<*>)
-        ): any))
-
-        this._componentCache.set(depInfo.key, atom)
-
-        return atom
-    }
-
-    postHandle(): void {}
-}
-
-if (0) ((new ComponentHandler(...(0: any))): IHandler)
+if (0) ((new ComponentControllable(...(0: any))): IComponentControllable<*, *>)

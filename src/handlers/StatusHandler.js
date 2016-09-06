@@ -1,8 +1,8 @@
 //@flow
 
-import {DepInfo, StatusMeta, IHandler} from 'reactive-di/common'
+import {DepInfo, StatusMeta, IHandler} from 'reactive-di/core/common'
 import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
-import Updater, {UpdaterStatus} from 'reactive-di/Updater'
+import Updater, {UpdaterStatus} from 'reactive-di/core/Updater'
 
 function mergeStatus(target: Class<UpdaterStatus>, updaters: UpdaterStatus[]): UpdaterStatus {
     const us: UpdaterStatus = new target('complete')
@@ -39,8 +39,6 @@ export default class StatusHandler {
         const merge = (updaters: UpdaterStatus[]) => mergeStatus(target, updaters)
         return (ctx.adapter.struct(statuses).derive(merge): any)
     }
-
-    postHandle(): void {}
 }
 
 if (0) ((new StatusHandler(...(0: any))): IHandler)

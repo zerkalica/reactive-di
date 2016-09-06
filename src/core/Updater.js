@@ -1,6 +1,7 @@
 // @flow
 import type {Key} from 'reactive-di/interfaces/deps'
 import type {Adapter, Atom, Derivable} from 'reactive-di/interfaces/atom'
+import type {IContext} from 'reactive-di/interfaces/internal'
 import type {
     MultiSyncUpdate,
     MultiAsyncUpdate,
@@ -12,7 +13,6 @@ import type {
     SingleUpdate,
     SingleAsyncUpdateResult
 } from 'reactive-di/interfaces/updater'
-import type {IContext} from 'reactive-di/common'
 import {cloneInstance} from 'reactive-di/utils/createProxy'
 import promiseToObservable from 'reactive-di/utils/promiseToObservable'
 import debugName from 'reactive-di/utils/debugName'

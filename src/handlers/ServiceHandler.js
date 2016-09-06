@@ -1,7 +1,8 @@
 //@flow
 
-import {DepInfo, ServiceMeta, IHandler, IContext} from 'reactive-di/common'
+import {DepInfo, ServiceMeta, IHandler} from 'reactive-di/core/common'
 import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
+import type {IContext} from 'reactive-di/interfaces/internal'
 import type {DepFn} from 'reactive-di/interfaces/deps'
 
 import debugName from 'reactive-di/utils/debugName'
@@ -56,8 +57,6 @@ export default class ServiceHandler {
 
         return ctx.preprocess((factory: any))
     }
-
-    postHandle(): void {}
 }
 
 if (0) ((new ServiceHandler(...(0: any))): IHandler)

@@ -10,7 +10,7 @@ import {
     deps
 } from 'reactive-di/annotations'
 
-import Di from 'reactive-di/Di'
+import Di from 'reactive-di/core/Di'
 import BaseModel from 'reactive-di/utils/BaseModel'
 
 describe('ScopesTest', () => {
@@ -39,9 +39,11 @@ describe('ScopesTest', () => {
 
         const di = (new Di()).register([ModelA])
         let newDi = di.create('child')
+        // console.log(di._metaRegistry.getMeta(ModelA) === newDi._metaRegistry.getMeta(ModelA))
+        assert(di.val(ModelA) === newDi.val(ModelA))
         // modify ModelA in parent di
-        newDi.val(ModelA).set(new ModelA({val: 'test1'}))
-        assert(di.val(ModelA).get().val === 'test1')
+        // newDi.val(ModelA).set(new ModelA({val: 'test1'}))
+        // assert(di.val(ModelA).get().val === 'test1')
     })
 
     it('model in child scope is independed from parent', () => {
