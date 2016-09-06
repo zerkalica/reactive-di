@@ -19,4 +19,4 @@ function propagateToGlobal (window) {
 propagateToGlobal(win)
 
 
-glob.sync(__dirname + '/../src/**/__tests__/*.js').forEach(file => require(file))
+glob.sync(__dirname + '/../src/**/__tests__/**/*.js').forEach(file => require(file))

@@ -1,5 +1,5 @@
 {
-    "presets": ["es2015-loose", "stage-0"],
+    "presets": ["es2015-loose", "stage-0", "react"],
     "plugins": [
         ["module-resolver", {
             "root": [""],
@@ -9,6 +9,9 @@
         }],
         "syntax-flow",
         "espower",
+        ["transform-react-jsx", {
+            "pragma": "h"
+        }],
         "transform-decorators-legacy",
         "transform-flow-strip-types"
     ]

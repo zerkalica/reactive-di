@@ -3,18 +3,24 @@ import type {
     CreateWidget,
     SrcComponent,
     CreateControllable,
-    IComponentControllable
+    IComponentControllable,
+    GetComponent,
+    CreateElement
 } from 'reactive-di/interfaces/component'
 
 import debugName from 'reactive-di/utils/debugName'
 import shallowEqual from 'reactive-di/utils/shallowEqual'
 
+type ReactElement = React$Element<any>
 type ReactComponent<Props, State> = React$Component<*, Props, State>
-type FindElement<Props, State> = (component: ReactComponent<Props, State>) => HTMLElement
+
+type ReactCreateElement = CreateElement<any, ReactElement>
+
 interface StaticContext<Props, State> {
-    findDOMElement: FindElement<Props, State>;
     Target: Class<SrcComponent<Props, State>>;
     createControllable: CreateControllable<State>;
+    createElement: ReactCreateElement;
+    isReactClass: (tag: Function) => boolean;
 }
 
 const dp = Object.defineProperty
@@ -27,108 +33,89 @@ class ComponentMixin<State: Object, Props: Object> {
     props: Props
     _target: SrcComponent<Props, State>
     _controllable: IComponentControllable<State>
+    _createElement: ReactCreateElement
 
     componentWillMount(): void {
         const ctx = this.constructor.__rdiCtx
         const setState: (state: State) => void = (state: State) => this.setState(state)
-        this._controllable = ctx.createControllable(setState)
+        const controllable  = this._controllable = ctx.createControllable(setState, this)
+        this._createElement = function createWrappedElement(
+            tag: Function,
+            props?: ?{[id: string]: mixed},
+            ...children: any
+        ): any {
+            return ctx.createElement(
+                ctx.isReactClass(tag) ? tag : controllable.wrapElement(tag),
+                props,
+                children
+            )
+        }
 
-        const state: ?State = this._controllable.getState()
+        const state: ?State = controllable.getState()
         if (state) {
             this.state = state
         }
-        const target: SrcComponent<Props, State> = this._target = new ctx.Target(this.state)
-        target.props = this.props
-        target.state = this.state
-        dp(target, '$', {
-            get: () => ctx.findDOMElement((this: any))
-        })
+        this._target = ctx.Target
     }
 
     componentDidMount() {
         this._controllable.onMount()
-        const target = this._target
-        if (target.componentDidMount) {
-            target.props = this.props
-            target.state = this.state
-            try {
-                target.componentDidMount()
-            } catch (err) {
-                console.error(err)
-                throw err
-            }
-        }
     }
 
     componentDidUpdate(props: Props, state: State): void {
-        const target = this._target
-        if (target.componentDidUpdate) {
-            target.props = this.props
-            target.state = this.state
-            try {
-                target.componentDidUpdate(props, state)
-            } catch (err) {
-                console.error(err)
-                throw err
-            }
-        }
+        this._controllable.onUpdate()
     }
 
     componentWillUnmount(): void {
         this._controllable.onUnmount()
-        const target = this._target
-        if (target.componentWillUnmount) {
-            target.props = this.props
-            target.state = this.state
-            try {
-                target.componentWillUnmount()
-            } catch (err) {
-                console.error(err)
-                throw err
-            }
-        }
     }
 
     shouldComponentUpdate(nextProps: Object): boolean {
         return !shallowEqual(this.props, nextProps)
     }
 
-    render(): React$Element<*> {
-        const target = this._target
-        target.props = this.props
-        target.state = this.state
-        let result: React$Element<*>
-            try {
-                result = target.render(this.props, this.state)
-            } catch (err) {
-                console.error(err)
-                throw err
-            }
-
-        return result
+    render(): any {
+        try {
+            return this._target(this.props, this.state, this._createElement)
+        } catch (e) {
+            console.error(e)
+        }
     }
 }
 
+const dummyProps = {
+    render() {}
+}
+
 export default function createReactWidgetFactory<Props:  Object, State: Object> (
-    RC: Class<ReactComponent<Props, State>>,
-    findDOMElement: FindElement<Props, State>
+    react: any
 ): CreateWidget<Props, State, Class<ReactComponent<Props, State>>> {
+    const {Component, createClass, createElement} = react
+    const RCProto = Component.prototype
+    const RClassProto = createClass(dummyProps).prototype
+    function isReactClass(tag: Function): boolean {
+        return !tag.prototype
+            || (RCProto: Object).isPrototypeOf(tag.prototype)
+            && RClassProto === tag.prototype
+    }
+    const assign = Object.assign
+
     return function createReactWidgetImpl(
         Target: Class<SrcComponent<Props, State>>,
         createControllable: CreateControllable<State>
     ): Class<ReactComponent<Props, State>> {
-        class WrappedComponent extends RC {
+        class WrappedComponent extends Component {
             static displayName: string = `${debugName(Target)}`
             static __rdiCtx: StaticContext<Props, State> = {
-                findDOMElement,
                 Target,
-                createControllable
+                createControllable,
+                createElement,
+                isReactClass
             }
-
             state: State
             props: Props
         }
-        (Object: any).assign(WrappedComponent.prototype, ComponentMixin.prototype)
+        assign((WrappedComponent.prototype: Object), ComponentMixin.prototype)
         return WrappedComponent
     }
 }

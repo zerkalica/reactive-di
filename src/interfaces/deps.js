@@ -12,7 +12,8 @@ export type ResultOf<F> = _ResultOf<*, F>
 type _ResultOf<V, F: (...x: any[]) => V> = V
 
 export interface LifeCycle<Dep> {
-    onMount(dep: Dep): void;
-    onUnmount(dep: Dep): void;
-    onUpdate(oldDep: Dep, newDep: Dep): void;
+    onMount?: (dep: Dep) => void;
+    onUnmount?: (dep: Dep) => void;
+    onAfterUpdate?: (dep: Dep) => void;
+    onUpdate?: (oldDep: Dep, newDep: Dep) => void;
 }

@@ -1,11 +1,12 @@
 // @flow
 /* eslint-env mocha */
+/* jsx-pragma h */
 
 import {spy, stub, match} from 'sinon'
 import assert from 'power-assert'
-import {Component as RC, createElement} from 'react'
-import {findDOMNode as toHtml} from 'react-dom'
+import React from 'react'
 import {renderIntoDocument} from 'react-addons-test-utils'
+import {findDOMNode} from 'react-dom'
 
 import {
     theme,
@@ -24,10 +25,10 @@ import createReactWidgetFactory from 'reactive-di/adapters/createReactWidgetFact
 import createHandlers from 'reactive-di/createHandlers'
 
 function render(raw) {
-    return renderIntoDocument(createElement(raw))
+    return renderIntoDocument(React.createElement(raw))
 }
 
-describe('LifeCycleTest', () => {
+describe('LifeCycleInDepsTest', () => {
     type ModelARec = {
         val?: string;
     }
@@ -93,47 +94,36 @@ describe('LifeCycleTest', () => {
             m: ModelA;
         }
 
-        @deps({m: ModelA})
-        @component()
-        class ComponentA extends Component<Props, State> {
-            props: Props
-            state: State
-            $: HTMLElement
-            render() {
-                const {m} = this.state
-                return createElement('div', null, 'testA-' + this.state.m.val)
-            }
+        function ComponentA(props: Props, state: State, h: Function): React$Element<any> {
+            return <div>testA-{state.m.val}</div>
         }
+        deps({m: ModelA})(ComponentA)
+        component()(ComponentA)
 
-        @deps({m: ModelA})
-        @component()
-        class ComponentB extends Component<Props, State> {
-            props: Props
-            state: State
-            $: HTMLElement
-            render() {
-                const {m} = this.state
-                return createElement('div', null, 'testB-' + this.state.m.val)
-            }
+        function ComponentB(props: Props, state: State, h: Function): React$Element<any> {
+            return <div>testB-{state.m.val}</div>
         }
+        deps({m: ModelA})(ComponentB)
+        component()(ComponentB)
 
-        const handlers = createHandlers(createReactWidgetFactory(RC, toHtml))
+        const handlers = createHandlers(createReactWidgetFactory(React))
         const di = new Di(handlers)
 
         const ComponentAEl = di.val(ComponentA).get()
         const ComponentBEl = di.val(ComponentB).get()
         const componentA = render(ComponentAEl)
-        const componentB = render(ComponentBEl)
+        console.log(findDOMNode(componentA).textContent)
+        assert(findDOMNode(componentA).textContent === 'testA-1')
 
-        assert(toHtml(componentA).textContent === 'testA-1')
-        assert(toHtml(componentB).textContent === 'testB-1')
+        const componentB = render(ComponentBEl)
+        assert(findDOMNode(componentB).textContent === 'testB-1')
         assert(onUpdate.notCalled)
 
         return promise.then(() => {
             const componentA2 = render(ComponentAEl)
             const componentB2 = render(ComponentBEl)
-            assert(toHtml(componentA2).textContent === 'testA-2')
-            assert(toHtml(componentB2).textContent === 'testB-2')
+            assert(findDOMNode(componentA2).textContent === 'testA-2')
+            assert(findDOMNode(componentB2).textContent === 'testB-2')
             assert(onUpdate.calledOnce)
 
             componentA.componentWillUnmount()

@@ -1,17 +1,10 @@
 // @flow
 
 import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
+import type {IContext} from '../common'
+import type {Key} from 'reactive-di/interfaces/deps'
 
-export interface SrcComponent<Props, State> extends React$Component<void, Props, State> {
-    props: Props;
-    state: State;
-    $: HTMLElement;
-
-    render(): any;
-    componentDidMount(): void;
-    componentDidUpdate(nextProps: Props, nextState: State): void;
-    componentWillUnmount(): void;
-}
+export type SrcComponent<Props, State> = (props: Props, state: State) => any
 
 export type StyleSheet = {
     attach(): void;
@@ -26,13 +19,25 @@ export interface RawStyleSheet {
 
 export type CreateStyleSheet = (css: {[id: string]: Object}) => StyleSheet;
 
+export type CreateElement<Component, Element> = (
+    tag: Component,
+    props?: ?{[id: string]: mixed},
+    children?: mixed
+) => Element
+
 export interface IComponentControllable<State> {
+    wrapElement(tag: Function): Function;
     getState(): ?State;
     onUnmount(): void;
     onMount(): void;
+    onUpdate(): void;
 }
 
-export type CreateControllable<State> = (setState: (state: State) => void) => IComponentControllable<State>
+export type CreateControllable<State> = (
+    setState: (state: State) => void
+) => IComponentControllable<State>
+
+export type GetComponent<Component> = (target: Function) => Component
 
 export type CreateWidget<Props, State, Component> = (
     Target: Class<SrcComponent<Props, State>>,

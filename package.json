@@ -18,6 +18,7 @@
     "update": "ncu -ua && npm install",
     "clean": "rm -rf $npm_package_config_builddir/dist",
     "build": "npm run clean && babel src --ignore=__tests__ --source-maps --out-dir $npm_package_config_builddir/dist",
+    "build.babel": "npm run clean && babel src --source-maps --out-dir $npm_package_config_builddir/dist",
     "build.dev": "babel src --source-maps --out-dir $npm_package_config_builddir/dist --watch",
     "lint": "exit 0 && eslint src",
     "check": "flow check",
@@ -81,6 +82,7 @@
     "sinon": "^1.17.5"
   },
   "dependencies": {
+    "babel-preset-react": "^6.11.1",
     "derivable": "^0.12.1"
   }
 }

@@ -70,7 +70,6 @@ export function isAbstract(key: Key): boolean {
     return typeof key === 'function' && gm(metaKey, key)
 }
 
-
 const defaultArr: ArgDep[] = []
 const gm = CustomReflect.getMetadata
 const defaultMeta: any = new DerivableMeta()
@@ -108,23 +107,17 @@ export class InternalLifeCycle<V> {
     _count: number = 0
     _entity: V
     _lc: LifeCycle<V>
-    isDisposed: boolean
 
-    constructor(lc: LifeCycle<V>, isDisposedAtom: Derivable<boolean>) {
+    constructor(lc: LifeCycle<V>) {
         this._lc = lc
-        this.isDisposed = false
-        isDisposedAtom.react((isDisposed: boolean) => {
-            this.isDisposed = isDisposed
-        }, {
-            skipFirst: true,
-            once: true
-        })
     }
 
-    update: (newValue: V) => void = (newValue: V) => {
+    onUpdate: (newValue: V) => void = (newValue: V) => this._onUpdate(newValue)
+
+    _onUpdate(newValue: V): void {
         const oldValue: V = this._entity
         if (oldValue && oldValue !== newValue) {
-            this._lc.onUpdate(oldValue, newValue)
+            this._lc.onUpdate && this._lc.onUpdate(oldValue, newValue)
         }
         this._entity = newValue
     }
@@ -132,7 +125,7 @@ export class InternalLifeCycle<V> {
     onMount() {
         this._count++
         if (this._count === 1) {
-            this._lc.onMount(this._entity)
+            this._lc.onMount && this._lc.onMount(this._entity)
         }
     }
 
@@ -142,7 +135,7 @@ export class InternalLifeCycle<V> {
         }
         this._count--
         if (this._count === 0) {
-            this._lc.onUnmount(this._entity)
+            this._lc.onUnmount && this._lc.onUnmount(this._entity)
         }
     }
 }
