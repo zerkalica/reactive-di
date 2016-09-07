@@ -1,28 +1,14 @@
 //@flow
 
-import shallowEqual from 'reactive-di/utils/shallowEqual'
-
 import {DepInfo, InternalLifeCycle, ComponentMeta} from 'reactive-di/core/common'
 
 import type {Atom, Derivable, Adapter} from 'reactive-di/interfaces/atom'
 import type {Key, LifeCycle} from 'reactive-di/interfaces/deps'
-import type {SrcComponent, IComponentControllable} from 'reactive-di/interfaces/component'
+import type {CreateElement, SrcComponent, IComponentControllable} from 'reactive-di/interfaces/component'
 import type {IContext} from 'reactive-di/interfaces/internal'
 
 function pickFirstArg<V>(v: any[]): V {
     return v[0]
-}
-
-function createSetState<State: Object>(
-    setState: (state: State) => void
-): (state: State) => void {
-    let oldState: State = ({}: any)
-    return function equalSetState(state: State): void {
-        if (!shallowEqual(oldState, state)) {
-            oldState = state
-            setState(state)
-        }
-    }
 }
 
 class ComponentLifeCycle<Component> extends InternalLifeCycle<Component> {
@@ -40,11 +26,14 @@ export default class ComponentControllable<State: Object, Component> {
     _lcs: InternalLifeCycle<*>[]
     _container: IContext
     _isOwnedContainer: boolean
-    _stopped: boolean = false
+    _isDisposed: Atom<boolean>
 
+    createElement: CreateElement<Component, *>
+    _cls: ComponentLifeCycle<*>
     constructor<V>(
         {deps, meta, ctx, name, lc}: DepInfo<V, ComponentMeta>,
-        setState: (state: State) => void
+        setState: (state: State) => void,
+        createElement: CreateElement<Component, *>
     ) {
         this.displayName = name
         let container: IContext
@@ -56,34 +45,26 @@ export default class ComponentControllable<State: Object, Component> {
             this._isOwnedContainer = false
         }
         this._container = container
-
+        this.createElement = createElement
         const ad: Adapter = ctx.adapter
-        const isDisposed: Atom<boolean> = ctx.stopped
+        this._isDisposed = ad.atom(false)
         this._isMounted = ad.atom(false)
         this._lcs = []
-
-        if (lc) {
-            this._lcs.push(new ComponentLifeCycle(container.val(lc).get()))
-        }
+        this._cls = new ComponentLifeCycle(lc ? container.val(lc).get() : {})
 
         if (deps.length) {
             this._stateAtom = container.resolveDeps(deps, this._lcs).derive(pickFirstArg)
             this._stateAtom
-                .react(createSetState(setState), {
+                .react(setState, {
                     skipFirst: true,
                     from: this._isMounted,
-                    while: this._isMounted,
-                    until: (isDisposed: Derivable<boolean>)
+                    until: this._isDisposed
                 })
         }
     }
 
-    wrapComponent: (tag: SrcComponent<*, State>) => Component = (
-        tag: SrcComponent<*, State>
-    )=> this._container.wrapComponent(tag)
-
     getState(): ?State {
-        if (this._stopped) {
+        if (this._isDisposed.get()) {
             throw new Error(`componentDidMount called after componentWillUnmount: ${this.displayName}`)
         }
 
@@ -91,28 +72,24 @@ export default class ComponentControllable<State: Object, Component> {
     }
 
     onUpdate(component: Component): void {
-        const lcs = this._lcs
-        for (let i = 0, l = lcs.length; i < l; i++) {
-            const lc = lcs[i]
-            lc.onUpdate(component)
-        }
+        this._cls.onUpdate(component)
     }
 
     onUnmount(): void {
-        this._isMounted.set(false)
         const lcs = this._lcs
         for (let i = 0, l = lcs.length; i < l; i++) {
             const lc = lcs[i]
             lc.onUnmount()
         }
+        this._cls.onUnmount()
         if (this._isOwnedContainer) {
             this._container.stop()
         }
-        this._stopped = true
+        this._isDisposed.set(true)
     }
 
     onMount(): void {
-        if (this._stopped) {
+        if (this._isDisposed.get()) {
             throw new Error(`componentDidMount called after componentWillUnmount: ${this.displayName}`)
         }
         this._isMounted.set(true)
@@ -121,6 +98,7 @@ export default class ComponentControllable<State: Object, Component> {
             const lc = lcs[i]
             lc.onMount()
         }
+        this._cls.onMount()
     }
 }
 if (0) ((new ComponentControllable(...(0: any))): IComponentControllable<*, *>)

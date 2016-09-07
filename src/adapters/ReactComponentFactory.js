@@ -1,13 +1,13 @@
 // @flow
 import type {
-    CreateWidget,
+    ComponentFactory,
+    CreateElement,
     SrcComponent,
     CreateControllable,
     IComponentControllable,
-    CreateElement,
     SetState
 } from 'reactive-di/interfaces/component'
-
+import type {IContext} from 'reactive-di/interfaces/internal'
 import debugName from 'reactive-di/utils/debugName'
 import shallowEqual from 'reactive-di/utils/shallowEqual'
 
@@ -17,13 +17,10 @@ type ReactComponentClass<Props, State> = Class<ReactComponent<Props, State>>
 
 type ReactCreateElement = CreateElement<any, ReactElement>
 type CreateReactControllable<Props, State> = CreateControllable<State, ReactComponentClass<Props, State>>
-type CreateReactWidget<Props, State> = CreateWidget<Props, State, ReactComponentClass<Props, State>>
 
 interface StaticContext<Props, State> {
     target: SrcComponent<Props, State>;
     createControllable: CreateReactControllable<Props, State>;
-    createElement: ReactCreateElement;
-    isReact(tag: Function|string): boolean;
 }
 
 const dp = Object.defineProperty
@@ -41,19 +38,11 @@ class ComponentMixin<State: Object, Props: Object> {
 
     componentWillMount(): void {
         const ctx: StaticContext<Props, State> = this.constructor.__rdiCtx
-        const setState: SetState<State> = (state: State) => this.setState(state)
-        const controllable = this._controllable = ctx.createControllable(setState, this)
-        this._createElement = function createWrappedElement(
-            tag: Function,
-            props?: ?{[id: string]: mixed},
-            ...children: any
-        ): ReactElement {
-            return ctx.createElement(
-                ctx.isReact(tag) ? tag : controllable.wrapComponent(tag),
-                props,
-                children
-            )
+        const setState: SetState<State> = (state: State) => {
+            return this.setState(state)
         }
+        const controllable = this._controllable = ctx.createControllable(setState, this)
+        this._createElement = controllable.createElement
 
         const state: ?State = controllable.getState()
         if (state) {
@@ -74,8 +63,8 @@ class ComponentMixin<State: Object, Props: Object> {
         this._controllable.onUnmount()
     }
 
-    shouldComponentUpdate(nextProps: Object): boolean {
-        return !shallowEqual(this.props, nextProps)
+    shouldComponentUpdate(nextProps: Object, nextState: Object): boolean {
+        return !shallowEqual(this.props, nextProps) || !shallowEqual(this.state, nextState)
     }
 
     render(): any {
@@ -94,40 +83,33 @@ const dummyProps = {
 
 interface React {
     Component: ReactComponentClass<*, *>;
-    createClass(options: Object): ReactComponentClass<*, *>;
     createElement: Function;
 }
 
-export default function createReactWidgetFactory<Props: Object, State: Object> (
-    {Component, createClass, createElement}: React
-): CreateReactWidget<Props, State> {
-    const RCProto = Component.prototype
-    const RClassProto = createClass(dummyProps).prototype
+export default class ReactComponentFactory {
+    _Component: ReactComponentClass<*, *>
+    createElement: CreateElement<*, *>
 
-    function isReact(tag: Function|string): boolean {
-        return !tag.prototype
-            || (RCProto: Object).isPrototypeOf(tag.prototype)
-            && RClassProto === (tag: any).prototype
+    constructor({Component, createElement}: React) {
+        this.createElement = (createElement: any)
+        this._Component = Component
     }
 
-    const assign = Object.assign
-
-    return function createReactWidgetImpl(
+    wrapComponent<Props, State>(
         target: SrcComponent<Props, State>,
         createControllable: CreateReactControllable<Props, State>
     ): ReactComponentClass<Props, State> {
-        class WrappedComponent extends (Component: any)<Props, State> {
+        class WrappedComponent extends (this._Component: any)<Props, State> {
             static displayName: string = `${debugName(target)}`
             static __rdiCtx: StaticContext<Props, State> = {
                 target,
-                createControllable,
-                createElement,
-                isReact
+                createControllable
             }
             state: State
             props: Props
         }
-        assign((WrappedComponent.prototype: Object), ComponentMixin.prototype)
+        Object.assign((WrappedComponent.prototype: Object), ComponentMixin.prototype)
         return WrappedComponent
     }
 }
+if (0) ((new ReactComponentFactory(...(0: any))): ComponentFactory)

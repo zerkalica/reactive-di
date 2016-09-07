@@ -126,6 +126,10 @@ export class InternalLifeCycle<V> {
     }
 }
 
+export function isComponent(target: Function): boolean {
+    return typeof target === 'function' && gm(metaKey, target)
+}
+
 export class DepInfo<V, M> {
     target: Function
     deps: ArgDep[]

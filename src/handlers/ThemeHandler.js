@@ -1,10 +1,9 @@
 //@flow
 
 import {DepInfo, ThemeMeta, IHandler} from 'reactive-di/core/common'
-
 import type {IContext} from 'reactive-di/interfaces/internal'
-import type {Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
-import type {CreateWidget, StyleSheet, CreateStyleSheet, RawStyleSheet} from 'reactive-di/interfaces/component'
+import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
+import type {StyleSheet, CreateStyleSheet, RawStyleSheet} from 'reactive-di/interfaces/component'
 import {fastCreateObject} from 'reactive-di/utils/fastCall'
 
 function noop() {}

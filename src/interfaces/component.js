@@ -1,4 +1,5 @@
 // @flow
+import type {IContext} from 'reactive-di/interfaces/internal'
 
 export type StyleSheet = {
     attach(): void;
@@ -22,7 +23,7 @@ export type CreateElement<Component, Element> = (
 ) => Element
 
 export interface IComponentControllable<State, Component> {
-    wrapComponent(tag: SrcComponent<*, State>): Component;
+    createElement: CreateElement<Component, *>;
     getState(): ?State;
     onUnmount(): void;
     onMount(): void;
@@ -35,7 +36,10 @@ export type CreateControllable<State, Component> = (
     setState: SetState<State>
 ) => IComponentControllable<State, Component>
 
-export type CreateWidget<Props, State, Component> = (
-    target: SrcComponent<Props, State>,
-    createControllable: CreateControllable<State, Component>
-) => Component
+export interface ComponentFactory {
+    createElement: CreateElement<*, *>;
+    wrapComponent<Props, State>(
+        target: SrcComponent<Props, State>,
+        createControllable: CreateControllable<State, *>
+    ): mixed;
+}

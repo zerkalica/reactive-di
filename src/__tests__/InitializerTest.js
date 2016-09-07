@@ -76,11 +76,15 @@ describe('InitializerTest', () => {
             }
         }
 
-        function createFakeComponent(target: Function, createControllable: CreateControllable<*, *>) {
-            target.createControllable = createControllable
-            return target
-        }
-        const di = new Di(createFakeComponent)
+        const di = new Di({
+            createElement(h) {
+                return h
+            },
+            wrapComponent(target: Function, createControllable: CreateControllable<any, any>): any {
+                target.createControllable = createControllable
+                return (target: any)
+            }
+        })
         const C: Class<Component> = di.wrapComponent(Component)
         const c = new C()
         return c

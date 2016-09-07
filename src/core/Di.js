@@ -5,21 +5,28 @@ import type {IHandler, RdiMeta} from 'reactive-di/core/common'
 
 import {deps} from 'reactive-di/annotations'
 
+import {isComponent} from 'reactive-di/core/common'
+
 import type {IContext} from 'reactive-di/interfaces/internal'
 import type {RegisterDepItem, ArgDep, Key} from 'reactive-di/interfaces/deps'
 import type {Adapter, Atom, DerivableArg, DerivableDict, Derivable} from 'reactive-di/interfaces/atom'
-import type {SetState, CreateWidget, CreateStyleSheet} from 'reactive-di/interfaces/component'
+import type {CreateElement, SetState, ComponentFactory, CreateStyleSheet} from 'reactive-di/interfaces/component'
 
 import debugName from 'reactive-di/utils/debugName'
-import derivableAtomAdapter from 'reactive-di/adapters/derivableAtomAdapter'
+import derivableAtomAdapter from 'reactive-di/core/derivableAtomAdapter'
 import createHandlers from 'reactive-di/core/createHandlers'
 import MetaRegistry from 'reactive-di/core/MetaRegistry'
 import Updater from 'reactive-di/core/Updater'
 import Collector from 'reactive-di/core/Collector'
 import ComponentControllable from 'reactive-di/core/ComponentControllable'
 
-function dummyCreateWidget() {
-    throw new Error('Can\'t create widget: provide widget factory to di')
+const dummyComponentFactory: ComponentFactory = {
+    createElement(arg) {
+        return arg
+    },
+    wrapComponent() {
+        throw new Error('Can\'t create widget: provide widget factory to di')
+    }
 }
 
 export default class Di {
@@ -32,19 +39,21 @@ export default class Di {
     _metaRegistry: MetaRegistry
     _handlers: {[id: string]: IHandler}
     _collector: Collector<InternalLifeCycle<*>>
-    _createWidget: CreateWidget<*, *, *>
+    _componentFactory: ComponentFactory
     _path: string[] = []
+    _createElement: CreateElement<*, *>
 
     constructor(
-        createWidget?: ?CreateWidget<*, *, *>,
+        componentFactory?: ?ComponentFactory,
         createStyleSheet?: ?CreateStyleSheet,
+
         handlers?: {[id: string]: IHandler},
         adapter?: Adapter,
         metaRegistry?: MetaRegistry,
         displayName?: string,
         collector?: Collector<InternalLifeCycle<*>>
     ) {
-        this._createWidget = createWidget || dummyCreateWidget
+        this._componentFactory = componentFactory || dummyComponentFactory
         this.displayName = displayName || 'rootDi'
         this.adapter = adapter || derivableAtomAdapter
         this._handlers = handlers || createHandlers(createStyleSheet)
@@ -53,6 +62,19 @@ export default class Di {
 
         this._metaRegistry.setContext(this)
         this.stopped = this.adapter.atom(false)
+        this._createElement = this._getCreateElement()
+    }
+
+    _getCreateElement(): CreateElement<*, *> {
+        const createElement = this._componentFactory.createElement
+
+        const createWrappedElement = (tag: Function, props?: ?{[id: string]: mixed}, ...children: any) => createElement(
+            this.wrapComponent(tag),
+            props,
+            children.length ? children : null
+        )
+
+        return createWrappedElement
     }
 
     stop(): IContext {
@@ -82,13 +104,20 @@ export default class Di {
         )).values(this.defaults)
     }
 
-    wrapComponent<Component>(key: Key): Component {
+    wrapComponent<Component>(key: Function): Component {
+        if (!isComponent(key)) {
+            return (key: any)
+        }
         const info: DepInfo<any, *> = this._metaRegistry.getMeta(key)
         if (!info.value) {
-            info.value = this._createWidget(
+            const createElement = this._createElement
+            const createControllable = function _createControllable(setState: SetState<*>) {
+                return new ComponentControllable(info, setState, createElement)
+            }
+            info.value = (this._componentFactory.wrapComponent(
                 info.target,
-                (setState: SetState<*>) => new ComponentControllable(info, setState)
-            )
+                createControllable
+            ): any)
         }
 
         return (info.value: any)

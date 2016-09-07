@@ -21,7 +21,7 @@ import type {StyleSheet} from 'reactive-di/interfaces/component'
 import {Component} from 'fake-react'
 import {Di, Updater} from 'reactive-di/index'
 
-import createReactWidgetFactory from 'reactive-di/adapters/createReactWidgetFactory'
+import ReactComponentFactory from 'reactive-di/adapters/ReactComponentFactory'
 
 function render(raw) {
     return renderIntoDocument(React.createElement(raw))
@@ -105,17 +105,17 @@ describe('LifeCycleInDepsTest', () => {
         deps({m: ModelA})(ComponentB)
         component()(ComponentB)
 
-        const di = new Di(createReactWidgetFactory(React))
+        const di = new Di(new ReactComponentFactory(React))
 
         const ComponentAEl = di.wrapComponent(ComponentA)
         const ComponentBEl = di.wrapComponent(ComponentB)
         const componentA = render(ComponentAEl)
-        console.log(findDOMNode(componentA).textContent)
         assert(findDOMNode(componentA).textContent === 'testA-1')
 
         const componentB = render(ComponentBEl)
         assert(findDOMNode(componentB).textContent === 'testB-1')
         assert(onUpdate.notCalled)
+        assert(onMount.calledOnce)
 
         return promise.then(() => {
             const componentA2 = render(ComponentAEl)

@@ -1,7 +1,8 @@
 // @flow
 
 import Di from 'reactive-di/core/Di'
-import createReactWidgetFactory from 'reactive-di/adapters/createReactWidgetFactory'
+import {isComponent} from 'reactive-di/core/common'
+import ReactComponentFactory from 'reactive-di/adapters/ReactComponentFactory'
 import BaseModel from 'reactive-di/utils/BaseModel'
 import Updater, {UpdaterStatus} from 'reactive-di/core/Updater'
 import type {IDi} from 'reactive-di/interfaces/internal'
@@ -17,8 +18,8 @@ export type {
     SrcComponent,
     StyleSheet,
     RawStyleSheet,
+    ComponentFactory,
     CreateStyleSheet,
-    CreateWidget,
     IComponentControllable
 } from 'reactive-di/interfaces/component'
 
@@ -29,8 +30,9 @@ export type {
 
 export {
     Di,
+    isComponent,
     Updater,
     UpdaterStatus,
     BaseModel,
-    createReactWidgetFactory
+    ReactComponentFactory
 }

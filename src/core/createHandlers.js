@@ -1,7 +1,7 @@
 // @flow
 
 import type {IHandler} from 'reactive-di/core/common'
-import type {CreateStyleSheet, CreateWidget} from 'reactive-di/interfaces/component'
+import type {CreateStyleSheet} from 'reactive-di/interfaces/component'
 
 import SourceHandler from 'reactive-di/handlers/SourceHandler'
 import DerivableHandler from 'reactive-di/handlers/DerivableHandler'

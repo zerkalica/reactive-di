@@ -20,7 +20,7 @@ import {Component} from 'fake-react'
 import Di from 'reactive-di/core/Di'
 import BaseModel from 'reactive-di/utils/BaseModel'
 
-import createReactWidgetFactory from 'reactive-di/adapters/createReactWidgetFactory'
+import ReactComponentFactory from 'reactive-di/adapters/ReactComponentFactory'
 
 import {renderIntoDocument} from 'react-addons-test-utils'
 import {findDOMNode} from 'react-dom'
@@ -55,7 +55,7 @@ describe('ComponentTest', () => {
         deps({m: ModelA})(TestComponent)
         component()(TestComponent)
 
-        const di = new Di(createReactWidgetFactory(React))
+        const di = new Di(new ReactComponentFactory(React))
 
         const TestComponentEl = di.wrapComponent(TestComponent)
         const componentA = render(TestComponentEl)
