@@ -25,7 +25,8 @@
     "testonly": "mocha",
     "test": "npm run lint && npm run check && npm run testonly",
     "test.dev": "npm run testonly -- --growl --watch",
-    "test.cov": "babel-istanbul cover --report text --report html node_modules/mocha/bin/_mocha"
+    "test.cov": "babel-istanbul cover --report text --report html node_modules/mocha/bin/_mocha",
+    "start": "webpack-dev-server --config examples/app/webpack.config.es5.js --hot --history-api-fallback --inline"
   },
   "author": "Stefan Zerkalica <zerkalica@gmail.com>",
   "license": "MIT",
@@ -61,6 +62,7 @@
   "devDependencies": {
     "babel-cli": "^6.14.0",
     "babel-core": "^6.14.0",
+    "babel-loader": "^6.2.5",
     "babel-plugin-espower": "^2.3.1",
     "babel-plugin-module-resolver": "^2.2.0",
     "babel-plugin-syntax-decorators": "^6.13.0",
@@ -73,13 +75,18 @@
     "babel-preset-stage-0": "^6.5.0",
     "fake-react": "^1.1.0",
     "glob": "^7.0.6",
+    "html-webpack-plugin": "^2.22.0",
     "jsdom": "^9.5.0",
+    "jss": "^5.5.1",
+    "jss-camel-case": "^2.0.0",
     "mocha": "^3.0.2",
     "power-assert": "^1.4.1",
     "react": "^15.3.1",
     "react-addons-test-utils": "^15.3.1",
     "react-dom": "^15.3.1",
-    "sinon": "^1.17.5"
+    "sinon": "^1.17.5",
+    "webpack": "^1.13.2",
+    "webpack-dev-server": "^1.15.1"
   },
   "dependencies": {
     "babel-preset-react": "^6.11.1",

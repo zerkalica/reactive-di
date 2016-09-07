@@ -44,53 +44,105 @@ Compile with [babel metadata plugin](https://github.com/zerkalica/babel-plugin-t
 import React from 'react'
 import ReactDOM from 'react-dom'
 import jss from 'jss'
+import jssCamel from 'jss-camel-case'
 
-import {Updater, UpdaterStatus, Di, createHandlers, createReactWidgetFactory} from 'reactive-di'
-import {theme, component, updaters, source} from 'reactive-di/annotations'
-import {Component} from 'fake-react'
+import {Updater, UpdaterStatus, Di, ReactComponentFactory} from 'reactive-di/index'
+import {hooks, theme, component, updaters, source} from 'reactive-di/annotations'
+
+const userFixture = {
+    id: 1,
+    name: 'John Doe',
+    email: 'john@example.com'
+}
 
 // Fetcher service, could be injected from outside by key 'Fetcher' as is
 @source({key: 'Fetcher', construct: false})
 class Fetcher {
     fetch<V>(url: string): Promise<V> {
         // fake fetcher for example
-        return Promise.resolve((({name: string}): UserRec))
+        return Promise.resolve((userFixture: any))
     }
 }
-
-// Create updater qeue for ThemeVars loader
-class ThemeVarsUpdater extends Updater {}
 
 // Create separate updater qeue for user
 class UserUpdater extends Updater {}
 
-// Get and combine pending/complete/error status from updater
-@updaters(UserUpdater, ThemeVarsUpdater)
-class SomeUpdaterStatus extends UpdaterStatus {}
+@source({key: 'User'})
+class User {
+    static Updater: Class<Updater> = UserUpdater
 
-// Invokes once at User resolving, if no 'User' value specified at di.values(), calls Updater and fetch data
-function userLoader(fetcher: Fetcher): () => Promise<$Shape<User>> {
-    return () => fetcher.fetch('/user')
-}
+    id: number
+    name: string
+    email: string
 
-// Model User, could be injected from outside by key 'User' as UserRec
-@source({key: 'User', updater: UserUpdater, loader: userLoader})
-class User  {
-    name: string;
-    constructor(r?: $Shape<User> = {}) {
-        this.name = r.name || 'unknown'
+    constructor(rec: Object) {
+        this.id = rec.id
+        this.name = rec.name
+        this.email = rec.email
     }
 }
 
-function themeVarsLoader(fetcher: Fetcher): () => Promise<$Shape<ThemeVars>> {
-    return () => fetcher.fetch('/theme-vars')
+@hooks(User)
+class UserHooks {
+    _updater: Updater
+    _fetcher: Fetcher
+
+    constructor(fetcher: Fetcher, updater: Updater) {
+        this._fetcher = fetcher
+        this._updater = updater
+    }
+
+    onMount(user: User): void {
+        this._updater.setSingle(
+            () => this._fetcher.fetch('/user'),
+            User
+        )
+    }
+
+    onUnmount(user: User): void {
+        this._updater.cancel()
+    }
 }
 
+class UserServiceUpdater extends Updater {}
+class UserService {
+    static Updater: Class<Updater> = UserServiceUpdater
+    _updater: Updater
+    _fetcher: Fetcher
+    _user: User
+
+    constructor(
+        fetcher: Fetcher,
+        updater: Updater,
+        user: User
+    ) {
+        this._fetcher = fetcher
+        this._updater = updater
+        this._user = user
+    }
+
+    submit: () => void = () => {
+        this._updater.set([
+
+        ])
+    }
+
+    changeColor: () => void = () => {
+        this._updater.setSingle({color: 'green'}, ThemeVars)
+    }
+}
+
+@updaters(User.Updater, UserService.Updater)
+class LoadingUpdaterStatus extends UpdaterStatus {}
+
+@updaters(UserService.Updater)
+class SavingUpdaterStatus extends UpdaterStatus {}
+
 // Model ThemeVars, could be injected from outside by key 'ThemeVars' as ThemeVarsRec
-@source({key: 'ThemeVars', updater: ThemeVarsUpdater, loader: themeVarsLoader})
+@source({key: 'ThemeVars'})
 class ThemeVars {
     color: string
-    constructor(r?: $Shape<ThemeVars> = {}) {
+    constructor(r?: Object = {}) {
         this.color = r.color || 'red'
     }
 }
@@ -107,27 +159,15 @@ class UserComponentTheme {
     constructor(vars: ThemeVars) {
         this.__css = {
             wrapper: {
-                'background-color': `rgb(${vars.color}, 0, 0)`
+                backgroundColor: `rgb(${vars.color}, 0, 0)`
             },
-            status {
-                'background-color': 'red'
+            status: {
+                backgroundColor: 'red'
             },
             name: {
-                'background-color': 'green'
+                backgroundColor: 'green'
             }
         }
-    }
-}
-
-class UserComponentActions {
-    _updater: ThemeVarsUpdater
-
-    constructor(updater: ThemeVarsUpdater) {
-        this._updater = updater
-    }
-
-    changeColor(): void {
-        this._updater.setSingle(new ThemeVars({color: 'green'}))
     }
 }
 
@@ -138,64 +178,49 @@ interface UserComponentProps {
 interface UserComponentState {
     theme: UserComponentTheme;
     user: User;
-    loading: SomeUpdaterStatus;
-    actions: UserComponentActions;
+    loading: LoadingUpdaterStatus;
+    saving: SavingUpdaterStatus;
+    service: UserService;
 }
 
-// Looks like react widget, flow compatible props
-@component({
-    register: [
-        UserComponentActions
-    ]
-})
-class UserComponent extends Component<UserComponentProps, UserComponentState> {
-    props: UserComponentProps;
-    state: UserComponentState;
-    $: HTMLElement;
-
-    // Babel plugin resolves dependencies from constructor
-    constructor(state: UserComponentState) {super()}
-
-    componentDidMount() {
-        // do something with this.$
+/* jsx-pragma h */
+function UserComponent(
+    {children}: UserComponentProps,
+    {theme, user, loading, saving, service}: UserComponentState,
+    h
+): mixed {
+    if (loading.pending) {
+        return <div class={theme.wrapper}>Loading...</div>
+    }
+    if (loading.error) {
+        return <div class={theme.wrapper}>Loading error: {loading.error.message}</div>
     }
 
-    render(): mixed {
-        const {
-            children
-        } = this.props
-        const {
-            theme,
-            user,
-            loading,
-            actions
-        } = this.state
-
-        return <div className={theme.wrapper}>
-            <span className={theme.status}>Loading status: {loading.type}</span>
-            <span className={theme.name}>Name: {user.name}</span>
-            {children}
-            <button onClick={actions.changeColor}</button>
-        </div>
-    }
+    return <div className={theme.wrapper}>
+        <span className={theme.name}>Name: {user.name}</span>
+        {children}
+        <button disabled={saving.pending} onClick={service.submit}>Save</button>
+        {saving.error
+            ? <div>Saving error: {saving.error.message}, <a href="#" onClick={saving.retry}>Retry</a></div>
+            : null
+        }
+    </div>
 }
+component()(UserComponent)
 
+jss.use(jssCamel)
 const node: HTMLElement = window.document.getElementById('app')
-const render = (widget: Class<Component>, attrs: ?Object) => ReactDOM.render(React.createElement(widget, attrs), node)
+const render = (widget: Function, attrs: ?Object) => ReactDOM.render(React.createElement(widget, attrs), node)
 
 const di = (new Di(
-    creaateHandlers(
-        createReactWidgetFactory(React.Component, ReactDOM.findDOMNode),
-        (styles) => jss.createStyleSheet(styles)
-    )
+    new ReactComponentFactory(React),
+    (styles) => jss.createStyleSheet(styles)
 ))
     .values({
         Fetcher: new Fetcher()
     })
 
-di.val(UserComponent).react((uc: Class<UserComponent>) => {
-    render(uc)
-})
+render(di.wrapComponent(UserComponent))
 ```
 
 More docs and examples coming soon.
