@@ -9,7 +9,7 @@ import type {
 } from 'reactive-di/interfaces/component'
 import type {IContext} from 'reactive-di/interfaces/internal'
 import debugName from 'reactive-di/utils/debugName'
-import shallowEqual from 'reactive-di/utils/shallowEqual'
+import shallowEqual, {shallowStrictEqual} from 'reactive-di/utils/shallowEqual'
 
 type ReactElement = React$Element<any>
 type ReactComponent<Props, State> = React$Component<*, Props, State>
@@ -64,7 +64,7 @@ class ComponentMixin<State: Object, Props: Object> {
     }
 
     shouldComponentUpdate(nextProps: Object, nextState: Object): boolean {
-        return !shallowEqual(this.props, nextProps) || !shallowEqual(this.state, nextState)
+        return !shallowEqual(this.props, nextProps) || !shallowStrictEqual(this.state, nextState)
     }
 
     render(): any {

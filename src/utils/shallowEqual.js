@@ -1,29 +1,45 @@
 // @flow
 
+export function shallowStrictEqual(objA: Object, objB: Object): boolean {
+    if (objA === objB) {
+        return true
+    }
+
+    if ((!objA && objB) || (objA && !objB)) {
+        return false
+    }
+
+    let k: string
+    for (k in objA) {
+        if (objA[k] !== objB[k]) {
+            return false
+        }
+    }
+    return true
+}
+
 export default function shallowEqual(objA: Object, objB: Object): boolean {
     if (objA === objB) {
         return true
     }
 
-    if (typeof objA !== 'object' || objA === null ||
-        typeof objB !== 'object' || objB === null) {
+    if (!objA && objB || objA && !objB) {
         return false
     }
 
-    var keysA = Object.keys(objA)
-    var keysB = Object.keys(objB)
+    let k: string
 
-    if (keysA.length !== keysB.length) {
-        return false
-    }
-
-    // Test for A's keys different from B.
-    var bHasOwnProperty = Object.prototype.hasOwnProperty.bind(objB)
-    for (var i = 0; i < keysA.length; i++) {
-        if (!bHasOwnProperty(keysA[i]) || objA[keysA[i]] !== objB[keysA[i]]) {
+    let numA: number = 0
+    let numB: number = 0
+    for (k in objA) {
+        numA++
+        if (objA[k] !== objB[k]) {
             return false
         }
     }
+    for (k in objB) {
+        numB++
+    }
 
-    return true
+    return numA === numB
 }
