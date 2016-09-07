@@ -10,7 +10,7 @@ import CustomReflect from 'reactive-di/CustomReflect'
 import Updater from 'reactive-di/core/Updater'
 
 export const paramTypesKey: string = 'design:paramtypes'
-export const functionTypesKey: string = 'design:function'
+export const subtypeKey: string = 'design:subtype'
 export const metaKey: string = 'rdi:meta'
 export const lcKey: string = 'rdi:lcs'
 
@@ -25,7 +25,7 @@ export class ComponentMeta {
     type: 'component' = 'component'
     register: ?RegisterDepItem[]
 
-    constructor(rec: ComponentMetaRec) {
+    constructor(rec?: ComponentMetaRec = {}) {
         this.register = rec.register && rec.register.length ? rec.register : null
     }
 }
@@ -150,8 +150,16 @@ export class DepInfo<V, M> {
         this.name = debugName(key)
         this.lc = gm(lcKey, target) || null
         this.deps = gm(paramTypesKey, target) || defaultArr
-        this.meta = gm(metaKey, target) || (defaultMeta: any)
-        this.isFactory = gm(functionTypesKey, target) || false
+
+        const meta = gm(metaKey, target)
+        const subType: ?string = gm(subtypeKey, target)
+        if (subType === 'jsx' && !meta) {
+            this.meta = (new ComponentMeta(): any)
+        } else {
+            this.meta = meta || (defaultMeta: any)
+        }
+        this.isFactory = subType === 'func'
+
         if (this.meta.type === 'theme') {
             this.lc = ThemeLifeCycle
         }

@@ -3,7 +3,7 @@ import CustomReflect from 'reactive-di/CustomReflect'
 import {
     paramTypesKey,
     metaKey,
-    functionTypesKey,
+    subtypeKey,
     lcKey,
 
     ComponentMeta,
@@ -29,7 +29,7 @@ export function deps<V: Function>(...args: ArgDep[]): (target: V) => V {
 }
 
 export function factory<V: Function>(target: V): V {
-    dm(functionTypesKey, true, target)
+    dm(subtypeKey, 'func', target)
     return target
 }
 
