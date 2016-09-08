@@ -19,7 +19,7 @@ export class ThemeMeta {
 }
 
 export interface ComponentMetaRec {
-    register?: ?RegisterDepItem[]
+    register?: RegisterDepItem[]
 }
 export class ComponentMeta {
     type: 'component' = 'component'
