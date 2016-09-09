@@ -188,9 +188,8 @@ interface UserComponentState {
 /* jsx-pragma h */
 function UserComponent(
     {children}: UserComponentProps,
-    {theme, user, loading, saving, service}: UserComponentState,
-    h
-): mixed {
+    {theme, user, loading, saving, service}: UserComponentState
+) {
     if (loading.pending) {
         return <div class={theme.wrapper}>Loading...</div>
     }
@@ -239,14 +238,11 @@ export interface ArgsInfo {
     propName: string;
 }
 export interface Middleware {
-    types?: string[];
     get?: <R>(value: R, info: ArgsInfo) => R;
     set?: <R>(oldValue: R, newValue: R, info: ArgsInfo) => R;
     exec?: <R>(resolve: (...args: any[]) => R, args: any[], info: ArgsInfo) => R;
 }
 ```
-
-Function factories calls:
 
 ```js
 // @flow
@@ -259,51 +255,7 @@ class Mdl1 {
 
         return result
     }
-}
 
-function createAdd(): (a: string) => {
-    return function add(a: string): string {
-        return a + 'b'
-    }
-}
-const di = (new Di()).middlewares([Mdl1])
-di.val(createAdd).get()('a')
-// begin function add
-// end add
-
-```
-
-Class method calls:
-
-```js
-// @flow
-import type {ArgsInfo} from 'reactive-di'
-class Mdl1 {
-    exec<R>(fn: (args: any[]) => R, args: any[], info: ArgsInfo): R {
-        console.log(`begin ${info.className ? 'method' : 'function'} ${info.id}`)
-        const result: R = fn(args)
-        console.log(`end ${info.id}`)
-
-        return result
-    }
-}
-class Service {
-    add(a: string): string {
-        return a + 'b'
-    }
-}
-const di = (new Di()).middlewares([Mdl1])
-di.val(Service).get().add('a')
-// begin method Service.add
-// end Service.add
-```
-
-Propery set/get:
-
-```js
-// @flow
-import type {ArgsInfo} from 'reactive-di'
-class Mdl1 {
     get<R>(result: R, info: ArgsInfo): R {
         console.log(`get ${info.id}: ${result}`)
         return result
@@ -315,17 +267,42 @@ class Mdl1 {
     }
 }
 
-const wrapper = new MiddlewareFactory([new Mdl1()])
+function createAdd(): (a: string) => {
+    return function add(a: string): string {
+        return a + 'b'
+    }
+}
+
+class Service {
+    add(a: string): string {
+        return a + 'b'
+    }
+}
+
+const di = (new Di()).middlewares([Mdl1])
+
+// Function factories calls:
+di.val(createAdd).get()('a')
+// begin function add
+// end add
+
+// Class method calls
+di.val(Service).get().add('a')
+// begin method Service.add
+// end Service.add
+
 class TestClass {
     a: string = '1'
 }
+
 const tc: TestClass = di.val(TestClass).get()
+
+// Propery set/get:
 tc.a
 // get TestClass.a: 1
 tc.a = '123'
 // TestClass.a changed from 1 to 213
 ```
-
 
 ## Manifest
 

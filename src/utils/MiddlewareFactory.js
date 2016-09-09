@@ -10,7 +10,6 @@ export interface ArgsInfo {
     propName: string;
 }
 export interface Middleware {
-    types?: string[];
     get?: <R>(value: R, info: ArgsInfo) => R;
     set?: <R>(oldValue: R, newValue: R, info: ArgsInfo) => R;
     exec?: <R>(resolve: (...args: any[]) => R, args: any[], info: ArgsInfo) => R;
