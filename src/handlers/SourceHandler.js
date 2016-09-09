@@ -4,19 +4,20 @@ import {DepInfo, SourceMeta, IHandler} from 'reactive-di/core/common'
 import type {Atom} from 'reactive-di/interfaces/atom'
 
 export default class SourceHandler {
-    handle<V, C: Class<V>>({
-        meta,
-        target,
-        ctx
-    }: DepInfo<C, SourceMeta>): Atom<V> {
+    handle<V, C: Class<V>>(di: DepInfo<C, SourceMeta>): Atom<V> {
         let atom: Atom<V>
+        const {
+            meta,
+            target,
+            ctx
+        } = di
         const value: any = ctx.defaults[meta.key]
         if (meta.construct) {
-            atom = ctx.adapter.atom(ctx.preprocess((new target(value): any)))
+            atom = ctx.adapter.atom(ctx.preprocess((new target(value): any), di))
         } else {
             atom = ctx.adapter.isAtom(value)
                 ? value
-                : ctx.adapter.atom(ctx.preprocess(value || (new target(): any)))
+                : ctx.adapter.atom(ctx.preprocess(value || (new target(): any), di))
         }
 
         return atom

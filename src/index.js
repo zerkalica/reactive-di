@@ -8,6 +8,11 @@ import Updater, {UpdaterStatus} from 'reactive-di/core/Updater'
 import type {IDi} from 'reactive-di/interfaces/internal'
 
 export type {
+    ArgsInfo,
+    Middleware
+} from 'reactive-di/utils/MiddlewareFactory'
+
+export type {
     RegisterDepItem,
     Key,
     ResultOf,

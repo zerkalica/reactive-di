@@ -23,7 +23,7 @@ export function fastCreateObject<T>(target: Class<T>, args: Array<any>): T {
     }
 }
 
-export function fastCallMethod<T>(obj: Object, fn: Function, args: Array<any>): T {
+export function fastCallMethod<T>(obj: ?Object, fn: Function, args: Array<any>): T {
     switch (args.length) {
         case 0:
             return fn.call(obj)

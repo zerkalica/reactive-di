@@ -22,18 +22,23 @@ export default class ThemeHandler {
         this._createSheet = createSheet
     }
 
-    handle<V>({
-        deps,
-        target,
-        ctx
-    }: DepInfo<V, ThemeMeta>): Atom<V> {
+    handle<V>(di: DepInfo<V, ThemeMeta>): Atom<V> {
+        const {
+            deps,
+            target,
+            ctx
+        } = di
         const depsAtom: Derivable<mixed[]> = ctx.resolveDeps(deps)
-        const createTheme = (args: mixed[]) => this._createTheme(target, args, ctx)
+        const createTheme = (args: mixed[]) => this._createTheme(args, di)
 
         return (depsAtom.derive(createTheme): any)
     }
 
-    _createTheme(target: Class<RawStyleSheet>, deps: mixed[], ctx: IContext): RawStyleSheet {
+    _createTheme(deps: mixed[], di: DepInfo<any, ThemeMeta>): RawStyleSheet {
+        const {
+            target,
+            ctx
+        } = di
         const theme: RawStyleSheet = fastCreateObject(target, deps)
         if (!theme.__css) {
             throw new Error(`Provide this.__css property with jss styles in theme ${ctx.debugStr(theme)}`)
@@ -42,7 +47,7 @@ export default class ThemeHandler {
         theme.__styles = Object.keys(styles.classes).length > 0 ? styles : fakeStyles
         Object.assign(theme, styles.classes)
 
-        return ctx.preprocess(theme)
+        return ctx.preprocess(theme, di)
     }
 }
 

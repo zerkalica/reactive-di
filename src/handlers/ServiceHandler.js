@@ -9,21 +9,22 @@ import debugName from 'reactive-di/utils/debugName'
 import {fastCall, fastCallMethod, fastCreateObject} from 'reactive-di/utils/fastCall'
 
 export default class ServiceHandler {
-    handle<V>({
-        deps,
-        isFactory,
-        target,
-        ctx
-    }: DepInfo<V, ServiceMeta>): Atom<V> {
+    handle<V>(di: DepInfo<V, ServiceMeta>): Atom<V> {
+        const {
+            deps,
+            isFactory,
+            ctx
+        } = di
         const depsAtom: Derivable<mixed[]> = ctx.resolveDeps(deps)
 
         return ctx.adapter.atom(isFactory
-            ? this._createDetachedFactory(target, depsAtom, ctx)
-            : this._createDatachedObject(target, depsAtom, ctx)
+            ? this._createDetachedFactory(depsAtom, di)
+            : this._createDatachedObject(depsAtom, di)
         )
     }
 
-    _createDatachedObject<V: Object>(target: Class<V>, depsAtom: Derivable<mixed[]>, ctx: IContext): V {
+    _createDatachedObject<V: Object>(depsAtom: Derivable<mixed[]>, di: DepInfo<any, ServiceMeta>): V {
+        const {target, ctx} = di
         const obj: V = fastCreateObject(target, depsAtom.get())
         function onServiceChange(deps: mixed[]): void {
             fastCallMethod(obj, target, deps)
@@ -33,10 +34,11 @@ export default class ServiceHandler {
             until: ctx.stopped
         })
 
-        return ctx.preprocess(obj)
+        return ctx.preprocess(obj, di)
     }
 
-    _createDetachedFactory<V: Function>(target: DepFn<V>, depsAtom: Derivable<mixed[]>, ctx: IContext): V {
+    _createDetachedFactory<V: Function>(depsAtom: Derivable<mixed[]>, di: DepInfo<any, ServiceMeta>): V {
+        const {target, ctx} = di
         let fn: DepFn<V> = fastCall(target, depsAtom.get())
         if (typeof fn !== 'function') {
             throw new Error(`Must be a function: ${ctx.debugStr(target)}`)
@@ -53,9 +55,9 @@ export default class ServiceHandler {
         function factory(...args: mixed[]): any {
             return fastCall(fn, args)
         }
-        factory.displayName = `${debugName(target)}#service`
+        factory.displayName = debugName(target)
 
-        return ctx.preprocess((factory: any))
+        return ctx.preprocess((factory: any), di)
     }
 }
 

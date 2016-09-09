@@ -13,9 +13,12 @@ import type {
     SingleUpdate,
     SingleAsyncUpdateResult
 } from 'reactive-di/interfaces/updater'
-import {cloneInstance} from 'reactive-di/utils/createProxy'
 import promiseToObservable from 'reactive-di/utils/promiseToObservable'
 import debugName from 'reactive-di/utils/debugName'
+
+function cloneInstance<Instance: Object>(target: Instance, props: $Shape<Instance>): Instance {
+    return new target.constructor({...target, ...props})
+}
 
 type NormalizedSyncUpdate = [Key, Object]
 

@@ -21,7 +21,7 @@ export interface IContext extends IDi {
     defaults: {[id: string]: mixed};
     resolveDeps(deps: ArgDep[]): Derivable<mixed[]>;
     debugStr(data: mixed): string;
-    preprocess<V: any>(data: V): V;
+    preprocess<V: any>(data: V, di: any): V;
 
     stop(): IContext;
     create(displayName: string): IContext;

@@ -19,6 +19,8 @@ Features:
 -   Optimistic updates with rollbacks
 -   About 2500 SLOC with tests, 1000 without
 -   Suitable for both node and the browser
+-   Middlewares for functions and class methods
+-   Lifehooks onUpdate, onMount, onUnmount supported for any dependencies
 
 ## Flow
 
@@ -26,13 +28,13 @@ Features:
 
 ## Basic entities
 
--   source(key, init, construct) - atom source: model with data or service, can be injected from outside and changed in runtime.
+-   source({key, construct}) - atom source: model with data or service, can be injected from outside and changed in runtime.
 -   factory - mark function factory, if not used [babel metadata plugin](https://github.com/zerkalica/babel-plugin-transform-metadata)
 -   deps(...deps: mixed[]) - declare dependencies, if not used [babel metadata plugin](https://github.com/zerkalica/babel-plugin-transform-metadata)
--   component(...deps: Function[]) - any visual component
+-   component({register: Function[]}(target) - any visual component
 -   theme - jss-like style
 -   updater(...updaters: Updater[]) - create loading status from updater services
--   service - for optimisations, do not recalculate, if dependencies changed, only call constructor with new deps
+-   service - for optimizations, do not recalculate, if dependencies changed, only call constructor with new deps
 
 
 ## Complete example
@@ -223,36 +225,124 @@ const di = (new Di(
 render(di.wrapComponent(UserComponent))
 ```
 
-More docs and examples coming soon.
+## Middlewares
 
-### factory
+Middlewares used for development for logging method calls and property get/set.
 
-### deps
+```js
+// @flow
 
-### service
+export interface ArgsInfo {
+    id: string;
+    type: string;
+    className: ?string;
+    propName: string;
+}
+export interface Middleware {
+    types?: string[];
+    get?: <R>(value: R, info: ArgsInfo) => R;
+    set?: <R>(oldValue: R, newValue: R, info: ArgsInfo) => R;
+    exec?: <R>(resolve: (...args: any[]) => R, args: any[], info: ArgsInfo) => R;
+}
+```
 
-### source
+Function factories calls:
 
-### updaters
+```js
+// @flow
+import type {ArgsInfo, Middleware} from 'reactive-di'
+class Mdl1 {
+    exec<R>(fn: (args: any[]) => R, args: any[], info: ArgsInfo): R {
+        console.log(`begin ${info.className ? 'method' : 'function'} ${info.id}`)
+        const result: R = fn(args)
+        console.log(`end ${info.id}`)
 
-### theme
+        return result
+    }
+}
 
-### component
+function createAdd(): (a: string) => {
+    return function add(a: string): string {
+        return a + 'b'
+    }
+}
+const di = (new Di()).middlewares([Mdl1])
+di.val(createAdd).get()('a')
+// begin function add
+// end add
+
+```
+
+Class method calls:
+
+```js
+// @flow
+import type {ArgsInfo} from 'reactive-di'
+class Mdl1 {
+    exec<R>(fn: (args: any[]) => R, args: any[], info: ArgsInfo): R {
+        console.log(`begin ${info.className ? 'method' : 'function'} ${info.id}`)
+        const result: R = fn(args)
+        console.log(`end ${info.id}`)
+
+        return result
+    }
+}
+class Service {
+    add(a: string): string {
+        return a + 'b'
+    }
+}
+const di = (new Di()).middlewares([Mdl1])
+di.val(Service).get().add('a')
+// begin method Service.add
+// end Service.add
+```
+
+Propery set/get:
+
+```js
+// @flow
+import type {ArgsInfo} from 'reactive-di'
+class Mdl1 {
+    get<R>(result: R, info: ArgsInfo): R {
+        console.log(`get ${info.id}: ${result}`)
+        return result
+    }
+
+    set<R>(oldValue: R, newValue: R, info: ArgsInfo): R {
+        console.log(`${info.id} changed from ${oldValue} to ${newValue}`)
+        return newValue
+    }
+}
+
+const wrapper = new MiddlewareFactory([new Mdl1()])
+class TestClass {
+    a: string = '1'
+}
+const tc: TestClass = di.val(TestClass).get()
+tc.a
+// get TestClass.a: 1
+tc.a = '123'
+// TestClass.a changed from 1 to 213
+```
+
 
 ## Manifest
 
--   DI as a glue, metaframework, abstraction from any framework, like react, angular, etc
+-   DI as an abstraction from any react-like framework, which supports createElement
 -   Each dependency resolved by class definition to atom or derivable
 -   Each dependency can be redefined at entry point
 -   Avoid use use atoms, promises, observables, rxjs and another wrappers in you business code (except data fetching layer) - move them to DI. Keep business code clean.
 -   Do not use interfaces as dependency key - use abstract classes or real classes (you can redefine them at entry point)
 -   Most of widgets has an own context - state, do not pass properties from hi-order to low-order, bind as dependency
 -   Minimum pure stateless widgets - only for low-level primitives
--   Widget class must be flow-compatible (autocomplete props)
--   Hooks componentDidMount and etc - only for raw dom manipulation, move data-loading to state/action layer
+-   Widget must be flow-compatible (autocomplete props)
+-   Hooks is separated class - as in cyclejs
 -   No difference between html or css - all controlled via state, do not use cssmodules, sass, less, stylus - all them are static, use js classes or functions with all OOP features: interfaces, compositions.
 -   JSX and CSSX better than template strings for parsing and ast manipulations
--   DI abstraction powerfull, redux is unnecessary. Use interceptors instead of middlewares, use atoms instead of reducers, use di-injected functions or classes instead of ugly dispatcher + action struct.
+-   Do not use redux-like actions, use functions or service classes. Di abstracts them from its realization. Di provide middlewares for them.
+-   Do not use redux-like dispatchers: di automatically thunkify all functions.
+-   Do not use redux-like stores: In di each store case block presented as pure function or service method with context.
 
 ## Credits
 

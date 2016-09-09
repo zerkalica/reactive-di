@@ -19,6 +19,8 @@ import MetaRegistry from 'reactive-di/core/MetaRegistry'
 import Updater from 'reactive-di/core/Updater'
 import Collector from 'reactive-di/core/Collector'
 import ComponentControllable from 'reactive-di/core/ComponentControllable'
+import type {Middleware} from 'reactive-di/utils/MiddlewareFactory'
+import MiddlewareFactory from 'reactive-di/utils/MiddlewareFactory'
 
 const dummyComponentFactory: ComponentFactory = {
     createElement(arg) {
@@ -42,6 +44,7 @@ export default class Di {
     _componentFactory: ComponentFactory
     _path: string[] = []
     _createElement: CreateElement<*, *>
+    _mdlFactory: ?MiddlewareFactory
 
     constructor(
         componentFactory?: ?ComponentFactory,
@@ -51,10 +54,12 @@ export default class Di {
         adapter?: Adapter,
         metaRegistry?: MetaRegistry,
         displayName?: string,
-        collector?: Collector<InternalLifeCycle<*>>
+        collector?: Collector<InternalLifeCycle<*>>,
+        mdlFactory?: ?MiddlewareFactory
     ) {
         this._componentFactory = componentFactory || dummyComponentFactory
         this.displayName = displayName || 'rootDi'
+        this._mdlFactory = mdlFactory
         this.adapter = adapter || derivableAtomAdapter
         this._handlers = handlers || createHandlers(createStyleSheet)
         this._metaRegistry = metaRegistry || new MetaRegistry()
@@ -100,8 +105,22 @@ export default class Di {
             this.adapter,
             this._metaRegistry.copy(),
             displayName,
-            this._collector
+            this._collector,
+            this._mdlFactory
         )).values(this.defaults)
+    }
+
+    middlewares(registered: ArgDep[]): IContext {
+        if (!registered) {
+            return this
+        }
+        const middlewares: Middleware[] = this.resolveDeps(registered).get()
+        // middlewares is services, not derivable
+        this._mdlFactory = this._mdlFactory
+            ? this._mdlFactory.copy(middlewares)
+            : new MiddlewareFactory(middlewares)
+
+        return this
     }
 
     wrapComponent<Component>(key: Function): Component {
@@ -173,7 +192,7 @@ export default class Di {
                 throw new Error(`Handler not found for type: ${ctx.debugStr(meta.type)}`)
         }
 
-        const value: Atom<V> = handler.handle(info)
+        let value: Atom<V> = handler.handle(info)
         info.value = value
 
         let lc: ?InternalLifeCycle<V>
@@ -191,16 +210,18 @@ export default class Di {
         return value
     }
 
-
     debugStr(sub: ?mixed): string {
         return `${debugName(sub)} [${this._path.join('.')}]`
     }
 
-    preprocess(entity: any): any {
-        if (entity && typeof entity === 'object') {
-            entity.__di = this.displayName
+    preprocess(value: any, {meta}: DepInfo<*, *>): any {
+        if (this._mdlFactory) {
+            value = this._mdlFactory.wrap(value, meta.type)
         }
-        return entity
+        if (value && typeof value === 'object') {
+            value.__di = this.displayName
+        }
+        return value
     }
 
     resolveDeps(deps: ArgDep[], lcs?: InternalLifeCycle<*>[]): Derivable<mixed[]> {
