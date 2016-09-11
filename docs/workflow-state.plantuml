@@ -1,0 +1,27 @@
+@startuml
+
+Component: render,\nmount,\nunmount
+Hooks: onMount\nonUnmount\nonUpdate
+Theme: attach css to dom\non mount/unmount
+Action: Function or class method.\nValidate, fetch,\ncall Updater. <<Action>>
+Updater: Transactional state updates.\nRollbacks.\nPromise resolving.
+Source: immutable observable model
+Computed: dependencies,\ndescribed in component state interface
+UpdaterStatus: Combine fetch status from many Updaters.
+Loader: Invoke updater on onMount
+
+Component ..> Hooks: on mount, unmount\n
+Hooks --> Theme
+Theme --> Computed: provide class names
+Computed --> Component: component state
+
+Source-->Computed: data
+Hooks-->Loader: on mount
+Action-->Updater: new Source() or \nPromise<Source>
+Updater-->Source: new data
+Updater-->UpdaterStatus: loader status
+UpdaterStatus-->Computed: loading status
+Loader-->Updater: invoke
+Component-->Action: user events
+
+@enduml

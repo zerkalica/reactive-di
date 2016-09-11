@@ -24,7 +24,7 @@ Features:
 
 ## Flow
 
-<img src="docs/flow.png" alt="reactive-di flow diagram" />
+<img src="https://rawgithub.com/zerkalica/reactive-di/master/docs/workflow-state.svg" alt="reactive-di flow diagram" />
 
 ## Basic entities
 
