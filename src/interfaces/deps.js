@@ -12,8 +12,18 @@ export type ResultOf<F> = _ResultOf<*, F>
 type _ResultOf<V, F: (...x: any[]) => V> = V
 
 export interface LifeCycle<Dep> {
+    /**
+    * Called on first mount of any component, which uses description
+     */
     onMount?: (dep: Dep) => void;
+
+    /**
+    * Called on last unmount of any component, which uses description
+     */
     onUnmount?: (dep: Dep) => void;
-    onAfterUpdate?: (dep: Dep) => void;
+
+    /**
+     * Called on Dep dependencies changes
+     */
     onUpdate?: (oldDep: Dep, newDep: Dep) => void;
 }
