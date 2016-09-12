@@ -71,13 +71,34 @@ export default class Di {
     }
 
     _getCreateElement(): CreateElement<*, *> {
-        const createElement = this._componentFactory.createElement
+        const ce = this._componentFactory.createElement
 
-        const createWrappedElement = (tag: Function, props?: ?{[id: string]: mixed}, ...children: any) => createElement(
-            this.wrapComponent(tag),
-            props,
-            children.length ? children : null
-        )
+        const createWrappedElement = (
+            tag: Function,
+            props?: ?{[id: string]: mixed},
+            ...ch: any
+        ) => {
+            switch (ch.length) {
+                case 0:
+                    return ce(this.wrapComponent(tag), props)
+                case 1:
+                    return ce(this.wrapComponent(tag), props, ch[0])
+                case 2:
+                    return ce(this.wrapComponent(tag), props, ch[0], ch[1])
+                case 3:
+                    return ce(this.wrapComponent(tag), props, ch[0], ch[1], ch[2])
+                case 4:
+                    return ce(this.wrapComponent(tag), props, ch[0], ch[1], ch[2], ch[3])
+                case 5:
+                    return ce(this.wrapComponent(tag), props, ch[0], ch[1], ch[2], ch[3], ch[4])
+                case 6:
+                    return ce(this.wrapComponent(tag), props, ch[0], ch[1], ch[2], ch[3], ch[4], ch[5])
+                case 7:
+                    return ce(this.wrapComponent(tag), props, ch[0], ch[1], ch[2], ch[3], ch[4], ch[5], ch[6])
+                default:
+                    return ce(this.wrapComponent(tag), props, ...ch)
+            }
+        }
 
         return createWrappedElement
     }

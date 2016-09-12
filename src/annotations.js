@@ -29,14 +29,15 @@ export function deps<V: Function>(...args: ArgDep[]): (target: V) => V {
     }
 }
 
-export function factory<V: Function>(target: V): V {
-    dm(subtypeKey, 'func', target)
+export function factory<V: Function>(target: V, isJsx?: boolean): V {
+    dm(subtypeKey, isJsx ? 'jsx' : 'func', target)
     return target
 }
 
 export function component<V: Function>(rec?: ComponentMetaRec): (target: V) => V {
     return (target: V) => {
         dm(metaKey, new ComponentMeta(rec || {}), target)
+        dm(subtypeKey, 'jsx', target)
         return target
     }
 }
