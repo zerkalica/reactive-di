@@ -6,6 +6,7 @@ import ReactComponentFactory from 'reactive-di/adapters/ReactComponentFactory'
 import BaseModel from 'reactive-di/utils/BaseModel'
 import Updater, {UpdaterStatus} from 'reactive-di/core/Updater'
 import type {IDi} from 'reactive-di/interfaces/internal'
+import bindObservableToAtom from 'reactive-di/utils/bindObservableToAtom'
 
 export type {
     ArgsInfo,
@@ -39,5 +40,6 @@ export {
     Updater,
     UpdaterStatus,
     BaseModel,
-    ReactComponentFactory
+    ReactComponentFactory,
+    bindObservableToAtom
 }
