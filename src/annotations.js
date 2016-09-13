@@ -71,11 +71,11 @@ export function abstract<V: Function>(target: V): V {
     return target
 }
 
-export function hooks<V: Function>(target: V): (lc: Class<LifeCycle<*>>) => V {
+export function hooks<V: Function>(target: V): (lc: Class<LifeCycle<*>>) => Class<LifeCycle<*>> {
     return (lc: Class<LifeCycle<*>>) => {
         dm(lcKey, lc, target)
         dm(metaKey, new ServiceMeta(), lc)
-        return target
+        return lc
     }
 }
 
