@@ -17,7 +17,7 @@ export default class MetaRegistry {
         this._context = context
         const key: Function = context.constructor
         const di = new DepInfo(key, key, context)
-        di.value = context
+        di.value = (context: any)
         this._metaMap.set(key, di)
         return this
     }
@@ -31,11 +31,9 @@ export default class MetaRegistry {
             return
         }
         const ctx = this._context
-
         const metaMap = this._metaMap
         let key: Key
         let target: Function
-        let di: ?IContext
         for (let i = 0, l = registered.length; i < l; i++) {
             const pr: RegisterDepItem = registered[i]
             if (Array.isArray(pr)) {
@@ -55,13 +53,14 @@ export default class MetaRegistry {
                 target = pr
             }
 
-            if (target !== key && isAbstract(key)) {
+            if (key !== target) {
                 const rec: ?DepInfo<*, *> = metaMap.get(target)
-                di = (rec ? rec.ctx : null) || ctx
+                const depInfo = new DepInfo(target, key, (rec ? rec.ctx : null) || ctx)
+                metaMap.set(key, depInfo)
+                metaMap.set(target, depInfo)
             } else {
-                di = ctx
+                metaMap.set(key, new DepInfo(target, key, ctx))
             }
-            metaMap.set(key, new DepInfo(target, key, di))
         }
     }
 

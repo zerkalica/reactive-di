@@ -48,6 +48,7 @@ class ComponentMixin<State: Object, Props: Object> {
 
         const state: ?State = this.state = controllable.getState()
         this._target = ctx.info.target
+        this._controllable.onWillMount((this: any))
     }
 
     componentDidMount() {
@@ -55,7 +56,7 @@ class ComponentMixin<State: Object, Props: Object> {
     }
 
     componentDidUpdate(props: Props, state: State): void {
-        this._controllable.onUpdate()
+        this._controllable.onUpdate((this: any))
     }
 
     componentWillUnmount(): void {

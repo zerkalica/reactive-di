@@ -89,7 +89,7 @@ export default class ComponentControllable<State: Object, Component> {
                     for (let i = 2, l = arguments.length; i < l; i++) {
                         args.push(arguments[i])
                     }
-                    return createElement.apply(undefined, arguments)
+                    return createElement.apply(undefined, args)
             }
         }
         ce.displayName = `h#${context.displayName}`
@@ -133,6 +133,19 @@ export default class ComponentControllable<State: Object, Component> {
             lc.onMount()
         }
         this._cls.onMount()
+    }
+
+    onWillMount(component: Component): void {
+        if (this._isDisposed.get()) {
+            throw new Error(`componentDidMount called after componentWillUnmount: ${this.displayName}`)
+        }
+        this._isMounted.set(true)
+        const lcs = this._lcs
+        for (let i = 0, l = lcs.length; i < l; i++) {
+            const lc = lcs[i]
+            lc.onWillMount()
+        }
+        this._cls.onWillMount()
     }
 }
 if (0) ((new ComponentControllable(...(0: any))): IComponentControllable<*, *>)

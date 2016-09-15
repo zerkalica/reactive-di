@@ -10,10 +10,13 @@ function mergeStatus(target: Class<UpdaterStatus>, updaters: UpdaterStatus[]): U
         const updater = updaters[i]
         if (updater.pending) {
             us.pending = true
+            us.complete = false
         }
         if (updater.error) {
             us.error = updater.error
             us.retry = updater.retry
+            us.complete = false
+            us.pending = false
             break
         }
     }

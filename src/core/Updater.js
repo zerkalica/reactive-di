@@ -49,6 +49,9 @@ class SingleUpdateBucket {
     asyncs: NormalizedAsyncUpdate[]
 
     constructor(rawUpdate: SingleUpdate, target: Key) {
+        if (!target) {
+            throw new Error('Target Class is not set for SingleUpdateBucket')
+        }
         if (Array.isArray(rawUpdate)) {
             if (rawUpdate.length !== 2) {
                 throw new Error(`Wrong update rec: need a tuple [SingleSyncUpdate, SingleAsyncUpdate]`)
@@ -235,7 +238,9 @@ class AsyncQeue {
     _removeSubscription(item: Subscription): void {
         this.size = this.size - 1
         this._subscriptions = this._subscriptions.filter((target) => target !== item)
-        this._run()
+        if (this.size) {
+            this._run()
+        }
     }
 
     cancel(): void {
@@ -268,7 +273,6 @@ class UpdaterObserver {
     ) {
         this._di = di
         this._rollbackOnError = rollbackOnError
-        this.displayName = `${di.displayName}#UpdaterObserver`
         this._adapter = di.adapter
         this._qeue = new AsyncQeue((this: Observer<UpdateBucket, OperationErrorRec>), maxSize)
         this.status = this._adapter.atom(new UpdaterStatus('complete'))
@@ -282,8 +286,7 @@ class UpdaterObserver {
     complete(updates: ?UpdateBucket): void {
         if (updates) {
             this.next(updates)
-        }
-        if (this._qeue.size === 0) {
+        } else if (this._qeue.size === 0) {
             this.status.set(new UpdaterStatus('complete'))
             this._pendingUpdates = []
         }
@@ -331,11 +334,24 @@ class UpdaterObserver {
         const pd = this._pendingUpdates
         for (let i = 0, l = updates.length; i < l; i++) {
             const rec = updates[i]
+            if (!Array.isArray(rec)) {
+                throw new Error('Wrong updates rec: must by an NormalizedSyncUpdate tuple')
+            }
+            const [key, props] = rec
+            if (!key) {
+                throw new Error('NormalizedSyncUpdate key can\'t be null')
+            }
+            if (!props) {
+                throw new Error('NormalizedSyncUpdate props can\'t be null')
+            }
             if (needRollback) {
                 pd.push(rec)
             }
-            const [key, props] = rec
             di.val(key).swap(cloneInstance, props)
+        }
+        if (!needRollback) {
+            this.status.set(new UpdaterStatus('complete'))
+            this._pendingUpdates = []
         }
     }
 }
@@ -351,13 +367,14 @@ export default class Updater {
     static rollbackOnError: boolean = false
 
     constructor(di: IContext) {
-        this.displayName = `${di.displayName}#Updater`
         const c = this.constructor
+        this.displayName = `${di.displayName}#${debugName(c)}`
         this._uo = new UpdaterObserver(
             di,
             c.maxSize,
             c.rollbackOnError
         )
+        this._uo.displayName = this.displayName + '#updater'
         this.status = this._uo.status
         const unsubscribeUpdater = (isStopped: boolean) => {
             if (isStopped) {

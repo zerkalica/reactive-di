@@ -13,12 +13,17 @@ type _ResultOf<V, F: (...x: any[]) => V> = V
 
 export interface LifeCycle<Dep> {
     /**
-    * Called on first mount of any component, which uses description
+    * Called before first mount of any component, works on server side
+     */
+    onWillMount?: (dep: Dep) => void;
+
+    /**
+    * Called on first mount of any component
      */
     onMount?: (dep: Dep) => void;
 
     /**
-    * Called on last unmount of any component, which uses description
+    * Called on last unmount of any component
      */
     onUnmount?: (dep: Dep) => void;
 

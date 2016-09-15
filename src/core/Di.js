@@ -44,7 +44,7 @@ export default class Di {
     _componentFactory: ComponentFactory
     _path: string[] = []
     _mdlFactory: ?MiddlewareFactory
-
+    static uniqId: number = 1
     constructor(
         componentFactory?: ?ComponentFactory,
         createStyleSheet?: ?CreateStyleSheet,
@@ -57,7 +57,7 @@ export default class Di {
         mdlFactory?: ?MiddlewareFactory
     ) {
         this._componentFactory = componentFactory || dummyComponentFactory
-        this.displayName = displayName || 'root'
+        this.displayName = (displayName || 'root') + String(Di.uniqId++)
         this._mdlFactory = mdlFactory
         this.adapter = adapter || derivableAtomAdapter
         this._handlers = handlers || createHandlers(createStyleSheet)
@@ -110,7 +110,7 @@ export default class Di {
     }
 
     wrapComponent<Component>(key: Function): Component {
-        if (!(key instanceof Function)) {
+        if (!isComponent(key)) {
             return (key: any)
         }
         const info: DepInfo<any, *> = this._metaRegistry.getMeta(key)

@@ -89,7 +89,7 @@ describe('InitializerTest', () => {
                 return (info.target: any)
             }
         }).register([Updater])
-        const C: Class<Component> = di.wrapComponent(Component)
+        const C: Class<Component> = di.wrapComponent((Component: any))
         const c = new C()
         return c
     }

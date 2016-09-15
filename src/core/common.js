@@ -108,6 +108,10 @@ export class InternalLifeCycle<V> {
         this._entity = newValue
     }
 
+    onWillMount() {
+        this._lc.onWillMount && this._lc.onWillMount(this._entity)
+    }
+
     onMount() {
         this._count++
         if (this._count === 1) {

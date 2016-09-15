@@ -47,7 +47,7 @@ describe('UpdaterStatusTest', () => {
         const di = new Di()
         const promise = Promise.resolve({val: 'testA'})
         assert(di.val(MyUpdaterStatus).get().complete)
-        di.val(MyUpdater1).get().setSingle(() => promise)
+        di.val(MyUpdater1).get().setSingle(() => promise, ModelA)
         assert(di.val(MyUpdaterStatus).get().pending)
 
         return promise.then(() => {
@@ -63,7 +63,7 @@ describe('UpdaterStatusTest', () => {
 
         const di = new Di()
         const promise = Promise.resolve({val: 'testA'})
-        di.val(MyUpdater1).get().setSingle(() => promise)
+        di.val(MyUpdater1).get().setSingle(() => promise, ModelA)
 
         const u: UpdaterStatus = di.val(MyUpdaterStatus).get()
         assert(u.pending)
@@ -81,13 +81,13 @@ describe('UpdaterStatusTest', () => {
 
         const di = new Di()
         const promiseA = Promise.resolve({val: 'testA'})
-        di.val(MyUpdater1).get().setSingle(() => promiseA)
+        di.val(MyUpdater1).get().setSingle(() => promiseA, ModelA)
 
         let resolveFn: Function
         const promiseB = new Promise(resolve => {
             resolveFn = resolve
         })
-        di.val(MyUpdater2).get().setSingle(() => promiseB)
+        di.val(MyUpdater2).get().setSingle(() => promiseB, ModelB)
 
         const u: UpdaterStatus = di.val(MyUpdaterStatus).get()
         assert(u.pending)

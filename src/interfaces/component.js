@@ -27,7 +27,8 @@ export interface IComponentControllable<State, Component> {
     getState(): ?State;
     onUnmount(): void;
     onMount(): void;
-    onUpdate(): void;
+    onUpdate(c: Component): void;
+    onWillMount(c: Component): void;
 }
 
 export type SetState<State> = (state: State) => void
