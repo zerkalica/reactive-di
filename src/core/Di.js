@@ -27,7 +27,7 @@ const dummyComponentFactory: ComponentFactory = {
         return arg
     },
     wrapComponent() {
-        throw new Error('Can\'t create widget: provide widget factory to di')
+        throw new Error('dummyComponentFactory, can\'t create widget: provide widget factory to di')
     }
 }
 
@@ -43,7 +43,6 @@ export default class Di {
     _collector: Collector<InternalLifeCycle<*>>
     _componentFactory: ComponentFactory
     _path: string[] = []
-    _createElement: CreateElement<*, *>
     _mdlFactory: ?MiddlewareFactory
 
     constructor(
@@ -58,7 +57,7 @@ export default class Di {
         mdlFactory?: ?MiddlewareFactory
     ) {
         this._componentFactory = componentFactory || dummyComponentFactory
-        this.displayName = displayName || 'rootDi'
+        this.displayName = displayName || 'root'
         this._mdlFactory = mdlFactory
         this.adapter = adapter || derivableAtomAdapter
         this._handlers = handlers || createHandlers(createStyleSheet)
@@ -67,40 +66,6 @@ export default class Di {
 
         this._metaRegistry.setContext(this)
         this.stopped = this.adapter.atom(false)
-        this._createElement = this._getCreateElement()
-    }
-
-    _getCreateElement(): CreateElement<*, *> {
-        const ce = this._componentFactory.createElement
-
-        const createWrappedElement = (
-            tag: Function,
-            props?: ?{[id: string]: mixed},
-            ...ch: any
-        ) => {
-            switch (ch.length) {
-                case 0:
-                    return ce(this.wrapComponent(tag), props)
-                case 1:
-                    return ce(this.wrapComponent(tag), props, ch[0])
-                case 2:
-                    return ce(this.wrapComponent(tag), props, ch[0], ch[1])
-                case 3:
-                    return ce(this.wrapComponent(tag), props, ch[0], ch[1], ch[2])
-                case 4:
-                    return ce(this.wrapComponent(tag), props, ch[0], ch[1], ch[2], ch[3])
-                case 5:
-                    return ce(this.wrapComponent(tag), props, ch[0], ch[1], ch[2], ch[3], ch[4])
-                case 6:
-                    return ce(this.wrapComponent(tag), props, ch[0], ch[1], ch[2], ch[3], ch[4], ch[5])
-                case 7:
-                    return ce(this.wrapComponent(tag), props, ch[0], ch[1], ch[2], ch[3], ch[4], ch[5], ch[6])
-                default:
-                    return ce(this.wrapComponent(tag), props, ...ch)
-            }
-        }
-
-        return createWrappedElement
     }
 
     stop(): IContext {
@@ -120,12 +85,12 @@ export default class Di {
 
     create(displayName: string): IContext {
         return (new Di(
-            null,
+            this._componentFactory,
             null,
             this._handlers,
             this.adapter,
             this._metaRegistry.copy(),
-            displayName,
+            this.displayName + '.' + displayName,
             this._collector,
             this._mdlFactory
         )).values(this.defaults)
@@ -145,18 +110,13 @@ export default class Di {
     }
 
     wrapComponent<Component>(key: Function): Component {
-        if (!isComponent(key)) {
+        if (!(key instanceof Function)) {
             return (key: any)
         }
         const info: DepInfo<any, *> = this._metaRegistry.getMeta(key)
         if (!info.value) {
-            const createElement = this._createElement
-            const createControllable = function _createControllable(setState: SetState<*>) {
-                return new ComponentControllable(info, setState, createElement)
-            }
             info.value = (this._componentFactory.wrapComponent(
-                info.target,
-                createControllable
+                info
             ): any)
         }
 
@@ -173,11 +133,6 @@ export default class Di {
             throw new Error(`Circular dependency detected: ${this.debugStr(key)}`)
         }
 
-        if (key === this.constructor) {
-            info.value = this.adapter.atom(((this: any): V))
-            collector.addCached(info.lcs)
-            return (info.value: any)
-        }
         const cache = this._metaRegistry
         const {ctx, target, meta, name} = info
         if (ctx !== this) {

@@ -1,6 +1,6 @@
 // @flow
 
-export function shallowStrictEqual(objA: Object, objB: Object): boolean {
+export function shallowStrictEqual(objA: ?Object, objB: Object): boolean {
     if (objA === objB) {
         return true
     }

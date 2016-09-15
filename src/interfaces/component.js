@@ -1,5 +1,6 @@
 // @flow
 import type {IContext} from 'reactive-di/interfaces/internal'
+import type {DepInfo} from 'reactive-di/core/common'
 
 export type StyleSheet = {
     attach(): void;
@@ -23,7 +24,6 @@ export type CreateElement<Component, Element> = (
 ) => Element
 
 export interface IComponentControllable<State, Component> {
-    createElement: CreateElement<Component, *>;
     getState(): ?State;
     onUnmount(): void;
     onMount(): void;
@@ -37,9 +37,5 @@ export type CreateControllable<State, Component> = (
 ) => IComponentControllable<State, Component>
 
 export interface ComponentFactory {
-    createElement: CreateElement<*, *>;
-    wrapComponent<Props, State>(
-        target: SrcComponent<Props, State>,
-        createControllable: CreateControllable<State, *>
-    ): mixed;
+    wrapComponent<Props, State>(info: DepInfo<SrcComponent<Props, State>, *>): mixed;
 }

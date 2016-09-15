@@ -18,6 +18,7 @@ import BaseModel from 'reactive-di/utils/BaseModel'
 import type {CreateControllable, IComponentControllable} from 'reactive-di/interfaces/component'
 import type {Derivable} from 'reactive-di/interfaces/atom'
 import type {SingleUpdate} from 'reactive-di/interfaces/updater'
+import ComponentControllable from 'reactive-di/core/ComponentControllable'
 
 describe('InitializerTest', () => {
     class BaseModel {
@@ -61,18 +62,21 @@ describe('InitializerTest', () => {
                 this._updater.cancel()
             }
         }
+
         @component()
         @deps({m: ModelA})
         class Component {
             m: ModelA
             ctl: IComponentControllable<*, *>
-            static createControllable: CreateControllable<*, *>
+            static info: any
 
             constructor() {
-                this.ctl = this.constructor.createControllable((state: Object) => {
-                    Object.assign(this, state)
-                })
+                // console.log(this.constructor.info)
+                this.ctl = new ComponentControllable(this.constructor.info, (state) => this.setState(state))
                 Object.assign(this, this.ctl.getState())
+            }
+            setState(state) {
+                Object.assign(this, state)
             }
         }
 
@@ -80,11 +84,11 @@ describe('InitializerTest', () => {
             createElement(h) {
                 return h
             },
-            wrapComponent(target: Function, createControllable: CreateControllable<any, any>): any {
-                target.createControllable = createControllable
-                return (target: any)
+            wrapComponent(info: any): any {
+                info.target.info = info
+                return (info.target: any)
             }
-        })
+        }).register([Updater])
         const C: Class<Component> = di.wrapComponent(Component)
         const c = new C()
         return c

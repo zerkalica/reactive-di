@@ -15,6 +15,10 @@ export default class MetaRegistry {
 
     setContext(context: IContext): MetaRegistry {
         this._context = context
+        const key: Function = context.constructor
+        const di = new DepInfo(key, key, context)
+        di.value = context
+        this._metaMap.set(key, di)
         return this
     }
 

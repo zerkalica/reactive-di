@@ -3,13 +3,15 @@ import type {
     ComponentFactory,
     CreateElement,
     SrcComponent,
-    CreateControllable,
     IComponentControllable,
+    CreateControllable,
     SetState
 } from 'reactive-di/interfaces/component'
 import type {IContext} from 'reactive-di/interfaces/internal'
 import debugName from 'reactive-di/utils/debugName'
 import shallowEqual, {shallowStrictEqual} from 'reactive-di/utils/shallowEqual'
+import ComponentControllable from 'reactive-di/core/ComponentControllable'
+import {DepInfo} from 'reactive-di/core/common'
 
 type ReactElement = React$Element<any>
 type ReactComponent<Props, State> = React$Component<*, Props, State>
@@ -19,8 +21,8 @@ type ReactCreateElement = CreateElement<any, ReactElement>
 type CreateReactControllable<Props, State> = CreateControllable<State, ReactComponentClass<Props, State>>
 
 interface StaticContext<Props, State> {
-    target: SrcComponent<Props, State>;
-    createControllable: CreateReactControllable<Props, State>;
+    info: DepInfo<SrcComponent<Props, State>, *>;
+    createElement: CreateElement<*, *>;
 }
 
 const dp = Object.defineProperty
@@ -29,10 +31,10 @@ class ComponentMixin<State: Object, Props: Object> {
     static __rdiCtx: StaticContext<Props, State>
     setState: (state: State) => void
 
-    state: State
+    state: ?State
     props: Props
 
-    _target: SrcComponent<Props, State>
+    _target: SrcComponent<Props, ?State>
     _controllable: IComponentControllable<State, ReactComponentClass<Props, State>>
     _createElement: ReactCreateElement
 
@@ -41,14 +43,11 @@ class ComponentMixin<State: Object, Props: Object> {
         const setState: SetState<State> = (state: State) => {
             return this.setState(state)
         }
-        const controllable = this._controllable = ctx.createControllable(setState, this)
-        this._createElement = controllable.createElement
+        const controllable = this._controllable = new ComponentControllable(ctx.info, setState)
+        this._createElement = controllable.contextify(ctx.createElement)
 
-        const state: ?State = controllable.getState()
-        if (state) {
-            this.state = state
-        }
-        this._target = ctx.target
+        const state: ?State = this.state = controllable.getState()
+        this._target = ctx.info.target
     }
 
     componentDidMount() {
@@ -88,22 +87,22 @@ interface React {
 
 export default class ReactComponentFactory {
     _Component: ReactComponentClass<*, *>
-    createElement: CreateElement<*, *>
+    _createElement: CreateElement<*, *>
 
     constructor({Component, createElement}: React) {
-        this.createElement = (createElement: any)
+        this._createElement = (createElement: any)
         this._Component = Component
     }
 
     wrapComponent<Props, State>(
-        target: SrcComponent<Props, State>,
-        createControllable: CreateReactControllable<Props, State>
+        info: DepInfo<SrcComponent<Props, State>, *>
     ): ReactComponentClass<Props, State> {
+        const createElement = this._createElement
         class WrappedComponent extends (this._Component: any)<Props, State> {
-            static displayName: string = `${debugName(target)}`
+            static displayName: string = `${debugName(info.target)}`
             static __rdiCtx: StaticContext<Props, State> = {
-                target,
-                createControllable
+                info,
+                createElement
             }
             state: State
             props: Props

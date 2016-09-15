@@ -28,12 +28,11 @@ export default class ComponentControllable<State: Object, Component> {
     _isOwnedContainer: boolean
     _isDisposed: Atom<boolean>
 
-    createElement: CreateElement<Component, *>
     _cls: ComponentLifeCycle<*>
+
     constructor<V>(
         {deps, meta, ctx, name, lc}: DepInfo<V, ComponentMeta>,
-        setState: (state: State) => void,
-        createElement: CreateElement<Component, *>
+        setState: (state: State) => void
     ) {
         this.displayName = name
         let container: IContext
@@ -45,7 +44,6 @@ export default class ComponentControllable<State: Object, Component> {
             this._isOwnedContainer = false
         }
         this._container = container
-        this.createElement = createElement
         const ad: Adapter = ctx.adapter
         this._isDisposed = ad.atom(false)
         this._isMounted = ad.atom(false)
@@ -61,6 +59,42 @@ export default class ComponentControllable<State: Object, Component> {
                     until: this._isDisposed
                 })
         }
+    }
+
+    contextify(createElement: CreateElement<*, *>): CreateElement<*, *> {
+        const context: IContext = this._container
+        function ce(
+            tag: any,
+            props?: ?{[id: string]: mixed}
+        ) {
+            switch (arguments.length) {
+                case 2:
+                    return createElement(context.wrapComponent(tag), props)
+                case 3:
+                    return createElement(context.wrapComponent(tag), props, arguments[2])
+                case 4:
+                    return createElement(context.wrapComponent(tag), props, arguments[2], arguments[3])
+                case 5:
+                    return createElement(context.wrapComponent(tag), props, arguments[2], arguments[3], arguments[4])
+                case 6:
+                    return createElement(context.wrapComponent(tag), props, arguments[2], arguments[3], arguments[4], arguments[5])
+                case 7:
+                    return createElement(context.wrapComponent(tag), props, arguments[2], arguments[3], arguments[4], arguments[5], arguments[6])
+                case 8:
+                    return createElement(context.wrapComponent(tag), props, arguments[2], arguments[3], arguments[4], arguments[5], arguments[6], arguments[7])
+                case 9:
+                    return createElement(context.wrapComponent(tag), props, arguments[2], arguments[3], arguments[4], arguments[5], arguments[6], arguments[7], arguments[8])
+                default:
+                    const args = [context.wrapComponent(tag), props]
+                    for (let i = 2, l = arguments.length; i < l; i++) {
+                        args.push(arguments[i])
+                    }
+                    return createElement.apply(undefined, arguments)
+            }
+        }
+        ce.displayName = `h#${context.displayName}`
+
+        return ce
     }
 
     getState(): ?State {

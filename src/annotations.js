@@ -79,11 +79,14 @@ export function hooks<V: Function>(target: V): (lc: Class<LifeCycle<*>>) => Clas
     }
 }
 
+let cloneNumber: number = 0
+
 export function cloneComponent<C: Function>(src: C, rec?: ComponentMetaRec): C {
     function target(arg1: any, arg2: any, arg3: any) {
         return src(arg1, arg2, arg3)
     }
-    target.displayName = src.displayName || src.name
+    target.displayName = (src.displayName || src.name) + '#clone-' + (cloneNumber || '0')
+    cloneNumber++
     Object.setPrototypeOf(target, src)
     if (rec) {
         dm(metaKey, new ComponentMeta(rec), target)
