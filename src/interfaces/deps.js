@@ -13,6 +13,11 @@ type _ResultOf<V, F: (...x: any[]) => V> = V
 
 export interface LifeCycle<Dep> {
     /**
+    * Called before dep update, if returned true - component updated
+     */
+    isEqual?: (oldDep: Dep, newDep: Dep) => boolean;
+
+    /**
     * Called before first mount of any component, works on server side
      */
     onWillMount?: (dep: Dep) => void;

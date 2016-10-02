@@ -21,6 +21,10 @@ export type {
 } from 'reactive-di/interfaces/deps'
 
 export type {
+    Atom
+} from 'reactive-di/interfaces/atom'
+
+export type {
     SrcComponent,
     StyleSheet,
     RawStyleSheet,

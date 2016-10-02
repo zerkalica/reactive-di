@@ -1,7 +1,7 @@
 // @flow
 
 import type {DepFn, Key, DepDict, ArgDep, DepAlias, RegisterDepItem, LifeCycle} from 'reactive-di/interfaces/deps'
-import type {Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
+import type {IsEqual, Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
 import type {IContext} from 'reactive-di/interfaces/internal'
 import type {RawStyleSheet} from 'reactive-di/interfaces/component'
 
@@ -94,13 +94,22 @@ export class InternalLifeCycle<V> {
     _entity: V
     _lc: LifeCycle<V>
 
+    isEqual: ?IsEqual<*>
+
     constructor(lc: LifeCycle<V>) {
         this._lc = lc
+        this.isEqual = lc.isEqual
+            ? (a: V, b: V) => {
+                // @todo remove b.equals after fixing https://github.com/ds300/derivablejs/issues/52
+                return b.equals ? true : (lc: any).isEqual(a, b)
+            }
+            : null
     }
 
     onUpdate: (newValue: V) => void = (newValue: V) => this._onUpdate(newValue)
 
     _onUpdate(newValue: V): void {
+        console.log(12312)
         const oldValue: V = this._entity
         if (oldValue && oldValue !== newValue) {
             this._lc.onUpdate && this._lc.onUpdate(oldValue, newValue)

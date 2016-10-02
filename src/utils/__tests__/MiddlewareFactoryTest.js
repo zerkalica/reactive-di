@@ -8,8 +8,8 @@ describe('MiddlewareFactoryTest', () => {
     describe('wrap functions', () => {
         it('should modify value', () => {
             class Mdl1 {
-                exec<R>(resolve: (args: any[]) => R, args: any[], info: ArgsInfo): R {
-                    const result: R = resolve(args)
+                exec(resolve: (args: any[]) => string, args: any[], info: ArgsInfo): any {
+                    const result: string = resolve(args)
                     // console.log(`${info.id} called`)
                     return result + 'c'
                 }
@@ -26,14 +26,14 @@ describe('MiddlewareFactoryTest', () => {
 
         it('should apply from last to first', () => {
             class Mdl1 {
-                exec<R>(resolve: (args: any[]) => R, args: any[], info: ArgsInfo): R {
-                    const result: R = resolve(args)
+                exec(resolve: (args: any[]) => string, args: any[], info: ArgsInfo): any {
+                    const result: string = resolve(args)
                     return result + 'c'
                 }
             }
             class Mdl2 {
-                exec<R>(resolve: (args: any[]) => R, args: any[], info: ArgsInfo): R {
-                    const result: R = resolve(args)
+                exec(resolve: (args: any[]) => string, args: any[], info: ArgsInfo): any {
+                    const result: string = resolve(args)
                     return result + 'd'
                 }
             }
@@ -49,8 +49,8 @@ describe('MiddlewareFactoryTest', () => {
 
         it('should apply only matched middlewares', () => {
             class Mdl1 {
-                exec<R>(resolve: (args: any[]) => R, args: any[], info: ArgsInfo): R {
-                    const result: R = resolve(args)
+                exec(resolve: (args: any[]) => string, args: any[], info: ArgsInfo): any {
+                    const result: string = resolve(args)
                     if (info.id !== 'testFuncB') {
                         return result
                     }
@@ -58,8 +58,8 @@ describe('MiddlewareFactoryTest', () => {
                 }
             }
             class Mdl2 {
-                exec<R>(resolve: (args: any[]) => R, args: any[], info: ArgsInfo): R {
-                    const result: R = resolve(args)
+                exec(resolve: (args: any[]) => string, args: any[], info: ArgsInfo): any {
+                    const result: string = resolve(args)
                     return result + 'd'
                 }
             }
@@ -83,8 +83,8 @@ describe('MiddlewareFactoryTest', () => {
     describe('wrap classes', () => {
         it('should wrap class methods', () => {
             class Mdl1 {
-                exec<R>(resolve: (args: any[]) => R, args: any[], info: ArgsInfo): R {
-                    const result: R = resolve(args)
+                exec(resolve: (args: any[]) => string, args: any[], info: ArgsInfo): any {
+                    const result: string = resolve(args)
                     // console.log(`${info.id} called`)
                     return result + 'c'
                 }
@@ -108,7 +108,7 @@ describe('MiddlewareFactoryTest', () => {
         it('should log property get', () => {
             const access = spy()
             class Mdl1 {
-                get<R>(result: R, info: ArgsInfo): R {
+                get(result: string, info: ArgsInfo): any {
                     access(result, info)
                     return result
                 }
@@ -128,7 +128,7 @@ describe('MiddlewareFactoryTest', () => {
 
         it('should modify on get', () => {
             class Mdl1 {
-                get<R>(result: R, info: ArgsInfo): R {
+                get(result: string, info: ArgsInfo): any {
                     return result + '2'
                 }
             }
@@ -146,7 +146,7 @@ describe('MiddlewareFactoryTest', () => {
         it('should log property set', () => {
             const setValue = spy()
             class Mdl1 {
-                set<R>(oldValue: R, newValue: R, info: ArgsInfo): R {
+                set(oldValue: string, newValue: string, info: ArgsInfo): any {
                     setValue(oldValue, newValue, info)
                     return newValue
                 }
@@ -166,7 +166,7 @@ describe('MiddlewareFactoryTest', () => {
 
         it('should modify on set', () => {
             class Mdl1 {
-                set<R>(oldValue: R, newValue: R, info: ArgsInfo): R {
+                set(oldValue: string, newValue: string, info: ArgsInfo): any {
                     return newValue + 'a'
                 }
             }

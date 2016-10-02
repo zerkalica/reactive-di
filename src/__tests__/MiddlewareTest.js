@@ -20,7 +20,7 @@ describe('MiddlewareTest', () => {
     it('exec on method call', () => {
         const addLog = spy()
         class Mdl1 {
-            exec<R>(fn: (args: any[]) => R, args: any[], info: ArgsInfo): R {
+            exec(fn: (args: any[]) => string, args: any[], info: ArgsInfo): string {
                 addLog(fn, args, info)
                 return fn(args) + 'c'
             }
@@ -38,13 +38,13 @@ describe('MiddlewareTest', () => {
     it('order of middleware calls', () => {
         const addLog = spy()
         class Mdl1 {
-            exec<R>(fn: (args: any[]) => R, args: any[], info: ArgsInfo): R {
+            exec(fn: (args: any[]) => string, args: any[], info: ArgsInfo): string {
                 addLog(fn, args, info)
                 return fn(args) + 'c'
             }
         }
         class Mdl2 {
-            exec<R>(fn: (args: any[]) => R, args: any[], info: ArgsInfo): R {
+            exec(fn: (args: any[]) => string, args: any[], info: ArgsInfo): string {
                 addLog(fn, args, info)
                 return fn(args) + 'd'
             }

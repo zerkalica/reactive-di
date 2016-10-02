@@ -27,21 +27,22 @@ interface StaticContext<Props, State> {
 
 const dp = Object.defineProperty
 
-class ComponentMixin<State: Object, Props: Object> {
-    static __rdiCtx: StaticContext<Props, State>
-    setState: (state: State) => void
+// <State: Object, Props: Object>
+const ComponentMixin = {
+    // static __rdiCtx: StaticContext<Props, State>
+    // setState: (state: State) => void
+    // state: ?State
+    // props: Props
+    //
+    // _target: SrcComponent<Props, ?State>
+    // _controllable: IComponentControllable<State, ReactComponentClass<Props, State>>
+    // _createElement: ReactCreateElement
 
-    state: ?State
-    props: Props
-
-    _target: SrcComponent<Props, ?State>
-    _controllable: IComponentControllable<State, ReactComponentClass<Props, State>>
-    _createElement: ReactCreateElement
-
-    componentWillMount(): void {
+    componentWillMount<Props, State>(): void {
         const ctx: StaticContext<Props, State> = this.constructor.__rdiCtx
+        const t = this
         const setState: SetState<State> = (state: State) => {
-            return this.setState(state)
+            return t.setState(state)
         }
         const controllable = this._controllable = new ComponentControllable(ctx.info, setState)
         this._createElement = controllable.contextify(ctx.createElement)
@@ -49,29 +50,79 @@ class ComponentMixin<State: Object, Props: Object> {
         const state: ?State = this.state = controllable.getState()
         this._target = ctx.info.target
         this._controllable.onWillMount((this: any))
-    }
+    },
 
     componentDidMount() {
         this._controllable.onMount()
-    }
+    },
 
-    componentDidUpdate(props: Props, state: State): void {
+    componentDidUpdate<Props, State>(props: Props, state: State): void {
         this._controllable.onUpdate((this: any))
-    }
+    },
 
     componentWillUnmount(): void {
         this._controllable.onUnmount()
-    }
+    },
 
     shouldComponentUpdate(nextProps: Object, nextState: Object): boolean {
         return !shallowEqual(this.props, nextProps) || !shallowStrictEqual(this.state, nextState)
-    }
+    },
 
     render(): any {
+        return this._target(this.props, this.state, this._createElement)
+    }
+}
+
+const ComponentDevMixin = {
+    _showError(e: Error): void {
+        console.error(e)
+    },
+
+    shouldComponentUpdate(nextProps: Object, nextState: Object): boolean {
+        return ComponentMixin.shouldComponentUpdate.call(this, nextProps, nextState)
+    },
+
+    componentWillMount(): void {
         try {
-            return this._target(this.props, this.state, this._createElement)
+            ComponentMixin.componentWillMount.call(this)
         } catch (e) {
-            console.error(e)
+            this._showError(e)
+            throw e
+        }
+    },
+
+    componentDidUpdate(): void {
+        try {
+            ComponentMixin.componentDidUpdate.call(this)
+        } catch (e) {
+            this._showError(e)
+            throw e
+        }
+    },
+
+    componentDidMount(): void {
+        try {
+            ComponentMixin.componentDidMount.call(this)
+        } catch (e) {
+            this._showError(e)
+            throw e
+        }
+    },
+
+    componentWillUnmount(): void {
+        try {
+            ComponentMixin.componentWillUnmount.call(this)
+        } catch (e) {
+            this._showError(e)
+            throw e
+        }
+    },
+
+    render(): void {
+        try {
+            return ComponentMixin.render.call(this)
+        } catch (e) {
+            this._showError(e)
             throw e
         }
     }
@@ -89,10 +140,12 @@ interface React {
 export default class ReactComponentFactory {
     _Component: ReactComponentClass<*, *>
     _createElement: CreateElement<*, *>
+    _mixin: Object
 
-    constructor({Component, createElement}: React) {
+    constructor({Component, createElement}: React, isDebug?: boolean) {
         this._createElement = (createElement: any)
         this._Component = Component
+        this._mixin = isDebug ? ComponentDevMixin : ComponentMixin
     }
 
     wrapComponent<Props, State>(
@@ -108,7 +161,7 @@ export default class ReactComponentFactory {
             state: State
             props: Props
         }
-        Object.assign((WrappedComponent.prototype: Object), ComponentMixin.prototype)
+        Object.assign((WrappedComponent.prototype: Object), this._mixin)
         return WrappedComponent
     }
 }

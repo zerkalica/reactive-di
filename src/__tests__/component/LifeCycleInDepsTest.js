@@ -122,7 +122,7 @@ describe('LifeCycleInDepsTest', () => {
             const componentB2 = render(ComponentBEl)
             assert(findDOMNode(componentA2).textContent === 'testA-2')
             assert(findDOMNode(componentB2).textContent === 'testB-2')
-            assert(onUpdate.calledOnce)
+            assert(onUpdate.notCalled)
 
             componentA.componentWillUnmount()
             componentA2.componentWillUnmount()

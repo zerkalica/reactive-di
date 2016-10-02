@@ -174,9 +174,9 @@ export default class Di {
         let lc: ?InternalLifeCycle<V>
         if (info.lc) {
             lc = new InternalLifeCycle(this.val(info.lc).get())
-            value.react(lc.onUpdate, {
-                until: this.stopped
-            })
+            if (lc.isEqual) {
+                value = value.withEquality(lc.isEqual)
+            }
         }
         collector.end(info.lcs, lc)
         info.resolving = false
