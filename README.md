@@ -1,4 +1,8 @@
-# reactive-di
+# Reactive DI  [![Build Status](https://secure.travis-ci.org/zerkalica/reactive-di.png)](http://travis-ci.org/zerkalica/reactive-di)
+======================================================================================================================================================
+
+[![NPM](https://nodei.co/npm/reactive-di.png?downloads=true&stars=true)](https://nodei.co/npm/reactive-di/)
+
 
 Solution for dependency injection and state-management, state-to-css, state-to-dom rendering, data loading, optimistic updates and rollbacks.
 
