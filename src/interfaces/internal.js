@@ -17,7 +17,7 @@ export interface IDi {
 /**
  * Context, used internally by di handlers
  */
-export interface IContext extends IDi {
+export type IContext = {
     stopped: Atom<boolean>;
 
     adapter: Adapter;
@@ -29,4 +29,4 @@ export interface IContext extends IDi {
     stop(): IContext;
     create(displayName: string): IContext;
     register(registered?: ?RegisterDepItem[]): IContext;
-}
+} & IDi

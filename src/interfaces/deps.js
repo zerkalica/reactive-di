@@ -14,7 +14,7 @@ type _ResultOf<V, F: (...x: any[]) => V> = V // eslint-disable-line
 /**
  * Life cycle hooks
  */
-export type LifeCycle<Dep> = {
+export interface LifeCycle<Dep> {
     /**
     * Called before dep update, if returned true - component updated
      */
