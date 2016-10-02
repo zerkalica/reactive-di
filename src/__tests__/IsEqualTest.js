@@ -1,14 +1,11 @@
 // @flow
 /* eslint-env mocha */
 
-import {spy, match} from 'sinon'
+import {spy} from 'sinon'
 import assert from 'power-assert'
-import {atom} from 'derivable'
 import {
-    service,
     deps,
     source,
-    factory,
     hooks
 } from 'reactive-di/annotations'
 
@@ -48,7 +45,7 @@ describe('IsEqualTest', () => {
         const di = new Di()
         const onReact = spy()
         di.val(Facet).react(onReact)
-        const ma =  di.val(ModelA)
+        const ma = di.val(ModelA)
         ma.set(new ModelA({val: '123'}))
         ma.set(new ModelA({val: '123'}))
         ma.set(new ModelA({val: '123'}))

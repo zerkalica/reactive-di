@@ -1,7 +1,6 @@
-//@flow
+// @flow
 
 import {DepInfo, ThemeMeta, IHandler} from 'reactive-di/core/common'
-import type {IContext} from 'reactive-di/interfaces/internal'
 import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
 import type {StyleSheet, CreateStyleSheet, RawStyleSheet} from 'reactive-di/interfaces/component'
 import {fastCreateObject} from 'reactive-di/utils/fastCall'
@@ -25,7 +24,6 @@ export default class ThemeHandler {
     handle<V>(di: DepInfo<V, ThemeMeta>): Atom<V> {
         const {
             deps,
-            target,
             ctx
         } = di
         const depsAtom: Derivable<mixed[]> = ctx.resolveDeps(deps)
@@ -51,4 +49,4 @@ export default class ThemeHandler {
     }
 }
 
-if (0) ((new ThemeHandler(...(0: any))): IHandler)
+if (0) ((new ThemeHandler(...(0: any))): IHandler) // eslint-disable-line

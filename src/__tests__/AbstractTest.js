@@ -1,15 +1,12 @@
 // @flow
 /* eslint-env mocha */
 
-import {spy, match} from 'sinon'
 import assert from 'power-assert'
 
 import {
-    service,
     abstract,
     deps,
-    source,
-    factory
+    source
 } from 'reactive-di/annotations'
 
 import Di from 'reactive-di/core/Di'
@@ -35,7 +32,7 @@ describe('AbstractTest', () => {
         deps(ModelA)(Service)
         const di = new Di()
         assert.throws(() => {
-            const model: ModelA = di.val(Service).get().b
+            di.val(Service).get()
         }, /Need register Abstract entity/)
     })
 

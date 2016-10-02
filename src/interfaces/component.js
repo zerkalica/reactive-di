@@ -1,5 +1,4 @@
 // @flow
-import type {IContext} from 'reactive-di/interfaces/internal'
 import type {DepInfo} from 'reactive-di/core/common'
 
 export type StyleSheet = {

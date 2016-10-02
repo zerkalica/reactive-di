@@ -1,4 +1,6 @@
 // @flow
+/* eslint-env browser */
+
 import React from 'react'
 import ReactDOM from 'react-dom'
 import jss from 'jss'
@@ -16,7 +18,7 @@ const userFixture = {
 // Fetcher service, could be injected from outside by key 'Fetcher' as is
 @source({key: 'Fetcher', construct: false})
 class Fetcher {
-    fetch<V>(url: string): Promise<V> {
+    fetch<V>(_url: string): Promise<V> {
         // fake fetcher for example
         return Promise.resolve((userFixture: any))
     }
@@ -50,17 +52,27 @@ class UserHooks {
         this._updater = updater
     }
 
-    onMount(user: User): void {
+    onMount(_user: User): void {
         this._updater.setSingle(
             () => this._fetcher.fetch('/user'),
             User
         )
     }
 
-    onUnmount(user: User): void {
+    onUnmount(_user: User): void {
         this._updater.cancel()
     }
 }
+
+// Model ThemeVars, could be injected from outside by key 'ThemeVars' as ThemeVarsRec
+@source({key: 'ThemeVars'})
+class ThemeVars {
+    color: string
+    constructor(r?: Object = {}) {
+        this.color = r.color || 'red'
+    }
+}
+
 
 class UserServiceUpdater extends Updater {}
 class UserService {
@@ -95,15 +107,6 @@ class LoadingUpdaterStatus extends UpdaterStatus {}
 
 @updaters(UserService.Updater)
 class SavingUpdaterStatus extends UpdaterStatus {}
-
-// Model ThemeVars, could be injected from outside by key 'ThemeVars' as ThemeVarsRec
-@source({key: 'ThemeVars'})
-class ThemeVars {
-    color: string
-    constructor(r?: Object = {}) {
-        this.color = r.color || 'red'
-    }
-}
 
 // Provide class names and data for jss in __css property
 @theme
@@ -144,22 +147,22 @@ interface UserComponentState {
 /* jsx-pragma h */
 function UserComponent(
     {children}: UserComponentProps,
-    {theme, user, loading, saving, service}: UserComponentState,
-    h
+    {theme: t, user, loading, saving, service}: UserComponentState,
+    _h
 ): mixed {
     if (loading.pending) {
-        return <div class={theme.wrapper}>Loading...</div>
+        return <div className={t.wrapper}>Loading...</div>
     }
     if (loading.error) {
-        return <div class={theme.wrapper}>Loading error: {loading.error.message}</div>
+        return <div className={t.wrapper}>Loading error: {loading.error.message}</div>
     }
 
-    return <div className={theme.wrapper}>
-        <span className={theme.name}>Name: {user.name}</span>
+    return <div className={t.wrapper}>
+        <span className={t.name}>Name: {user.name}</span>
         {children}
         <button disabled={saving.pending} onClick={service.submit}>Save</button>
         {saving.error
-            ? <div>Saving error: {saving.error.message}, <a href="#" onClick={saving.retry}>Retry</a></div>
+            ? <div>Saving error: {saving.error.message}, <a href="/" onClick={saving.retry}>Retry</a></div>
             : null
         }
     </div>
@@ -168,7 +171,9 @@ component()(UserComponent)
 
 jss.use(jssCamel)
 const node: HTMLElement = window.document.getElementById('app')
-const render = (widget: Function, attrs: ?Object) => ReactDOM.render(React.createElement(widget, attrs), node)
+const render = (widget: Function, attrs: ?Object) => {
+    ReactDOM.render(React.createElement(widget, attrs), node)
+}
 
 const di = (new Di(
     new ReactComponentFactory(React),

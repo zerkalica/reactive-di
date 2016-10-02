@@ -1,7 +1,7 @@
-//@flow
+// @flow
 
 import {DepInfo, DerivableMeta, IHandler} from 'reactive-di/core/common'
-import type {Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
+import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
 
 import {fastCall, fastCreateObject} from 'reactive-di/utils/fastCall'
 
@@ -15,7 +15,10 @@ export default class DerivableHandler {
         } = di
         const depsAtom: Derivable<mixed[]> = ctx.resolveDeps(deps)
         const fn: (target: Function, args: mixed[]) => V = isFactory ? fastCall : fastCreateObject
-        const deriveItem: (args: mixed[]) => V = (args: mixed[]) => ctx.preprocess(fn(target, args), di)
+
+        const deriveItem: (args: mixed[]) => V = (args: mixed[]) =>
+            ctx.preprocess(fn(target, args), di)
+
         deriveItem.displayName = `${ctx.displayName}#derive`
 
         return ((depsAtom.derive(deriveItem): any): Atom<V>)
@@ -24,4 +27,4 @@ export default class DerivableHandler {
     postHandle(): void {}
 }
 
-if (0) ((new DerivableHandler(...(0: any))): IHandler)
+if (0) ((new DerivableHandler(...(0: any))): IHandler) // eslint-disable-line

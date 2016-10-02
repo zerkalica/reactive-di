@@ -1,30 +1,26 @@
 // @flow
 /* eslint-env mocha */
 
-import {spy, match} from 'sinon'
+import {spy} from 'sinon'
 import assert from 'power-assert'
 
 import React from 'react'
-import ReactDOM from 'react-dom/server'
 
 import {
     hooks,
-    theme,
     component,
     source,
     deps
 } from 'reactive-di/annotations'
 
-import type {StyleSheet} from 'reactive-di/interfaces/component'
 
-import {Component} from 'fake-react'
 import Di from 'reactive-di/core/Di'
 import BaseModel from 'reactive-di/utils/BaseModel'
 
 import ReactComponentFactory from 'reactive-di/adapters/ReactComponentFactory'
 
 import {renderIntoDocument} from 'react-addons-test-utils'
-import {findDOMNode} from 'react-dom'
+
 type ReactComponent<Props, State> = React$Component<*, Props, State>
 
 function render(raw) {
@@ -52,14 +48,13 @@ describe('LifeCycleTest', () => {
             m: ModelA;
         }
 
-        function TestComponent(props: Props, state: State, h): mixed {
+        function TestComponent(props: Props, state: State, _h): mixed {
             return <div>{state.m.val}</div>
         }
         deps({m: ModelA})(TestComponent)
         component()(TestComponent)
 
         const onMount = spy()
-        const onUnmount = spy()
         const onUpdate = spy()
 
         @hooks(TestComponent)
@@ -73,7 +68,7 @@ describe('LifeCycleTest', () => {
 
         assert(onMount.notCalled)
         assert(onUpdate.notCalled)
-        const componentA = render(TestComponentEl)
+        render(TestComponentEl)
         assert(onMount.calledOnce)
         assert(onUpdate.notCalled)
     })

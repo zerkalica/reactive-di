@@ -1,6 +1,6 @@
 // @flow
 
-export type Key = Function|string
+export type Key = Function | string
 export type DepFn<V> = (...a: any) => V
 export type DepDict = {[k: string]: Key}
 export type ArgDep = Key | DepDict
@@ -9,7 +9,7 @@ export type DepAlias = [any, Function]
 export type RegisterDepItem = any
 
 export type ResultOf<F> = _ResultOf<*, F>
-type _ResultOf<V, F: (...x: any[]) => V> = V
+type _ResultOf<V, F: (...x: any[]) => V> = V // eslint-disable-line
 
 export interface LifeCycle<Dep> {
     /**

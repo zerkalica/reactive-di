@@ -16,8 +16,7 @@ export default function debugName(
 ): string {
     if (
         func === null
-        || typeof func !== 'object'
-        && typeof func !== 'function'
+        || (typeof func !== 'object' && typeof func !== 'function')
     ) {
         return String(func)
     }

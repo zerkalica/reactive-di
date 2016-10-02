@@ -14,16 +14,10 @@ import {
 import Di from 'reactive-di/core/Di'
 import BaseModel from 'reactive-di/utils/BaseModel'
 
-type Atom = {
-    set: any
-}
-
 const FN: (a: string) => void = ((() => {}): any);
 // type FN = typeof FN
 function createFn(): typeof FN {
-    return (a: string) => {
-
-    }
+    return (_a: string) => {}
 }
 createFn()('1')
 
@@ -57,7 +51,7 @@ describe('DiBaseTest', () => {
         deps(ModelA)(Service)
 
         const di = new Di()
-        const s: Service = di.val(Service).get()
+        di.val(Service).get()
         const modelA: ModelA = di.val(ModelA).get()
         assert(Service.calledOnce)
         assert(Service.firstCall.calledWith(
@@ -91,15 +85,16 @@ describe('DiBaseTest', () => {
     })
 
     it('create service from factory', () => {
-        const FactoryService = spy(function (modelA: ModelA) {
+        function factoryService(modelA: ModelA): () => string {
             return () => modelA.val
-        })
+        }
+        const FactoryService = spy(factoryService)
         service(FactoryService)
         factory(FactoryService)
         deps(ModelA)(FactoryService)
 
         const di = new Di()
-        const fn = di.val(FactoryService).get()
+        di.val(FactoryService).get()
         const modelA: ModelA = di.val(ModelA).get()
         assert(FactoryService.calledOnce)
         assert(FactoryService.firstCall.calledWith(
@@ -109,9 +104,10 @@ describe('DiBaseTest', () => {
     })
 
     it('dependency changed and factory changed inside', () => {
-        const FactoryService = spy(function factoryService(modelA: ModelA): () => string {
+        function factoryService(modelA: ModelA): () => string {
             return () => modelA.val
-        })
+        }
+        const FactoryService = spy(factoryService)
         service(FactoryService)
         factory(FactoryService)
         deps(ModelA)(FactoryService)

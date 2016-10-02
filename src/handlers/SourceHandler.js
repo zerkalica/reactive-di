@@ -1,4 +1,4 @@
-//@flow
+// @flow
 
 import {DepInfo, SourceMeta, IHandler} from 'reactive-di/core/common'
 import type {Atom} from 'reactive-di/interfaces/atom'
@@ -12,6 +12,7 @@ export default class SourceHandler {
             ctx
         } = di
         const value: any = ctx.defaults[meta.key]
+        /* eslint-disable new-cap */
         if (meta.construct) {
             atom = ctx.adapter.atom(ctx.preprocess((new target(value): any), di))
         } else {
@@ -24,4 +25,4 @@ export default class SourceHandler {
     }
 }
 
-if (0) ((new SourceHandler(...(0: any))): IHandler)
+if (0) ((new SourceHandler(...(0: any))): IHandler) // eslint-disable-line

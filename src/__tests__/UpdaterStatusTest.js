@@ -1,13 +1,9 @@
 // @flow
 /* eslint-env mocha */
 
-import {spy, match} from 'sinon'
 import assert from 'power-assert'
 
 import {
-    factory,
-    service,
-    deps,
     source,
     updaters
 } from 'reactive-di/annotations'
@@ -84,7 +80,7 @@ describe('UpdaterStatusTest', () => {
         di.val(MyUpdater1).get().setSingle(() => promiseA, ModelA)
 
         let resolveFn: Function
-        const promiseB = new Promise(resolve => {
+        const promiseB = new Promise((resolve) => {
             resolveFn = resolve
         })
         di.val(MyUpdater2).get().setSingle(() => promiseB, ModelB)

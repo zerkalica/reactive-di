@@ -3,12 +3,10 @@ import type {Key} from 'reactive-di/interfaces/deps'
 import type {Adapter, Atom, Derivable} from 'reactive-di/interfaces/atom'
 import type {IContext} from 'reactive-di/interfaces/internal'
 import type {
-    MultiSyncUpdate,
     MultiAsyncUpdate,
     MultiUpdate,
     MultiAsyncUpdateResult,
 
-    SingleSyncUpdate,
     SingleAsyncUpdate,
     SingleUpdate,
     SingleAsyncUpdateResult
@@ -54,7 +52,7 @@ class SingleUpdateBucket {
         }
         if (Array.isArray(rawUpdate)) {
             if (rawUpdate.length !== 2) {
-                throw new Error(`Wrong update rec: need a tuple [SingleSyncUpdate, SingleAsyncUpdate]`)
+                throw new Error('Wrong update rec: need a tuple [SingleSyncUpdate, SingleAsyncUpdate]')
             }
             this.syncs = [[target, (rawUpdate[0]: Object)]]
             this.asyncs = [new NormalizedSingleAsyncUpdate(target, rawUpdate[1])]
@@ -355,7 +353,7 @@ class UpdaterObserver {
         }
     }
 }
-if (0) ((new UpdaterObserver(...(0: any))): Observer<UpdateBucket, OperationErrorRec>)
+if (0) ((new UpdaterObserver(...(0: any))): Observer<UpdateBucket, OperationErrorRec>) // eslint-disable-line
 
 export default class Updater {
     displayName: string

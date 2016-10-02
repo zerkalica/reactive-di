@@ -1,7 +1,5 @@
 // @flow
 
-import type {LifeCycle} from 'reactive-di/interfaces/deps'
-
 export default class Collector<T> {
     _parents: Set<T>[] = []
 

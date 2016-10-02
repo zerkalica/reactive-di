@@ -9,8 +9,7 @@ export function shallowStrictEqual(objA: ?Object, objB: Object): boolean {
         return false
     }
 
-    let k: string
-    for (k in objA) {
+    for (let k in objA) { // eslint-disable-line
         if (objA[k] !== objB[k]) {
             return false
         }
@@ -23,7 +22,7 @@ export default function shallowEqual(objA: Object, objB: Object): boolean {
         return true
     }
 
-    if (!objA && objB || objA && !objB) {
+    if ((!objA && objB) || (objA && !objB)) {
         return false
     }
 
@@ -31,14 +30,14 @@ export default function shallowEqual(objA: Object, objB: Object): boolean {
 
     let numA: number = 0
     let numB: number = 0
-    for (k in objA) {
-        numA++
+    for (k in objA) { // eslint-disable-line
+        numA++ // eslint-disable-line
         if (objA[k] !== objB[k]) {
             return false
         }
     }
-    for (k in objB) {
-        numB++
+    for (k in objB) { // eslint-disable-line
+        numB++ // eslint-disable-line
     }
 
     return numA === numB

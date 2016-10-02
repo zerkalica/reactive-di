@@ -3,29 +3,20 @@ import type {
     ComponentFactory,
     CreateElement,
     SrcComponent,
-    IComponentControllable,
-    CreateControllable,
     SetState
 } from 'reactive-di/interfaces/component'
-import type {IContext} from 'reactive-di/interfaces/internal'
 import debugName from 'reactive-di/utils/debugName'
 import shallowEqual, {shallowStrictEqual} from 'reactive-di/utils/shallowEqual'
 import ComponentControllable from 'reactive-di/core/ComponentControllable'
 import {DepInfo} from 'reactive-di/core/common'
 
-type ReactElement = React$Element<any>
 type ReactComponent<Props, State> = React$Component<*, Props, State>
 type ReactComponentClass<Props, State> = Class<ReactComponent<Props, State>>
-
-type ReactCreateElement = CreateElement<any, ReactElement>
-type CreateReactControllable<Props, State> = CreateControllable<State, ReactComponentClass<Props, State>>
 
 interface StaticContext<Props, State> {
     info: DepInfo<SrcComponent<Props, State>, *>;
     createElement: CreateElement<*, *>;
 }
-
-const dp = Object.defineProperty
 
 // <State: Object, Props: Object>
 const ComponentMixin = {
@@ -47,7 +38,7 @@ const ComponentMixin = {
         const controllable = this._controllable = new ComponentControllable(ctx.info, setState)
         this._createElement = controllable.contextify(ctx.createElement)
 
-        const state: ?State = this.state = controllable.getState()
+        this.state = controllable.getState()
         this._target = ctx.info.target
         this._controllable.onWillMount((this: any))
     },
@@ -56,7 +47,7 @@ const ComponentMixin = {
         this._controllable.onMount()
     },
 
-    componentDidUpdate<Props, State>(props: Props, state: State): void {
+    componentDidUpdate<Props, State>(_props: Props, _state: State): void {
         this._controllable.onUpdate((this: any))
     },
 
@@ -75,7 +66,7 @@ const ComponentMixin = {
 
 const ComponentDevMixin = {
     _showError(e: Error): void {
-        console.error(e)
+        console.error(e) // eslint-disable-line
     },
 
     shouldComponentUpdate(nextProps: Object, nextState: Object): boolean {
@@ -128,10 +119,6 @@ const ComponentDevMixin = {
     }
 }
 
-const dummyProps = {
-    render() {}
-}
-
 interface React {
     Component: ReactComponentClass<*, *>;
     createElement: Function;
@@ -165,4 +152,4 @@ export default class ReactComponentFactory {
         return WrappedComponent
     }
 }
-if (0) ((new ReactComponentFactory(...(0: any))): ComponentFactory)
+if (0) ((new ReactComponentFactory(...(0: any))): ComponentFactory) // eslint-disable-line

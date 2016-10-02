@@ -2,23 +2,19 @@
 /* eslint-env mocha */
 /* jsx-pragma h */
 
-import {spy, stub, match} from 'sinon'
+import {spy} from 'sinon'
 import assert from 'power-assert'
 import React from 'react'
 import {renderIntoDocument} from 'react-addons-test-utils'
 import {findDOMNode} from 'react-dom'
 
 import {
-    theme,
     hooks,
     component,
     source,
     deps
 } from 'reactive-di/annotations'
 
-import type {StyleSheet} from 'reactive-di/interfaces/component'
-
-import {Component} from 'fake-react'
 import {Di, Updater} from 'reactive-di/index'
 
 import ReactComponentFactory from 'reactive-di/adapters/ReactComponentFactory'
@@ -59,7 +55,7 @@ describe('LifeCycleInDepsTest', () => {
 
         @hooks(ModelA)
         @deps(Fetcher, Updater)
-        class ModelALifeCycle {
+        class ModelALifeCycle { // eslint-disable-line
             _fetcher: Fetcher
             _updater: Updater
             _promise: ?Promise<ModelARec>
@@ -75,10 +71,10 @@ describe('LifeCycleInDepsTest', () => {
 
             onMount(model: ModelA) {
                 onMount(model)
-                const promise: Promise<ModelARec> = this._promise = this._fetcher.fetch({
+                const prm: Promise<ModelARec> = this._promise = this._fetcher.fetch({
                     url: '/model-a'
                 })
-                this._updater.setSingle(() => promise, ModelA)
+                this._updater.setSingle(() => prm, ModelA)
             }
 
             onUnmount(model: ModelARec) {
@@ -93,13 +89,13 @@ describe('LifeCycleInDepsTest', () => {
             m: ModelA;
         }
 
-        function ComponentA(props: Props, state: State, h: Function): React$Element<any> {
+        function ComponentA(props: Props, state: State, _h: Function): React$Element<any> {
             return <div>testA-{state.m.val}</div>
         }
         deps({m: ModelA})(ComponentA)
         component()(ComponentA)
 
-        function ComponentB(props: Props, state: State, h: Function): React$Element<any> {
+        function ComponentB(props: Props, state: State, _h: Function): React$Element<any> {
             return <div>testB-{state.m.val}</div>
         }
         deps({m: ModelA})(ComponentB)

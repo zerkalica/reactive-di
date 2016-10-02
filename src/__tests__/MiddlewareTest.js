@@ -1,20 +1,11 @@
 // @flow
 /* eslint-env mocha */
 
-import {spy, match} from 'sinon'
+import {spy} from 'sinon'
 import assert from 'power-assert'
 
-import {
-    service,
-    abstract,
-    deps,
-    source,
-    factory
-} from 'reactive-di/annotations'
-
 import Di from 'reactive-di/core/Di'
-import BaseModel from 'reactive-di/utils/BaseModel'
-import type {Middleware, ArgsInfo} from 'reactive-di/utils/MiddlewareFactory'
+import type {ArgsInfo} from 'reactive-di/utils/MiddlewareFactory'
 
 describe('MiddlewareTest', () => {
     it('exec on method call', () => {

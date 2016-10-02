@@ -3,7 +3,7 @@
 export function fastCreateObject<T>(target: Class<T>, args: Array<any>): T {
     switch (args.length) {
         case 0:
-            return new (target: any)
+            return new (target: any)()
         case 1:
             return new (target: any)(args[0])
         case 2:

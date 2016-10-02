@@ -1,9 +1,8 @@
 // @flow
 
-import type {Derivable} from 'reactive-di/interfaces/atom'
-import type {LifeCycle, RegisterDepItem, Key} from 'reactive-di/interfaces/deps'
+import type {RegisterDepItem, Key} from 'reactive-di/interfaces/deps'
 import type {IContext} from 'reactive-di/interfaces/internal'
-import {DepInfo, isAbstract} from 'reactive-di/core/common'
+import {DepInfo} from 'reactive-di/core/common'
 
 export default class MetaRegistry {
     _context: IContext

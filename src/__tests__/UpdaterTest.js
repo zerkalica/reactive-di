@@ -1,15 +1,10 @@
 // @flow
 /* eslint-env mocha */
 
-import {spy, match} from 'sinon'
 import assert from 'power-assert'
 
 import {
-    factory,
-    service,
-    deps,
-    source,
-    updaters
+    source
 } from 'reactive-di/annotations'
 
 import Di from 'reactive-di/core/Di'
@@ -76,9 +71,13 @@ describe('UpdaterTest', () => {
         const val2 = 'test2'
         let resolve1: Function
         let resolve2: Function
-        const promise1 = new Promise(r => {resolve1 = r})
-        const promise2 = new Promise(r => {resolve2 = r})
-        const modelAObservable = new Observable((observer: Observer<ModelA|ModelA[], Error>) => {
+        const promise1 = new Promise((r) => {
+            resolve1 = r
+        })
+        const promise2 = new Promise((r) => {
+            resolve2 = r
+        })
+        const modelAObservable = new Observable((observer: Observer<ModelA | ModelA[], Error>) => {
             setTimeout(() => {
                 observer.next([new ModelA({val})])
                 resolve1()

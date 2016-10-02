@@ -1,16 +1,14 @@
 // @flow
 
-import {DepInfo, InternalLifeCycle} from 'reactive-di/core/common'
+import {DepInfo, isComponent, InternalLifeCycle} from 'reactive-di/core/common'
 import type {IHandler, RdiMeta} from 'reactive-di/core/common'
 
 import {deps} from 'reactive-di/annotations'
 
-import {isComponent} from 'reactive-di/core/common'
-
 import type {IContext} from 'reactive-di/interfaces/internal'
 import type {RegisterDepItem, ArgDep, Key} from 'reactive-di/interfaces/deps'
 import type {Adapter, Atom, DerivableArg, DerivableDict, Derivable} from 'reactive-di/interfaces/atom'
-import type {CreateElement, SetState, ComponentFactory, CreateStyleSheet} from 'reactive-di/interfaces/component'
+import type {ComponentFactory, CreateStyleSheet} from 'reactive-di/interfaces/component'
 
 import debugName from 'reactive-di/utils/debugName'
 import derivableAtomAdapter from 'reactive-di/core/derivableAtomAdapter'
@@ -18,7 +16,6 @@ import createHandlers from 'reactive-di/core/createHandlers'
 import MetaRegistry from 'reactive-di/core/MetaRegistry'
 import Updater from 'reactive-di/core/Updater'
 import Collector from 'reactive-di/core/Collector'
-import ComponentControllable from 'reactive-di/core/ComponentControllable'
 import type {Middleware} from 'reactive-di/utils/MiddlewareFactory'
 import MiddlewareFactory from 'reactive-di/utils/MiddlewareFactory'
 
@@ -57,7 +54,9 @@ export default class Di {
         mdlFactory?: ?MiddlewareFactory
     ) {
         this._componentFactory = componentFactory || dummyComponentFactory
-        this.displayName = (displayName || 'root') + String(Di.uniqId++)
+        const c = this.constructor
+        c.uniqId = c.uniqId + 1 // eslint-disable-line
+        this.displayName = (displayName || 'root') + String(c.uniqId)
         this._mdlFactory = mdlFactory
         this.adapter = adapter || derivableAtomAdapter
         this._handlers = handlers || createHandlers(createStyleSheet)
@@ -133,7 +132,6 @@ export default class Di {
             throw new Error(`Circular dependency detected: ${this.debugStr(key)}`)
         }
 
-        const cache = this._metaRegistry
         const {ctx, target, meta, name} = info
         if (ctx !== this) {
             return ctx.val(target)
@@ -142,7 +140,6 @@ export default class Di {
         this._path.push(name)
         collector.begin()
 
-        let depsAtom: ?Derivable<mixed[]>
         let handler: ?IHandler
 
         switch (meta.type) {
@@ -190,7 +187,8 @@ export default class Di {
         return `${debugName(sub)} [${this._path.join('.')}]`
     }
 
-    preprocess(value: any, {meta}: DepInfo<*, *>): any {
+    preprocess(raw: any, {meta}: DepInfo<*, *>): any {
+        let value = raw
         if (this._mdlFactory) {
             value = this._mdlFactory.wrap(value, meta.type)
         }
@@ -200,16 +198,16 @@ export default class Di {
         return value
     }
 
-    resolveDeps(deps: ArgDep[], lcs?: InternalLifeCycle<*>[]): Derivable<mixed[]> {
+    resolveDeps(argDeps: ArgDep[], lcs?: InternalLifeCycle<*>[]): Derivable<mixed[]> {
         const resolvedArgs: DerivableArg[] = []
         if (lcs) {
             this._collector.begin()
         }
-        for (let i = 0, l = deps.length; i < l; i++) {
-            const argDep: ArgDep = deps[i]
+        for (let i = 0, l = argDeps.length; i < l; i++) {
+            const argDep: ArgDep = argDeps[i]
             if (typeof argDep === 'object') {
                 const result: DerivableDict = {}
-                for (let prop in argDep) {
+                for (let prop in argDep) { // eslint-disable-line
                     const dep: Key = argDep[prop]
                     if (!dep) {
                         throw new Error(`Not a dependency, need a function: ${debugName(prop || i)}`)
@@ -231,6 +229,6 @@ export default class Di {
         return this.adapter.struct(resolvedArgs)
     }
 }
-if (0) ((new Di(...(0: any))): IContext)
+if (0) ((new Di(...(0: any))): IContext) // eslint-disable-line
 
 deps(Di)(Updater)

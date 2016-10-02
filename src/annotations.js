@@ -18,7 +18,6 @@ import Updater from 'reactive-di/core/Updater'
 import type {ComponentMetaRec, SourceMetaRec} from 'reactive-di/core/common'
 
 const dm = CustomReflect.defineMetadata
-const gm = CustomReflect.getMetadata
 
 export function deps<V: Function>(...args: ArgDep[]): (target: V) => V {
     return (target: V) => {
@@ -54,9 +53,9 @@ export function source<R, V: Class<R>>(rec: SourceMetaRec): (target: V) => V {
     }
 }
 
-export function updaters<V: Function>(...updaters: Class<Updater>[]): (target: V) => V {
+export function updaters<V: Function>(...items: Class<Updater>[]): (target: V) => V {
     return (target: V) => {
-        dm(metaKey, new StatusMeta(updaters), target)
+        dm(metaKey, new StatusMeta(items), target)
         return target
     }
 }
@@ -86,7 +85,7 @@ export function cloneComponent<C: Function>(src: C, rec?: ComponentMetaRec): C {
         return src(arg1, arg2, arg3)
     }
     target.displayName = (src.displayName || src.name) + '#clone-' + (cloneNumber || '0')
-    cloneNumber++
+    cloneNumber++ // eslint-disable-line
     Object.setPrototypeOf(target, src)
     if (rec) {
         dm(metaKey, new ComponentMeta(rec), target)

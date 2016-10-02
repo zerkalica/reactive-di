@@ -1,8 +1,7 @@
-//@flow
+// @flow
 
 import {DepInfo, ServiceMeta, IHandler} from 'reactive-di/core/common'
 import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
-import type {IContext} from 'reactive-di/interfaces/internal'
 import type {DepFn} from 'reactive-di/interfaces/deps'
 
 import debugName from 'reactive-di/utils/debugName'
@@ -23,7 +22,10 @@ export default class ServiceHandler {
         )
     }
 
-    _createDatachedObject<V: Object>(depsAtom: Derivable<mixed[]>, di: DepInfo<any, ServiceMeta>): V {
+    _createDatachedObject<V: Object>(
+        depsAtom: Derivable<mixed[]>,
+        di: DepInfo<any, ServiceMeta>
+    ): V {
         const {target, ctx} = di
         const obj: V = fastCreateObject(target, depsAtom.get())
         function onServiceChange(deps: mixed[]): void {
@@ -37,7 +39,10 @@ export default class ServiceHandler {
         return ctx.preprocess(obj, di)
     }
 
-    _createDetachedFactory<V: Function>(depsAtom: Derivable<mixed[]>, di: DepInfo<any, ServiceMeta>): V {
+    _createDetachedFactory<V: Function>(
+        depsAtom: Derivable<mixed[]>,
+        di: DepInfo<any, ServiceMeta>
+    ): V {
         const {target, ctx} = di
         let fn: DepFn<V> = fastCall(target, depsAtom.get())
         if (typeof fn !== 'function') {
@@ -61,4 +66,4 @@ export default class ServiceHandler {
     }
 }
 
-if (0) ((new ServiceHandler(...(0: any))): IHandler)
+if (0) ((new ServiceHandler(...(0: any))): IHandler) // eslint-disable-line

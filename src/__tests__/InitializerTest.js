@@ -1,12 +1,9 @@
 // @flow
 /* eslint-env mocha */
 
-import {spy, match} from 'sinon'
 import assert from 'power-assert'
 
 import {
-    factory,
-    updaters,
     component,
     hooks,
     deps,
@@ -14,10 +11,7 @@ import {
 } from 'reactive-di/annotations'
 
 import {Di, Updater} from 'reactive-di/index'
-import BaseModel from 'reactive-di/utils/BaseModel'
-import type {CreateControllable, IComponentControllable} from 'reactive-di/interfaces/component'
-import type {Derivable} from 'reactive-di/interfaces/atom'
-import type {SingleUpdate} from 'reactive-di/interfaces/updater'
+import type {IComponentControllable} from 'reactive-di/interfaces/component'
 import ComponentControllable from 'reactive-di/core/ComponentControllable'
 
 describe('InitializerTest', () => {
@@ -45,7 +39,7 @@ describe('InitializerTest', () => {
 
         @hooks(ModelA)
         @deps(ModelAUpdater)
-        class ModelALC {
+        class ModelALC { // eslint-disable-line
             _updater: Updater
 
             constructor(updater: ModelAUpdater) {
@@ -72,7 +66,10 @@ describe('InitializerTest', () => {
 
             constructor() {
                 // console.log(this.constructor.info)
-                this.ctl = new ComponentControllable(this.constructor.info, (state) => this.setState(state))
+                this.ctl = new ComponentControllable(
+                    this.constructor.info,
+                    (state) => this.setState(state)
+                )
                 Object.assign(this, this.ctl.getState())
             }
             setState(state) {
@@ -85,7 +82,7 @@ describe('InitializerTest', () => {
                 return h
             },
             wrapComponent(info: any): any {
-                info.target.info = info
+                info.target.info = info // eslint-disable-line
                 return (info.target: any)
             }
         }).register([Updater])

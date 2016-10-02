@@ -1,5 +1,5 @@
 // @flow
-import type {Atom, Adapter} from 'reactive-di/interfaces/atom'
+import type {Adapter} from 'reactive-di/interfaces/atom'
 
 import {
     atom,

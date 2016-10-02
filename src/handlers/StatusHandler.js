@@ -1,10 +1,11 @@
-//@flow
+// @flow
 
 import {DepInfo, StatusMeta, IHandler} from 'reactive-di/core/common'
 import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
 import Updater, {UpdaterStatus} from 'reactive-di/core/Updater'
 
 function mergeStatus(target: Class<UpdaterStatus>, updaters: UpdaterStatus[]): UpdaterStatus {
+    /* eslint-disable new-cap */
     const us: UpdaterStatus = new target('complete')
     for (let i = 0, l = updaters.length; i < l; i++) {
         const updater = updaters[i]
@@ -44,4 +45,4 @@ export default class StatusHandler {
     }
 }
 
-if (0) ((new StatusHandler(...(0: any))): IHandler)
+if (0) ((new StatusHandler(...(0: any))): IHandler) // eslint-disable-line

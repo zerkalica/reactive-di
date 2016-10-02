@@ -1,7 +1,7 @@
 // @flow
 /* eslint-env mocha */
 
-import {spy, match} from 'sinon'
+import {spy} from 'sinon'
 import assert from 'power-assert'
 
 import {
@@ -38,12 +38,8 @@ describe('ScopesTest', () => {
         deps(ModelA)(Service)
 
         const di = (new Di()).register([ModelA])
-        let newDi = di.create('child')
-        // console.log(di._metaRegistry.getMeta(ModelA) === newDi._metaRegistry.getMeta(ModelA))
+        const newDi = di.create('child')
         assert(di.val(ModelA) === newDi.val(ModelA))
-        // modify ModelA in parent di
-        // newDi.val(ModelA).set(new ModelA({val: 'test1'}))
-        // assert(di.val(ModelA).get().val === 'test1')
     })
 
     it('model in child scope is independed from parent', () => {
@@ -67,7 +63,7 @@ describe('ScopesTest', () => {
 
         const di = new Di()
 
-        let newDi = di.create('child').register([ModelA])
+        const newDi = di.create('child').register([ModelA])
 
         // modify ModelA in child di
         newDi.val(ModelA).set(new ModelA({val: 'test1'}))
@@ -96,7 +92,7 @@ describe('ScopesTest', () => {
         deps(ModelA)(Service)
 
         const di = new Di()
-        let newDi = di.create('child')
+        const newDi = di.create('child')
 
         // modify ModelA in parent di
         newDi.val(ModelA).set(new ModelA({val: 'test1'}))

@@ -7,16 +7,17 @@ const win = doc.defaultView
 global.document = doc
 global.window = win
 
-function propagateToGlobal (window) {
-  for (let key in window) {
-    if (!window.hasOwnProperty(key)) continue
-    if (key in global) continue
+const hasOwnProperty = {}.hasOwnProperty
 
-    global[key] = window[key]
-  }
+function propagateToGlobal(window: Object) {
+    for (let key in window) { // eslint-disable-line
+        if (hasOwnProperty.call(window, key) && !(key in global)) {
+            global[key] = window[key]
+        }
+    }
 }
 
 propagateToGlobal(win)
 
 
-glob.sync(__dirname + '/../src/**/__tests__/**/*.js').forEach(file => require(file))
+glob.sync(__dirname + '/../src/**/__tests__/**/*.js').forEach((file) => require(file)) // eslint-disable-line

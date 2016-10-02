@@ -31,4 +31,4 @@ export interface Adapter {
     struct<R>(value: DerivableArg[]): Derivable<R>;
 }
 
-export type CacheMap = Map<Function|string, ?Atom<*>>
+export type CacheMap = Map<Function | string, ?Atom<*>>

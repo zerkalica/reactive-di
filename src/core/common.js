@@ -1,7 +1,7 @@
 // @flow
 
-import type {DepFn, Key, DepDict, ArgDep, DepAlias, RegisterDepItem, LifeCycle} from 'reactive-di/interfaces/deps'
-import type {IsEqual, Atom, Adapter, CacheMap, Derivable} from 'reactive-di/interfaces/atom'
+import type {Key, ArgDep, RegisterDepItem, LifeCycle} from 'reactive-di/interfaces/deps'
+import type {IsEqual, Atom} from 'reactive-di/interfaces/atom'
 import type {IContext} from 'reactive-di/interfaces/internal'
 import type {RawStyleSheet} from 'reactive-di/interfaces/component'
 
@@ -44,7 +44,7 @@ export class SourceMeta {
     construct: boolean
     constructor(rec: SourceMetaRec) {
         if (!rec.key) {
-            throw new Error(`@source has no key property`)
+            throw new Error('@source has no key property')
         }
         this.key = rec.key
         this.construct = rec.construct || false
@@ -64,14 +64,17 @@ export class StatusMeta {
     }
 }
 
-export type RdiMeta = ThemeMeta | ComponentMeta | AbstractMeta | SourceMeta | ServiceMeta | DerivableMeta | StatusMeta
+export type RdiMeta = ThemeMeta | ComponentMeta | AbstractMeta
+    | SourceMeta | ServiceMeta | DerivableMeta | StatusMeta
+
+
+const gm = CustomReflect.getMetadata
 
 export function isAbstract(key: Key): boolean {
     return typeof key === 'function' && gm(metaKey, key)
 }
 
 const defaultArr: ArgDep[] = []
-const gm = CustomReflect.getMetadata
 const defaultMeta = new DerivableMeta()
 
 class ThemeLifeCycle {
@@ -109,22 +112,23 @@ export class InternalLifeCycle<V> {
     onUpdate: (newValue: V) => void = (newValue: V) => this._onUpdate(newValue)
 
     _onUpdate(newValue: V): void {
-        console.log(12312)
         const oldValue: V = this._entity
-        if (oldValue && oldValue !== newValue) {
-            this._lc.onUpdate && this._lc.onUpdate(oldValue, newValue)
+        if (oldValue && this._lc.onUpdate && oldValue !== newValue) {
+            this._lc.onUpdate(oldValue, newValue)
         }
         this._entity = newValue
     }
 
     onWillMount() {
-        this._lc.onWillMount && this._lc.onWillMount(this._entity)
+        if (this._lc.onWillMount) {
+            this._lc.onWillMount(this._entity)
+        }
     }
 
     onMount() {
-        this._count++
-        if (this._count === 1) {
-            this._lc.onMount && this._lc.onMount(this._entity)
+        this._count = this._count + 1
+        if (this._count === 1 && this._lc.onMount) {
+            this._lc.onMount(this._entity)
         }
     }
 
@@ -132,9 +136,9 @@ export class InternalLifeCycle<V> {
         if (this._count === 0) {
             return
         }
-        this._count--
-        if (this._count === 0) {
-            this._lc.onUnmount && this._lc.onUnmount(this._entity)
+        this._count = this._count - 1
+        if (this._count === 0 && this._lc.onUnmount) {
+            this._lc.onUnmount(this._entity)
         }
     }
 }

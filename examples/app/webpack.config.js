@@ -1,6 +1,5 @@
 import path from 'path'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
-import webpack from 'webpack'
 
 const fallback = []
 if (process.env.NVM_PATH) {
@@ -25,7 +24,7 @@ export default {
         filename: 'app.js'
     },
     entry: {
-        'browser': [
+        browser: [
             path.resolve(__dirname, 'src', 'browser.js')
         ]
     },

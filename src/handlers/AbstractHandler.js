@@ -1,4 +1,4 @@
-//@flow
+// @flow
 
 import {DepInfo, AbstractMeta, IHandler} from 'reactive-di/core/common'
 import type {Atom} from 'reactive-di/interfaces/atom'
@@ -12,4 +12,4 @@ export default class AbstractHandler {
     }
 }
 
-if (0) ((new AbstractHandler(...(0: any))): IHandler)
+if (0) ((new AbstractHandler(...(0: any))): IHandler) // eslint-disable-line

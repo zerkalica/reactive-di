@@ -1,24 +1,18 @@
 // @flow
 /* eslint-env mocha */
 
-import {spy, match} from 'sinon'
 import assert from 'power-assert'
 
 import React from 'react'
-import ReactDOM from 'react-dom/server'
 
 import {
     abstract,
     cloneComponent,
-    theme,
     component,
     source,
     deps
 } from 'reactive-di/annotations'
 
-import type {StyleSheet} from 'reactive-di/interfaces/component'
-
-import {Component} from 'fake-react'
 import Di from 'reactive-di/core/Di'
 import BaseModel from 'reactive-di/utils/BaseModel'
 
@@ -46,7 +40,7 @@ describe('AliasedComponentTest', () => {
             }
         }
 
-        function TestComponent(props: {}, state: {m: Test}, h) {
+        function TestComponent(props: {}, state: {m: Test}, _h) {
             return <div>{state.m.val}</div>
         }
         deps({m: Test})(TestComponent)
@@ -60,7 +54,7 @@ describe('AliasedComponentTest', () => {
         }
 
         @source({key: 'TestB'})
-        class TestB extends Test{
+        class TestB extends Test {
             static defaults: ModelARec = {
                 val: 'TestB'
             }
@@ -78,7 +72,7 @@ describe('AliasedComponentTest', () => {
             ]
         })
 
-        function Main(props: {}, s, h) {
+        function Main(props: {}, s, _h) {
             return <div>{s.a.val}/{s.b.val}, <TestComponentA/>-<TestComponentB/></div>
         }
         deps({a: TestA, b: TestB})(Main)

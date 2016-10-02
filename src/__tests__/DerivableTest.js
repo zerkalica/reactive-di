@@ -1,14 +1,13 @@
 // @flow
 /* eslint-env mocha */
 
-import {spy, match} from 'sinon'
+import {spy} from 'sinon'
 import assert from 'power-assert'
 
 import {
     service,
     deps,
-    source,
-    factory
+    source
 } from 'reactive-di/annotations'
 
 import Di from 'reactive-di/core/Di'

@@ -16,9 +16,12 @@ export interface Middleware {
 }
 
 type OrigFn<R> = (...args: any[]) => R
-type Wrap = (type: string, origMethod: OrigFn<*>, obj?: ?Object) => OrigFn<*>
 
-function createExec<R>(middleware: Middleware, method: OrigFn<R>, info: ArgsInfo): (args: any[]) => R {
+function createExec<R>(
+    middleware: Middleware,
+    method: OrigFn<R>,
+    info: ArgsInfo
+): (args: any[]) => R {
     return function exec(args: any[]): R {
         return (middleware.exec: any)(method, args, info)
     }
@@ -31,7 +34,7 @@ class ProxyHandlers<T: Object> {
         this._wrapper = wrapper
     }
 
-    get(target: T, key: string, receiver: Proxy<T>): any {
+    get(target: T, key: string, _receiver: Proxy<T>): any {
         const prop: mixed = target[key]
         if (typeof prop === 'function') {
             return this._wrapper.wrapFn(target[key], target)
@@ -41,7 +44,7 @@ class ProxyHandlers<T: Object> {
 
     set(target: T, key: string, value: mixed): boolean {
         const newValue = this._wrapper.set(value, key, target)
-        target[key] = newValue
+        target[key] = newValue // eslint-disable-line
         return true
     }
 }
@@ -52,7 +55,7 @@ class ArgsInfoImpl {
     propName: string
     className: ?string
 
-    constructor(type: string, obj: ?Object, method: Function|string) {
+    constructor(type: string, obj: ?Object, method: Function | string) {
         const propName: string = typeof method === 'string'
             ? method
             : method.displayName || method.name

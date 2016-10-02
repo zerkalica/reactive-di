@@ -1,14 +1,16 @@
 // @flow
+/* eslint-env mocha */
+
 import {spy} from 'sinon'
 import assert from 'power-assert'
-import type {ArgsInfo, Middleware} from 'reactive-di/utils/MiddlewareFactory'
+import type {ArgsInfo} from 'reactive-di/utils/MiddlewareFactory'
 import MiddlewareFactory from 'reactive-di/utils/MiddlewareFactory'
 
 describe('MiddlewareFactoryTest', () => {
     describe('wrap functions', () => {
         it('should modify value', () => {
             class Mdl1 {
-                exec(resolve: (args: any[]) => string, args: any[], info: ArgsInfo): any {
+                exec(resolve: (args: any[]) => string, args: any[], _info: ArgsInfo): any {
                     const result: string = resolve(args)
                     // console.log(`${info.id} called`)
                     return result + 'c'
@@ -26,13 +28,13 @@ describe('MiddlewareFactoryTest', () => {
 
         it('should apply from last to first', () => {
             class Mdl1 {
-                exec(resolve: (args: any[]) => string, args: any[], info: ArgsInfo): any {
+                exec(resolve: (args: any[]) => string, args: any[], _info: ArgsInfo): any {
                     const result: string = resolve(args)
                     return result + 'c'
                 }
             }
             class Mdl2 {
-                exec(resolve: (args: any[]) => string, args: any[], info: ArgsInfo): any {
+                exec(resolve: (args: any[]) => string, args: any[], _info: ArgsInfo): any {
                     const result: string = resolve(args)
                     return result + 'd'
                 }
@@ -58,7 +60,7 @@ describe('MiddlewareFactoryTest', () => {
                 }
             }
             class Mdl2 {
-                exec(resolve: (args: any[]) => string, args: any[], info: ArgsInfo): any {
+                exec(resolve: (args: any[]) => string, args: any[], _info: ArgsInfo): any {
                     const result: string = resolve(args)
                     return result + 'd'
                 }
@@ -83,7 +85,7 @@ describe('MiddlewareFactoryTest', () => {
     describe('wrap classes', () => {
         it('should wrap class methods', () => {
             class Mdl1 {
-                exec(resolve: (args: any[]) => string, args: any[], info: ArgsInfo): any {
+                exec(resolve: (args: any[]) => string, args: any[], _info: ArgsInfo): any {
                     const result: string = resolve(args)
                     // console.log(`${info.id} called`)
                     return result + 'c'
@@ -128,7 +130,7 @@ describe('MiddlewareFactoryTest', () => {
 
         it('should modify on get', () => {
             class Mdl1 {
-                get(result: string, info: ArgsInfo): any {
+                get(result: string, _info: ArgsInfo): any {
                     return result + '2'
                 }
             }
@@ -166,7 +168,7 @@ describe('MiddlewareFactoryTest', () => {
 
         it('should modify on set', () => {
             class Mdl1 {
-                set(oldValue: string, newValue: string, info: ArgsInfo): any {
+                set(oldValue: string, newValue: string, _info: ArgsInfo): any {
                     return newValue + 'a'
                 }
             }
