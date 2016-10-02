@@ -12,7 +12,7 @@ All dependencies presented as [atoms](http://ds300.github.io/derivablejs/#deriva
 
 ## Motivation
 
-We need good OO design with [Composition reuse](https://en.wikipedia.org/wiki/Composition_over_inheritance) and [SOLID](https://en.wikipedia.org/wiki/SOLID_(object-oriented_design) in complex javascript applications on sever and client.
+We need good OO design with [Composition reuse](https://en.wikipedia.org/wiki/Composition_over_inheritance) and [SOLID](https://en.wikipedia.org/wiki/SOLID_(object-oriented_design)) in complex javascript applications on sever and client.
 
 Any stream is wrapper on top of domain data. We need to automate and move most of all reactive-data stream manipulations behind the scene. For example, [mobx](http://mobxjs.github.io/mobx/) is good there.
 
