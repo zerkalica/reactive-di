@@ -11,7 +11,10 @@ export type RegisterDepItem = any
 export type ResultOf<F> = _ResultOf<*, F>
 type _ResultOf<V, F: (...x: any[]) => V> = V // eslint-disable-line
 
-export interface LifeCycle<Dep> {
+/**
+ * Life cycle hooks
+ */
+export type LifeCycle<Dep> = {
     /**
     * Called before dep update, if returned true - component updated
      */

@@ -14,6 +14,9 @@ export interface IDi {
     wrapComponent<Component>(key: SrcComponent<*, *>): Component;
 }
 
+/**
+ * Context, used internally by di handlers
+ */
 export interface IContext extends IDi {
     stopped: Atom<boolean>;
 

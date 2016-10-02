@@ -28,7 +28,13 @@ const dummyComponentFactory: ComponentFactory = {
     }
 }
 
+/**
+ * Main dependency injection container
+ */
 export default class Di {
+    /**
+     * String name of container
+     */
     displayName: string
     stopped: Atom<boolean>
     adapter: Adapter
@@ -42,6 +48,7 @@ export default class Di {
     _path: string[] = []
     _mdlFactory: ?MiddlewareFactory
     static uniqId: number = 1
+
     constructor(
         componentFactory?: ?ComponentFactory,
         createStyleSheet?: ?CreateStyleSheet,
@@ -82,6 +89,9 @@ export default class Di {
         return this
     }
 
+    /**
+     * Create new copy of container and inherit all resolved dependencies
+     */
     create(displayName: string): IContext {
         return (new Di(
             this._componentFactory,

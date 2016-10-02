@@ -1,8 +1,6 @@
 # Reactive DI  [![Build Status](https://secure.travis-ci.org/zerkalica/reactive-di.png)](http://travis-ci.org/zerkalica/reactive-di)
-======================================================================================================================================================
 
 [![NPM](https://nodei.co/npm/reactive-di.png?downloads=true&stars=true)](https://nodei.co/npm/reactive-di/)
-
 
 Solution for dependency injection and state-management, state-to-css, state-to-dom rendering, data loading, optimistic updates and rollbacks.
 
@@ -22,19 +20,20 @@ Any stream is wrapper on top of domain data. We need to automate and move most o
 
 We need to reduce boilerplate code, by maximally using flow-types. Many decorators are unnecessary: use reflection metadata for classes, functions and components.
 
-We need to keep all components clean and usable without di-framework: decorators must be used only for additional metadata, not as wrappers.
+We need to keep all components clean and usable without di: decorators must be used only for additional metadata, not as wrappers.
 
-We need to remove dependencies at react-like frameworks from compiletime to runtime. It give posibility to create unified jsx-based zero-dependency component, which can be used in any jsx-compatible render-to-dom library.
+We need to move dependencies at react-like frameworks from compiletime to runtime. It give posibility to create unified jsx-based zero-dependency component, which can be used in any jsx-compatible render-to-dom library.
 
 We need to provide unified cssx-based component which can be used in any jss-compatible render-to-css library.
 
 ## Install
 
 ```
-npm install reactive-di babel-plugin-transform-metadata
+npm install --save reactive-di
+npm install --save-dev babel-plugin-transform-metadata
 ```
 
-For using unified components, we need to define jsx pragma in transform-metadata:
+For using zero-dependency components, we need to define jsx pragma in transform-metadata:
 
 .babelrc:
 
@@ -51,7 +50,7 @@ For using unified components, we need to define jsx pragma in transform-metadata
 }
 ```
 
-reactive-di requires some polyfills: Promise, Observable (only if observables used in application code), Map, Proxy (only for middlewares).
+reactive-di requires some polyfills: Promise, Observable (only if observables used in application code), Map, Set, Proxy (only for middlewares).
 
 ## Basics
 
