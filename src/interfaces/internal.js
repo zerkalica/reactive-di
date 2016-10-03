@@ -11,6 +11,7 @@ export interface IDi {
     stop(): IDi;
     create(displayName: string): IDi;
     register(registered?: ?RegisterDepItem[]): IDi;
+    values(values?: ?{[id: string]: mixed}): IDi;
     wrapComponent<Component>(key: SrcComponent<*, *>): Component;
 }
 
@@ -29,4 +30,5 @@ export type IContext = {
     stop(): IContext;
     create(displayName: string): IContext;
     register(registered?: ?RegisterDepItem[]): IContext;
+    values(values?: ?{[id: string]: mixed}): IContext;
 } & IDi
