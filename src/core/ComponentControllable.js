@@ -154,9 +154,8 @@ export default class ComponentControllable<State: Object, Component> {
 
     onWillMount(_component: Component): void {
         if (this._isDisposed.get()) {
-            throw new Error(`componentDidMount called after componentWillUnmount: ${this.displayName}`)
+            throw new Error(`componentWillMount called after componentWillUnmount: ${this.displayName}`)
         }
-        this._isMounted.set(true)
         const lcs = this._lcs
         for (let i = 0, l = lcs.length; i < l; i++) {
             const lc = lcs[i]

@@ -89,6 +89,6 @@
     "webpack-dev-server": "^1.16.1"
   },
   "dependencies": {
-    "derivable": "^0.13.0"
+    "derivable": "^0.12.1"
   }
 }
