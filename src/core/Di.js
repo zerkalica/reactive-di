@@ -184,6 +184,7 @@ export default class Di {
             if (lc.isEqual) {
                 value = value.withEquality(lc.isEqual)
             }
+            lc.onUpdate(value.get())
         }
         collector.end(info.lcs, lc)
         info.resolving = false
