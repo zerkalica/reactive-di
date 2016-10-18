@@ -267,13 +267,14 @@ class UpdaterObserver {
     constructor(
         di: IContext,
         maxSize: number,
-        rollbackOnError: boolean
+        rollbackOnError: boolean,
+        pending: boolean
     ) {
         this._di = di
         this._rollbackOnError = rollbackOnError
         this._adapter = di.adapter
         this._qeue = new AsyncQeue((this: Observer<UpdateBucket, OperationErrorRec>), maxSize)
-        this.status = this._adapter.atom(new UpdaterStatus('complete'))
+        this.status = this._adapter.atom(new UpdaterStatus(pending ? 'pending' : 'complete'))
     }
 
     cancel(): void {
@@ -363,6 +364,7 @@ export default class Updater {
 
     static maxSize: number = 10
     static rollbackOnError: boolean = false
+    static pending: boolean = false
 
     constructor(di: IContext) {
         const c = this.constructor
@@ -370,7 +372,8 @@ export default class Updater {
         this._uo = new UpdaterObserver(
             di,
             c.maxSize,
-            c.rollbackOnError
+            c.rollbackOnError,
+            c.pending
         )
         this._uo.displayName = this.displayName + '#updater'
         this.status = this._uo.status
