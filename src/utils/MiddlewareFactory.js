@@ -10,9 +10,9 @@ export interface ArgsInfo {
     propName: string;
 }
 export interface Middleware {
-    get?: <R: any>(value: R, info: ArgsInfo) => R;
-    set?: <R: any>(oldValue: R, newValue: R, info: ArgsInfo) => R;
-    exec?: <R: any>(resolve: (...args: any[]) => R, args: any[], info: ArgsInfo) => R;
+    +get?: <R: any>(value: R, info: ArgsInfo) => R;
+    +set?: <R: any>(oldValue: R, newValue: R, info: ArgsInfo) => R;
+    +exec?: <R: any>(resolve: (...args: any[]) => R, args: any[], info: ArgsInfo) => R;
 }
 
 type OrigFn<R> = (...args: any[]) => R

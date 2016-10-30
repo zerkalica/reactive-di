@@ -1,6 +1,6 @@
 // @flow
 
-import type {Key, ArgDep, RegisterDepItem, LifeCycle} from 'reactive-di/interfaces/deps'
+import type {Key, ArgDep, RegisterDepItem, LifeCycle} from 'reactive-di/interfaces/deps' // eslint-disable-line
 import type {IsEqual, Atom} from 'reactive-di/interfaces/atom'
 import type {IContext} from 'reactive-di/interfaces/internal'
 import type {RawStyleSheet} from 'reactive-di/interfaces/component'
@@ -13,6 +13,8 @@ export const paramTypesKey: string = 'design:paramtypes'
 export const subtypeKey: string = 'design:subtype'
 export const metaKey: string = 'rdi:meta'
 export const lcKey: string = 'rdi:lcs'
+
+export const atomKey: Symbol = Symbol('rdi:atom')
 
 export class ThemeMeta {
     type: 'theme' = 'theme'

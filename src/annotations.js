@@ -13,7 +13,7 @@ import {
     ServiceMeta,
     AbstractMeta
 } from 'reactive-di/core/common'
-import type {ArgDep, LifeCycle} from 'reactive-di/interfaces/deps'
+import type {ArgDep, LifeCycle} from 'reactive-di/interfaces/deps' // eslint-disable-line
 import Updater from 'reactive-di/core/Updater'
 import type {ComponentMetaRec, SourceMetaRec} from 'reactive-di/core/common'
 

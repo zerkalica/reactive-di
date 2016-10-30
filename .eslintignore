@@ -5,3 +5,5 @@
 **/conf/*
 **/node_modules/*
 **/flow-typed/*
+deps.js
+MiddlewareFactory.js

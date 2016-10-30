@@ -1,6 +1,6 @@
 // @flow
 
-import type {RegisterDepItem, Key} from 'reactive-di/interfaces/deps'
+import type {RegisterDepItem, Key} from 'reactive-di/interfaces/deps' // eslint-disable-line
 import type {IContext} from 'reactive-di/interfaces/internal'
 import {DepInfo} from 'reactive-di/core/common'
 

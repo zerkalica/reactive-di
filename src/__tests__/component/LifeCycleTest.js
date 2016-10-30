@@ -23,7 +23,7 @@ import {renderIntoDocument} from 'react-addons-test-utils'
 
 type ReactComponent<Props, State> = React$Component<*, Props, State>
 
-function render(raw) {
+function render(raw: mixed) {
     return renderIntoDocument(React.createElement(raw))
 }
 
@@ -48,7 +48,7 @@ describe('LifeCycleTest', () => {
             m: ModelA;
         }
 
-        function TestComponent(props: Props, state: State, _h): mixed {
+        function TestComponent(props: Props, state: State, _h: mixed): mixed {
             return <div>{state.m.val}</div>
         }
         deps({m: ModelA})(TestComponent)

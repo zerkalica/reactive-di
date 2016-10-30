@@ -28,7 +28,7 @@ describe('InitializerTest', () => {
         }
     }
 
-    function createComponent(update) {
+    function createComponent(update: any) {
         @deps(Di)
         class ModelAUpdater extends Updater {}
 
@@ -68,17 +68,17 @@ describe('InitializerTest', () => {
                 // console.log(this.constructor.info)
                 this.ctl = new ComponentControllable(
                     this.constructor.info,
-                    (state) => this.setState(state)
+                    (state: Object) => this.setState(state)
                 )
                 Object.assign(this, this.ctl.getState())
             }
-            setState(state) {
+            setState(state: Object) {
                 Object.assign(this, state)
             }
         }
 
         const di = new Di({
-            createElement(h) {
+            createElement(h: mixed) {
                 return h
             },
             wrapComponent(info: any): any {

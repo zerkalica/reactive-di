@@ -19,7 +19,7 @@ import ReactComponentFactory from 'reactive-di/adapters/ReactComponentFactory'
 import {renderIntoDocument} from 'react-addons-test-utils'
 import {findDOMNode} from 'react-dom'
 
-function render(raw) {
+function render(raw: mixed) {
     return renderIntoDocument(React.createElement(raw))
 }
 
@@ -43,7 +43,7 @@ describe('ComponentTest', () => {
             m: ModelA;
         }
 
-        function TestComponent(props: Props, state: State, _h): mixed {
+        function TestComponent(props: Props, state: State, _h: mixed): mixed {
             return <div>{state.m.val}</div>
         }
         deps({m: ModelA})(TestComponent)

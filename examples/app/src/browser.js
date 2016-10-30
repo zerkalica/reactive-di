@@ -148,7 +148,7 @@ interface UserComponentState {
 function UserComponent(
     {children}: UserComponentProps,
     {theme: t, user, loading, saving, service}: UserComponentState,
-    _h
+    _h: mixed
 ): mixed {
     if (loading.pending) {
         return <div className={t.wrapper}>Loading...</div>
@@ -177,7 +177,7 @@ const render = (widget: Function, attrs: ?Object) => {
 
 const di = (new Di(
     new ReactComponentFactory(React),
-    (styles) => jss.createStyleSheet(styles)
+    (styles: mixed) => jss.createStyleSheet(styles)
 ))
     .values({
         Fetcher: new Fetcher()

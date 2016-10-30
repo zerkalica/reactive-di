@@ -4,8 +4,8 @@
 import {spy} from 'sinon'
 import assert from 'power-assert'
 
+import type {ArgsInfo} from 'reactive-di/utils/MiddlewareFactory' // eslint-disable-line
 import Di from 'reactive-di/core/Di'
-import type {ArgsInfo} from 'reactive-di/utils/MiddlewareFactory'
 
 describe('MiddlewareTest', () => {
     it('exec on method call', () => {

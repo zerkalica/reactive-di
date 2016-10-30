@@ -71,10 +71,10 @@ describe('UpdaterTest', () => {
         const val2 = 'test2'
         let resolve1: Function
         let resolve2: Function
-        const promise1 = new Promise((r) => {
+        const promise1 = new Promise((r: Function) => {
             resolve1 = r
         })
-        const promise2 = new Promise((r) => {
+        const promise2 = new Promise((r: Function) => {
             resolve2 = r
         })
         const modelAObservable = new Observable((observer: Observer<ModelA | ModelA[], Error>) => {

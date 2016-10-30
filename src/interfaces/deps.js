@@ -18,25 +18,25 @@ export interface LifeCycle<Dep> {
     /**
     * Called before dep update, if returned true - component updated
      */
-    isEqual?: (oldDep: Dep, newDep: Dep) => boolean;
+    +isEqual?: (oldDep: Dep, newDep: Dep) => boolean;
 
     /**
     * Called before first mount of any component, works on server side
      */
-    onWillMount?: (dep: Dep) => void;
+    +onWillMount?: (dep: Dep) => void;
 
     /**
     * Called on first mount of any component
      */
-    onMount?: (dep: Dep) => void;
+    +onMount?: (dep: Dep) => void;
 
     /**
     * Called on last unmount of any component
      */
-    onUnmount?: (dep: Dep) => void;
+    +onUnmount?: (dep: Dep) => void;
 
     /**
      * Called on Dep dependencies changes
      */
-    onUpdate?: (oldDep: Dep, newDep: Dep) => void;
+    +onUpdate?: (oldDep: Dep, newDep: Dep) => void;
 }

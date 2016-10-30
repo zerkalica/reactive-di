@@ -1,6 +1,6 @@
 // @flow
 
-import type {Key} from 'reactive-di/interfaces/deps'
+import type {Key} from 'reactive-di/interfaces/deps' // eslint-disable-line
 
 export type SingleSyncUpdate = Object
 export type SingleAsyncUpdateResult = Promise<SingleSyncUpdate>

@@ -80,7 +80,7 @@ describe('UpdaterStatusTest', () => {
         di.val(MyUpdater1).get().setSingle(() => promiseA, ModelA)
 
         let resolveFn: Function
-        const promiseB = new Promise((resolve) => {
+        const promiseB = new Promise((resolve: Function) => {
             resolveFn = resolve
         })
         di.val(MyUpdater2).get().setSingle(() => promiseB, ModelB)

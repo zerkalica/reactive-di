@@ -1,12 +1,12 @@
 // @flow
 
-import {DepInfo, isComponent, InternalLifeCycle} from 'reactive-di/core/common'
+import {DepInfo, isComponent, InternalLifeCycle, atomKey} from 'reactive-di/core/common'
 import type {IHandler, RdiMeta} from 'reactive-di/core/common'
 
 import {deps} from 'reactive-di/annotations'
 
 import type {IContext} from 'reactive-di/interfaces/internal'
-import type {RegisterDepItem, ArgDep, Key} from 'reactive-di/interfaces/deps'
+import type {RegisterDepItem, ArgDep, Key} from 'reactive-di/interfaces/deps' // eslint-disable-line
 import type {Adapter, Atom, DerivableArg, DerivableDict, Derivable} from 'reactive-di/interfaces/atom'
 import type {ComponentFactory, CreateStyleSheet} from 'reactive-di/interfaces/component'
 
@@ -16,11 +16,11 @@ import createHandlers from 'reactive-di/core/createHandlers'
 import MetaRegistry from 'reactive-di/core/MetaRegistry'
 import Updater from 'reactive-di/core/Updater'
 import Collector from 'reactive-di/core/Collector'
-import type {Middleware} from 'reactive-di/utils/MiddlewareFactory'
-import MiddlewareFactory from 'reactive-di/utils/MiddlewareFactory'
+import type {Middleware} from 'reactive-di/utils/MiddlewareFactory' // eslint-disable-line
+import MiddlewareFactory from 'reactive-di/utils/MiddlewareFactory' // eslint-disable-line
 
 const dummyComponentFactory: ComponentFactory = {
-    createElement(arg) {
+    createElement<V>(arg: V): V {
         return arg
     },
     wrapComponent() {
@@ -198,13 +198,14 @@ export default class Di {
         return `${debugName(sub)} [${this._path.join('.')}]`
     }
 
-    preprocess(raw: any, {meta}: DepInfo<*, *>): any {
+    preprocess(raw: any, depInfo: DepInfo<*, *>): any {
         let value = raw
         if (this._mdlFactory) {
-            value = this._mdlFactory.wrap(value, meta.type)
+            value = this._mdlFactory.wrap(value, depInfo.meta.type)
         }
         if (value && typeof value === 'object') {
             value.__di = this.displayName
+            value[atomKey] = depInfo
         }
         return value
     }

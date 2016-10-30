@@ -1,7 +1,7 @@
 /* @flow */
 
-const STRIP_COMMENTS: RegExp = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
-const FN_MAGIC: string = 'function';
+const STRIP_COMMENTS: RegExp = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg
+const FN_MAGIC: string = 'function'
 
 function propToStr(prop: mixed): string {
     if (typeof prop === 'object' || typeof prop === 'function') {
@@ -37,7 +37,7 @@ export default function debugName(
 
     if (fn === Object) {
         return 'Object { ' + Object.keys(func).slice(5)
-            .map((key) => `${key}: ${propToStr((func: any)[key])}`)
+            .map((key: string) => `${key}: ${propToStr((func: any)[key])}`)
             .join(', ')
             + ' }'
     }

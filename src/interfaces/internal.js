@@ -1,6 +1,6 @@
 // @flow
 
-import type {Key, ArgDep, RegisterDepItem} from 'reactive-di/interfaces/deps'
+import type {Key, ArgDep, RegisterDepItem} from 'reactive-di/interfaces/deps' // eslint-disable-line
 import type {Adapter, Atom, Derivable} from 'reactive-di/interfaces/atom'
 import type {SrcComponent} from 'reactive-di/interfaces/component'
 

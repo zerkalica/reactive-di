@@ -1,4 +1,4 @@
-import 'babel-polyfill'
+import 'babel-polyfill' // eslint-disable-line
 import glob from 'glob'
 import jsdom from 'jsdom'
 

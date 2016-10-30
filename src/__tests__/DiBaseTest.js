@@ -14,7 +14,7 @@ import {
 import Di from 'reactive-di/core/Di'
 import BaseModel from 'reactive-di/utils/BaseModel'
 
-const FN: (a: string) => void = ((() => {}): any);
+const FN: (a: string) => void = ((() => {}): any)
 // type FN = typeof FN
 function createFn(): typeof FN {
     return (_a: string) => {}

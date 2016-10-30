@@ -3,8 +3,8 @@
 
 import {spy} from 'sinon'
 import assert from 'power-assert'
-import type {ArgsInfo} from 'reactive-di/utils/MiddlewareFactory'
-import MiddlewareFactory from 'reactive-di/utils/MiddlewareFactory'
+import type {ArgsInfo} from 'reactive-di/utils/MiddlewareFactory'  // eslint-disable-line
+import MiddlewareFactory from 'reactive-di/utils/MiddlewareFactory'  // eslint-disable-line
 
 describe('MiddlewareFactoryTest', () => {
     describe('wrap functions', () => {

@@ -3,21 +3,11 @@
 import {DepInfo, InternalLifeCycle, ComponentMeta} from 'reactive-di/core/common'
 
 import type {Atom, Derivable, Adapter} from 'reactive-di/interfaces/atom'
-import type {LifeCycle} from 'reactive-di/interfaces/deps'
 import type {CreateElement, IComponentControllable} from 'reactive-di/interfaces/component'
 import type {IContext} from 'reactive-di/interfaces/internal'
 
 function pickFirstArg<V>(v: any[]): V {
     return v[0]
-}
-
-class ComponentLifeCycle<Component> extends InternalLifeCycle<Component> {
-    _lc: LifeCycle<Component>
-    _onUpdate(component: Component): void {
-        if (this._lc.onUpdate) {
-            this._lc.onUpdate(component, component)
-        }
-    }
 }
 
 export default class ComponentControllable<State: Object, Component> {
@@ -30,7 +20,7 @@ export default class ComponentControllable<State: Object, Component> {
     _isOwnedContainer: boolean
     _isDisposed: Atom<boolean>
 
-    _cls: ComponentLifeCycle<*>
+    _cls: InternalLifeCycle<*>
 
     constructor<V>(
         {deps, meta, ctx, name, lc}: DepInfo<V, ComponentMeta>,
@@ -50,7 +40,7 @@ export default class ComponentControllable<State: Object, Component> {
         this._isDisposed = ad.atom(false)
         this._isMounted = ad.atom(false)
         this._lcs = []
-        this._cls = new ComponentLifeCycle(lc ? container.val(lc).get() : {})
+        this._cls = new InternalLifeCycle(lc ? container.val(lc).get() : {})
 
         if (deps.length) {
             this._stateAtom = container.resolveDeps(deps, this._lcs).derive(pickFirstArg)
@@ -152,7 +142,7 @@ export default class ComponentControllable<State: Object, Component> {
         this._cls.onMount()
     }
 
-    onWillMount(_component: Component): void {
+    onWillMount(component: Component): void {
         if (this._isDisposed.get()) {
             throw new Error(`componentWillMount called after componentWillUnmount: ${this.displayName}`)
         }
@@ -161,6 +151,7 @@ export default class ComponentControllable<State: Object, Component> {
             const lc = lcs[i]
             lc.onWillMount()
         }
+        this._cls.onUpdate(component)
         this._cls.onWillMount()
     }
 }

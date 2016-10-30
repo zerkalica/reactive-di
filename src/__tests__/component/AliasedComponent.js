@@ -21,7 +21,7 @@ import ReactComponentFactory from 'reactive-di/adapters/ReactComponentFactory'
 import {renderIntoDocument} from 'react-addons-test-utils'
 import {findDOMNode} from 'react-dom'
 
-function render(raw) {
+function render(raw: mixed) {
     return renderIntoDocument(React.createElement(raw))
 }
 
@@ -40,7 +40,7 @@ describe('AliasedComponentTest', () => {
             }
         }
 
-        function TestComponent(props: {}, state: {m: Test}, _h) {
+        function TestComponent(props: {}, state: {m: Test}, _h: mixed) {
             return <div>{state.m.val}</div>
         }
         deps({m: Test})(TestComponent)
@@ -72,7 +72,7 @@ describe('AliasedComponentTest', () => {
             ]
         })
 
-        function Main(props: {}, s, _h) {
+        function Main(props: {}, s: Object, _h: mixed) {
             return <div>{s.a.val}/{s.b.val}, <TestComponentA/>-<TestComponentB/></div>
         }
         deps({a: TestA, b: TestB})(Main)

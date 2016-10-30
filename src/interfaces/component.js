@@ -12,7 +12,7 @@ export interface RawStyleSheet {
     __styles: StyleSheet;
 }
 
-export type CreateStyleSheet = (css: {[id: string]: Object}) => StyleSheet;
+export type CreateStyleSheet = (css: {[id: string]: Object}) => StyleSheet
 
 export type SrcComponent<Props, State> = (props: Props, state: State) => any
 

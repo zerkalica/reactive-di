@@ -2,7 +2,7 @@
 
 import {DepInfo, ServiceMeta, IHandler} from 'reactive-di/core/common'
 import type {Atom, Derivable} from 'reactive-di/interfaces/atom'
-import type {DepFn} from 'reactive-di/interfaces/deps'
+import type {DepFn} from 'reactive-di/interfaces/deps' // eslint-disable-line
 
 import debugName from 'reactive-di/utils/debugName'
 import {fastCall, fastCallMethod, fastCreateObject} from 'reactive-di/utils/fastCall'

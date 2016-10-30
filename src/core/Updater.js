@@ -1,7 +1,9 @@
 // @flow
-import type {Key} from 'reactive-di/interfaces/deps'
+import type {Key} from 'reactive-di/interfaces/deps' // eslint-disable-line
 import type {Adapter, Atom, Derivable} from 'reactive-di/interfaces/atom'
 import type {IContext} from 'reactive-di/interfaces/internal'
+import {atomKey} from 'reactive-di/core/common'
+
 import type {
     MultiAsyncUpdate,
     MultiUpdate,
@@ -235,7 +237,7 @@ class AsyncQeue {
 
     _removeSubscription(item: Subscription): void {
         this.size = this.size - 1
-        this._subscriptions = this._subscriptions.filter((target) => target !== item)
+        this._subscriptions = this._subscriptions.filter((target: Subscription) => target !== item)
         if (this.size) {
             this._run()
         }
@@ -346,7 +348,8 @@ class UpdaterObserver {
             if (needRollback) {
                 pd.push(rec)
             }
-            di.val(key).swap(cloneInstance, props)
+            const atom = props[atomKey] ? props[atomKey].value : di.val(key)
+            atom.swap(cloneInstance, props)
         }
         if (!needRollback) {
             this.status.set(new UpdaterStatus('complete'))

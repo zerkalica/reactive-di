@@ -19,7 +19,7 @@ import {Di, Updater} from 'reactive-di/index'
 
 import ReactComponentFactory from 'reactive-di/adapters/ReactComponentFactory'
 
-function render(raw) {
+function render(raw: mixed) {
     return renderIntoDocument(React.createElement(raw))
 }
 
