@@ -210,7 +210,7 @@ export default class Di {
         return value
     }
 
-    resolveDeps(argDeps: ArgDep[], lcs?: InternalLifeCycle<*>[]): Derivable<mixed[]> {
+    resolveDeps(argDeps: ArgDep[], lcs?: InternalLifeCycle<*>[]): Derivable<any[]> {
         const resolvedArgs: DerivableArg[] = []
         if (lcs) {
             this._collector.begin()

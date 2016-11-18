@@ -106,7 +106,7 @@ export class InternalLifeCycle<V> {
         this.isEqual = lc.isEqual
             ? (a: V, b: V) => {
                 // @todo remove b.equals after fixing https://github.com/ds300/derivablejs/issues/52
-                return b.equals ? true : (lc: any).isEqual(a, b)
+                return (b: any).equals ? true : (lc: any).isEqual(a, b)
             }
             : null
     }
