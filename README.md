@@ -4,6 +4,8 @@
 
 Solution for dependency injection and state-management, state-to-css, state-to-dom rendering, data loading, optimistic updates and rollbacks.
 
+[todomvc](https://github.com/zerkalica/reactive-di-todomvc) example app.
+
 ## About
 
 Hierarchical scope, state management IoC container uses a class constructor or function signature to identify and inject its dependencies.
