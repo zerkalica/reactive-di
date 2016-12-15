@@ -6,8 +6,8 @@ import ReactDOM from 'react-dom'
 import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
-import {Updater, UpdaterStatus, Di, ReactComponentFactory} from 'reactive-di/index'
-import {hooks, theme, component, updaters, source} from 'reactive-di/annotations'
+import {getSetter, getStatus, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
+import {hooks, theme, component, source} from 'reactive-di/annotations'
 
 const userFixture = {
     id: 1,
@@ -16,7 +16,7 @@ const userFixture = {
 }
 
 // Fetcher service, could be injected from outside by key 'Fetcher' as is
-@source({key: 'Fetcher', construct: false})
+@source({key: 'Fetcher', instance: true})
 class Fetcher {
     fetch<V>(_url: string): Promise<V> {
         // fake fetcher for example
@@ -24,13 +24,8 @@ class Fetcher {
     }
 }
 
-// Create separate updater qeue for user
-class UserUpdater extends Updater {}
-
 @source({key: 'User'})
 class User {
-    static Updater: Class<Updater> = UserUpdater
-
     id: number
     name: string
     email: string
@@ -44,23 +39,30 @@ class User {
 
 @hooks(User)
 class UserHooks {
-    _updater: Updater
     _fetcher: Fetcher
+    _user: User
 
-    constructor(fetcher: Fetcher, updater: Updater) {
+    constructor(fetcher: Fetcher, user: User) {
         this._fetcher = fetcher
-        this._updater = updater
+        this._user = user
     }
 
-    onMount(_user: User): void {
-        this._updater.setSingle(
-            () => this._fetcher.fetch('/user'),
-            User
-        )
+    willMount(): void {
+        const status = getStatus(this._user)
+        const statVal = status.get()
+        status.set(statVal.copy('pending'))
+        this._fetcher.fetch('/user')
+            .then((user: Object) => {
+                status.set(statVal.copy('complete'))
+                getSetter(this._user).merge(user, true)
+            })
+            .catch((error: Error) => {
+                status.set(statVal.copy('error', error))
+            })
     }
 
-    onUnmount(_user: User): void {
-        this._updater.cancel()
+    willUnmount(_user: User): void {
+        // this._updater.cancel()
     }
 }
 
@@ -74,39 +76,36 @@ class ThemeVars {
 }
 
 
-class UserServiceUpdater extends Updater {}
 class UserService {
-    static Updater: Class<Updater> = UserServiceUpdater
-    _updater: Updater
     _fetcher: Fetcher
     _user: User
+    _tv: ThemeVars
 
     constructor(
         fetcher: Fetcher,
-        updater: Updater,
-        user: User
+        user: User,
+        tv: ThemeVars
     ) {
         this._fetcher = fetcher
-        this._updater = updater
         this._user = user
+        this._tv = tv
     }
 
     submit: () => void = () => {
-        this._updater.set([
-
-        ])
     }
 
     changeColor: () => void = () => {
-        this._updater.setSingle({color: 'green'}, ThemeVars)
+        getSetter(this._tv).merge({color: 'green'}, true)
     }
 }
 
-@updaters(User.Updater, UserService.Updater)
-class LoadingUpdaterStatus extends UpdaterStatus {}
+class LoadingUpdaterStatus extends SourceStatus {
+    static statuses = [User, UserService]
+}
 
-@updaters(UserService.Updater)
-class SavingUpdaterStatus extends UpdaterStatus {}
+class SavingUpdaterStatus extends SourceStatus {
+    static statuses = [UserService]
+}
 
 // Provide class names and data for jss in __css property
 @theme
@@ -144,12 +143,10 @@ interface UserComponentState {
     service: UserService;
 }
 
-/* jsx-pragma h */
 function UserComponent(
     {children}: UserComponentProps,
-    {theme: t, user, loading, saving, service}: UserComponentState,
-    _h: mixed
-): mixed {
+    {theme: t, user, loading, saving, service}: UserComponentState
+) {
     if (loading.pending) {
         return <div className={t.wrapper}>Loading...</div>
     }
@@ -162,7 +159,7 @@ function UserComponent(
         {children}
         <button disabled={saving.pending} onClick={service.submit}>Save</button>
         {saving.error
-            ? <div>Saving error: {saving.error.message}, <a href="/" onClick={saving.retry}>Retry</a></div>
+            ? <div>Saving error: {saving.error.message}</div>
             : null
         }
     </div>
@@ -170,17 +167,17 @@ function UserComponent(
 component()(UserComponent)
 
 jss.use(jssCamel)
-const node: HTMLElement = window.document.getElementById('app')
-const render = (widget: Function, attrs: ?Object) => {
-    ReactDOM.render(React.createElement(widget, attrs), node)
-}
 
-const di = (new Di(
-    new ReactComponentFactory(React),
-    (styles: mixed) => jss.createStyleSheet(styles)
-))
-    .values({
+const di = (new DiFactory({
+    values: {
+        AbstractSheetFactory: jss,
         Fetcher: new Fetcher()
-    })
+    },
+    componentFactory: new ReactComponentFactory(React)
+}))
+    .create()
 
-render(di.wrapComponent(UserComponent))
+ReactDOM.render(
+    React.createElement(di.wrapComponent(UserComponent)),
+    window.document.getElementById('app')
+)
