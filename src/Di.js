@@ -172,8 +172,7 @@ export default class Di<Component, Element> {
     }
 
     wrapComponent<Props, State>(tag: IComponent<Props, State, Element>): Component {
-        return (this.items[tag._rdiId || 0]: any).component
-            || this.resolveConsumer(tag).component
+        return ((this.items[tag._rdiId || 0]: any) || this.resolveConsumer(tag)).component
     }
 
     resolveSource<V>(key: IKey): ISource<V> {
