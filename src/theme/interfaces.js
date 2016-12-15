@@ -1,0 +1,21 @@
+// @flow
+
+export type CssObj = Object
+
+export interface RawStyleSheet {
+    __css: CssObj;
+}
+
+export interface StyleSheet {
+    classes: {[id: string]: string};
+    attach(): void;
+    detach(): void;
+}
+
+export class AbstractSheetFactory {
+    static _rdiAbs = true
+
+    createStyleSheet(_cssObj: CssObj): StyleSheet {
+        throw new Error('implement')
+    }
+}

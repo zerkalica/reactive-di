@@ -1,5 +1,0 @@
-// @flow
-
-import CustomReflect from './src/CustomReflect'
-
-export default CustomReflect
