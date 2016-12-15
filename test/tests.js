@@ -20,4 +20,4 @@ function propagateToGlobal(window: Object) {
 propagateToGlobal(win)
 
 
-glob.sync(__dirname + '/../src/**/__tests__/**/*.js').forEach((file) => require(file)) // eslint-disable-line
+glob.sync(__dirname + '/spec/**/*.js').forEach((file) => require(file)) // eslint-disable-line

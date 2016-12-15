@@ -9,8 +9,10 @@ import valueSetter from './utils/valueSetter'
 import debugName from './utils/debugName'
 
 import SourceStatus from './atoms/SourceStatus'
+import ReactComponentFactory from './adapters/ReactComponentFactory'
 
 export {
+    ReactComponentFactory,
     SourceStatus,
     getSetter,
     getStatus,

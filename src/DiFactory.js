@@ -18,10 +18,10 @@ import Di from './Di'
 export type IOpts<Component, Element> = {
     values?: {[id: string]: any};
     defaultErrorComponent: IKey;
-    errorHandler: IErrorHandler;
+    errorHandler?: IErrorHandler;
     componentFactory: IComponentFactory<Component, Element>;
     debug?: boolean;
-    middlewares: ?IMiddlewares;
+    middlewares?: IMiddlewares;
 }
 
 class DefaultErrorHandler {

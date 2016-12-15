@@ -3,6 +3,7 @@
 import type {
     ICreateElement,
     IHasForceUpdate,
+    IHasCreateComponent,
     IContext,
     IConsumerListener,
     IGetable,
@@ -86,6 +87,7 @@ export default class ConsumerListener<
 
     update<V>(newItem: V): void {
         this._props.item = newItem
+        this._lastProps = null
         this._updater.forceUpdate()
     }
 
@@ -224,7 +226,11 @@ export default class ConsumerListener<
         this._lastProps = this._props
         this._lastState = this._parent.state
         try {
-            return (this._proto.cached || this._proto.get())(this._props, this._lastState)
+            return (this._proto.cached || this._proto.get())(
+                this._props,
+                this._lastState,
+                (this: IHasCreateComponent<Element>)
+            )
         } catch (error) {
             this._setError(error)
             return this._renderError()
