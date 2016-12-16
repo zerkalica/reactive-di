@@ -5,7 +5,7 @@ import getSetter, {getStatus} from './getSetter'
 
 import IndexCollection from './utils/IndexCollection'
 import refsSetter from './utils/refsSetter'
-import valueSetter from './utils/valueSetter'
+import valueSetter, {statusSetter} from './utils/valueSetter'
 import debugName from './utils/debugName'
 
 import SourceStatus from './atoms/SourceStatus'
@@ -19,6 +19,7 @@ export {
     debugName,
     refsSetter,
     valueSetter,
+    statusSetter,
     IndexCollection,
     DiFactory
 }

@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom'
 import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
-import {valueSetter, refsSetter, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
+import {valueSetter, statusSetter, refsSetter, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
 import {hooks, theme, component, source} from 'reactive-di/annotations'
 
 const userFixture = {
@@ -30,7 +30,7 @@ class User {
     name = ''
     email = ''
     set = valueSetter(this)
-    setStatus = valueSetter(this, true)
+    setStatus = statusSetter(this)
 
     copy(rec: $Shape<this>): this {
         return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
@@ -46,14 +46,14 @@ class UserHooks {
     }
 
     willMount(user: User): void {
-        user.setStatus._({type: 'pending'})
+        user.setStatus({type: 'pending'})
         this._fetcher.fetch('/user')
             .then((userData: $Shape<User>) => {
-                user.setStatus._({type: 'complete'})
-                user.set._(userData)
+                user.setStatus({type: 'complete'})
+                user.set(userData)
             })
             .catch((error: Error) => {
-                user.setStatus._({type: 'error', error})
+                user.setStatus({type: 'error', error})
             })
     }
 
