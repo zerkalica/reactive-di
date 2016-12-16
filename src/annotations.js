@@ -50,7 +50,7 @@ export function source<V: Function>(rec: SourceMetaRec): (target: V) => V {
     }
 }
 
-export function service<V: Function>(target: V): V {
+export function actions<V: Function>(target: V): V {
     target._rdiEnd = true
     return target
 }

@@ -6,8 +6,8 @@ import ReactDOM from 'react-dom'
 import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
-import {valueSetter, statusSetter, refsSetter, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
-import {hooks, theme, component, source} from 'reactive-di/annotations'
+import {valueSetter, Updater, refsSetter, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
+import {actions, hooks, theme, component, source} from 'reactive-di/annotations'
 
 const userFixture = {
     id: 1,
@@ -30,7 +30,6 @@ class User {
     name = ''
     email = ''
     set = valueSetter(this)
-    setStatus = statusSetter(this)
 
     copy(rec: $Shape<this>): this {
         return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
@@ -40,25 +39,15 @@ class User {
 @hooks(User)
 class UserHooks {
     _fetcher: Fetcher
+    _updater: Updater
 
-    constructor(fetcher: Fetcher) {
+    constructor(fetcher: Fetcher, updater: Updater) {
         this._fetcher = fetcher
+        this._updater = updater
     }
 
     willMount(user: User): void {
-        user.setStatus({type: 'pending'})
-        this._fetcher.fetch('/user')
-            .then((userData: $Shape<User>) => {
-                user.setStatus({type: 'complete'})
-                user.set(userData)
-            })
-            .catch((error: Error) => {
-                user.setStatus({type: 'error', error})
-            })
-    }
-
-    willUnmount(): void {
-        // this._updater.cancel()
+        this._updater.run(user, this._fetcher.fetch('/user'))
     }
 }
 
@@ -73,35 +62,34 @@ class ThemeVars {
     }
 }
 
+class UserRefs {
+    name: ?HTMLElement
+    set = refsSetter(this)
+}
 
+@actions
 class UserService {
     _fetcher: Fetcher
     _user: User
     _tv: ThemeVars
-    _refs: {
-        name: ?HTMLElement;
-    }
-
-    setRef: {
-        name: (e: HTMLElement) => void;
-    }
+    _refs: UserRefs
 
     constructor(
         fetcher: Fetcher,
         user: User,
+        refs: UserRefs,
         tv: ThemeVars
     ) {
         this._fetcher = fetcher
         this._user = user
         this._tv = tv
-        this._refs = {name: null}
-        this.setRef = refsSetter(this._refs)
+        this._refs = refs
     }
 
-    submit: () => void = () => {
+    submit(): void {
     }
 
-    changeColor: () => void = () => {
+    changeColor(): void {
         this._tv.set.color('green')
     }
 }
@@ -145,6 +133,7 @@ interface UserComponentProps {
 interface UserComponentState {
     theme: UserComponentTheme;
     user: User;
+    refs: UserRefs;
     loading: LoadingUpdaterStatus;
     saving: SavingUpdaterStatus;
     service: UserService;
@@ -152,7 +141,7 @@ interface UserComponentState {
 
 function UserComponent(
     props: {},
-    {theme: t, user, loading, saving, service}: UserComponentState
+    {theme: t, user, loading, saving, refs, service}: UserComponentState
 ) {
     if (loading.pending) {
         return <div className={t.wrapper}>Loading...</div>
@@ -163,7 +152,7 @@ function UserComponent(
 
     return <div className={t.wrapper}>
         <span className={t.name}>Name: <input
-            ref={service.setRef.name}
+            ref={refs.set.name}
             value={user.name}
             name="user.name"
             id="user.id"

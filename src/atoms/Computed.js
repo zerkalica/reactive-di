@@ -15,6 +15,7 @@ import resolveArgs from './resolveArgs'
 
 type IRef<V> = {
     cached: V;
+    context: IContext;
     _middlewares: ?IMiddlewares;
 }
 
@@ -28,6 +29,7 @@ const refProxyHandler = {
                 if (r._middlewares) {
                     r._middlewares.onMethodCall(r.cached, name, args, result)
                 }
+                r.context.notifier.commit()
                 return result
             }
             val.displayName = name
@@ -53,6 +55,7 @@ function createFunctionProxy<V>(ref: IRef<V>): () => V {
         if (ref._middlewares) {
             ref._middlewares.onFuncCall((ref.cached: any), args, result)
         }
+        ref.context.notifier.commit()
         return result
     }
 }

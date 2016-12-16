@@ -5,7 +5,8 @@ import type {ISourceStatus} from './interfaces'
 export type SourceStatusType = 'pending' | 'complete' | 'error'
 
 export type SourceStatusOpts = {
-    type?: SourceStatusType;
+    complete?: boolean;
+    pending?: boolean;
     error?: ?Error;
 }
 
@@ -14,11 +15,11 @@ export default class SourceStatus {
     pending: boolean
     error: ?Error
 
-    constructor({type, error}?: SourceStatusOpts = {}) {
+    constructor(opts?: SourceStatusOpts = {}) {
         (this: ISourceStatus) // eslint-disable-line
-        this.complete = type === 'complete'
-        this.pending = !type || type === 'pending'
-        this.error = error || null
+        this.complete = opts.complete || false
+        this.pending = opts.pending || (!opts.error && !opts.complete) || false
+        this.error = opts.error || null
     }
 
     isEqual(status: ISourceStatus): boolean {
