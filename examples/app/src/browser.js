@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom'
 import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
-import {valueSetter, refsSetter, getSetter, getStatus, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
+import {valueSetter, refsSetter, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
 import {hooks, theme, component, source} from 'reactive-di/annotations'
 
 const userFixture = {
@@ -30,6 +30,7 @@ class User {
     name = ''
     email = ''
     set = valueSetter(this)
+    setStatus = valueSetter(this, true)
 
     copy(rec: $Shape<this>): this {
         return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
@@ -45,15 +46,14 @@ class UserHooks {
     }
 
     willMount(user: User): void {
-        const status = getStatus(user)
-        status.merge({type: 'pending'}, true)
+        user.setStatus._({type: 'pending'})
         this._fetcher.fetch('/user')
             .then((userData: $Shape<User>) => {
-                status.merge({type: 'complete'})
-                getSetter(user).merge(userData, true)
+                user.setStatus._({type: 'complete'})
+                user.set._(userData)
             })
             .catch((error: Error) => {
-                status.merge({type: 'error', error}, true)
+                user.setStatus._({type: 'error', error})
             })
     }
 
@@ -65,9 +65,11 @@ class UserHooks {
 // Model ThemeVars, could be injected from outside by key 'ThemeVars' as ThemeVarsRec
 @source({key: 'ThemeVars'})
 class ThemeVars {
-    color: string
-    constructor(r?: Object = {}) {
-        this.color = r.color || 'red'
+    color = 'red'
+    set = valueSetter(this)
+
+    copy(rec: $Shape<this>): this {
+        return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
     }
 }
 
@@ -100,7 +102,7 @@ class UserService {
     }
 
     changeColor: () => void = () => {
-        getSetter(this._tv).merge({color: 'green'}, true)
+        this._tv.set.color('green')
     }
 }
 
