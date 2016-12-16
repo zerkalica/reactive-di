@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom'
 import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
-import {valueSetter, Updater, refsSetter, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
+import {BaseModel, Updater, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
 import {actions, hooks, theme, component, source} from 'reactive-di/annotations'
 
 const userFixture = {
@@ -25,15 +25,10 @@ class Fetcher {
 }
 
 @source({key: 'User'})
-class User {
+class User extends BaseModel {
     id = 0
     name = ''
     email = ''
-    set = valueSetter(this)
-
-    copy(rec: $Shape<this>): this {
-        return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
-    }
 }
 
 @hooks(User)
@@ -53,18 +48,12 @@ class UserHooks {
 
 // Model ThemeVars, could be injected from outside by key 'ThemeVars' as ThemeVarsRec
 @source({key: 'ThemeVars'})
-class ThemeVars {
+class ThemeVars extends BaseModel {
     color = 'red'
-    set = valueSetter(this)
-
-    copy(rec: $Shape<this>): this {
-        return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
-    }
 }
 
-class UserRefs {
-    name: ?HTMLElement
-    set = refsSetter(this)
+class UserRefs extends BaseModel {
+    name: ?HTMLElement = null
 }
 
 @actions
@@ -90,7 +79,7 @@ class UserService {
     }
 
     changeColor(): void {
-        this._tv.set.color('green')
+        this._tv.$set.color('green')
     }
 }
 
@@ -152,11 +141,11 @@ function UserComponent(
 
     return <div className={t.wrapper}>
         <span className={t.name}>Name: <input
-            ref={refs.set.name}
+            ref={refs.$set.name}
             value={user.name}
             name="user.name"
             id="user.id"
-            onChange={user.set.name}
+            onChange={user.$set.name}
         /></span>
         <button disabled={saving.pending} onClick={service.submit}>Save</button>
         {saving.error

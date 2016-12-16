@@ -1,31 +1,31 @@
 // @flow
 
-import type {INotifier, ISourceStatus, ISource, ISettable} from '../atoms/interfaces'
+import type {INotifier, ISettable, ISourceStatus, ISource} from '../atoms/interfaces'
 import {setterKey} from '../atoms/interfaces'
 
-class ValueProxy<V> {
+class ValueProxy<V: Object> {
     _flush: boolean
-    _setter: ISettable<V>
+    _v: V
 
-    constructor(setter: ISettable<V>, noFlush: boolean) {
-        this._flush = !!noFlush
-        this._setter = setter
+    constructor(v: V) {
+        this._v = v
     }
 
     apply(target: any, that: any, args: mixed[]) {
-        this._setter.merge(args[0], this._flush)
+        const setter: ISettable<V> = this._v[setterKey]
+        setter.merge(args[0])
     }
 
     get(target: any, name: string): any {
-        const flush = this._flush
-        const setter = this._setter
+        const setter: ISettable<V> = this._v[setterKey]
         return function setVal(v: mixed): void {
-            setter.merge({[name]: v}, flush)
+            setter.merge({[name]: v})
         }
     }
 
     set(target: any, name: string, val: any): boolean {
-        this._setter.merge({[name]: val}, this._flush)
+        const setter: ISettable<V> = this._v[setterKey]
+        setter.merge({[name]: val})
         return true
     }
 }
@@ -37,16 +37,21 @@ export type SetterResult<V: Object> = {
     [id: $Keys<V>]: (v: mixed) => void;
 }
 
-export default function valueSetter<V: Object>(
-    v: V,
-    noFlush?: boolean
-): SetterResult<V> {
+export class BaseModel {
+    $set: SetterResult<*> = (new Proxy(
+        empty,
+        (new ValueProxy((this: any)): any)
+    ): any)
+
+    copy(rec: $Shape<this>): this {
+        return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
+    }
+}
+
+export default function valueSetter<V: Object>(v: V): SetterResult<V> {
     return (new Proxy(
         empty,
-        (new ValueProxy(
-            (v: any)[setterKey],
-            noFlush || false
-        ): any)
+        (new ValueProxy((v: any)[setterKey]): any)
     ): any)
 }
 

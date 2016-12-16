@@ -5,7 +5,7 @@ import getSetter, {getStatus} from './getSetter'
 
 import IndexCollection from './utils/IndexCollection'
 import refsSetter from './utils/refsSetter'
-import valueSetter, {statusSetter, Updater, Loader} from './utils/valueSetter'
+import valueSetter, {BaseModel, statusSetter, Updater, Loader} from './utils/valueSetter'
 import debugName from './utils/debugName'
 
 import SourceStatus from './atoms/SourceStatus'
@@ -18,6 +18,7 @@ export {
     getStatus,
     debugName,
     refsSetter,
+    BaseModel,
     valueSetter,
     statusSetter,
     Updater,
