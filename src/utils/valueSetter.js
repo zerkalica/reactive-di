@@ -38,10 +38,17 @@ export type SetterResult<V: Object> = {
 }
 
 export class BaseModel {
-    $set: SetterResult<*> = (new Proxy(
-        empty,
-        (new ValueProxy((this: any)): any)
-    ): any)
+    $set: SetterResult<*>
+
+    constructor() {
+        Object.defineProperty(this, '$set', {
+            enumerable: false,
+            value: new Proxy(
+                empty,
+                (new ValueProxy((this: any)): any)
+            )
+        })
+    }
 
     copy(rec: $Shape<this>): this {
         return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
