@@ -9,6 +9,8 @@ import type {
     IErrorHandler
 } from './atoms/interfaces'
 
+import type {SheetFactory} from './theme/interfaces'
+
 import DisposableCollection from './atoms/DisposableCollection'
 import DepFactory from './atoms/DepFactory'
 import Transact from './atoms/Transact'
@@ -19,6 +21,7 @@ export type IOpts<Component, Element> = {
     values?: {[id: string]: any};
     defaultErrorComponent: IKey;
     errorHandler?: IErrorHandler;
+    themeFactory: SheetFactory,
     componentFactory: IComponentFactory<Component, Element>;
     debug?: boolean;
     middlewares?: IMiddlewares;
@@ -34,8 +37,10 @@ export default class DiFactory<Component, Element> {
     _staticContext: IStaticContext<Component, Element>
 
     constructor(opts: IOpts<Component, Element>) {
+        const values = opts.values || {}
+        values.AbstractSheetFactory = opts.themeFactory
         const context: IStaticContext<Component, Element> = this._staticContext = {
-            depFactory: new DepFactory(opts.values, opts.defaultErrorComponent),
+            depFactory: new DepFactory(values, opts.defaultErrorComponent),
             notifier: new Transact(),
             componentFactory: opts.componentFactory,
             binder: new RelationBinder(),

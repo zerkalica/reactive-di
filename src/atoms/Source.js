@@ -56,20 +56,20 @@ export default class Source<V> {
         const hook = this._hook.cached || this._hook.get()
         if (hook.init && !this._initialized) {
             this._initialized = true
-            hook.init()
+            hook.init(this.cached)
         }
         if (hook.willMount) {
-            hook.willMount()
+            hook.willMount(this.cached)
         }
     }
 
     willUnmount(parent: ?IContext): void {
         const hook = this._hook.cached || this._hook.get()
         if (hook.willUnmount) {
-            hook.willUnmount()
+            hook.willUnmount(this.cached)
         }
         if (hook.dispose && parent === this.context) {
-            hook.dispose()
+            hook.dispose(this.cached)
             this._initialized = false
         }
     }
@@ -148,7 +148,7 @@ export default class Source<V> {
         }
         const hook = this._hook.cached || this._hook.get()
         ;(v: any)[setterKey] = this // eslint-disable-line
-        if (hook.shouldUpdate && !hook.shouldUpdate(this.cached, v)) {
+        if (hook.shouldUpdate && !hook.shouldUpdate(v, this.cached)) {
             return
         }
         if (hook.willUpdate) {

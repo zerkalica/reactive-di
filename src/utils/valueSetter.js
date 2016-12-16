@@ -17,7 +17,11 @@ class ValueProxy<V> {
         const setter = this._setter
 
         return function setVal(v: mixed): void {
-            setter.merge({[name]: v}, flush)
+            if (name === '_') {
+                setter.merge(v, flush)
+            } else {
+                setter.merge({[name]: v}, flush)
+            }
         }
     }
 }

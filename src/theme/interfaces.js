@@ -12,6 +12,10 @@ export interface StyleSheet {
     detach(): void;
 }
 
+export interface SheetFactory {
+    createStyleSheet(_cssObj: CssObj): StyleSheet;
+}
+
 export class AbstractSheetFactory {
     static _rdiAbs = true
     static _rdiKey = 'AbstractSheetFactory'

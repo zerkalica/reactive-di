@@ -14,6 +14,7 @@ export function createDi() {
 
     const diFactory = new DiFactory({
         defaultErrorComponent,
+        themeFactory: (0: any),
         componentFactory: new ReactComponentFactory(React)
     })
 

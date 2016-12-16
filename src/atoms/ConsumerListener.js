@@ -138,7 +138,7 @@ export default class ConsumerListener<
         try {
             const hook = this._hook.cached || this._hook.get()
             if (hook.didMount) {
-                hook.didMount()
+                hook.didMount(this._props)
             }
         } catch (e) {
             this._setError(e)
@@ -149,7 +149,7 @@ export default class ConsumerListener<
         try {
             const hook = this._hook.cached || this._hook.get()
             if (hook.didUpdate) {
-                hook.didUpdate()
+                hook.didUpdate(this._props)
             }
         } catch (e) {
             this._setError(e)
@@ -242,7 +242,7 @@ export default class ConsumerListener<
             this._parent.willUnmount(this._updater)
             const hook = this._hook.cached || this._hook.get()
             if (hook.willUnmount) {
-                hook.willUnmount()
+                hook.willUnmount(this._props)
             }
             const prop = this._props.item
             if (prop && (prop: Object)[itemKey]) {
@@ -258,7 +258,7 @@ export default class ConsumerListener<
             this._parent.willMount()
             const hook = this._hook.cached || this._hook.get()
             if (hook.willMount) {
-                hook.willMount()
+                hook.willMount(this._props)
             }
         } catch (e) {
             this._setError(e)

@@ -109,20 +109,20 @@ export default class Computed<V> {
         const hook = this._hook.cached || this._hook.get()
         if (hook.init && !this._initialized) {
             this._initialized = true
-            hook.init()
+            hook.init(this._proxy)
         }
         if (hook.willMount) {
-            hook.willMount()
+            hook.willMount(this._proxy)
         }
     }
 
     willUnmount(parent: ?IContext): void {
         const hook = this._hook.cached || this._hook.get()
         if (hook.willUnmount) {
-            hook.willUnmount()
+            hook.willUnmount(this._proxy)
         }
         if (hook.dispose && parent === this.context) {
-            hook.dispose()
+            hook.dispose(this._proxy)
             this.closed = true
             this._initialized = false
         }
@@ -173,7 +173,7 @@ export default class Computed<V> {
         const newVal = this._create(this._proto.cached || this._proto.get(), this._argVals || [])
         const hook = this._hook.cached || this._hook.get()
 
-        if (!this._proxy || !hook.shouldUpdate || hook.shouldUpdate(this._proxy, newVal)) {
+        if (!this._proxy || !hook.shouldUpdate || hook.shouldUpdate(newVal, this._proxy)) {
             if (hook.willUpdate) {
                 hook.willUpdate(newVal, this.cached)
             }

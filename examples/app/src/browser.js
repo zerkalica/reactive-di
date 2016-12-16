@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom'
 import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
-import {getSetter, getStatus, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
+import {valueSetter, refsSetter, getSetter, getStatus, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
 import {hooks, theme, component, source} from 'reactive-di/annotations'
 
 const userFixture = {
@@ -26,42 +26,38 @@ class Fetcher {
 
 @source({key: 'User'})
 class User {
-    id: number
-    name: string
-    email: string
+    id = 0
+    name = ''
+    email = ''
+    set = valueSetter(this)
 
-    constructor(rec: Object) {
-        this.id = rec.id
-        this.name = rec.name
-        this.email = rec.email
+    copy(rec: $Shape<this>): this {
+        return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
     }
 }
 
 @hooks(User)
 class UserHooks {
     _fetcher: Fetcher
-    _user: User
 
-    constructor(fetcher: Fetcher, user: User) {
+    constructor(fetcher: Fetcher) {
         this._fetcher = fetcher
-        this._user = user
     }
 
-    willMount(): void {
-        const status = getStatus(this._user)
-        const statVal = status.get()
-        status.set(statVal.copy('pending'))
+    willMount(user: User): void {
+        const status = getStatus(user)
+        status.merge({type: 'pending'}, true)
         this._fetcher.fetch('/user')
-            .then((user: Object) => {
-                status.set(statVal.copy('complete'))
-                getSetter(this._user).merge(user, true)
+            .then((userData: $Shape<User>) => {
+                status.merge({type: 'complete'})
+                getSetter(user).merge(userData, true)
             })
             .catch((error: Error) => {
-                status.set(statVal.copy('error', error))
+                status.merge({type: 'error', error}, true)
             })
     }
 
-    willUnmount(_user: User): void {
+    willUnmount(): void {
         // this._updater.cancel()
     }
 }
@@ -80,6 +76,13 @@ class UserService {
     _fetcher: Fetcher
     _user: User
     _tv: ThemeVars
+    _refs: {
+        name: ?HTMLElement;
+    }
+
+    setRef: {
+        name: (e: HTMLElement) => void;
+    }
 
     constructor(
         fetcher: Fetcher,
@@ -89,6 +92,8 @@ class UserService {
         this._fetcher = fetcher
         this._user = user
         this._tv = tv
+        this._refs = {name: null}
+        this.setRef = refsSetter(this._refs)
     }
 
     submit: () => void = () => {
@@ -144,7 +149,7 @@ interface UserComponentState {
 }
 
 function UserComponent(
-    {children}: UserComponentProps,
+    props: {},
     {theme: t, user, loading, saving, service}: UserComponentState
 ) {
     if (loading.pending) {
@@ -155,8 +160,13 @@ function UserComponent(
     }
 
     return <div className={t.wrapper}>
-        <span className={t.name}>Name: {user.name}</span>
-        {children}
+        <span className={t.name}>Name: <input
+            ref={service.setRef.name}
+            value={user.name}
+            name="user.name"
+            id="user.id"
+            onChange={user.set.name}
+        /></span>
         <button disabled={saving.pending} onClick={service.submit}>Save</button>
         {saving.error
             ? <div>Saving error: {saving.error.message}</div>
@@ -166,13 +176,22 @@ function UserComponent(
 }
 component()(UserComponent)
 
+
+function ErrorView(
+    {error}: {error: Error}
+) {
+    return <div>{error.message}</div>
+}
+component()(ErrorView)
+
 jss.use(jssCamel)
 
 const di = (new DiFactory({
     values: {
-        AbstractSheetFactory: jss,
         Fetcher: new Fetcher()
     },
+    defaultErrorComponent: ErrorView,
+    themeFactory: jss,
     componentFactory: new ReactComponentFactory(React)
 }))
     .create()

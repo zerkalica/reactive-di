@@ -39,7 +39,9 @@ export {
     AbstractSheetFactory
 } from './theme/interfaces'
 
+
 export type {
+    SheetFactory,
     CssObj,
     RawStyleSheet,
     StyleSheet

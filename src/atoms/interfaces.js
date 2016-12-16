@@ -35,20 +35,22 @@ export type IHasForceUpdate = {
 }
 
 export interface IBaseHook<V> {
-    dispose?: () => void;
-    init?: () => void;
-    willMount?: () => void;
-    willUnmount?: () => void;
-    shouldUpdate?: (prev: V, next: V) => boolean;
+    dispose?: (v: V) => void;
+    init?: (v: V) => void;
+    shouldUpdate?: (next: V, prev: V) => boolean;
+
+    willMount?: (v: V) => void;
+    willUnmount?: (v: V) => void;
     willUpdate?: (next: V, prev: ?V) => void;
 }
 
 export type IConsumerHook<Props: Object> = {
-    willUnmount?: () => void;
-    willMount?: () => void;
-    willUpdate?: (newProps: Props, oldProps: ?Props) => void;
-    didMount?: () => void;
-    didUpdate?: () => void;
+    willUnmount?: (p: Props) => void;
+    willMount?: (p: Props) => void;
+    willUpdate?: (next: Props, prev: ?Props) => void;
+
+    didMount?: (p: Props) => void;
+    didUpdate?: (p: Props) => void;
 }
 
 export type IDepRegister = Function | [IKey, Function]

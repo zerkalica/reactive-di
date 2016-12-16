@@ -34,7 +34,7 @@ export default class Status {
         this.id = meta.id
         this.masters = []
         this.context = context
-        this.cached = new meta.key('complete') // eslint-disable-line
+        this.cached = new meta.key({type: 'complete'}) // eslint-disable-line
         this._v = this.cached
     }
 
@@ -56,7 +56,7 @@ export default class Status {
 
     get(): ISourceStatus {
         const statuses = this.masters
-        const newStatus = new this._meta.key('complete') // eslint-disable-line
+        const newStatus = new this._meta.key({type: 'complete'}) // eslint-disable-line
         for (let i = 0, l = statuses.length; i < l; i++) {
             const st = statuses[i]
             if (st.t !== 1) {
