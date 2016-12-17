@@ -57,7 +57,7 @@ export default class Source<V> {
         const setter = this.setter = {}
         const notifier = context.notifier
         const keys = Object.keys((this.cached: any))
-        const p = (this.cached: any).prototype
+        const p = ((this.cached: any).constructor).prototype
         for (let i = 0; i < keys.length; i++) {
             this._createSetter(keys[i], notifier, setter, p)
         }
@@ -154,7 +154,7 @@ export default class Source<V> {
     merge(props: mixed): void {
         this.set(
            Object.assign(
-               Object.create((this.cached: any).prototype),
+               Object.create((this.cached: any).constructor.prototype),
                (this.cached: any),
                props
            )

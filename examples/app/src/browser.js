@@ -7,7 +7,7 @@ import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
 import {refsSetter, setter, BaseModel, Updater, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
-import {actions, hooks, theme, component, source} from 'reactive-di/annotations'
+import {actions, hooks, deps, theme, component, source} from 'reactive-di/annotations'
 
 const userFixture = {
     id: 1,
@@ -31,6 +31,7 @@ class User extends BaseModel {
     email = ''
 }
 
+@deps(Fetcher, Updater)
 @hooks(User)
 class UserHooks {
     _fetcher: Fetcher
@@ -57,6 +58,12 @@ class UserRefs {
     set = refsSetter(this)
 }
 
+@deps(
+    Fetcher,
+    User,
+    UserRefs,
+    ThemeVars
+)
 @actions
 class UserService {
     _fetcher: Fetcher
@@ -93,6 +100,9 @@ class SavingUpdaterStatus extends SourceStatus {
 }
 
 // Provide class names and data for jss in __css property
+@deps({
+    vars: ThemeVars
+})
 @theme
 class UserComponentTheme {
     wrapper: string
@@ -131,7 +141,8 @@ interface UserComponentState {
 
 function UserComponent(
     props: {},
-    {theme: t, user, loading, saving, refs, service}: UserComponentState
+    {theme: t, user, loading, saving, refs, service}: UserComponentState,
+    _t: any
 ) {
     if (loading.pending) {
         return <div className={t.wrapper}>Loading...</div>
@@ -148,7 +159,6 @@ function UserComponent(
             value={user.name}
             name="user.name"
             id="user.id"
-            onScroll={service.onScroll}
             onChange={userSetter.name}
         /></span>
         <button disabled={saving.pending} onClick={service.submit}>Save</button>
@@ -158,10 +168,19 @@ function UserComponent(
         }
     </div>
 }
+deps({
+    theme: UserComponentTheme,
+    user: User,
+    refs: UserRefs,
+    loading: LoadingUpdaterStatus,
+    saving: SavingUpdaterStatus,
+    service: UserService
+})(UserComponent)
 component()(UserComponent)
 
 function ErrorView(
-    {error}: {error: Error}
+    {error}: {error: Error},
+    _t: any
 ) {
     return <div>{error.message}</div>
 }

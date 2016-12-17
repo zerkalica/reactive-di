@@ -51,7 +51,9 @@ export default class DepFactory<Element> {
                 key,
                 args: key._rdiArgs || null,
                 hook: key._rdiHook || null,
-                errorComponent: componentMeta.onError || this._defaultErrorComponent,
+                errorComponent: componentMeta.onError || key === this._defaultErrorComponent
+                    ? null
+                    : this._defaultErrorComponent,
                 register
             },
             context
