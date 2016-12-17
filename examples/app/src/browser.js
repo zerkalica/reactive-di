@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom'
 import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
-import {BaseModel, Updater, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
+import {refsSetter, setter, BaseModel, Updater, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
 import {actions, hooks, theme, component, source} from 'reactive-di/annotations'
 
 const userFixture = {
@@ -52,8 +52,9 @@ class ThemeVars extends BaseModel {
     color = 'red'
 }
 
-class UserRefs extends BaseModel {
+class UserRefs {
     name: ?HTMLElement = null
+    set = refsSetter(this)
 }
 
 @actions
@@ -79,7 +80,7 @@ class UserService {
     }
 
     changeColor(): void {
-        this._tv.$set.color('green')
+        setter(this._tv).color('green')
     }
 }
 
@@ -139,13 +140,16 @@ function UserComponent(
         return <div className={t.wrapper}>Loading error: {loading.error.message}</div>
     }
 
+    const userSetter = setter(user)
+
     return <div className={t.wrapper}>
         <span className={t.name}>Name: <input
-            ref={refs.$set.name}
+            ref={refs.set.name}
             value={user.name}
             name="user.name"
             id="user.id"
-            onChange={user.$set.name}
+            onScroll={service.onScroll}
+            onChange={userSetter.name}
         /></span>
         <button disabled={saving.pending} onClick={service.submit}>Save</button>
         {saving.error
@@ -155,7 +159,6 @@ function UserComponent(
     </div>
 }
 component()(UserComponent)
-
 
 function ErrorView(
     {error}: {error: Error}

@@ -1,6 +1,8 @@
 // @flow
 import type {
     ISource,
+    ISetter,
+    INotifier,
     IGetable,
     IContext,
     ICacheable,
@@ -30,6 +32,7 @@ export default class Source<V> {
     _resolved: boolean
     _hook: IGetable<IBaseHook<V>>
     _configValue: ?V
+    setter: ISetter<V>
 
     constructor(
         meta: ISourceMeta<V>,
@@ -50,26 +53,43 @@ export default class Source<V> {
         ;(meta.initialValue: any)[setterKey] = this // eslint-disable-line
         this.cached = meta.initialValue
         this._hook = this.context.resolveHook(meta.hook)
+
+        const setter = this.setter = {}
+        const notifier = context.notifier
+        const keys = Object.keys((this.cached: any))
+        const p = (this.cached: any).prototype
+        for (let i = 0; i < keys.length; i++) {
+            this._createSetter(keys[i], notifier, setter, p)
+        }
+    }
+
+    _createSetter(key: string, notifier: INotifier, setter: any, p: Function): void {
+        setter[key] = (v: mixed) => { // eslint-disable-line
+            const obj = Object.assign(Object.create(p), (this.cached: any))
+            obj[key] = v
+            this.set(obj)
+            notifier.commit()
+        }
     }
 
     willMount(_parent: ?IContext): void {
         const hook = this._hook.cached || this._hook.get()
         if (hook.init && !this._initialized) {
             this._initialized = true
-            hook.init(this.cached)
+            hook.init((this.cached: any))
         }
         if (hook.willMount) {
-            hook.willMount(this.cached)
+            hook.willMount((this.cached: any))
         }
     }
 
     willUnmount(parent: ?IContext): void {
         const hook = this._hook.cached || this._hook.get()
         if (hook.willUnmount) {
-            hook.willUnmount(this.cached)
+            hook.willUnmount((this.cached: any))
         }
         if (hook.dispose && parent === this.context) {
-            hook.dispose(this.cached)
+            hook.dispose((this.cached: any))
             this._initialized = false
         }
     }
@@ -112,17 +132,6 @@ export default class Source<V> {
         throw new Error('Source always cached')
     }
 
-    merge(props: mixed, flush?: boolean): void {
-        this.set(
-           Object.assign(
-               Object.create((this.cached: any).prototype),
-               (this.cached: any),
-               props
-           ),
-           flush
-       )
-    }
-
     getStatus(): ISource<ISourceStatus> {
         if (!this.status) {
             const status: ISource<ISourceStatus> = new Source(
@@ -132,7 +141,7 @@ export default class Source<V> {
                     id: this.id - 1,
                     hook: null,
                     configValue: null,
-                    initialValue: new SourceStatus('complete')
+                    initialValue: new SourceStatus({complete: true})
                 }: ISourceMeta<ISourceStatus>),
                 this.context
             )
@@ -142,7 +151,17 @@ export default class Source<V> {
         return this.status
     }
 
-    set(v: V, flush?: boolean): void {
+    merge(props: mixed): void {
+        this.set(
+           Object.assign(
+               Object.create((this.cached: any).prototype),
+               (this.cached: any),
+               props
+           )
+       )
+    }
+
+    set(v: V): void {
         if (v === this.cached) {
             return
         }
@@ -164,6 +183,6 @@ export default class Source<V> {
         for (let i = 0, l = computeds.length; i < l; i++) {
             computeds[i].cached = null
         }
-        context.notifier.notify(this.consumers.items, flush)
+        context.notifier.notify(this.consumers.items)
     }
 }

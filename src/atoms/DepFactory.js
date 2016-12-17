@@ -49,7 +49,7 @@ export default class DepFactory<Element> {
                 id,
                 name,
                 key,
-                args: key._rdiArgs || Reflect.getMetadata('design:paramtypes', key) || null,
+                args: key._rdiArgs || null,
                 hook: key._rdiHook || null,
                 errorComponent: componentMeta.onError || this._defaultErrorComponent,
                 register
@@ -68,7 +68,7 @@ export default class DepFactory<Element> {
                 name: key._rdiKey || debugName(key),
                 key,
                 func: key._rdiFn || false,
-                args: key._rdiArgs || Reflect.getMetadata('design:paramtypes', key) || null,
+                args: key._rdiArgs || null,
                 ender: key._rdiEnd || isEnder || false,
                 hook: key._rdiHook || null
             },

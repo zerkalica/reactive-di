@@ -1,36 +1,7 @@
 // @flow
 
-import type {INotifier, ISettable, ISourceStatus, ISource} from '../atoms/interfaces'
+import type {INotifier, ISourceStatus, ISource} from '../atoms/interfaces'
 import {setterKey} from '../atoms/interfaces'
-
-class ValueProxy<V: Object> {
-    _flush: boolean
-    _v: V
-
-    constructor(v: V) {
-        this._v = v
-    }
-
-    apply(target: any, that: any, args: mixed[]) {
-        const setter: ISettable<V> = this._v[setterKey]
-        setter.merge(args[0])
-    }
-
-    get(target: any, name: string): any {
-        const setter: ISettable<V> = this._v[setterKey]
-        return function setVal(v: mixed): void {
-            setter.merge({[name]: v})
-        }
-    }
-
-    set(target: any, name: string, val: any): boolean {
-        const setter: ISettable<V> = this._v[setterKey]
-        setter.merge({[name]: val})
-        return true
-    }
-}
-
-function empty() {}
 
 export type SetterResult<V: Object> = {
     (v: $Shape<$Subtype<V>>): void;
@@ -38,38 +9,9 @@ export type SetterResult<V: Object> = {
 }
 
 export class BaseModel {
-    $set: SetterResult<*>
-
-    constructor() {
-        Object.defineProperty(this, '$set', {
-            enumerable: false,
-            value: new Proxy(
-                empty,
-                (new ValueProxy((this: any)): any)
-            )
-        })
-    }
-
     copy(rec: $Shape<this>): this {
         return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
     }
-}
-
-export default function valueSetter<V: Object>(v: V): SetterResult<V> {
-    return (new Proxy(
-        empty,
-        (new ValueProxy((v: any)[setterKey]): any)
-    ): any)
-}
-
-export function statusSetter(v: Object, noFlush?: boolean): SetterResult<ISourceStatus> {
-    return (new Proxy(
-        empty,
-        (new ValueProxy(
-            (v: any)[setterKey].getStatus(),
-            noFlush || false
-        ): any)
-    ): any)
 }
 
 export class Loader<V: Object> {

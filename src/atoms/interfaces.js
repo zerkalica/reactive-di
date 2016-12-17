@@ -154,12 +154,14 @@ export type ISourceMeta<V> = IBaseMeta & {
     configValue: ?V;
 }
 
-export interface ISourceStatus {
+type IStatusBase = {
     complete: boolean;
     pending: boolean;
     error: ?Error;
+}
+export interface ISourceStatus extends IStatusBase {
     isEqual(src: ISourceStatus): boolean;
-    copy(type: 'pending' | 'error' | 'complete', err?: Error): ISourceStatus;
+    copy(opts: $Shape<IStatusBase>): ISourceStatus;
 }
 
 export type IDepInfo<V> = {
@@ -167,6 +169,8 @@ export type IDepInfo<V> = {
     id: number;
     cached: ?V;
 }
+
+export type ISetter<V> = {[id: string]: (v: mixed) => void}
 
 export type ISource<V> = {
     t: 1;
@@ -181,6 +185,7 @@ export type ISource<V> = {
 
     computeds: IDisposableCollection<IDisposable & ICacheable<*>>;
     consumers: IDisposableCollection<IPullable>;
+    setter: ISetter<V>;
 
     get(): V;
     set(v: V): void;

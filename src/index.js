@@ -1,11 +1,11 @@
 // @flow
 
 import DiFactory from './DiFactory'
-import getSetter, {getStatus} from './getSetter'
+import setter, {status, merge} from './setter'
 
 import IndexCollection from './utils/IndexCollection'
 import refsSetter from './utils/refsSetter'
-import valueSetter, {BaseModel, statusSetter, Updater, Loader} from './utils/valueSetter'
+import {BaseModel, Updater, Loader} from './utils/valueSetter'
 import debugName from './utils/debugName'
 
 import SourceStatus from './atoms/SourceStatus'
@@ -14,13 +14,12 @@ import ReactComponentFactory from './adapters/ReactComponentFactory'
 export {
     ReactComponentFactory,
     SourceStatus,
-    getSetter,
-    getStatus,
+    setter,
+    status,
+    merge,
     debugName,
     refsSetter,
     BaseModel,
-    valueSetter,
-    statusSetter,
     Updater,
     Loader,
     IndexCollection,

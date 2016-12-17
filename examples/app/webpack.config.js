@@ -43,7 +43,7 @@ export default {
     plugins: [
         new HtmlWebpackPlugin({
             title: 'example demo',
-            template: path.resolve(__dirname, 'assets', 'index.ejs')
+            template: path.resolve(__dirname, 'index.ejs')
         })
     ]
 }
