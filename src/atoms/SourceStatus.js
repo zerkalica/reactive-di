@@ -15,11 +15,11 @@ export default class SourceStatus {
     pending: boolean
     error: ?Error
 
-    constructor(opts?: SourceStatusOpts = {}) {
+    constructor(opts?: SourceStatusOpts) {
         (this: ISourceStatus) // eslint-disable-line
-        this.complete = opts.complete || false
-        this.pending = opts.pending || (!opts.error && !opts.complete) || false
-        this.error = opts.error || null
+        this.complete = !opts || !!opts.complete
+        this.pending = !!opts && !!opts.pending
+        this.error = opts ? opts.error : null
     }
 
     isEqual(status: ISourceStatus): boolean {

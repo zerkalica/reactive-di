@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom'
 import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
-import {refsSetter, setter, BaseModel, Updater, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
+import {refsSetter, eventSetter, setter, BaseModel, Updater, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
 import {actions, hooks, deps, theme, component, source} from 'reactive-di/annotations'
 
 const userFixture = {
@@ -18,9 +18,18 @@ const userFixture = {
 // Fetcher service, could be injected from outside by key 'Fetcher' as is
 @source({key: 'Fetcher', instance: true})
 class Fetcher {
+    _count = 0
     fetch<V>(_url: string): Promise<V> {
         // fake fetcher for example
-        return Promise.resolve((userFixture: any))
+
+        return new Promise((resolve: (v: V) => void, reject: (e: Error) => void) => {
+            const isError = false
+            setTimeout(() => {
+                return isError
+                    ? reject(new Error('Fake error'))
+                    : resolve(userFixture)
+            }, 600)
+        })
     }
 }
 
@@ -84,6 +93,7 @@ class UserService {
     }
 
     submit(): void {
+        debugger
     }
 
     changeColor(): void {
@@ -91,8 +101,19 @@ class UserService {
     }
 }
 
+@deps(User)
+class ComputedUser {
+    user: User
+    fullName: string
+
+    constructor(user: User) {
+        this.fullName = `${user.name} <${user.email}>`
+        this.user = user
+    }
+}
+
 class LoadingUpdaterStatus extends SourceStatus {
-    static statuses = [User, UserService]
+    static statuses = [UserService]
 }
 
 class SavingUpdaterStatus extends SourceStatus {
@@ -141,9 +162,10 @@ interface UserComponentState {
 
 function UserComponent(
     props: {},
-    {theme: t, user, loading, saving, refs, service}: UserComponentState,
+    {theme: t, user, saving, loading, refs, service}: UserComponentState,
     _t: any
 ) {
+    // const user = cuser.user
     if (loading.pending) {
         return <div className={t.wrapper}>Loading...</div>
     }
@@ -151,7 +173,7 @@ function UserComponent(
         return <div className={t.wrapper}>Loading error: {loading.error.message}</div>
     }
 
-    const userSetter = setter(user)
+    const userSetter = eventSetter(user)
 
     return <div className={t.wrapper}>
         <span className={t.name}>Name: <input
@@ -161,11 +183,11 @@ function UserComponent(
             id="user.id"
             onChange={userSetter.name}
         /></span>
-        <button disabled={saving.pending} onClick={service.submit}>Save</button>
-        {saving.error
+        <button onClick={service.submit}>Save</button>
+        {/* {saving.error
             ? <div>Saving error: {saving.error.message}</div>
             : null
-        }
+        } */}
     </div>
 }
 deps({
@@ -173,7 +195,7 @@ deps({
     user: User,
     refs: UserRefs,
     loading: LoadingUpdaterStatus,
-    saving: SavingUpdaterStatus,
+    // saving: SavingUpdaterStatus,
     service: UserService
 })(UserComponent)
 component()(UserComponent)

@@ -33,10 +33,9 @@ export default class Consumer<
     displayName: string
     id: number
     closed: boolean
-    pulled: boolean
     context: IContext
     masters: IMaster[]
-    state: State
+    cached: ?State
 
     _resolved: boolean
     _refs: number
@@ -56,7 +55,7 @@ export default class Consumer<
         this.t = 2
         this._refs = 0
         this.closed = false
-        this.pulled = false
+        this.cached = null
         this._resolved = false
         this._isOwnContext = !!meta.register
 
@@ -64,7 +63,7 @@ export default class Consumer<
         this._args = (null: any)
         this._argVals = emptyArgs
         this.masters = []
-        this.state = this._argVals[0]
+        this.cached = this._argVals[0]
         this._updaters = []
 
         this._meta = meta
@@ -92,6 +91,8 @@ export default class Consumer<
             this._args = meta.args ? context.resolveDeps(meta.args) : null
             if (this._args) {
                 this._argVals = (new Array(this._args.length): any)
+                resolveArgs(this._args, this._argVals)
+                this.cached = this._argVals[0]
             }
             context.binder.end()
         }
@@ -110,14 +111,12 @@ export default class Consumer<
     }
 
     _pull(): void {
-        this.pulled = true
-        if (this._args && !resolveArgs(this._args, this._argVals)) {
-            return
-        }
-        this.state = this._argVals[0]
-        const updaters = this._updaters
-        for (let i = 0, l = updaters.length; i < l; i++) {
-            updaters[i].forceUpdate()
+        this.cached = this._argVals[0]
+        if (!this._args || resolveArgs(this._args, this._argVals)) {
+            const updaters = this._updaters
+            for (let i = 0, l = updaters.length; i < l; i++) {
+                updaters[i].forceUpdate()
+            }
         }
     }
 
@@ -144,7 +143,7 @@ export default class Consumer<
             this._args = (null: any)
             this._argVals = emptyArgs
             this.masters = []
-            this.state = this._argVals[0]
+            this.cached = this._argVals[0]
             this._updaters = []
             this.closed = true
         }
@@ -181,9 +180,10 @@ export default class Consumer<
                 }
                 master.refs++ // eslint-disable-line
             }
-            if (this._args && !resolveArgs(this._args, this._argVals)) {
-                this.state = this._argVals[0]
+            if (this._args) {
+                resolveArgs(this._args, this._argVals)
             }
+            this.cached = this._argVals[0]
         }
 
         this._refs++

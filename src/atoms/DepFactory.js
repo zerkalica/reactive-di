@@ -60,7 +60,7 @@ export default class DepFactory<Element> {
         )
     }
 
-    computed<V>(key: Function, context: IContext, isEnder?: boolean): IComputed<V> {
+    computed<V>(key: Function, context: IContext, isHook?: boolean): IComputed<V> {
         const id = key._rdiId || ++this._lastId // eslint-disable-line
         key._rdiId = id // eslint-disable-line
 
@@ -71,10 +71,11 @@ export default class DepFactory<Element> {
                 key,
                 func: key._rdiFn || false,
                 args: key._rdiArgs || null,
-                ender: key._rdiEnd || isEnder || false,
+                ender: key._rdiEnd || false,
                 hook: key._rdiHook || null
             },
-            context
+            context,
+            isHook
         )
     }
 

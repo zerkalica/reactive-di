@@ -5,60 +5,18 @@ import type {
     IComputed,
     IArg,
     IGetable,
+    INotifier,
     IContext,
     IBaseHook,
     IMaster,
     IMiddlewares
 } from './interfaces'
-import {fastCreateObject, fastCallMethod, fastCall} from './fastCreate'
+
+import {fastCreateObject, fastCall} from '../utils/fastCreate'
+import wrapObject, {wrapFunction} from '../utils/wrapObject'
+import type {IRef} from '../utils/wrapObject'
+
 import resolveArgs from './resolveArgs'
-
-type IRef<V> = {
-    cached: V;
-    context: IContext;
-    _middlewares: ?IMiddlewares;
-}
-
-const refProxyHandler = {
-    get(r: IRef<any>, name: string): mixed {
-        let val = r.cached[name]
-        if (typeof val === 'function' && !val.__binded) {
-            const orig = r.cached[name]
-            val = r.cached[name] = function setter(...args: any[]) { // eslint-disable-line
-                const result = fastCallMethod(r.cached, orig, args)
-                if (r._middlewares) {
-                    r._middlewares.onMethodCall(r.cached, name, args, result)
-                }
-                r.context.notifier.commit()
-                return result
-            }
-            val.displayName = name
-            val.__binded = true
-        }
-
-        return val
-    },
-
-    set(r: IRef<any>, name: string, value: mixed): boolean {
-        r.cached[name] = value // eslint-disable-line
-        return false
-    }
-}
-
-function createFunctionProxy<V>(ref: IRef<V>): () => V {
-    if (typeof ref.cached !== 'function') {
-        throw new Error(`Not a function ${String(ref.cached)}`)
-    }
-
-    return function fnProxy(...args: mixed[]): V {
-        const result = fastCall((ref.cached: any), args) // eslint-disable-line
-        if (ref._middlewares) {
-            ref._middlewares.onFuncCall((ref.cached: any), args, result)
-        }
-        ref.context.notifier.commit()
-        return result
-    }
-}
 
 export default class Computed<V> {
     t: 0
@@ -73,6 +31,7 @@ export default class Computed<V> {
     masters: IMaster[]
     context: IContext
 
+    _notifier: ?INotifier
     _middlewares: ?IMiddlewares
     _resolved: boolean
     _initialized: boolean
@@ -87,7 +46,8 @@ export default class Computed<V> {
 
     constructor(
         meta: IComputedMeta,
-        context: IContext
+        context: IContext,
+        isHook?: boolean
     ) {
         this.t = 0
         this.closed = false
@@ -106,6 +66,7 @@ export default class Computed<V> {
         this.context = context
         this._middlewares = context.middlewares
         this._proto = ({cached: meta.key}: Object)
+        this._notifier = isHook ? null : context.notifier
     }
 
     willMount(_parent: ?IContext): void {
@@ -131,6 +92,29 @@ export default class Computed<V> {
         }
     }
 
+    onFunctionCall(args: any[], result: any): void {
+        if (this._middlewares) {
+            this._middlewares.onFuncCall(this.displayName, args, result)
+        }
+        if (this._notifier) {
+            this._notifier.commit()
+        }
+    }
+
+    onMethodCall(name: string | Symbol, args: any[], result: any): void {
+        if (this._middlewares) {
+            this._middlewares.onMethodCall(
+                this.displayName,
+                typeof name === 'string' ? name : name.toString(),
+                args,
+                result
+            )
+        }
+        if (this._notifier) {
+            this._notifier.commit()
+        }
+    }
+
     resolve(): void {
         if (!this._resolved) {
             this._resolved = true
@@ -153,9 +137,9 @@ export default class Computed<V> {
         const k = stack.length
         for (let i = 0, l = masters.length; i < l; i++) {
             const master = masters[i]
-            if (master.t === 1) {
+            if (master.t === 1) { // source
                 master.resolve()
-            } else {
+            } else { // computed, consumer
                 for (let j = level; j < k; j++) {
                     const rec = stack[j]
                     if (!rec.has[master.id]) {
@@ -184,8 +168,8 @@ export default class Computed<V> {
             if (this._meta.ender) {
                 if (!this._proxy) {
                     this._proxy = this._meta.func
-                        ? (createFunctionProxy(this): any)
-                        : (new Proxy(this, refProxyHandler): any)
+                        ? wrapFunction((this: IRef<any>))
+                        : wrapObject((this: IRef<any>))
                 }
             } else {
                 this._proxy = newVal

@@ -1,7 +1,7 @@
 // @flow
 
 import DiFactory from './DiFactory'
-import setter, {status, merge} from './setter'
+import setter, {status, eventSetter, merge} from './setter'
 
 import IndexCollection from './utils/IndexCollection'
 import refsSetter from './utils/refsSetter'
@@ -15,6 +15,7 @@ export {
     ReactComponentFactory,
     SourceStatus,
     setter,
+    eventSetter,
     status,
     merge,
     debugName,

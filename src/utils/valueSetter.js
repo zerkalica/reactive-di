@@ -14,6 +14,9 @@ export class BaseModel {
     }
 }
 
+const completeObj = {complete: true, pending: false, error: null}
+const pendingObj = {complete: false, pending: true, error: null}
+
 export class Loader<V: Object> {
     _source: ISource<V>
     _status: ISource<ISourceStatus>
@@ -26,7 +29,7 @@ export class Loader<V: Object> {
         this._status = source.getStatus()
         this._isCanceled = false
         this._notifier = source.context.notifier
-        this._status.merge({pending: true})
+        this._status.merge(pendingObj)
         this._promise = promise
             .then((data: $Shape<V>) => this._resolve(data))
             .catch((error: Error) => this._reject(error))
@@ -35,14 +38,14 @@ export class Loader<V: Object> {
     _resolve(data: $Shape<V>): void {
         if (!this._isCanceled) {
             this._source.merge(data)
-            this._status.merge({complete: true})
+            this._status.merge(completeObj)
             this._notifier.commit()
         }
     }
 
     _reject(error: Error): void {
         if (!this._isCanceled) {
-            this._status.merge({error})
+            this._status.merge({error, complete: false, pending: false})
             this._notifier.commit()
         }
     }

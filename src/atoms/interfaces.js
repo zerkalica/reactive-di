@@ -93,6 +93,7 @@ export type IConsumerFactory<Props, Element> = {
     create(updater: IHasForceUpdate, props: Props): IConsumerListener<Props, Element, Component>;
 }
 
+type State = any
 export type IConsumer<Props, Element> = {
     t: 2;
     displayName: string;
@@ -102,7 +103,7 @@ export type IConsumer<Props, Element> = {
     context: IContext;
     masters: IMaster[];
 
-    pulled: boolean;
+    cached: ?State;
     pull(): void;
     dispose(): void;
     create(updater: IHasForceUpdate): IConsumerListener<Props, Element, Component>;
@@ -184,8 +185,11 @@ export type ISource<V> = {
     getStatus(): ISource<ISourceStatus>;
 
     computeds: IDisposableCollection<IDisposable & ICacheable<*>>;
-    consumers: IDisposableCollection<IPullable>;
-    setter: ISetter<V>;
+    consumers: IDisposableCollection<IPullable<*>>;
+    setter: ?ISetter<V>;
+    getSetter(): ISetter<V>;
+    eventSetter: ?ISetter<V>;
+    getEventSetter(): ISetter<V>;
 
     get(): V;
     set(v: V): void;
@@ -213,7 +217,7 @@ export interface IRelationBinder {
 }
 
 export type INotifier = {
-    notify(c: IPullable[], flush?: boolean): void;
+    notify(c: IPullable<*>[], flush?: boolean): void;
     commit(): void;
 }
 
@@ -235,8 +239,8 @@ export interface IErrorHandler {
 
 export type IMiddlewares = {
     onSetValue<V>(src: IDepInfo<V>, newVal: V): void;
-    onMethodCall<O: Object>(obj: O, prop: string, args: mixed[], result: mixed): void;
-    onFuncCall(fn: Function, result: mixed): void;
+    onMethodCall<O: Object>(name: string, prop: string, args: mixed[], result: mixed): void;
+    onFuncCall(name: string, args: mixed[], result: mixed): void;
 }
 
 export type IStaticContext<Component, Element> = {
@@ -296,10 +300,10 @@ export type ICacheable<V> = {
     cached: ?V;
 }
 
-export type IPullable = {
+export type IPullable<V> = {
     pull(): void;
     closed: boolean;
-    pulled: boolean;
+    cached: ?V;
 }
 
 export type IDisposable = {

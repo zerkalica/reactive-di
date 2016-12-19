@@ -1,7 +1,7 @@
 // @flow
 import type {IPullable} from './interfaces'
 
-export default class Transact<C: IPullable> {
+export default class Transact<C: IPullable<*>> {
     _consumers: C[] = []
 
     notify(consumers: C[], flush?: boolean): void {
@@ -18,7 +18,7 @@ export default class Transact<C: IPullable> {
         const consumers = this._consumers
         for (let i = 0, l = consumers.length; i < l; i++) {
             const consumer = consumers[i]
-            if (!consumer.pulled && !consumer.closed) {
+            if (!consumer.cached && !consumer.closed) {
                 consumer.pull()
             }
         }

@@ -23,16 +23,17 @@ export default class Source<V> {
     id: number
     refs: number
     computeds: IDisposableCollection<ICacheable<*> & IDisposable>
-    consumers: IDisposableCollection<IPullable>
+    consumers: IDisposableCollection<IPullable<*>>
     context: IContext
     status: ?ISource<ISourceStatus>
     cached: ?V
+    setter: ?ISetter<V>
+    eventSetter: ?ISetter<V>
 
     _initialized: boolean
-    _resolved: boolean
     _hook: IGetable<IBaseHook<V>>
     _configValue: ?V
-    setter: ISetter<V>
+    _isLoadable: boolean
 
     constructor(
         meta: ISourceMeta<V>,
@@ -42,7 +43,6 @@ export default class Source<V> {
         this.t = 1
         this.refs = 0
         this._initialized = false
-        this._resolved = false
         this.status = null
         this.computeds = new DisposableCollection()
         this.consumers = new DisposableCollection()
@@ -53,23 +53,44 @@ export default class Source<V> {
         ;(meta.initialValue: any)[setterKey] = this // eslint-disable-line
         this.cached = meta.initialValue
         this._hook = this.context.resolveHook(meta.hook)
+        this._isLoadable = !!meta.hook
 
-        const setter = this.setter = {}
-        const notifier = context.notifier
-        const keys = Object.keys((this.cached: any))
-        const p = ((this.cached: any).constructor).prototype
-        for (let i = 0; i < keys.length; i++) {
-            this._createSetter(keys[i], notifier, setter, p)
-        }
+        this.setter = null
     }
 
-    _createSetter(key: string, notifier: INotifier, setter: any, p: Function): void {
-        setter[key] = (v: mixed) => { // eslint-disable-line
-            const obj = Object.assign(Object.create(p), (this.cached: any))
+    getSetter(isEventSetter?: boolean): ISetter<V> {
+        const setter = this.setter = {}
+        const eventSetter = this.eventSetter = {}
+        const notifier = this.context.notifier
+        const keys = Object.keys((this.cached: any))
+
+        for (let i = 0; i < keys.length; i++) {
+            this._createSetter(keys[i], notifier)
+        }
+
+        return isEventSetter ? eventSetter : setter
+    }
+
+    getEventSetter(): ISetter<V> {
+        return this.getSetter(true)
+    }
+
+    _createSetter(key: string, notifier: INotifier): void {
+        const setter = (v: mixed) => { // eslint-disable-line
+            const cached: Object = (this.cached: any)
+            const obj: any = Object.assign(Object.create(cached.constructor.prototype), cached)
             obj[key] = v
             this.set(obj)
             notifier.commit()
         }
+        setter.displayName = `${this.displayName}.set.${key}`
+
+        ;(this.setter: any)[key] = setter
+        function eventSetter(e: Object) {
+            return setter(e.target.value)
+        }
+        eventSetter.displayName = `${this.displayName}.setEvent.${key}`
+        ;(this.eventSetter: any)[key] = eventSetter
     }
 
     willMount(_parent: ?IContext): void {
@@ -95,34 +116,31 @@ export default class Source<V> {
     }
 
     resolve(): void {
-        const init = !this._resolved
-        this._resolved = true
         const {stack, level} = this.context.binder
-
         let source: ISource<any> = this
         let computeds = source.computeds
         let consumers = source.consumers
-
+        const isLoadable = this._isLoadable
         let i = stack.length
-        while (--i >= level) {
+        while (--i >= 0) {
             const rec = stack[i]
-            if (init || !rec.has[source.id]) {
-                rec.v.masters.push(source)
-                if (!init) {
-                    rec.has[source.id] = true
-                }
-                if (rec.v.t === 0) {
-                    // computed
+            if (!rec.has[source.id]) {
+                rec.has[source.id] = true
+                if (rec.v.t === 3) { // status
+                    if (isLoadable) {
+                        source = this.status || this.getStatus()
+                        computeds = source.computeds
+                        consumers = source.consumers
+                        computeds.push(rec.v)
+                        rec.v.masters.push(source)
+                    }
+                } else if (i >= level || source !== this) {
+                    // consumer or computed
+                    if (rec.v.t === 2) { // consumer
+                        consumers.push(rec.v)
+                    }
                     computeds.push(rec.v)
-                } else if (rec.v.t === 3) {
-                    // status
-                    source = this.status || this.getStatus()
-                    computeds = source.computeds
-                    consumers = source.consumers
-                    computeds.push(rec.v)
-                } else {
-                    // consumer
-                    consumers.push(rec.v)
+                    rec.v.masters.push(source)
                 }
             }
         }
@@ -141,7 +159,7 @@ export default class Source<V> {
                     id: this.id - 1,
                     hook: null,
                     configValue: null,
-                    initialValue: new SourceStatus({complete: true})
+                    initialValue: new SourceStatus()
                 }: ISourceMeta<ISourceStatus>),
                 this.context
             )

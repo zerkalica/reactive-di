@@ -9,7 +9,11 @@ export type Setter<V: Object> = {
 }
 
 export default function setter<V: Object>(obj: Object): Setter<V> {
-    return (obj[setterKey]: ISource<V>).setter
+    return (obj[setterKey]: ISource<V>).setter || (obj[setterKey]: ISource<V>).getSetter()
+}
+
+export function eventSetter<V: Object>(obj: Object): Setter<V> {
+    return (obj[setterKey]: ISource<V>).eventSetter || (obj[setterKey]: ISource<V>).getEventSetter()
 }
 
 export function status(obj: Object): ISettable<ISourceStatus> & IGetable<ISourceStatus> {
