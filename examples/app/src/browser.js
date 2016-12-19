@@ -6,20 +6,37 @@ import ReactDOM from 'react-dom'
 import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
-import {refsSetter, eventSetter, setter, BaseModel, Updater, SourceStatus, DiFactory, ReactComponentFactory} from 'reactive-di/index'
+import {
+    refsSetter,
+    eventSetter,
+    setter,
+    reset,
+    BaseModel,
+    Updater,
+    SourceStatus,
+    DiFactory,
+    ReactComponentFactory,
+    IndexCollection
+} from 'reactive-di/index'
 import {actions, hooks, deps, theme, component, source} from 'reactive-di/annotations'
 
-const userFixture = {
-    id: 1,
-    name: 'John Doe',
-    email: 'john@example.com'
+const todosFixture: any = []
+
+const maxTodos = 10000
+
+for (let i = 0; i < maxTodos; i++) {
+    todosFixture.push({
+        id: i + 1,
+        title: 'John Doe ' + i,
+        email: 'john' + i + '@example.com'
+    })
 }
 
 // Fetcher service, could be injected from outside by key 'Fetcher' as is
 @source({key: 'Fetcher', instance: true})
 class Fetcher {
     _count = 0
-    fetch<V>(_url: string): Promise<V> {
+    fetch<V: Object>(_url: string, _params?: {method: string}): Promise<V> {
         // fake fetcher for example
 
         return new Promise((resolve: (v: V) => void, reject: (e: Error) => void) => {
@@ -27,22 +44,27 @@ class Fetcher {
             setTimeout(() => {
                 return isError
                     ? reject(new Error('Fake error'))
-                    : resolve(userFixture)
+                    : resolve(todosFixture)
             }, 600)
         })
     }
 }
 
-@source({key: 'User'})
-class User extends BaseModel {
+@source({key: 'Todo'})
+class Todo extends BaseModel {
     id = 0
-    name = ''
+    title = ''
     email = ''
 }
 
+@source({key: 'Todos'})
+class Todos extends IndexCollection {
+    static Item = Todo
+}
+
 @deps(Fetcher, Updater)
-@hooks(User)
-class UserHooks {
+@hooks(Todos)
+class TodosHooks {
     _fetcher: Fetcher
     _updater: Updater
 
@@ -51,10 +73,13 @@ class UserHooks {
         this._updater = updater
     }
 
-    willMount(user: User): void {
-        this._updater.run(user, this._fetcher.fetch('/user'))
+    willMount(todos: Todos): void {
+        this._updater.run(todos, this._fetcher.fetch('/todos', {method: 'GET'}))
     }
 }
+
+@source({key: 'AddedTodo'})
+class AddedTodo extends Todo {}
 
 // Model ThemeVars, could be injected from outside by key 'ThemeVars' as ThemeVarsRec
 @source({key: 'ThemeVars'})
@@ -62,38 +87,60 @@ class ThemeVars extends BaseModel {
     color = 'red'
 }
 
-class UserRefs {
-    name: ?HTMLElement = null
+class TodoRefs {
+    title: ?HTMLElement = null
     set = refsSetter(this)
 }
 
+@source({key: 'TodoServiceSubmit'})
+class TodoServiceSubmit extends SourceStatus {}
+
 @deps(
     Fetcher,
-    User,
-    UserRefs,
-    ThemeVars
+    AddedTodo,
+    TodoRefs,
+    ThemeVars,
+    TodoServiceSubmit,
+    Updater
 )
 @actions
-class UserService {
+class TodoService {
     _fetcher: Fetcher
-    _user: User
+    _addedTodo: Todo
+    _todos: Todos
     _tv: ThemeVars
-    _refs: UserRefs
+    _refs: TodoRefs
+    _submitStatus: TodoServiceSubmit
+    _updater: Updater
 
     constructor(
         fetcher: Fetcher,
-        user: User,
-        refs: UserRefs,
-        tv: ThemeVars
+        addedTodo: AddedTodo,
+        todos: Todos,
+        refs: TodoRefs,
+        tv: ThemeVars,
+        submitStatus: TodoServiceSubmit,
+        updater: Updater
     ) {
         this._fetcher = fetcher
-        this._user = user
+        this._addedTodo = addedTodo
+        this._todos = todos
         this._tv = tv
         this._refs = refs
+        this._submitStatus = submitStatus
+        this._updater = updater
     }
 
     submit(): void {
-        debugger
+        const promise = this._fetcher.fetch('/todo', {
+            method: 'POST',
+            body: JSON.stringify(this._addedTodo)
+        }).then(() => {
+            setter(this._todos).set(this._todos.push(this._addedTodo))
+            reset(this._addedTodo)
+        })
+
+        this._updater.run(this._submitStatus, promise)
     }
 
     changeColor(): void {
@@ -101,34 +148,19 @@ class UserService {
     }
 }
 
-@deps(User)
-class ComputedUser {
-    user: User
-    fullName: string
 
-    constructor(user: User) {
-        this.fullName = `${user.name} <${user.email}>`
-        this.user = user
-    }
+function TodoView({todo}: {todo: Todo}, _state: {}, _t: any) {
+    return <div>{todo.id} - {todo.title}</div>
 }
-
-class LoadingUpdaterStatus extends SourceStatus {
-    static statuses = [UserService]
-}
-
-class SavingUpdaterStatus extends SourceStatus {
-    static statuses = [UserService]
-}
+component()(TodoView)
 
 // Provide class names and data for jss in __css property
-@deps({
-    vars: ThemeVars
-})
+@deps(ThemeVars)
 @theme
-class UserComponentTheme {
+class TodosViewTheme {
     wrapper: string
     status: string
-    name: string
+    title: string
 
     __css: mixed
 
@@ -140,32 +172,40 @@ class UserComponentTheme {
             status: {
                 backgroundColor: 'red'
             },
-            name: {
+            title: {
                 backgroundColor: 'green'
             }
         }
     }
 }
 
-interface UserComponentProps {
+class LoadingStatus extends SourceStatus {
+    static statuses = [Todos]
+}
+
+class SavingStatus extends SourceStatus {
+    static statuses = [TodoService]
+}
+
+interface TodosState {
+    theme: TodosViewTheme;
+    addedTodo: AddedTodo;
+    todos: Todos;
+    refs: TodoRefs;
+    loading: LoadingStatus;
+    saving: SavingStatus;
+    service: TodoService;
+}
+
+interface TodosProps {
     children?: mixed;
 }
 
-interface UserComponentState {
-    theme: UserComponentTheme;
-    user: User;
-    refs: UserRefs;
-    loading: LoadingUpdaterStatus;
-    saving: SavingUpdaterStatus;
-    service: UserService;
-}
-
-function UserComponent(
+function TodosView(
     props: {},
-    {theme: t, user, saving, loading, refs, service}: UserComponentState,
+    {theme: t, addedTodo, todos, saving, loading, refs, service}: TodosState,
     _t: any
 ) {
-    // const user = cuser.user
     if (loading.pending) {
         return <div className={t.wrapper}>Loading...</div>
     }
@@ -173,32 +213,34 @@ function UserComponent(
         return <div className={t.wrapper}>Loading error: {loading.error.message}</div>
     }
 
-    const userSetter = eventSetter(user)
+    const todoSetter = eventSetter(addedTodo)
 
     return <div className={t.wrapper}>
-        <span className={t.name}>Name: <input
-            ref={refs.set.name}
-            value={user.name}
-            name="user.name"
-            id="user.id"
-            onChange={userSetter.name}
+        <span className={t.title}>Todo: <input
+            ref={refs.set.title}
+            value={addedTodo.title}
+            title="todo.title"
+            id="todo.id"
+            onChange={todoSetter.title}
         /></span>
-        <button onClick={service.submit}>Save</button>
-        {/* {saving.error
+        <button disabled={saving.pending} onClick={service.submit}>Save</button>
+        {saving.error
             ? <div>Saving error: {saving.error.message}</div>
             : null
-        } */}
+        }
+        {todos.map((todo: Todo) => <TodoView key={todo.id} todo={todo} />)}
     </div>
 }
 deps({
-    theme: UserComponentTheme,
-    user: User,
-    refs: UserRefs,
-    loading: LoadingUpdaterStatus,
-    // saving: SavingUpdaterStatus,
-    service: UserService
-})(UserComponent)
-component()(UserComponent)
+    theme: TodosViewTheme,
+    todos: Todos,
+    addedTodo: AddedTodo,
+    refs: TodoRefs,
+    loading: LoadingStatus,
+    saving: SavingStatus,
+    service: TodoService
+})(TodosView)
+component()(TodosView)
 
 function ErrorView(
     {error}: {error: Error},
@@ -221,6 +263,6 @@ const di = (new DiFactory({
     .create()
 
 ReactDOM.render(
-    React.createElement(di.wrapComponent(UserComponent)),
+    React.createElement(di.wrapComponent(TodosView)),
     window.document.getElementById('app')
 )

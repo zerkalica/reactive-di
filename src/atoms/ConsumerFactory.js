@@ -44,8 +44,7 @@ export default class ConsumerFactory<V, Element, Component> {
                 this.context.copy(this.displayName).register(this._meta.register)
             )).create(updater)
 
-        listener.willMount()
-        listener.shouldUpdate(props)
+        listener.willMount(props)
 
         return listener
     }

@@ -175,8 +175,7 @@ export default class ConsumerListener<
         let args: mixed[]
 
         const wrapped = typeof tag === 'function' && tag._rdiJsx
-            ? (this._items[tag._rdiId || 0]: any).component
-                || this._context.resolveConsumer(tag).component
+            ? ((this._items[tag._rdiId || 0]: any) || this._context.resolveConsumer(tag)).component
             : tag
 
         switch (arguments.length) {
@@ -253,7 +252,8 @@ export default class ConsumerListener<
         }
     }
 
-    willMount(): void {
+    willMount(props: Props): void {
+        this._props = props
         try {
             this._parent.willMount()
             const hook = this._hook.cached || this._hook.get()

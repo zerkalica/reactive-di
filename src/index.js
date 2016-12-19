@@ -1,7 +1,7 @@
 // @flow
 
 import DiFactory from './DiFactory'
-import setter, {status, eventSetter, merge} from './setter'
+import setter, {status, eventSetter, merge, reset} from './setter'
 
 import IndexCollection from './utils/IndexCollection'
 import refsSetter from './utils/refsSetter'
@@ -18,6 +18,7 @@ export {
     eventSetter,
     status,
     merge,
+    reset,
     debugName,
     refsSetter,
     BaseModel,

@@ -10,7 +10,7 @@ import type {
 } from './interfaces'
 
 import debugName from '../utils/debugName'
-
+import SourceStatus from './SourceStatus'
 import Status from './Status'
 import Source from './Source'
 import ConsumerFactory from './ConsumerFactory'
@@ -102,6 +102,7 @@ export default class DepFactory<Element> {
                 key,
                 initialValue,
                 configValue,
+                loaded: key._rdiLoaded || !!key._rdiHook || key.prototype instanceof SourceStatus,
                 hook: key._rdiHook || null
             },
             context

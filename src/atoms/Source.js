@@ -53,7 +53,7 @@ export default class Source<V> {
         ;(meta.initialValue: any)[setterKey] = this // eslint-disable-line
         this.cached = meta.initialValue
         this._hook = this.context.resolveHook(meta.hook)
-        this._isLoadable = !!meta.hook
+        this._isLoadable = meta.loaded
 
         this.setter = null
     }
@@ -171,11 +171,12 @@ export default class Source<V> {
 
     merge(props: mixed): void {
         this.set(
-           Object.assign(
-               Object.create((this.cached: any).constructor.prototype),
-               (this.cached: any),
-               props
-           )
+            (this.cached: any).copy(props)
+        //    Object.assign(
+        //        Object.create((this.cached: any).constructor.prototype),
+        //        (this.cached: any),
+        //        props
+        //    )
        )
     }
 

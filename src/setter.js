@@ -23,3 +23,7 @@ export function status(obj: Object): ISettable<ISourceStatus> & IGetable<ISource
 export function merge<V: Object>(obj: Object, newData: $Shape<V>): void {
     (obj[setterKey]: ISource<V>).merge(newData)
 }
+
+export function reset(newData: Object): void {
+    (newData[setterKey]: ISource<Object>).merge(new newData.constructor())
+}

@@ -19,7 +19,7 @@ function createWrap<V: Object, R>(
 
         return result
     }
-    wrappedMethod.displayName = name
+    wrappedMethod.displayName = `${ref.displayName}.${String(name)}`
 
     return wrappedMethod
 }
@@ -56,7 +56,7 @@ export function wrapFunction<V: Function>(ref: IRef<V>): V {
 export default function wrapObject<V: Object>(ref: IRef<V>): V {
     let obj: V = ref.cached
     const result: V = (Object.create(obj.constructor.prototype): any)
-    const setted: Map<string | Symbol, boolean> = new Map()
+    const setted: {[id: string | Symbol]: boolean} = Object.create(null)
     do {
         const propNames: (string | Symbol)[] = Object.getOwnPropertyNames(obj)
         if (Object.getOwnPropertySymbols) {
@@ -68,15 +68,17 @@ export default function wrapObject<V: Object>(ref: IRef<V>): V {
 
         for (let i = 0, l = propNames.length; i < l; i++) {
             const propName: string | Symbol = propNames[i]
-            if (!setted.get(propName)) {
+            if (!setted[propName]) {
                 const prop = result[propName]
-                setted.set(propName, true)
+                setted[propName] = true
                 if (typeof prop === 'function') {
                     if (propName !== 'constructor') {
                         result[propName] = createWrap(ref, propName)
                     }
-                } else {
+                } else if (typeof propName !== 'string' || propName[0] !== '_') {
                     Object.defineProperty(result, propName, new PropDescriptor(ref, propName))
+                } else {
+                    result[propName] = ref.cached[propName]
                 }
             }
         }

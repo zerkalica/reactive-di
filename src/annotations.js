@@ -7,6 +7,7 @@ import GenericThemeHook from './theme/GenericThemeHook'
 
 export interface SourceMetaRec {
     key: string;
+    loaded?: boolean;
 }
 
 export interface ComponentMetaRec {
@@ -46,6 +47,7 @@ export function source<V: Function>(rec: SourceMetaRec): (target: V) => V {
     return (target: V) => {
         target._rdiKey = rec.key
         target._rdiInst = rec.instance || false
+        target._rdiLoaded = rec.loaded || false
         return target
     }
 }
