@@ -13,7 +13,7 @@ import {fakeListener, itemKey} from '../utils/IndexCollection'
 import type {ItemListener} from '../utils/IndexCollection'
 
 interface IParent<State> {
-    cached: ?State;
+    state: State;
     willMount(): void;
     willUnmount(updater: IHasForceUpdate): void;
 }
@@ -88,11 +88,11 @@ export default class ConsumerListener<
     update<V>(newItem: V): void {
         this._props.item = newItem
         this._lastProps = null
-        this._updater.forceUpdate()
+        this._context.notifier.notify([this])
     }
 
     shouldUpdate(props: Props): boolean {
-        if (this._parent.cached !== this._lastState) {
+        if (this._parent.state !== this._lastState) {
             return true
         }
 
@@ -223,7 +223,7 @@ export default class ConsumerListener<
             return this._renderError()
         }
         this._lastProps = this._props
-        this._lastState = this._parent.cached
+        this._lastState = this._parent.state
         try {
             return (this._proto.cached || this._proto.get())(
                 this._props,

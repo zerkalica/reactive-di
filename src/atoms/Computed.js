@@ -135,6 +135,9 @@ export default class Computed<V> {
         const masters = this.masters
         const {stack, level} = this.context.binder
         const k = stack.length
+        if (this._meta.ender) {
+            return
+        }
         for (let i = 0, l = masters.length; i < l; i++) {
             const master = masters[i]
             if (master.t === 1) { // source

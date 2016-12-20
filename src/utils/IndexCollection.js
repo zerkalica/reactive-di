@@ -1,5 +1,7 @@
 /* @flow */
 
+import {setterKey} from '../atoms/interfaces'
+
 export type MapFn<T, V> = (v: T, index?: number) => V
 export type FilterFn<T> = (v: T, index?: number) => boolean
 export type SortFn<T> = (a: T, b: T) => number
@@ -40,7 +42,11 @@ export default class IndexCollection<Item: Object> {
     }
 
     copy(items: Item[]): this {
-        return new this.constructor(null, items, this._logger)
+        const newObj = new this.constructor(null, items, this._logger)
+        const source = (newObj: any)[setterKey] = (this: any)[setterKey]
+
+        source.set(newObj)
+        return newObj
     }
 
     _recsToItems(recs: $Shape<Item>[]): Item[] {

@@ -153,7 +153,8 @@ export type ISourceMeta<V> = IBaseMeta & {
     hook: ?IKey;
     initialValue: V;
     configValue: ?V;
-    loaded: boolean;
+    isFetching: boolean;
+    isPending: boolean;
 }
 
 type IStatusBase = {

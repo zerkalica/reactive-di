@@ -94,7 +94,7 @@ export default class DepFactory<Element> {
 
         const id = key._rdiId || (++this._lastId, ++this._lastId) // eslint-disable-line
         key._rdiId = id // eslint-disable-line
-
+        const isPending = !(key.prototype instanceof SourceStatus)
         return new Source(
             {
                 id,
@@ -102,7 +102,8 @@ export default class DepFactory<Element> {
                 key,
                 initialValue,
                 configValue,
-                loaded: key._rdiLoaded || !!key._rdiHook || key.prototype instanceof SourceStatus,
+                isPending,
+                isFetching: key._rdiLoaded || !!key._rdiHook || !isPending,
                 hook: key._rdiHook || null
             },
             context

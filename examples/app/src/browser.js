@@ -22,7 +22,7 @@ import {actions, hooks, deps, theme, component, source} from 'reactive-di/annota
 
 const todosFixture: any = []
 
-const maxTodos = 10000
+const maxTodos = 10
 
 for (let i = 0; i < maxTodos; i++) {
     todosFixture.push({
@@ -50,9 +50,10 @@ class Fetcher {
     }
 }
 
+let counter = maxTodos
 @source({key: 'Todo'})
 class Todo extends BaseModel {
-    id = 0
+    id = ++counter
     title = ''
     email = ''
 }
@@ -98,6 +99,7 @@ class TodoServiceSubmit extends SourceStatus {}
 @deps(
     Fetcher,
     AddedTodo,
+    Todos,
     TodoRefs,
     ThemeVars,
     TodoServiceSubmit,
@@ -136,7 +138,7 @@ class TodoService {
             method: 'POST',
             body: JSON.stringify(this._addedTodo)
         }).then(() => {
-            setter(this._todos).set(this._todos.push(this._addedTodo))
+            this._todos.push(this._addedTodo)
             reset(this._addedTodo)
         })
 
@@ -149,8 +151,8 @@ class TodoService {
 }
 
 
-function TodoView({todo}: {todo: Todo}, _state: {}, _t: any) {
-    return <div>{todo.id} - {todo.title}</div>
+function TodoView({item}: {item: Todo}, _state: {}, _t: any) {
+    return <div>{item.id} - {item.title}</div>
 }
 component()(TodoView)
 
@@ -190,7 +192,6 @@ class SavingStatus extends SourceStatus {
 interface TodosState {
     theme: TodosViewTheme;
     addedTodo: AddedTodo;
-    todos: Todos;
     refs: TodoRefs;
     loading: LoadingStatus;
     saving: SavingStatus;
@@ -201,9 +202,19 @@ interface TodosProps {
     children?: mixed;
 }
 
+function TodosViewColl(_p: {}, {items}: {items: Todos}, _t: any) {
+    return <div>
+        {items.map((todo: Todo) => <TodoView key={todo.id} item={todo} />)}
+    </div>
+}
+deps({
+    items: Todos
+})(TodosViewColl)
+component()(TodosViewColl)
+
 function TodosView(
     props: {},
-    {theme: t, addedTodo, todos, saving, loading, refs, service}: TodosState,
+    {theme: t, addedTodo, saving, loading, refs, service}: TodosState,
     _t: any
 ) {
     if (loading.pending) {
@@ -223,17 +234,18 @@ function TodosView(
             id="todo.id"
             onChange={todoSetter.title}
         /></span>
-        <button disabled={saving.pending} onClick={service.submit}>Save</button>
+        <button disabled={saving.pending} onClick={service.submit}>
+            {saving.pending ? 'Saving...' : 'Save'}
+        </button>
         {saving.error
             ? <div>Saving error: {saving.error.message}</div>
             : null
         }
-        {todos.map((todo: Todo) => <TodoView key={todo.id} todo={todo} />)}
+        <TodosViewColl />
     </div>
 }
 deps({
     theme: TodosViewTheme,
-    todos: Todos,
     addedTodo: AddedTodo,
     refs: TodoRefs,
     loading: LoadingStatus,

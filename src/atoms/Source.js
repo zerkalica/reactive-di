@@ -33,17 +33,22 @@ export default class Source<V> {
     _initialized: boolean
     _hook: IGetable<IBaseHook<V>>
     _configValue: ?V
-    _isLoadable: boolean
+    _isFetching: boolean
+    _isPending: boolean
+    _meta: ISourceMeta<V>
+    _parent: ?ISource<*>
 
     constructor(
         meta: ISourceMeta<V>,
-        context: IContext
+        context: IContext,
+        parent?: ?ISource<*>
     ) {
         ;(this: ISource<V>) // eslint-disable-line
         this.t = 1
         this.refs = 0
         this._initialized = false
         this.status = null
+        this._parent = parent
         this.computeds = new DisposableCollection()
         this.consumers = new DisposableCollection()
         this.displayName = meta.name
@@ -53,8 +58,9 @@ export default class Source<V> {
         ;(meta.initialValue: any)[setterKey] = this // eslint-disable-line
         this.cached = meta.initialValue
         this._hook = this.context.resolveHook(meta.hook)
-        this._isLoadable = meta.loaded
-
+        this._meta = meta
+        this._isFetching = meta.isFetching
+        this._isPending = meta.isPending
         this.setter = null
     }
 
@@ -94,6 +100,9 @@ export default class Source<V> {
     }
 
     willMount(_parent: ?IContext): void {
+        if (this._parent) {
+            this._parent.willMount(_parent)
+        }
         const hook = this._hook.cached || this._hook.get()
         if (hook.init && !this._initialized) {
             this._initialized = true
@@ -113,6 +122,9 @@ export default class Source<V> {
             hook.dispose((this.cached: any))
             this._initialized = false
         }
+        if (this._parent) {
+            this._parent.willUnmount(parent)
+        }
     }
 
     resolve(): void {
@@ -120,14 +132,14 @@ export default class Source<V> {
         let source: ISource<any> = this
         let computeds = source.computeds
         let consumers = source.consumers
-        const isLoadable = this._isLoadable
+        const isFetching = this._isFetching
         let i = stack.length
         while (--i >= 0) {
             const rec = stack[i]
             if (!rec.has[source.id]) {
                 rec.has[source.id] = true
                 if (rec.v.t === 3) { // status
-                    if (isLoadable) {
+                    if (isFetching) {
                         source = this.status || this.getStatus()
                         computeds = source.computeds
                         consumers = source.consumers
@@ -159,9 +171,10 @@ export default class Source<V> {
                     id: this.id - 1,
                     hook: null,
                     configValue: null,
-                    initialValue: new SourceStatus()
+                    initialValue: new SourceStatus(this._isPending ? {pending: true} : null)
                 }: ISourceMeta<ISourceStatus>),
-                this.context
+                this.context,
+                this
             )
             this.status = status.status = status
         }

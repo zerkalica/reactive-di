@@ -24,6 +24,10 @@ export function merge<V: Object>(obj: Object, newData: $Shape<V>): void {
     (obj[setterKey]: ISource<V>).merge(newData)
 }
 
+export function set<V: Object>(newData: V): void {
+    (newData[setterKey]: ISource<V>).set(newData)
+}
+
 export function reset(newData: Object): void {
     (newData[setterKey]: ISource<Object>).merge(new newData.constructor())
 }
