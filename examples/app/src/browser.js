@@ -123,6 +123,7 @@ class TodoUpdater {
         todos: Todos,
         submitStatus: TodoServiceSubmit
     ) {
+        this._fetcher = fetcher
         this._todos = todos
         this._addedTodo = addedTodo
         this.value = submitStatus
@@ -144,21 +145,25 @@ class TodoUpdater {
 @deps(
     TodoRefs,
     ThemeVars,
-    TodoUpdater
+    TodoUpdater,
+    AddedTodo
 )
 @actions
 class TodoService {
     _tv: ThemeVars
     _refs: TodoRefs
     _todoUpdater: Updater<*>
+    event: {[id: string]: (v: any) => void}
 
     constructor(
         refs: TodoRefs,
         tv: ThemeVars,
-        todoUpdater: TodoUpdater
+        todoUpdater: TodoUpdater,
+        addedTodo: AddedTodo
     ) {
         this._tv = tv
         this._refs = refs
+        this.event = eventSetter(addedTodo)
         this._todoUpdater = new Updater(todoUpdater)
     }
 
@@ -245,7 +250,7 @@ function TodosView(
         return <div className={t.wrapper}>Loading error: {loading.error.message}</div>
     }
 
-    const todoSetter = eventSetter(addedTodo)
+    const todoSetter = service.event
 
     return <div className={t.wrapper}>
         <span className={t.title}>Todo: <input
@@ -255,13 +260,13 @@ function TodosView(
             id="todo.id"
             onChange={todoSetter.title}
         /></span>
-        {/* <button disabled={saving.pending} onClick={service.submit}>
+        <button disabled={saving.pending} onClick={service.submit}>
             {saving.pending ? 'Saving...' : 'Save'}
         </button>
         {saving.error
             ? <div>Saving error: {saving.error.message}</div>
             : null
-        } */}
+        }
         <TodosViewColl />
     </div>
 }
@@ -270,7 +275,7 @@ deps({
     addedTodo: AddedTodo,
     refs: TodoRefs,
     loading: LoadingStatus,
-    // saving: SavingStatus,
+    saving: SavingStatus,
     service: TodoService
 })(TodosView)
 component()(TodosView)

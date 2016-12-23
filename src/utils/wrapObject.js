@@ -38,11 +38,14 @@ class PropDescriptor<V: Object> {
         this._propName = propName
     }
 
-    get(): V {
+    get = () => this._get()
+    set = (newVal: V) => this._set(newVal)
+
+    _get(): V {
         return this._ref.cachedSrc[this._propName]
     }
 
-    set(newVal: V): void {
+    _set(newVal: V): void {
         this._ref.cachedSrc[this._propName] = newVal
     }
 }

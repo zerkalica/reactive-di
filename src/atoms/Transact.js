@@ -48,11 +48,11 @@ export default class Transact<C: IPullable<*>> {
         return last
     }
 
-    createCaller(name: string): ICaller {
+    createCaller(name?: ?string): ICaller {
         const lc = this._getLastCaller()
         return {
             ...lc,
-            names: lc.names.concat(name)
+            names: name ? lc.names.concat(name) : lc.names
         }
     }
 

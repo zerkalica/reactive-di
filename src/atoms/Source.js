@@ -82,12 +82,13 @@ export default class Source<V> {
     }
 
     _createSetter(key: string, notifier: INotifier): void {
+        const caller = notifier.createCaller()
         const setter = (v: mixed, isFromEvent?: boolean) => { // eslint-disable-line
             const cached: Object = (this.cached: any)
             notifier.begin({
-                names: [isFromEvent ? 'event' : 'set', key],
+                names: caller.names.concat([isFromEvent ? 'event' : 'set', key]),
                 args: [v],
-                id: 0
+                id: caller.id
             })
             const obj: any = Object.assign(Object.create(cached.constructor.prototype), cached)
             obj[key] = v
@@ -128,9 +129,10 @@ export default class Source<V> {
             hook.dispose((this.cached: any))
             this._initialized = false
         }
-        if (this._parent) {
-            this._parent.willUnmount(parent)
-            this._parent.refs--
+        const p = this._parent
+        if (p) {
+            p.willUnmount(parent)
+            p.refs--
         }
     }
 

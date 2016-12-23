@@ -133,7 +133,12 @@ export default class Computed<V> {
         if (this._args && !resolveArgs(this._args, this._argVals)) {
             return this.cached
         }
-
+        const notifier = this.context.notifier
+        notifier.begin({
+            names: [this.displayName],
+            id: 0,
+            args: this._argVals || []
+        })
         const newVal = this._create(this._proto.cached || this._proto.get(), this._argVals || [])
         const hook = this._hook.cached || this._hook.get()
 
@@ -152,6 +157,7 @@ export default class Computed<V> {
                 this._cachedProxy = this.cached = newVal
             }
         }
+        notifier.end()
 
         return this._cachedProxy
     }
