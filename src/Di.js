@@ -5,7 +5,6 @@ import type {
     IComponentFactory,
     IErrorHandler,
     IContext,
-    IMiddlewares,
     IRelationBinder,
     INotifier,
     IHasDispose,
@@ -41,7 +40,6 @@ export default class Di<Component, Element> {
     protoFactory: ?IContext
     binder: IRelationBinder
     notifier: INotifier
-    middlewares: ?IMiddlewares
     closed: boolean
     disposables: IDisposableCollection<IHasDispose>
 
@@ -64,7 +62,6 @@ export default class Di<Component, Element> {
         this.protoFactory = c.protoFactory
         this.binder = c.binder
         this.notifier = c.notifier
-        this.middlewares = c.middlewares
         this._context = c
         this.disposables = new DisposableCollection()
         this._parents = parents

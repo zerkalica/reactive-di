@@ -1,21 +1,26 @@
 // @flow
 
+import type {INotifier} from '../atoms/interfaces'
 import {fastCallMethod, fastCall} from './fastCreate'
 
 export type IRef<V> = {
     displayName: string;
-    cached: V;
-    onFunctionCall(args: any[], result: any): void;
-    onMethodCall(name: string | Symbol, args: any[], result: any): void;
+    cachedSrc: V;
+    notifier: INotifier;
 }
-
+/* eslint-disable no-param-reassign */
 function createWrap<V: Object, R>(
     ref: IRef<V>,
     name: string | Symbol
 ): (...args: any[]) => R {
     function wrappedMethod(...args: any[]): R {
-        const result: R = fastCallMethod(ref.cached, ref.cached[name], args)
-        ref.onMethodCall(name, args, result)
+        ref.notifier.begin({
+            names: [ref.displayName, typeof name === 'string' ? name : name.toString()],
+            args,
+            id: 0
+        })
+        const result: R = fastCallMethod(ref.cachedSrc, ref.cachedSrc[name], args)
+        ref.notifier.end()
 
         return result
     }
@@ -34,18 +39,23 @@ class PropDescriptor<V: Object> {
     }
 
     get(): V {
-        return this._ref.cached[this._propName]
+        return this._ref.cachedSrc[this._propName]
     }
 
     set(newVal: V): void {
-        this._ref.cached[this._propName] = newVal
+        this._ref.cachedSrc[this._propName] = newVal
     }
 }
 
 export function wrapFunction<V: Function>(ref: IRef<V>): V {
     function fnProxy(...args: any[]): V {
-        const result = fastCall(ref.cached, args) // eslint-disable-line
-        ref.onFunctionCall(args, result)
+        ref.notifier.begin({
+            names: [ref.displayName],
+            args,
+            id: 0
+        })
+        const result = fastCall(ref.cachedSrc, args) // eslint-disable-line
+        ref.notifier.end()
         return result
     }
     fnProxy.displayName = ref.displayName
@@ -54,7 +64,7 @@ export function wrapFunction<V: Function>(ref: IRef<V>): V {
 }
 
 export default function wrapObject<V: Object>(ref: IRef<V>): V {
-    let obj: V = ref.cached
+    let obj: V = ref.cachedSrc
     const result: V = (Object.create(obj.constructor.prototype): any)
     const setted: {[id: string | Symbol]: boolean} = Object.create(null)
     do {
@@ -78,7 +88,7 @@ export default function wrapObject<V: Object>(ref: IRef<V>): V {
                 } else if (typeof propName !== 'string' || propName[0] !== '_') {
                     Object.defineProperty(result, propName, new PropDescriptor(ref, propName))
                 } else {
-                    result[propName] = ref.cached[propName]
+                    result[propName] = ref.cachedSrc[propName]
                 }
             }
         }

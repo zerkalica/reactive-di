@@ -141,6 +141,7 @@ export type IComputed<V> = {
     refs: number;
     context: IContext;
     masters: IMaster[];
+    notifier: INotifier;
 
     cached: ?V;
     get(): V;
@@ -162,15 +163,9 @@ type IStatusBase = {
     pending: boolean;
     error: ?Error;
 }
-export interface ISourceStatus extends IStatusBase {
+export type ISourceStatus = IStatusBase & {
     isEqual(src: ISourceStatus): boolean;
     copy(opts: $Shape<IStatusBase>): ISourceStatus;
-}
-
-export type IDepInfo<V> = {
-    displayName: string;
-    id: number;
-    cached: ?V;
 }
 
 export type ISetter<V> = {[id: string]: (v: mixed) => void}
@@ -218,9 +213,27 @@ export interface IRelationBinder {
     end(): void;
 }
 
+
+export type ICaller = {
+    id: number;
+    names: string[];
+    args: any[];
+}
+
+export type IDepInfo<V> = {
+    displayName: string;
+    cached: ?V;
+}
+
+export type IMiddlewares = {
+    onSetValue<V>(src: IDepInfo<V>, newVal: V, caller: ICaller): void;
+}
+
 export type INotifier = {
-    notify(c: IPullable<*>[], flush?: boolean): void;
-    commit(): void;
+    begin(caller: ICaller): void;
+    createCaller(name: string): ICaller;
+    end(): void;
+    notify<V>(c: IPullable<*>[], info: IDepInfo<V>, newVal: V): void;
 }
 
 export type ICreateElement<Element> = (...args: any) => Element
@@ -239,12 +252,6 @@ export interface IErrorHandler {
     setError(e: Error): void;
 }
 
-export type IMiddlewares = {
-    onSetValue<V>(src: IDepInfo<V>, newVal: V): void;
-    onMethodCall<O: Object>(name: string, prop: string, args: mixed[], result: mixed): void;
-    onFuncCall(name: string, args: mixed[], result: mixed): void;
-}
-
 export type IStaticContext<Component, Element> = {
     binder: IRelationBinder;
     depFactory: IDepFactory<Element>;
@@ -252,7 +259,6 @@ export type IStaticContext<Component, Element> = {
     componentFactory: IComponentFactory<*, *>;
     errorHandler: IErrorHandler;
     protoFactory: ?IContext;
-    middlewares: ?IMiddlewares;
     contexts: ?IDisposableCollection<IContext>;
 }
 
@@ -273,7 +279,6 @@ export type IContext = {
     protoFactory: ?IContext;
     binder: IRelationBinder;
     notifier: INotifier;
-    middlewares: ?IMiddlewares;
     closed: boolean;
     disposables: IDisposableCollection<IHasDispose>;
 

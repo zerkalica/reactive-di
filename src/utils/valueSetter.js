@@ -1,6 +1,5 @@
 // @flow
 
-import type {INotifier, ISourceStatus, ISource} from '../atoms/interfaces'
 import {setterKey} from '../atoms/interfaces'
 
 export type SetterResult<V: Object> = {
@@ -9,54 +8,19 @@ export type SetterResult<V: Object> = {
 }
 
 export class BaseModel {
-    copy(rec: $Shape<this>): this {
+    copy(rec: any): this {
         return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
     }
-}
 
-const completeObj = {complete: true, pending: false, error: null}
-const pendingObj = {complete: false, pending: true, error: null}
-
-export class Loader<V: Object> {
-    _source: ISource<V>
-    _status: ISource<ISourceStatus>
-    _isCanceled: boolean
-    _promise: Promise<$Shape<V>>
-    _notifier: INotifier
-
-    constructor(source: ISource<V>, promise: Promise<$Shape<V>>) {
-        this._source = source
-        this._status = source.getStatus()
-        this._isCanceled = false
-        this._notifier = source.context.notifier
-        this._status.merge(pendingObj)
-        this._promise = promise
-            .then((data: $Shape<V>) => this._resolve(data))
-            .catch((error: Error) => this._reject(error))
+    set(rec: any): this {
+        const val = this.copy(rec)
+        ;(val: any)[setterKey].set(this)
+        return val
     }
 
-    _resolve(data: $Shape<V>): void {
-        if (!this._isCanceled) {
-            this._source.merge(data)
-            this._status.merge(completeObj)
-            this._notifier.commit()
-        }
-    }
-
-    _reject(error: Error): void {
-        if (!this._isCanceled) {
-            this._status.merge({error, complete: false, pending: false})
-            this._notifier.commit()
-        }
-    }
-
-    cancel(): void {
-        this._isCanceled = true
-    }
-}
-
-export class Updater {
-    run<V: Object>(v: V, promise: Promise<$Shape<V>>): Loader<V> {
-        return new Loader((v: any)[setterKey], promise)
+    reset(): this {
+        const val = new this.constructor()
+        ;(val: any)[setterKey].set(this)
+        return val
     }
 }

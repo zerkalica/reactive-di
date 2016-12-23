@@ -27,6 +27,7 @@ export default class ConsumerListener<
     displayName: string
     _updater: IHasForceUpdate
     closed: boolean
+    cached: ?Props
 
     _context: IContext
     _props: Props
@@ -54,6 +55,7 @@ export default class ConsumerListener<
         this._updater = updater
         this.displayName = displayName
         this.closed = false
+        this.cached = false
         this._items = context.items
         this._errorComponent = errorComponent
         this._lastState = null
@@ -89,6 +91,10 @@ export default class ConsumerListener<
         this._props.item = newItem
         this._lastProps = null
         this._context.notifier.notify([this])
+    }
+
+    pull(): void {
+        this._updater.forceUpdate()
     }
 
     shouldUpdate(props: Props): boolean {

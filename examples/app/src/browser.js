@@ -10,7 +10,6 @@ import {
     refsSetter,
     eventSetter,
     setter,
-    reset,
     BaseModel,
     Updater,
     SourceStatus,
@@ -18,11 +17,13 @@ import {
     ReactComponentFactory,
     IndexCollection
 } from 'reactive-di/index'
+import type {IDepInfo, ICaller} from 'reactive-di/index'
 import {actions, hooks, deps, theme, component, source} from 'reactive-di/annotations'
 
 const todosFixture: any = []
 
-const maxTodos = 10
+
+const maxTodos = 50
 
 for (let i = 0; i < maxTodos; i++) {
     todosFixture.push({
@@ -63,19 +64,30 @@ class Todos extends IndexCollection {
     static Item = Todo
 }
 
-@deps(Fetcher, Updater)
+@deps(Fetcher)
 @hooks(Todos)
 class TodosHooks {
     _fetcher: Fetcher
-    _updater: Updater
+    _updater: Updater<Todos>
 
-    constructor(fetcher: Fetcher, updater: Updater) {
+    value: Todos
+
+    constructor(fetcher: Fetcher) {
         this._fetcher = fetcher
-        this._updater = updater
+    }
+
+    promise(): Promise<Todos> {
+        return this._fetcher.fetch('/todos', {method: 'GET'})
     }
 
     willMount(todos: Todos): void {
-        this._updater.run(todos, this._fetcher.fetch('/todos', {method: 'GET'}))
+        this.value = todos
+        this._updater = new Updater(this)
+        this._updater.run()
+    }
+
+    willUnmount(): void {
+        this._updater.abort()
     }
 }
 
@@ -96,53 +108,62 @@ class TodoRefs {
 @source({key: 'TodoServiceSubmit'})
 class TodoServiceSubmit extends SourceStatus {}
 
-@deps(
-    Fetcher,
-    AddedTodo,
-    Todos,
-    TodoRefs,
-    ThemeVars,
-    TodoServiceSubmit,
-    Updater
-)
-@actions
-class TodoService {
+
+@deps(Fetcher, AddedTodo, Todos, TodoServiceSubmit)
+class TodoUpdater {
     _fetcher: Fetcher
-    _addedTodo: Todo
+    _addedTodo: AddedTodo
     _todos: Todos
-    _tv: ThemeVars
-    _refs: TodoRefs
-    _submitStatus: TodoServiceSubmit
-    _updater: Updater
+
+    value: TodoServiceSubmit
 
     constructor(
         fetcher: Fetcher,
         addedTodo: AddedTodo,
         todos: Todos,
+        submitStatus: TodoServiceSubmit
+    ) {
+        this._todos = todos
+        this._addedTodo = addedTodo
+        this.value = submitStatus
+    }
+
+    promise(): Promise<TodoServiceSubmit> {
+        return this._fetcher.fetch('/todo', {
+            method: 'POST',
+            body: JSON.stringify(this._addedTodo)
+        })
+    }
+
+    next(): void {
+        this._todos.push(this._addedTodo)
+        this._addedTodo.reset()
+    }
+}
+
+@deps(
+    TodoRefs,
+    ThemeVars,
+    TodoUpdater
+)
+@actions
+class TodoService {
+    _tv: ThemeVars
+    _refs: TodoRefs
+    _todoUpdater: Updater<*>
+
+    constructor(
         refs: TodoRefs,
         tv: ThemeVars,
-        submitStatus: TodoServiceSubmit,
-        updater: Updater
+        todoUpdater: TodoUpdater
     ) {
-        this._fetcher = fetcher
-        this._addedTodo = addedTodo
-        this._todos = todos
         this._tv = tv
         this._refs = refs
-        this._submitStatus = submitStatus
-        this._updater = updater
+        this._todoUpdater = new Updater(todoUpdater)
     }
 
     submit(): void {
-        const promise = this._fetcher.fetch('/todo', {
-            method: 'POST',
-            body: JSON.stringify(this._addedTodo)
-        }).then(() => {
-            this._todos.push(this._addedTodo)
-            reset(this._addedTodo)
-        })
-
-        this._updater.run(this._submitStatus, promise)
+        this._todoUpdater.run()
     }
 
     changeColor(): void {
@@ -234,13 +255,13 @@ function TodosView(
             id="todo.id"
             onChange={todoSetter.title}
         /></span>
-        <button disabled={saving.pending} onClick={service.submit}>
+        {/* <button disabled={saving.pending} onClick={service.submit}>
             {saving.pending ? 'Saving...' : 'Save'}
         </button>
         {saving.error
             ? <div>Saving error: {saving.error.message}</div>
             : null
-        }
+        } */}
         <TodosViewColl />
     </div>
 }
@@ -249,7 +270,7 @@ deps({
     addedTodo: AddedTodo,
     refs: TodoRefs,
     loading: LoadingStatus,
-    saving: SavingStatus,
+    // saving: SavingStatus,
     service: TodoService
 })(TodosView)
 component()(TodosView)
@@ -264,10 +285,22 @@ component()(ErrorView)
 
 jss.use(jssCamel)
 
+class Middleware {
+    onSetValue<V>(src: IDepInfo<V>, newVal: V, caller: ICaller): void {
+        console.log(
+            `\n${caller.names.join('.')}, #${caller.id} set ${src.displayName}\nfrom`,
+            src.cached,
+            '\nto',
+            newVal
+        )
+    }
+}
+
 const di = (new DiFactory({
     values: {
         Fetcher: new Fetcher()
     },
+    middlewares: new Middleware(),
     defaultErrorComponent: ErrorView,
     themeFactory: jss,
     componentFactory: new ReactComponentFactory(React)

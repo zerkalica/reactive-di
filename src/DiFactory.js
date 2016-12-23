@@ -41,12 +41,11 @@ export default class DiFactory<Component, Element> {
         values.AbstractSheetFactory = opts.themeFactory
         const context: IStaticContext<Component, Element> = this._staticContext = {
             depFactory: new DepFactory(values, opts.defaultErrorComponent),
-            notifier: new Transact(),
+            notifier: new Transact(opts.middlewares || null),
             componentFactory: opts.componentFactory,
             binder: new RelationBinder(),
             errorHandler: opts.errorHandler || new DefaultErrorHandler(),
             protoFactory: null,
-            middlewares: opts.middlewares || null,
             contexts: opts.debug ? new DisposableCollection() : null
         }
         if (opts.debug) {
@@ -56,10 +55,6 @@ export default class DiFactory<Component, Element> {
 
     create(): Di<Component, Element> {
         return new Di('root', [], this._staticContext, [])
-    }
-
-    commit(): void {
-        this._staticContext.notifier.commit()
     }
 
     setState<V>(id: number, value: V): void {
@@ -73,7 +68,6 @@ export default class DiFactory<Component, Element> {
                 context.set(id, value)
             }
         }
-        this._staticContext.notifier.commit()
     }
 
     setProto(from: Function, to: Function): void {

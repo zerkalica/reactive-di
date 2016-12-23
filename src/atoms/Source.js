@@ -82,18 +82,23 @@ export default class Source<V> {
     }
 
     _createSetter(key: string, notifier: INotifier): void {
-        const setter = (v: mixed) => { // eslint-disable-line
+        const setter = (v: mixed, isFromEvent?: boolean) => { // eslint-disable-line
             const cached: Object = (this.cached: any)
+            notifier.begin({
+                names: [isFromEvent ? 'event' : 'set', key],
+                args: [v],
+                id: 0
+            })
             const obj: any = Object.assign(Object.create(cached.constructor.prototype), cached)
             obj[key] = v
             this.set(obj)
-            notifier.commit()
+            notifier.end()
         }
         setter.displayName = `${this.displayName}.set.${key}`
 
         ;(this.setter: any)[key] = setter
         function eventSetter(e: Object) {
-            return setter(e.target.value)
+            return setter(e.target.value, true)
         }
         eventSetter.displayName = `${this.displayName}.setEvent.${key}`
         ;(this.eventSetter: any)[key] = eventSetter
@@ -101,6 +106,7 @@ export default class Source<V> {
 
     willMount(_parent: ?IContext): void {
         if (this._parent) {
+            this._parent.refs++
             this._parent.willMount(_parent)
         }
         const hook = this._hook.cached || this._hook.get()
@@ -124,6 +130,7 @@ export default class Source<V> {
         }
         if (this._parent) {
             this._parent.willUnmount(parent)
+            this._parent.refs--
         }
     }
 
@@ -170,6 +177,8 @@ export default class Source<V> {
                     name: this.displayName + 'Status',
                     id: this.id - 1,
                     hook: null,
+                    isFetching: false,
+                    isPending: false,
                     configValue: null,
                     initialValue: new SourceStatus(this._isPending ? {pending: true} : null)
                 }: ISourceMeta<ISourceStatus>),
@@ -206,15 +215,11 @@ export default class Source<V> {
             hook.willUpdate(v, this.cached)
         }
         const context = this.context
-        if (context.middlewares) {
-            context.middlewares.onSetValue(this, v)
-        }
-        this.cached = v
-
         const computeds = this.computeds.items
         for (let i = 0, l = computeds.length; i < l; i++) {
             computeds[i].cached = null
         }
-        context.notifier.notify(this.consumers.items)
+        context.notifier.notify(this.consumers.items, this, v)
+        this.cached = v
     }
 }

@@ -71,11 +71,10 @@ export default class DepFactory<Element> {
                 key,
                 func: key._rdiFn || false,
                 args: key._rdiArgs || null,
-                ender: key._rdiEnd || false,
+                ender: key._rdiEnd || isHook || false,
                 hook: key._rdiHook || null
             },
-            context,
-            isHook
+            context
         )
     }
 
@@ -94,7 +93,7 @@ export default class DepFactory<Element> {
 
         const id = key._rdiId || (++this._lastId, ++this._lastId) // eslint-disable-line
         key._rdiId = id // eslint-disable-line
-        const isPending = !(key.prototype instanceof SourceStatus)
+        const isPending = false // !(key.prototype instanceof SourceStatus)
         return new Source(
             {
                 id,
