@@ -4,10 +4,12 @@ import type {IMiddlewares, IDepInfo, IPullable} from './interfaces'
 export default class Transact<C: IPullable<*>> {
     _consumers: C[] = []
     _middlewares: ?IMiddlewares
+
     trace: string = ''
     asyncType: null | 'next' | 'error' | 'complete' = null
     callerId: number = 0
-    renderId: number = 0
+
+    lastId: number = 0
 
     constructor(
         middlewares?: ?IMiddlewares
@@ -38,7 +40,6 @@ export default class Transact<C: IPullable<*>> {
                     consumer.pull()
                 }
             }
-            this.renderId++
             this._consumers = []
         }
     }

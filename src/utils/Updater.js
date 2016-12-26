@@ -147,8 +147,8 @@ export default class Updater<V> {
         const oldTrace = notifier.trace
         const oldId = notifier.callerId
         notifier.trace = this._trace
-        notifier.asyncType = 'complete'
         notifier.callerId = this._id
+        notifier.asyncType = 'complete'
         this._status.merge(completeObj)
         if (v) {
             this._source.merge(v)

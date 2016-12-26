@@ -5,6 +5,7 @@ import type {ISource, INotifier} from '../atoms/interfaces'
 import {fastCallMethod, fastCall} from './fastCreate'
 
 export type IRef<V> = {
+    displayName: string;
     cachedSrc: V;
     notifier: INotifier;
 }
@@ -17,7 +18,7 @@ function wrapMethod<V: Object, R>(
     const trace = `${notifier.trace}.${typeof name === 'string' ? name : name.toString()}`
     function wrappedMethod(...args: any[]): R {
         const oldTrace = notifier.trace
-        ++notifier.callerId
+        notifier.callerId = ++notifier.lastId
         notifier.trace = trace
         const result: R = fastCallMethod(ref.cachedSrc, ref.cachedSrc[name], args)
         notifier.trace = oldTrace
@@ -35,7 +36,7 @@ export function wrapFunction<V: Function>(ref: IRef<V>): V {
 
     function wrappedFn(...args: any[]): V {
         const oldTrace = notifier.trace
-        ++notifier.callerId
+        notifier.callerId = ++notifier.lastId
         notifier.trace = trace
         const result = fastCall(ref.cachedSrc, args) // eslint-disable-line
         notifier.trace = oldTrace
@@ -49,48 +50,57 @@ export function wrapFunction<V: Function>(ref: IRef<V>): V {
 
 function createSetterFn<V: Object>(
     src: ISource<V>,
-    trace: string,
     notifier: INotifier,
+    ref: {displayName: string},
     key: string,
     getValue: ?(rawVal: mixed) => mixed
 ) {
-    const setter = (rawVal: mixed) => {
+    const setVal = (rawVal: mixed) => {
         const v: mixed = getValue ? getValue(rawVal) : rawVal
         const oldTrace = notifier.trace
-        ++notifier.callerId
-        notifier.trace = trace
+        notifier.callerId = ++notifier.lastId
+        notifier.trace = `${ref.displayName}.${key}`
         src.merge({[key]: v})
         notifier.trace = oldTrace
         notifier.end()
     }
-    setter.displayName = notifier.trace
-    return setter
+    setVal.displayName = notifier.trace
+    return setVal
 }
 
 function fromEvent(e: any): mixed {
     return e.target.value
 }
 
+export type Setter<V: Object> = {
+    // (v: $Shape<$Subtype<V>>): void;
+    [id: $Keys<V>]: (v: mixed) => void;
+}
+
 function createSetter<V: Object>(
     obj: V,
-    isFromEvent?: boolean,
-    propName?: string | Symbol
-) {
+    getValue: ?(rawVal: mixed) => mixed
+): Setter<V> {
     const src = (obj: any)[setterKey]
     const notifier = src.context.notifier
     const result = Object.create(obj.constructor)
     const propNames: string[] = Object.getOwnPropertyNames(obj)
-    const trace = propName
-        ? `${notifier.trace}.${typeof propName === 'string' ? propName : propName.toString()}`
-        : notifier.trace
-
-    const getValue = isFromEvent ? fromEvent : null
     for (let i = 0, l = propNames.length; i < l; i++) {
         const pn = propNames[i]
-        result[pn] = createSetterFn(src, `${trace}.${pn}`, notifier, pn, getValue)
+        result[pn] = createSetterFn(src, notifier, result, pn, getValue)
     }
+    result.displayName = notifier.trace
+    result.__rdiSetter = true
 
     return result
+}
+
+export function setter<V: Object>(obj: Object): Setter<V> {
+    return createSetter(obj, null)
+}
+
+export function eventSetter<V: Object>(obj: Object): Setter<V> {
+    return createSetter(obj, fromEvent)
 }
 
 function wrapCommonProperty<V: Object>(ref: IRef<V>, propName: string | Symbol) {
@@ -127,8 +137,9 @@ export default function wrapObject<V: Object>(ref: IRef<V>): V {
                         result[propName] = wrapMethod(ref, propName)
                     }
                 } else if (typeof propName === 'string' && propName[0] !== '_') {
-                    if (typeof prop === 'object' && prop[setterKey]) {
-                        result[propName] = createSetter(prop, true, propName)
+                    if (typeof prop === 'object' && prop.__rdiSetter) {
+                        prop.displayName = `${ref.displayName}.${propName}`
+                        result[propName] = prop
                     } else {
                         Object.defineProperty(result, propName, wrapCommonProperty(ref, propName))
                     }

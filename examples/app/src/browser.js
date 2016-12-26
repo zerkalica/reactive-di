@@ -294,7 +294,7 @@ class Middleware {
     onSetValue<V>(src: IDepInfo<V>, newVal: V, info: ICallerInfo): void {
         /* eslint-disable no-console */
         console.log(
-            `\nframe ${info.renderId}, ${info.trace}#${info.callerId}/${String(info.asyncType)} set ${src.displayName}\nfrom`,
+            `\nframe ${info.trace}#${info.callerId}/${String(info.asyncType)} set ${src.displayName}\nfrom`,
             src.cached,
             '\nto',
             newVal

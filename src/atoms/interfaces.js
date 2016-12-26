@@ -219,7 +219,6 @@ export type ICallerInfo = {
     trace: string;
     asyncType: null | 'next' | 'error' | 'complete';
     callerId: number;
-    renderId: number;
 }
 
 export type IMiddlewares = {
@@ -227,6 +226,8 @@ export type IMiddlewares = {
 }
 
 export type INotifier = ICallerInfo & {
+    lastId: number;
+
     end(): void;
     notify<V>(c: IPullable<*>[], info: IDepInfo<V>, newVal: V): void;
 }
