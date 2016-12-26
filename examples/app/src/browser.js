@@ -17,7 +17,7 @@ import {
     ReactComponentFactory,
     IndexCollection
 } from 'reactive-di/index'
-import type {ICallerRef, IDepInfo} from 'reactive-di/index'
+import type {ICallerInfo, IDepInfo} from 'reactive-di/index'
 import {actions, hooks, deps, theme, component, source} from 'reactive-di/annotations'
 
 const todosFixture: any = []
@@ -291,9 +291,10 @@ component()(ErrorView)
 jss.use(jssCamel)
 
 class Middleware {
-    onSetValue<V>(src: IDepInfo<V>, newVal: V, trace: string[]): void {
+    onSetValue<V>(src: IDepInfo<V>, newVal: V, info: ICallerInfo): void {
+        /* eslint-disable no-console */
         console.log(
-            `\n${trace.join('.')} set ${src.displayName}\nfrom`,
+            `\nframe ${info.renderId}, ${info.trace}#${info.callerId}/${String(info.asyncType)} set ${src.displayName}\nfrom`,
             src.cached,
             '\nto',
             newVal

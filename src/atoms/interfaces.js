@@ -215,14 +215,18 @@ export type IDepInfo<V> = {
     cached: ?V;
 }
 
-export type IMiddlewares = {
-    onSetValue<V>(src: IDepInfo<V>, newVal: V, trace: string[]): void;
+export type ICallerInfo = {
+    trace: string;
+    asyncType: null | 'next' | 'error' | 'complete';
+    callerId: number;
+    renderId: number;
 }
 
-export type INotifier = {
-    trace: string[];
-    callerId: number;
+export type IMiddlewares = {
+    onSetValue<V>(src: IDepInfo<V>, newVal: V, trace: ICallerInfo): void;
+}
 
+export type INotifier = ICallerInfo & {
     end(): void;
     notify<V>(c: IPullable<*>[], info: IDepInfo<V>, newVal: V): void;
 }

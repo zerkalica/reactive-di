@@ -42,7 +42,7 @@ export default class ConsumerListener<
     _proto: IGetable<Function>
 
     _items: Object[]
-    _trace: string[]
+    _trace: string
 
     constructor(
         displayName: string,
@@ -58,7 +58,7 @@ export default class ConsumerListener<
         this.displayName = displayName
         this.closed = false
         this.cached = null
-        this._trace = [this.displayName, '' + id]
+        this._trace = this.displayName + '' + id
         this._items = context.items
         this._errorComponent = errorComponent
         this._lastState = null

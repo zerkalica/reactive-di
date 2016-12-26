@@ -55,10 +55,9 @@ export default class Updater<V> {
     _notifier: INotifier
     _isCanceled: boolean
 
-    _trace: string[]
+    _trace: string
     _subscription: ?Subscription
     _id: number
-
     constructor(updater: $Supertype<IUpdater<V>>) {
         const source: ISource<V> = this._source = (updater.value: any)[setterKey]
         const status: ISettable<ISourceStatus> = source.getStatus()
@@ -73,6 +72,7 @@ export default class Updater<V> {
     run(): void {
         const updater = this._updater
         this._trace = this._notifier.trace
+        this._id = this._notifier.callerId
         if (updater.promise) {
             this._status.merge(pendingObj)
             const complete = (v: V) => this.complete(v)
@@ -101,13 +101,18 @@ export default class Updater<V> {
         }
         const notifier = this._notifier
         const oldTrace = notifier.trace
-        notifier.trace = [...this._trace, 'next']
+        const oldId = notifier.callerId
+        notifier.trace = this._trace
+        notifier.asyncType = 'next'
+        notifier.callerId = this._id
         this._source.merge(v)
         const observer = this._updater
         if (observer && observer.next) {
             observer.next(v)
         }
+        notifier.asyncType = null
         notifier.trace = oldTrace
+        notifier.callerId = oldId
         notifier.end()
     }
 
@@ -118,13 +123,18 @@ export default class Updater<V> {
         const error = new RecoverableError(e, (this: IControllable))
         const notifier = this._notifier
         const oldTrace = notifier.trace
-        notifier.trace = [...this._trace, 'error']
+        const oldId = notifier.callerId
+        notifier.trace = this._trace
+        notifier.asyncType = 'error'
+        notifier.callerId = this._id
         this._status.merge({error, complete: false, pending: false})
         const observer = this._updater
         if (observer && observer.error) {
             observer.error(error)
         }
+        notifier.asyncType = null
         notifier.trace = oldTrace
+        notifier.callerId = oldId
         notifier.end()
     }
 
@@ -135,7 +145,10 @@ export default class Updater<V> {
         this.abort()
         const notifier = this._notifier
         const oldTrace = notifier.trace
-        notifier.trace = [...this._trace, 'complete']
+        const oldId = notifier.callerId
+        notifier.trace = this._trace
+        notifier.asyncType = 'complete'
+        notifier.callerId = this._id
         this._status.merge(completeObj)
         if (v) {
             this._source.merge(v)
@@ -144,7 +157,9 @@ export default class Updater<V> {
         if (observer && observer.complete) {
             observer.complete(v)
         }
+        notifier.asyncType = null
         notifier.trace = oldTrace
+        notifier.callerId = oldId
         notifier.end()
     }
 }

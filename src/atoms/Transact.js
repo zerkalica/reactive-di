@@ -4,8 +4,10 @@ import type {IMiddlewares, IDepInfo, IPullable} from './interfaces'
 export default class Transact<C: IPullable<*>> {
     _consumers: C[] = []
     _middlewares: ?IMiddlewares
-    trace: string[] = []
+    trace: string = ''
+    asyncType: null | 'next' | 'error' | 'complete' = null
     callerId: number = 0
+    renderId: number = 0
 
     constructor(
         middlewares?: ?IMiddlewares
@@ -22,13 +24,13 @@ export default class Transact<C: IPullable<*>> {
             this._middlewares.onSetValue(
                 info,
                 value,
-                this.trace
+                this
             )
         }
     }
 
     end(): void {
-        if (!this.trace.length) {
+        if (!this.trace) {
             const consumers = this._consumers
             for (let i = 0, l = consumers.length; i < l; i++) {
                 const consumer = consumers[i]
@@ -36,7 +38,7 @@ export default class Transact<C: IPullable<*>> {
                     consumer.pull()
                 }
             }
-
+            this.renderId++
             this._consumers = []
         }
     }

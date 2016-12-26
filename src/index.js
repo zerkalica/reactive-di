@@ -30,7 +30,7 @@ export {
 }
 
 export type {
-    ICallerRef,
+    ICallerInfo,
     IHasForceUpdate,
     ISettable,
     IBaseHook,

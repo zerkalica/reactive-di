@@ -137,7 +137,7 @@ export default class Computed<V> {
         }
         const notifier = this.context.notifier
         const oldTrace = notifier.trace
-        notifier.trace = [this.displayName]
+        notifier.trace = this.displayName
         const newVal = this._create(this._proto.cached || this._proto.get(), this._argVals || [])
 
         const hook = this._hook.cached || this._hook.get()

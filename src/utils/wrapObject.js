@@ -14,10 +14,11 @@ function wrapMethod<V: Object, R>(
     name: string | Symbol
 ): (...args: any[]) => R {
     const notifier = ref.notifier
-    const trace = notifier.trace.concat(typeof name === 'string' ? name : name.toString())
+    const trace = `${notifier.trace}.${typeof name === 'string' ? name : name.toString()}`
     function wrappedMethod(...args: any[]): R {
         const oldTrace = notifier.trace
-        notifier.trace = trace.concat('' + ++notifier.callerId)
+        ++notifier.callerId
+        notifier.trace = trace
         const result: R = fastCallMethod(ref.cachedSrc, ref.cachedSrc[name], args)
         notifier.trace = oldTrace
         ref.notifier.end()
@@ -34,7 +35,8 @@ export function wrapFunction<V: Function>(ref: IRef<V>): V {
 
     function wrappedFn(...args: any[]): V {
         const oldTrace = notifier.trace
-        notifier.trace = trace.concat('' + ++notifier.callerId)
+        ++notifier.callerId
+        notifier.trace = trace
         const result = fastCall(ref.cachedSrc, args) // eslint-disable-line
         notifier.trace = oldTrace
         notifier.end()
@@ -47,7 +49,7 @@ export function wrapFunction<V: Function>(ref: IRef<V>): V {
 
 function createSetterFn<V: Object>(
     src: ISource<V>,
-    trace: string[],
+    trace: string,
     notifier: INotifier,
     key: string,
     getValue: ?(rawVal: mixed) => mixed
@@ -55,12 +57,13 @@ function createSetterFn<V: Object>(
     const setter = (rawVal: mixed) => {
         const v: mixed = getValue ? getValue(rawVal) : rawVal
         const oldTrace = notifier.trace
+        ++notifier.callerId
         notifier.trace = trace
         src.merge({[key]: v})
         notifier.trace = oldTrace
         notifier.end()
     }
-    setter.displayName = notifier.trace.join('.')
+    setter.displayName = notifier.trace
     return setter
 }
 
@@ -77,14 +80,14 @@ function createSetter<V: Object>(
     const notifier = src.context.notifier
     const result = Object.create(obj.constructor)
     const propNames: string[] = Object.getOwnPropertyNames(obj)
-    const trace = notifier.trace.slice(0)
-    if (propName) {
-        trace.push(propName)
-    }
+    const trace = propName
+        ? `${notifier.trace}.${typeof propName === 'string' ? propName : propName.toString()}`
+        : notifier.trace
+
     const getValue = isFromEvent ? fromEvent : null
     for (let i = 0, l = propNames.length; i < l; i++) {
         const pn = propNames[i]
-        result[pn] = createSetterFn(src, trace.concat(pn), notifier, pn, getValue)
+        result[pn] = createSetterFn(src, `${trace}.${pn}`, notifier, pn, getValue)
     }
 
     return result
