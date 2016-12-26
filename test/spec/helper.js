@@ -1,6 +1,6 @@
 // @flow
 
-import React from 'React'
+import React from 'react'
 import {component} from 'reactive-di/annotations'
 import {DiFactory, ReactComponentFactory} from 'reactive-di/index'
 

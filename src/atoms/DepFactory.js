@@ -10,7 +10,6 @@ import type {
 } from './interfaces'
 
 import debugName from '../utils/debugName'
-import SourceStatus from './SourceStatus'
 import Status from './Status'
 import Source from './Source'
 import ConsumerFactory from './ConsumerFactory'
