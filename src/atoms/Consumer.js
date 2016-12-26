@@ -38,6 +38,7 @@ export default class Consumer<
     cached: ?State
     state: State
 
+    _listenerId: number
     _resolved: boolean
     _refs: number
     _meta: IConsumerMeta
@@ -54,6 +55,7 @@ export default class Consumer<
         context: IContext
     ) {
         this.t = 2
+        this._listenerId = 0
         this._refs = 0
         this.closed = false
         this._resolved = false
@@ -106,7 +108,8 @@ export default class Consumer<
             this,
             this._proto,
             this._errorComponent,
-            context
+            context,
+            ++this._listenerId
         )
     }
 

@@ -42,6 +42,7 @@ export default class ConsumerListener<
     _proto: IGetable<Function>
 
     _items: Object[]
+    _trace: string[]
 
     constructor(
         displayName: string,
@@ -50,12 +51,14 @@ export default class ConsumerListener<
         parent: IParent<State>,
         proto: IGetable<Function>,
         errorComponent: ?IConsumerListener<{error: Error}, Element, Component>,
-        context: IContext
+        context: IContext,
+        id: number
     ) {
         this._updater = updater
         this.displayName = displayName
         this.closed = false
-        this.cached = false
+        this.cached = null
+        this._trace = [this.displayName, '' + id]
         this._items = context.items
         this._errorComponent = errorComponent
         this._lastState = null
@@ -88,9 +91,10 @@ export default class ConsumerListener<
     }
 
     update<V>(newItem: V): void {
-        this._props.item = newItem
+        const newProps: Props = ({...this.cached || {}, item: newItem}: any)
         this._lastProps = null
-        this._context.notifier.notify([this])
+        this._context.notifier.notify([this], this, newProps)
+        this._props = newProps
     }
 
     pull(): void {
@@ -231,11 +235,16 @@ export default class ConsumerListener<
         this._lastProps = this._props
         this._lastState = this._parent.state
         try {
-            return (this._proto.cached || this._proto.get())(
+            const notifier = this._context.notifier
+            const oldTrace = notifier.trace
+            notifier.trace = this._trace
+            const result = (this._proto.cached || this._proto.get())(
                 this._props,
                 this._lastState,
                 (this: IHasCreateComponent<Element>)
             )
+            notifier.trace = oldTrace
+            return result
         } catch (error) {
             this._setError(error)
             return this._renderError()

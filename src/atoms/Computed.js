@@ -25,6 +25,7 @@ export default class Computed<V> {
     refs: number
     closed: boolean
 
+    callId: number
     cached: ?V
     cachedSrc: V
 
@@ -47,6 +48,7 @@ export default class Computed<V> {
         context: IContext
     ) {
         this.t = 0
+        this.callId = 0
         this.closed = false
         this.cached = null
         this.refs = 0
@@ -134,12 +136,10 @@ export default class Computed<V> {
             return this.cached
         }
         const notifier = this.context.notifier
-        notifier.begin({
-            names: [this.displayName],
-            id: 0,
-            args: this._argVals || []
-        })
+        const oldTrace = notifier.trace
+        notifier.trace = [this.displayName]
         const newVal = this._create(this._proto.cached || this._proto.get(), this._argVals || [])
+
         const hook = this._hook.cached || this._hook.get()
 
         if (!hook.shouldUpdate || hook.shouldUpdate(newVal, this.cachedSrc)) {
@@ -157,7 +157,7 @@ export default class Computed<V> {
                 this._cachedProxy = this.cached = newVal
             }
         }
-        notifier.end()
+        notifier.trace = oldTrace
 
         return this._cachedProxy
     }

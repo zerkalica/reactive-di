@@ -17,13 +17,13 @@ import {
     ReactComponentFactory,
     IndexCollection
 } from 'reactive-di/index'
-import type {IDepInfo, ICaller} from 'reactive-di/index'
+import type {ICallerRef, IDepInfo} from 'reactive-di/index'
 import {actions, hooks, deps, theme, component, source} from 'reactive-di/annotations'
 
 const todosFixture: any = []
 
 
-const maxTodos = 50
+const maxTodos = 3
 
 for (let i = 0; i < maxTodos; i++) {
     todosFixture.push({
@@ -136,7 +136,7 @@ class TodoUpdater {
         })
     }
 
-    next(): void {
+    complete(): void {
         this._todos.push(this._addedTodo)
         this._addedTodo.reset()
     }
@@ -291,9 +291,9 @@ component()(ErrorView)
 jss.use(jssCamel)
 
 class Middleware {
-    onSetValue<V>(src: IDepInfo<V>, newVal: V, caller: ICaller): void {
+    onSetValue<V>(src: IDepInfo<V>, newVal: V, trace: string[]): void {
         console.log(
-            `\n${caller.names.join('.')}, #${caller.id} set ${src.displayName}\nfrom`,
+            `\n${trace.join('.')} set ${src.displayName}\nfrom`,
             src.cached,
             '\nto',
             newVal

@@ -1,15 +1,11 @@
 // @flow
-import type {IMiddlewares, IDepInfo, IPullable, ICaller} from './interfaces'
-
-function getCallerNames(caller: ICaller): string {
-    return caller.names.join('.')
-}
+import type {IMiddlewares, IDepInfo, IPullable} from './interfaces'
 
 export default class Transact<C: IPullable<*>> {
     _consumers: C[] = []
-    _callers: ICaller[] = []
     _middlewares: ?IMiddlewares
-    _counter: number = 0
+    trace: string[] = []
+    callerId: number = 0
 
     constructor(
         middlewares?: ?IMiddlewares
@@ -26,39 +22,13 @@ export default class Transact<C: IPullable<*>> {
             this._middlewares.onSetValue(
                 info,
                 value,
-                this._getLastCaller()
+                this.trace
             )
         }
     }
 
-    begin(caller: ICaller): void {
-        if (!caller.id) {
-            caller.id = ++this._counter // eslint-disable-line
-        }
-        this._callers.push(caller)
-    }
-
-    _getLastCaller(): ICaller {
-        const callers = this._callers
-        const last: ?ICaller = callers[callers.length - 1]
-        if (!last) {
-            throw new Error(`Need to add wrap @actions before class ${callers.map(getCallerNames).join(' -> ')}`)
-        }
-
-        return last
-    }
-
-    createCaller(name?: ?string): ICaller {
-        const lc = this._getLastCaller()
-        return {
-            ...lc,
-            names: name ? lc.names.concat(name) : lc.names
-        }
-    }
-
     end(): void {
-        this._callers.pop()
-        if (this._callers.length === 0) {
+        if (!this.trace.length) {
             const consumers = this._consumers
             for (let i = 0, l = consumers.length; i < l; i++) {
                 const consumer = consumers[i]

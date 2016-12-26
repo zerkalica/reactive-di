@@ -183,10 +183,6 @@ export type ISource<V> = {
 
     computeds: IDisposableCollection<IDisposable & ICacheable<*>>;
     consumers: IDisposableCollection<IPullable<*>>;
-    setter: ?ISetter<V>;
-    getSetter(): ISetter<V>;
-    eventSetter: ?ISetter<V>;
-    getEventSetter(): ISetter<V>;
 
     get(): V;
     set(v: V): void;
@@ -214,24 +210,19 @@ export interface IRelationBinder {
 }
 
 
-export type ICaller = {
-    id: number;
-    names: string[];
-    args: any[];
-}
-
 export type IDepInfo<V> = {
     displayName: string;
     cached: ?V;
 }
 
 export type IMiddlewares = {
-    onSetValue<V>(src: IDepInfo<V>, newVal: V, caller: ICaller): void;
+    onSetValue<V>(src: IDepInfo<V>, newVal: V, trace: string[]): void;
 }
 
 export type INotifier = {
-    begin(caller: ICaller): void;
-    createCaller(name: string): ICaller;
+    trace: string[];
+    callerId: number;
+
     end(): void;
     notify<V>(c: IPullable<*>[], info: IDepInfo<V>, newVal: V): void;
 }

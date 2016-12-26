@@ -1,8 +1,6 @@
 // @flow
 import type {
     ISource,
-    ISetter,
-    INotifier,
     IGetable,
     IContext,
     ICacheable,
@@ -27,8 +25,6 @@ export default class Source<V> {
     context: IContext
     status: ?ISource<ISourceStatus>
     cached: ?V
-    setter: ?ISetter<V>
-    eventSetter: ?ISetter<V>
 
     _initialized: boolean
     _hook: IGetable<IBaseHook<V>>
@@ -61,48 +57,6 @@ export default class Source<V> {
         this._meta = meta
         this._isFetching = meta.isFetching
         this._isPending = meta.isPending
-        this.setter = null
-    }
-
-    getSetter(isEventSetter?: boolean): ISetter<V> {
-        const setter = this.setter = {}
-        const eventSetter = this.eventSetter = {}
-        const notifier = this.context.notifier
-        const keys = Object.keys((this.cached: any))
-
-        for (let i = 0; i < keys.length; i++) {
-            this._createSetter(keys[i], notifier)
-        }
-
-        return isEventSetter ? eventSetter : setter
-    }
-
-    getEventSetter(): ISetter<V> {
-        return this.getSetter(true)
-    }
-
-    _createSetter(key: string, notifier: INotifier): void {
-        const caller = notifier.createCaller()
-        const setter = (v: mixed, isFromEvent?: boolean) => { // eslint-disable-line
-            const cached: Object = (this.cached: any)
-            notifier.begin({
-                names: caller.names.concat([isFromEvent ? 'event' : 'set', key]),
-                args: [v],
-                id: caller.id
-            })
-            const obj: any = Object.assign(Object.create(cached.constructor.prototype), cached)
-            obj[key] = v
-            this.set(obj)
-            notifier.end()
-        }
-        setter.displayName = `${this.displayName}.set.${key}`
-
-        ;(this.setter: any)[key] = setter
-        function eventSetter(e: Object) {
-            return setter(e.target.value, true)
-        }
-        eventSetter.displayName = `${this.displayName}.setEvent.${key}`
-        ;(this.eventSetter: any)[key] = eventSetter
     }
 
     willMount(_parent: ?IContext): void {

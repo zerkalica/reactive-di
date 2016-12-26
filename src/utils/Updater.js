@@ -2,7 +2,7 @@
 
 import Err from 'es6-error'
 
-import type {ISettable, ICaller, ISource, ISourceStatus, INotifier} from '../atoms/interfaces'
+import type {ISettable, ISource, ISourceStatus, INotifier} from '../atoms/interfaces'
 import {setterKey} from '../atoms/interfaces'
 
 const completeObj = {complete: true, pending: false, error: null}
@@ -55,10 +55,9 @@ export default class Updater<V> {
     _notifier: INotifier
     _isCanceled: boolean
 
-    _nextCaller: ICaller
-    _completeCaller: ICaller
-    _errorCaller: ICaller
+    _trace: string[]
     _subscription: ?Subscription
+    _id: number
 
     constructor(updater: $Supertype<IUpdater<V>>) {
         const source: ISource<V> = this._source = (updater.value: any)[setterKey]
@@ -73,10 +72,7 @@ export default class Updater<V> {
 
     run(): void {
         const updater = this._updater
-        const notifier = this._notifier
-        this._nextCaller = notifier.createCaller('next')
-        this._errorCaller = notifier.createCaller('error')
-        this._completeCaller = notifier.createCaller('complete')
+        this._trace = this._notifier.trace
         if (updater.promise) {
             this._status.merge(pendingObj)
             const complete = (v: V) => this.complete(v)
@@ -103,13 +99,16 @@ export default class Updater<V> {
         if (this._isCanceled) {
             return
         }
-        this._notifier.begin(this._nextCaller)
+        const notifier = this._notifier
+        const oldTrace = notifier.trace
+        notifier.trace = [...this._trace, 'next']
         this._source.merge(v)
         const observer = this._updater
         if (observer && observer.next) {
             observer.next(v)
         }
-        this._notifier.end()
+        notifier.trace = oldTrace
+        notifier.end()
     }
 
     error(e: Error): void {
@@ -117,13 +116,16 @@ export default class Updater<V> {
             return
         }
         const error = new RecoverableError(e, (this: IControllable))
-        this._notifier.begin(this._errorCaller)
+        const notifier = this._notifier
+        const oldTrace = notifier.trace
+        notifier.trace = [...this._trace, 'error']
         this._status.merge({error, complete: false, pending: false})
         const observer = this._updater
         if (observer && observer.error) {
             observer.error(error)
         }
-        this._notifier.end()
+        notifier.trace = oldTrace
+        notifier.end()
     }
 
     complete(v: ?V): void {
@@ -131,7 +133,9 @@ export default class Updater<V> {
             return
         }
         this.abort()
-        this._notifier.begin(this._completeCaller)
+        const notifier = this._notifier
+        const oldTrace = notifier.trace
+        notifier.trace = [...this._trace, 'complete']
         this._status.merge(completeObj)
         if (v) {
             this._source.merge(v)
@@ -140,6 +144,7 @@ export default class Updater<V> {
         if (observer && observer.complete) {
             observer.complete(v)
         }
-        this._notifier.end()
+        notifier.trace = oldTrace
+        notifier.end()
     }
 }

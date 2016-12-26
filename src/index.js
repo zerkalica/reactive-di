@@ -30,6 +30,7 @@ export {
 }
 
 export type {
+    ICallerRef,
     IHasForceUpdate,
     ISettable,
     IBaseHook,
@@ -44,7 +45,6 @@ export type {
 export {
     AbstractSheetFactory
 } from './theme/interfaces'
-
 
 export type {
     SheetFactory,

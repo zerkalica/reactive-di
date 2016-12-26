@@ -14,13 +14,13 @@ export class BaseModel {
 
     set(rec: any): this {
         const val = this.copy(rec)
-        ;(val: any)[setterKey].set(this)
+        ;(this: any)[setterKey].set(val)
         return val
     }
 
     reset(): this {
         const val = new this.constructor()
-        ;(val: any)[setterKey].set(this)
+        ;(this: any)[setterKey].set(val)
         return val
     }
 }
