@@ -54,6 +54,7 @@ export default class ConsumerListener<
         context: IContext,
         id: number
     ) {
+        ;(this: IConsumerListener<Props, Element, Component>) // eslint-disable-line
         this._updater = updater
         this.displayName = displayName
         this.closed = false

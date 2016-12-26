@@ -8,11 +8,11 @@ export type SetterResult<V: Object> = {
 }
 
 export class BaseModel {
-    copy(rec: any): this {
+    copy(rec: Object): this {
         return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
     }
 
-    set(rec: any): this {
+    set(rec: Object): this {
         const val = this.copy(rec)
         ;(this: any)[setterKey].set(val)
         return val

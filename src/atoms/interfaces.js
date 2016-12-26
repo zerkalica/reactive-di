@@ -78,7 +78,7 @@ export type IConsumerListener<Props, Element, Component> = {
     displayName: string;
     closed: boolean;
     willUnmount(): void;
-    willMount(): void;
+    willMount(prop: Props): void;
     didMount(): void;
     render(): Element;
     shouldUpdate(newProps: Props): boolean;
@@ -163,9 +163,16 @@ type IStatusBase = {
     pending: boolean;
     error: ?Error;
 }
+
+export type SourceStatusOpts = {
+    complete?: boolean;
+    pending?: boolean;
+    error?: ?Error;
+}
+
 export type ISourceStatus = IStatusBase & {
     isEqual(src: ISourceStatus): boolean;
-    copy(opts: $Shape<IStatusBase>): ISourceStatus;
+    copy(opts: SourceStatusOpts): ISourceStatus;
 }
 
 export type ISetter<V> = {[id: string]: (v: mixed) => void}
@@ -239,7 +246,7 @@ export type IComponent<Props, State, Element> = (props: Props, state: State) => 
 export interface IComponentFactory<Component, Element> {
     createElement: ICreateElement<Element>;
 
-    wrapComponent<Props, State>(
+    wrapComponent<Props: Object, State>(
         factory: IConsumerFactory<Props, Element>
     ): Component;
 }

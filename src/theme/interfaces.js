@@ -6,14 +6,14 @@ export interface RawStyleSheet {
     __css: CssObj;
 }
 
-export interface StyleSheet {
+export type StyleSheet = {
     classes: {[id: string]: string};
-    attach(): void;
-    detach(): void;
+    attach(): StyleSheet;
+    detach(): StyleSheet;
 }
 
 export interface SheetFactory {
-    createStyleSheet(_cssObj: CssObj): StyleSheet;
+    createStyleSheet(_cssObj: CssObj, options: any): StyleSheet;
 }
 
 export class AbstractSheetFactory {

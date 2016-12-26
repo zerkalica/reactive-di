@@ -1,14 +1,6 @@
 // @flow
 
-import type {ISourceStatus} from './interfaces'
-
-export type SourceStatusType = 'pending' | 'complete' | 'error'
-
-export type SourceStatusOpts = {
-    complete?: boolean;
-    pending?: boolean;
-    error?: ?Error;
-}
+import type {SourceStatusOpts, ISourceStatus} from './interfaces'
 
 export default class SourceStatus {
     complete: boolean

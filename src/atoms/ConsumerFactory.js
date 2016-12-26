@@ -32,7 +32,7 @@ export default class ConsumerFactory<V, Element, Component> {
             ? null
             : new Consumer(this._meta, context)
         this.component = context.componentFactory.wrapComponent(
-            (this: IConsumerFactory<V, Element>)
+            (this: IConsumerFactory<any, Element>)
         )
     }
 
