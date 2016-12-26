@@ -177,10 +177,26 @@ class TodoService {
 }
 
 
-function TodoView({item}: {item: Todo}, _state: {}, _t: any) {
-    return <div>{item.id} - {item.title}</div>
+@deps(Todos)
+@actions
+class TodoViewService {
+    _todos: Todos
+    constructor(todos: Todos) {
+        this._todos = todos
+    }
+
+    removeTodo(todo: Todo): void {
+        this._todos.remove(todo)
+    }
+}
+
+function TodoView({item}: {item: Todo}, {service}: {service: TodoViewService}, _t: any) {
+    return <div>{item.id} - {item.title}
+        <button onClick={() => service.removeTodo(item)}>X</button>
+    </div>
 }
 component()(TodoView)
+deps({service: TodoViewService})(TodoView)
 
 // Provide class names and data for jss in __css property
 @deps(ThemeVars)

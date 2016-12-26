@@ -41,7 +41,11 @@ export default class IndexCollection<Item: Object> {
         this._logger = logger
     }
 
-    copy(items: Item[]): this {
+    copy(items: $Shape<Item>[]): this {
+        return new this.constructor(items, null, this._logger)
+    }
+
+    _copy(items: Item[]): this {
         const newObj = new this.constructor(null, items, this._logger)
         const source = (newObj: any)[setterKey] = (this: any)[setterKey]
 
@@ -50,10 +54,10 @@ export default class IndexCollection<Item: Object> {
     }
 
     _recsToItems(recs: $Shape<Item>[]): Item[] {
-        const ItemClass = this.constructor.Item
+        const protoItem = new this.constructor.Item()
         const items: Item[] = new Array(recs.length)
         for (let i = 0, l = recs.length; i < l; i++) {
-            const newItem = new ItemClass(recs[i])
+            const newItem = protoItem.copy(recs[i])
             ;(newItem: Object)[itemKey] = {listener: fakeListener, i}
             items[i] = newItem
         }
@@ -73,7 +77,7 @@ export default class IndexCollection<Item: Object> {
         if (this._logger) {
             this._logger.removeAll()
         }
-        return this.copy([])
+        return this._copy([])
     }
 
     get(index: number): ?Item {
@@ -97,7 +101,7 @@ export default class IndexCollection<Item: Object> {
             const item = items[i]
             item[itemKey].i -= cnt
         }
-        return this.copy(this._items)
+        return this._copy(this._items)
     }
 
     insertMultiple(ptr: number | Item, newItems: Item[]): this {
@@ -114,7 +118,7 @@ export default class IndexCollection<Item: Object> {
                 (logger: any).add(item, index)
             }
         }
-        return this.copy(this._items)
+        return this._copy(this._items)
     }
 
     insert(ptr: number | Item, newItem: Item): this {
@@ -201,7 +205,7 @@ export default class IndexCollection<Item: Object> {
         }
 
         this._items.push(item)
-        return this.copy(this._items)
+        return this._copy(this._items)
     }
 
     pop(): this {
@@ -209,7 +213,7 @@ export default class IndexCollection<Item: Object> {
         if (this._logger) {
             this._logger.remove(item, this._items.length)
         }
-        return this.copy(this._items)
+        return this._copy(this._items)
     }
 
     find(findFn: FindFn<Item>): ?Item {
