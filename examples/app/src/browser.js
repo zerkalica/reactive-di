@@ -9,7 +9,6 @@ import jssCamel from 'jss-camel-case'
 import {
     refsSetter,
     eventSetter,
-    setter,
     BaseModel,
     Updater,
     SourceStatus,
@@ -70,19 +69,18 @@ class TodosHooks {
     _fetcher: Fetcher
     _updater: Updater<Todos>
 
-    value: Todos
-
     constructor(fetcher: Fetcher) {
         this._fetcher = fetcher
     }
 
-    promise(): Promise<Todos> {
-        return this._fetcher.fetch('/todos', {method: 'GET'})
-    }
-
     willMount(todos: Todos): void {
-        this.value = todos
-        this._updater = new Updater(this)
+        const fetcher = this._fetcher
+        this._updater = new Updater({
+            value: todos,
+            promise(): Promise<Todos> {
+                return fetcher.fetch('/todos', {method: 'GET'})
+            }
+        })
         this._updater.run()
     }
 
@@ -172,31 +170,76 @@ class TodoService {
     }
 
     changeColor(): void {
-        setter(this._tv).color('green')
+        this._tv.set({color: 'green'})
     }
 }
 
+@source({key: 'EditingTodo'})
+class EditingTodo extends Todo {}
 
-@deps(Todos)
+@deps(Todos, EditingTodo)
 @actions
 class TodoViewService {
     _todos: Todos
-    constructor(todos: Todos) {
+    _editingTodo: EditingTodo
+
+    constructor(todos: Todos, editingTodo: EditingTodo) {
         this._todos = todos
+        this._editingTodo = editingTodo
     }
 
     removeTodo(todo: Todo): void {
         this._todos.remove(todo)
     }
+
+    saveTodo(): void {
+        this._todos.update(this._editingTodo)
+        this._editingTodo.reset()
+    }
+
+    beginEdit(item: Todo): void {
+        this._editingTodo.set(item)
+    }
+
+    cancelEdit(): void {
+        this._editingTodo.reset()
+    }
 }
 
-function TodoView({item}: {item: Todo}, {service}: {service: TodoViewService}, _t: any) {
-    return <div>{item.id} - {item.title}
+function TodoView(
+    {item}: {
+        item: Todo
+    }, {editingTodo, service}: {
+        editingTodo: EditingTodo,
+        service: TodoViewService
+    },
+    _t: any
+) {
+    const isEdited = editingTodo.id === item.id
+
+    if (isEdited) {
+        return <div>
+            <input
+                name="editTodo"
+                value={editingTodo.title}
+                onChange={eventSetter(editingTodo).title}
+            />
+            <button onClick={service.saveTodo}>Save</button>
+            <button onClick={service.cancelEdit}>Cancel</button>
+        </div>
+    }
+
+    return <div>
+        <span>{item.id} - {item.title}</span>
+        <button onClick={() => service.beginEdit(item)}>Edit</button>
         <button onClick={() => service.removeTodo(item)}>X</button>
     </div>
 }
 component()(TodoView)
-deps({service: TodoViewService})(TodoView)
+deps({
+    editingTodo: EditingTodo,
+    service: TodoViewService
+})(TodoView)
 
 // Provide class names and data for jss in __css property
 @deps(ThemeVars)
@@ -265,7 +308,6 @@ function TodosView(
     if (loading.error) {
         return <div className={t.wrapper}>Loading error: {loading.error.message}</div>
     }
-
     const todoSetter = service.event
 
     return <div className={t.wrapper}>
@@ -298,6 +340,7 @@ component()(TodosView)
 
 function ErrorView(
     {error}: {error: Error},
+    _state: {},
     _t: any
 ) {
     return <div>{error.message}</div>

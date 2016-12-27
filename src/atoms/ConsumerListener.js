@@ -62,7 +62,7 @@ export default class ConsumerListener<
         this._trace = this.displayName + '' + id
         this._items = context.items
         this._errorComponent = errorComponent
-        this._lastState = null
+        this._lastState = parent.state
         this._lastError = null
         this._props = (null: any)
         this._lastProps = null
@@ -270,6 +270,10 @@ export default class ConsumerListener<
 
     willMount(props: Props): void {
         this._props = props
+        const prop = props.item
+        if (prop && (prop: Object)[itemKey]) {
+            (prop: Object)[itemKey].listener = (this: ItemListener<*>)
+        }
         try {
             this._parent.willMount()
             const hook = this._hook.cached || this._hook.get()

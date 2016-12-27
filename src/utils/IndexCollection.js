@@ -139,11 +139,19 @@ export default class IndexCollection<Item: Object> {
         return this
     }
 
-    update(ptr: number | Item, updateFn: UpdateFn<Item>): this {
+    update(ptr: number | Item, updateFn?: UpdateFn<Item>): this {
         const index: number = typeof ptr === 'object' ? ptr[itemKey].i : ptr
         const oldItem = this._items[index]
-        const newItem = updateFn(oldItem)
-        if (oldItem !== newItem) {
+        let newItem: Item
+        if (updateFn) {
+            newItem = updateFn(oldItem)
+        } else {
+            if (typeof ptr !== 'object') {
+                throw new Error('Need an Item object as first argument')
+            }
+            newItem = ptr
+        }
+        if (oldItem !== newItem || !updateFn) {
             if (this._logger) {
                 this._logger.update(newItem, oldItem, index)
             }

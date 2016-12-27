@@ -82,8 +82,11 @@ function createSetter<V: Object>(
     getValue: ?(rawVal: mixed) => mixed
 ): Setter<V> {
     const src = (obj: any)[setterKey]
+    if (src.setter) {
+        return src.setter
+    }
     const notifier = src.context.notifier
-    const result = Object.create(obj.constructor)
+    const result = src.setter = Object.create(obj.constructor)
     const propNames: string[] = Object.getOwnPropertyNames(obj)
     for (let i = 0, l = propNames.length; i < l; i++) {
         const pn = propNames[i]
