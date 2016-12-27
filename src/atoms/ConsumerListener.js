@@ -94,8 +94,8 @@ export default class ConsumerListener<
     update<V>(newItem: V): void {
         this._lastProps = null
         this._lastState = null
-        this._context.notifier.notify([this], this, this.cached)
         this._props = {...this._props, item: newItem}
+        this._context.notifier.notify([this], this, this._props)
         this._updater.setProps(this._props)
     }
 
