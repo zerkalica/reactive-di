@@ -12,10 +12,10 @@ import type {
 import {fakeListener, itemKey} from '../utils/IndexCollection'
 import type {ItemListener} from '../utils/IndexCollection'
 
-interface IParent<State> {
+interface IParent<Props, State> {
     state: State;
     willMount(): void;
-    willUnmount(updater: IHasForceUpdate): void;
+    willUnmount(updater: IHasForceUpdate<Props>): void;
 }
 
 export default class ConsumerListener<
@@ -25,7 +25,7 @@ export default class ConsumerListener<
     Component
 > {
     displayName: string
-    _updater: IHasForceUpdate
+    _updater: IHasForceUpdate<Props>
     closed: boolean
     cached: ?Props
 
@@ -34,7 +34,7 @@ export default class ConsumerListener<
     _lastProps: ?Props
     _hook: IGetable<IConsumerHook<Props>>
 
-    _parent: IParent<State>
+    _parent: IParent<Props, State>
     _lastState: ?State
     _createElement: ICreateElement<Element>
     _errorComponent: ?IConsumerListener<{error: Error}, Element, Component>
@@ -46,9 +46,9 @@ export default class ConsumerListener<
 
     constructor(
         displayName: string,
-        updater: IHasForceUpdate,
+        updater: IHasForceUpdate<Props>,
         hook: IGetable<IConsumerHook<Props>>,
-        parent: IParent<State>,
+        parent: IParent<Props, State>,
         proto: IGetable<Function>,
         errorComponent: ?IConsumerListener<{error: Error}, Element, Component>,
         context: IContext,
@@ -92,10 +92,11 @@ export default class ConsumerListener<
     }
 
     update<V>(newItem: V): void {
-        const newProps: Props = ({...this.cached || {}, item: newItem}: any)
         this._lastProps = null
-        this._context.notifier.notify([this], this, newProps)
-        this._props = newProps
+        this._lastState = null
+        this._context.notifier.notify([this], this, this.cached)
+        this._props = {...this._props, item: newItem}
+        this._updater.setProps(this._props)
     }
 
     pull(): void {

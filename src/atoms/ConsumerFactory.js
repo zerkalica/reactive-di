@@ -36,7 +36,7 @@ export default class ConsumerFactory<V, Element, Component> {
         )
     }
 
-    create(updater: IHasForceUpdate, props: V): IConsumerListener<V, Element, Component> {
+    create(updater: IHasForceUpdate<V>, props: V): IConsumerListener<V, Element, Component> {
         const listener = this._cached
             ? this._cached.create(updater)
             : (new Consumer(

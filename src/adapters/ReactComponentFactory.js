@@ -22,9 +22,13 @@ export default class ReactComponentFactory<Element: React$Element<any>, Componen
 
             componentWillMount() {
                 this._consumer = this.constructor.__factory.create(
-                    (this: IHasForceUpdate),
+                    (this: IHasForceUpdate<Props>),
                     this.props
                 )
+            }
+
+            setProps(props: Props): void {
+                this.props = props
             }
 
             componentDidMount() {

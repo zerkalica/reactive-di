@@ -30,8 +30,9 @@ export type IGettable<V> = {
     get(): V;
 }
 
-export type IHasForceUpdate = {
+export type IHasForceUpdate<Props> = {
     forceUpdate(): void;
+    setProps(props: Props): void;
 }
 
 export interface IBaseHook<V> {
@@ -90,7 +91,7 @@ export type IConsumerFactory<Props, Element> = {
     id: number;
     component: Component;
     context: IContext;
-    create(updater: IHasForceUpdate, props: Props): IConsumerListener<Props, Element, Component>;
+    create(updater: IHasForceUpdate<Props>, props: Props): IConsumerListener<Props, Element, Component>;
 }
 
 type State = any
@@ -106,7 +107,7 @@ export type IConsumer<Props, Element> = {
     cached: ?State;
     pull(): void;
     dispose(): void;
-    create(updater: IHasForceUpdate): IConsumerListener<Props, Element, Component>;
+    create(updater: IHasForceUpdate<Props>): IConsumerListener<Props, Element, Component>;
 }
 
 export type IStatusMeta = IBaseMeta & {

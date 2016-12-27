@@ -14,5 +14,13 @@
         }],
         "transform-decorators-legacy",
         "transform-flow-strip-types"
-    ]
+    ],
+    "env": {
+      "production": {
+        "presets": ["babili"],
+        "plugins": [
+          ["minify-dead-code-elimination", { "keepFnArgs": true, "keepFnName": true }]
+        ]
+      }
+    }
 }

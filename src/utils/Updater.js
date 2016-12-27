@@ -142,7 +142,7 @@ export default class Updater<V> {
         if (this._isCanceled) {
             return
         }
-        this.abort()
+        // this.abort()
         const notifier = this._notifier
         const oldTrace = notifier.trace
         const oldId = notifier.callerId

@@ -20,7 +20,8 @@ const emptyHook: any = {
     cached: {}
 }
 const fakeUpdater = {
-    forceUpdate() {}
+    forceUpdate() {},
+    setProps() {}
 }
 
 export default class Consumer<
@@ -46,7 +47,7 @@ export default class Consumer<
     _argVals: [State]
 
     _proto: IGetable<IComponent<Props, State, Element>>
-    _updaters: IHasForceUpdate[]
+    _updaters: IHasForceUpdate<Props>[]
     _errorComponent: ?IConsumerListener<{error: Error}, Element, Component>
     _isOwnContext: boolean
 
@@ -65,7 +66,8 @@ export default class Consumer<
         this._args = (null: any)
         this._argVals = emptyArgs
         this.masters = []
-        this.cached = this.state = this._argVals[0]
+        this.state = (null: any)
+        this.cached = this._argVals[0]
         this._updaters = []
 
         this._meta = meta
@@ -75,7 +77,7 @@ export default class Consumer<
         context.disposables.push(this)
     }
 
-    create(updater: IHasForceUpdate): IConsumerListener<Props, Element, Component> {
+    create(updater: IHasForceUpdate<Props>): IConsumerListener<Props, Element, Component> {
         const meta = this._meta
         const context = this.context
         if (!this._resolved) {
@@ -94,7 +96,7 @@ export default class Consumer<
             if (this._args) {
                 this._argVals = (new Array(this._args.length): any)
                 resolveArgs(this._args, this._argVals)
-                this.state = this.cached = this._argVals[0]
+                this.cached = this._argVals[0]
             }
             context.binder.end()
         }
@@ -124,6 +126,9 @@ export default class Consumer<
     }
 
     pull(): void {
+        if (!this.state) {
+            return
+        }
         try {
             this._pull()
         } catch (e) {
@@ -152,8 +157,8 @@ export default class Consumer<
         }
     }
 
-    willUnmount(updater: IHasForceUpdate): void {
-        const newUpdaters: IHasForceUpdate[] = []
+    willUnmount(updater: IHasForceUpdate<Props>): void {
+        const newUpdaters: IHasForceUpdate<Props>[] = []
         const updaters = this._updaters
         for (let i = 0, l = updaters.length; i < l; i++) {
             const item = updaters[i]

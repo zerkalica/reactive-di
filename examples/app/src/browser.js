@@ -1,8 +1,13 @@
 // @flow
 /* eslint-env browser */
 
-import React from 'react'
-import ReactDOM from 'react-dom'
+// import {Component, createElement} from 'react'
+// import {render} from 'react-dom'
+
+import {render} from 'inferno-dom'
+import Component from 'inferno-component'
+import createElement from 'inferno-create-element'
+
 import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
@@ -21,8 +26,8 @@ import {actions, hooks, deps, theme, component, source} from 'reactive-di/annota
 
 const todosFixture: any = []
 
-
-const maxTodos = 5000
+// const maxTodos = 5000
+const maxTodos = 5
 
 for (let i = 0; i < maxTodos; i++) {
     todosFixture.push({
@@ -252,7 +257,7 @@ deps({
 
 // @hooks(TodoView)
 @deps(TodoViewService)
-class TodoViewHook {
+export class TodoViewHook {
     _service: TodoViewService
 
     constructor(service: TodoViewService) {
@@ -391,11 +396,13 @@ const di = (new DiFactory({
     middlewares: new Middleware(),
     defaultErrorComponent: ErrorView,
     themeFactory: jss,
-    componentFactory: new ReactComponentFactory(React)
+    componentFactory: new ReactComponentFactory({
+        Component,
+        createElement
+    })
 }))
     .create()
-
-ReactDOM.render(
-    React.createElement(di.wrapComponent(TodosView)),
+render(
+    createElement(di.wrapComponent(TodosView)),
     window.document.getElementById('app')
 )
