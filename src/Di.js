@@ -128,7 +128,7 @@ export default class Di<Component, Element> {
                 }
                 const [key, target] = pr
 
-                rec = items.get(target._rdiId || 0)
+                rec = items.get(target)
 
                 // @todo expose resolved
                 if (rec && rec.resolved) {
@@ -140,7 +140,7 @@ export default class Di<Component, Element> {
                     target,
                     rec ? rec.context : this
                 )
-                items.set(depInfo.id, depInfo)
+                items.set(target, depInfo)
 
                 if (key._rdiId) {
                     const binder = this.binder
@@ -152,9 +152,9 @@ export default class Di<Component, Element> {
                 if (typeof pr !== 'function') {
                     throw new Error(`Only function as register target, given: ${this.binder.debugStr(pr)}`)
                 }
-                if (!items[pr._rdiId || 0]) {
+                if (!items[pr]) {
                     rec = df.any(pr, this)
-                    items.set(rec.id, rec)
+                    items.set(pr, rec)
                 }
             }
         }
@@ -164,19 +164,19 @@ export default class Di<Component, Element> {
 
     resolveConsumer<V: Object>(key: IKey): IConsumerFactory<V, Element> {
         const rec: IConsumerFactory<V, Element> = this._depFactory.consumer(key, this)
-        this.items[rec.id] = rec
+        this.items.set(key, rec)
         return rec
     }
 
     wrapComponent<Props, State>(tag: IComponent<Props, State, Element>): Component {
-        return ((this.items[tag._rdiId || 0]: any) || this.resolveConsumer(tag)).component
+        return ((this.items.get(tag): any) || this.resolveConsumer(tag)).component
     }
 
     resolveSource<V>(key: IKey): ISource<V> {
-        let rec: ?ISource<V> = (this.items[key._rdiId || 0]: any)
+        let rec: ?ISource<V> = (this.items[key]: any)
         if (!rec) {
             rec = this._depFactory.source(key, this)
-            this.items[rec.id] = rec
+            this.items.set(key, rec)
         }
         rec.resolve()
 
@@ -204,10 +204,10 @@ export default class Di<Component, Element> {
                 const values = []
                 for (let prop in argDep) { // eslint-disable-line
                     const key = argDep[prop]
-                    rec = (items.get(key._rdiId || 0): any)
+                    rec = (items.get(key): any)
                     if (!rec) {
                         rec = df.anyDep(key, this)
-                        items[rec.id] = rec
+                        items.set(key, rec)
                     }
                     rec.resolve()
 
@@ -215,10 +215,10 @@ export default class Di<Component, Element> {
                 }
                 resolvedArgs.push({t: 1, r: values})
             } else {
-                rec = (items.get(argDep._rdiId || 0): any)
+                rec = (items.get(argDep): any)
                 if (!rec) {
                     rec = df.anyDep(argDep, this)
-                    items.set(rec.id, rec)
+                    items.set(argDep, rec)
                 }
                 rec.resolve()
 
