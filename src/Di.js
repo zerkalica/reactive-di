@@ -45,12 +45,12 @@ export default class Di<Component, Element> {
 
     _parents: IContext[]
     _depFactory: IDepFactory<Element>
-    items: Map<number, ICacheItem>
+    items: ICacheItem[]
     _context: IStaticContext<Component, Element>
 
     constructor(
         displayName: string,
-        items: Map<number, ICacheItem>,
+        items: ICacheItem[],
         c: IStaticContext<Component, Element>,
         parents: IContext[]
     ) {
@@ -103,7 +103,7 @@ export default class Di<Component, Element> {
 
         return (new Di(
             displayName,
-            new Map(this.items),
+            this.items.slice(0),
             this._context,
             newParents
         ): any)
@@ -128,7 +128,7 @@ export default class Di<Component, Element> {
                 }
                 const [key, target] = pr
 
-                rec = items.get(target)
+                rec = items[target._rdiId || 0]
 
                 // @todo expose resolved
                 if (rec && rec.resolved) {
@@ -140,7 +140,7 @@ export default class Di<Component, Element> {
                     target,
                     rec ? rec.context : this
                 )
-                items.set(target, depInfo)
+                items[depInfo.id] = depInfo
 
                 if (key._rdiId) {
                     const binder = this.binder
@@ -152,9 +152,9 @@ export default class Di<Component, Element> {
                 if (typeof pr !== 'function') {
                     throw new Error(`Only function as register target, given: ${this.binder.debugStr(pr)}`)
                 }
-                if (!items[pr]) {
+                if (!items[pr._rdiId || 0]) {
                     rec = df.any(pr, this)
-                    items.set(pr, rec)
+                    items[rec.id] = rec
                 }
             }
         }
@@ -164,19 +164,19 @@ export default class Di<Component, Element> {
 
     resolveConsumer<V: Object>(key: IKey): IConsumerFactory<V, Element> {
         const rec: IConsumerFactory<V, Element> = this._depFactory.consumer(key, this)
-        this.items.set(key, rec)
+        this.items[rec.id] = rec
         return rec
     }
 
     wrapComponent<Props, State>(tag: IComponent<Props, State, Element>): Component {
-        return ((this.items.get(tag): any) || this.resolveConsumer(tag)).component
+        return ((this.items[tag._rdiId || 0]: any) || this.resolveConsumer(tag)).component
     }
 
     resolveSource<V>(key: IKey): ISource<V> {
-        let rec: ?ISource<V> = (this.items[key]: any)
+        let rec: ?ISource<V> = (this.items[key._rdiId || 0]: any)
         if (!rec) {
             rec = this._depFactory.source(key, this)
-            this.items.set(key, rec)
+            this.items[rec.id] = rec
         }
         rec.resolve()
 
@@ -204,10 +204,10 @@ export default class Di<Component, Element> {
                 const values = []
                 for (let prop in argDep) { // eslint-disable-line
                     const key = argDep[prop]
-                    rec = (items.get(key): any)
+                    rec = (items[key._rdiId || 0]: any)
                     if (!rec) {
                         rec = df.anyDep(key, this)
-                        items.set(key, rec)
+                        items[rec.id] = rec
                     }
                     rec.resolve()
 
@@ -215,10 +215,10 @@ export default class Di<Component, Element> {
                 }
                 resolvedArgs.push({t: 1, r: values})
             } else {
-                rec = (items.get(argDep): any)
+                rec = (items[argDep._rdiId || 0]: any)
                 if (!rec) {
                     rec = df.anyDep(argDep, this)
-                    items.set(argDep, rec)
+                    items[rec.id] = rec
                 }
                 rec.resolve()
 

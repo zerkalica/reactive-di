@@ -54,7 +54,7 @@ export default class DiFactory<Component, Element> {
     }
 
     create(): Di<Component, Element> {
-        return new Di('root', new Map(), this._staticContext, [])
+        return new Di('root', [], this._staticContext, [])
     }
 
     setState<V>(id: number, value: V): void {
