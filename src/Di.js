@@ -45,12 +45,12 @@ export default class Di<Component, Element> {
 
     _parents: IContext[]
     _depFactory: IDepFactory<Element>
-    items: ICacheItem[]
+    items: Map<number, ICacheItem>
     _context: IStaticContext<Component, Element>
 
     constructor(
         displayName: string,
-        items: ICacheItem[],
+        items: Map<number, ICacheItem>,
         c: IStaticContext<Component, Element>,
         parents: IContext[]
     ) {
@@ -103,7 +103,7 @@ export default class Di<Component, Element> {
 
         return (new Di(
             displayName,
-            this.items.slice(0),
+            new Map(this.items),
             this._context,
             newParents
         ): any)
@@ -128,7 +128,7 @@ export default class Di<Component, Element> {
                 }
                 const [key, target] = pr
 
-                rec = items[target._rdiId || 0]
+                rec = items.get(target._rdiId || 0)
 
                 // @todo expose resolved
                 if (rec && rec.resolved) {
@@ -140,7 +140,7 @@ export default class Di<Component, Element> {
                     target,
                     rec ? rec.context : this
                 )
-                items[depInfo.id] = depInfo
+                items.set(depInfo.id, depInfo)
 
                 if (key._rdiId) {
                     const binder = this.binder
@@ -154,7 +154,7 @@ export default class Di<Component, Element> {
                 }
                 if (!items[pr._rdiId || 0]) {
                     rec = df.any(pr, this)
-                    items[rec.id] = rec
+                    items.set(rec.id, rec)
                 }
             }
         }
@@ -204,7 +204,7 @@ export default class Di<Component, Element> {
                 const values = []
                 for (let prop in argDep) { // eslint-disable-line
                     const key = argDep[prop]
-                    rec = (items[key._rdiId || 0]: any)
+                    rec = (items.get(key._rdiId || 0): any)
                     if (!rec) {
                         rec = df.anyDep(key, this)
                         items[rec.id] = rec
@@ -215,10 +215,10 @@ export default class Di<Component, Element> {
                 }
                 resolvedArgs.push({t: 1, r: values})
             } else {
-                rec = (items[argDep._rdiId || 0]: any)
+                rec = (items.get(argDep._rdiId || 0): any)
                 if (!rec) {
                     rec = df.anyDep(argDep, this)
-                    items[rec.id] = rec
+                    items.set(rec.id, rec)
                 }
                 rec.resolve()
 

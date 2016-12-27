@@ -22,7 +22,7 @@ import {actions, hooks, deps, theme, component, source} from 'reactive-di/annota
 const todosFixture: any = []
 
 
-const maxTodos = 3
+const maxTodos = 5000
 
 for (let i = 0; i < maxTodos; i++) {
     todosFixture.push({
@@ -95,7 +95,7 @@ class AddedTodo extends Todo {}
 // Model ThemeVars, could be injected from outside by key 'ThemeVars' as ThemeVarsRec
 @source({key: 'ThemeVars'})
 class ThemeVars extends BaseModel {
-    color = 'red'
+    color = 'black'
 }
 
 class TodoRefs {
@@ -181,6 +181,7 @@ class EditingTodo extends Todo {}
 @actions
 class TodoViewService {
     _todos: Todos
+    _todo: Todo
     _editingTodo: EditingTodo
 
     constructor(todos: Todos, editingTodo: EditingTodo) {
@@ -188,17 +189,21 @@ class TodoViewService {
         this._editingTodo = editingTodo
     }
 
-    removeTodo(todo: Todo): void {
-        this._todos.remove(todo)
+    setTodo(todo: Todo) {
+        this._todo = todo
     }
 
-    saveTodo(): void {
+    removeTodo(todo: Todo): void {
+        this._todos.remove(this._todo || todo)
+    }
+
+    beginEdit(todo: Todo): void {
+        this._editingTodo.set(this._todo || todo)
+    }
+
+    submitEdit(): void {
         this._todos.update(this._editingTodo)
         this._editingTodo.reset()
-    }
-
-    beginEdit(item: Todo): void {
-        this._editingTodo.set(item)
     }
 
     cancelEdit(): void {
@@ -224,7 +229,7 @@ function TodoView(
                 value={editingTodo.title}
                 onChange={eventSetter(editingTodo).title}
             />
-            <button onClick={service.saveTodo}>Save</button>
+            <button onClick={service.submitEdit}>Save</button>
             <button onClick={service.cancelEdit}>Cancel</button>
         </div>
     }
@@ -235,11 +240,29 @@ function TodoView(
         <button onClick={() => service.removeTodo(item)}>X</button>
     </div>
 }
-component()(TodoView)
+component({
+    // register: [
+    //     TodoViewService
+    // ]
+})(TodoView)
 deps({
     editingTodo: EditingTodo,
     service: TodoViewService
 })(TodoView)
+
+// @hooks(TodoView)
+@deps(TodoViewService)
+class TodoViewHook {
+    _service: TodoViewService
+
+    constructor(service: TodoViewService) {
+        this._service = service
+    }
+
+    willMount({item}: {item: Todo}) {
+        this._service.setTodo(item)
+    }
+}
 
 // Provide class names and data for jss in __css property
 @deps(ThemeVars)
@@ -254,13 +277,13 @@ class TodosViewTheme {
     constructor(vars: ThemeVars) {
         this.__css = {
             wrapper: {
-                backgroundColor: `rgb(${vars.color}, 0, 0)`
+                color: `${vars.color}`
             },
             status: {
-                backgroundColor: 'red'
+                color: 'red'
             },
             title: {
-                backgroundColor: 'green'
+                color: 'green'
             }
         }
     }
