@@ -8,7 +8,6 @@ import {setterKey} from '../atoms/interfaces'
 const completeObj = {complete: true, pending: false, error: null}
 const pendingObj = {complete: false, pending: true, error: null}
 
-
 interface IControllable {
     run(): void;
     abort(): void;
@@ -43,10 +42,13 @@ type IUpdaterBase<V> = {
     complete?: (v: ?V) => void;
     error?: (e: Error) => void;
 }
+
 export type IUpdater<V> = IUpdaterBase<V> & {
     promise: () => Promise<V>;
+} | IUpdaterBase<V> & {
+    promise: void;
+    observable: () => Observable<V, Error>;
 }
-
 
 export default class Updater<V> {
     _source: ISettable<V>
@@ -58,6 +60,7 @@ export default class Updater<V> {
     _trace: string
     _subscription: ?Subscription
     _id: number
+
     constructor(updater: $Supertype<IUpdater<V>>) {
         const source: ISource<V> = this._source = (updater.value: any)[setterKey]
         const status: ISettable<ISourceStatus> = source.getStatus()

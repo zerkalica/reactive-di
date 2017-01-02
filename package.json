@@ -23,6 +23,7 @@
     "testonly": "mocha",
     "test": "eslint . && flow check && mocha",
     "test.dev": "mocha --growl --watch",
+    "analyze": "webpack --config examples/app/webpack.config.es5.js --json | webpack-bundle-size-analyzer",
     "start": "webpack-dev-server --config examples/app/webpack.config.es5.js --hot --history-api-fallback --inline"
   },
   "author": "Stefan Zerkalica <zerkalica@gmail.com>",

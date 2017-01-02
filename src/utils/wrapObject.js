@@ -55,16 +55,17 @@ function createSetterFn<V: Object>(
     key: string,
     getValue: ?(rawVal: mixed) => mixed
 ) {
-    const setVal = (rawVal: mixed) => {
+    const name = `${notifier.trace}.${key}`
+    function setVal(rawVal: mixed) {
         const v: mixed = getValue ? getValue(rawVal) : rawVal
         const oldTrace = notifier.trace
         notifier.callerId = ++notifier.lastId
-        notifier.trace = `${ref.displayName}.${key}`
+        notifier.trace = name
         src.merge({[key]: v})
         notifier.trace = oldTrace
         notifier.end()
     }
-    setVal.displayName = notifier.trace
+    setVal.displayName = name
     return setVal
 }
 

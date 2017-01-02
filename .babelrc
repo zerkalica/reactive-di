@@ -1,6 +1,7 @@
 {
-    "presets": [["es2015", {"loose": true}], "stage-0", "react"],
+    "presets": [["es2015", {"loose": true, "spec": true}], "stage-0", "react"],
     "plugins": [
+        ["transform-object-rest-spread", {"useBuiltIns": true}],
         ["module-resolver", {
             "root": [""],
             "alias": {
@@ -14,13 +15,5 @@
         }],
         "transform-decorators-legacy",
         "transform-flow-strip-types"
-    ],
-    "env": {
-      "production": {
-        "presets": ["babili"],
-        "plugins": [
-          ["minify-dead-code-elimination", { "keepFnArgs": true, "keepFnName": true }]
-        ]
-      }
-    }
+    ]
 }

@@ -7,7 +7,7 @@ export type SetterResult<V: Object> = {
     [id: $Keys<V>]: (v: mixed) => void;
 }
 
-export class BaseModel {
+export default class BaseModel {
     copy(rec: Object): this {
         return Object.assign((Object.create(this.constructor.prototype): any), this, rec)
     }

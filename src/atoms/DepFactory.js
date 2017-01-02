@@ -63,7 +63,7 @@ export default class DepFactory<Element> {
         const id = key._rdiId || ++this._lastId // eslint-disable-line
         key._rdiId = id // eslint-disable-line
 
-        return new Computed(
+        return (new Computed(
             {
                 id,
                 name: key._rdiKey || debugName(key),
@@ -74,7 +74,7 @@ export default class DepFactory<Element> {
                 hook: key._rdiHook || null
             },
             context
-        )
+        ): any)
     }
 
     source<V>(key: Function, context: IContext): ISource<V> {

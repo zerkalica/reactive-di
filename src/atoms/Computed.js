@@ -17,7 +17,7 @@ import type {IRef} from '../utils/wrapObject'
 
 import resolveArgs from './resolveArgs'
 
-export default class Computed<V> {
+export default class Computed<V: Object> {
     t: 0
     displayName: string
 
@@ -145,6 +145,14 @@ export default class Computed<V> {
         if (!hook.shouldUpdate || hook.shouldUpdate(newVal, this.cachedSrc)) {
             if (hook.willUpdate) {
                 hook.willUpdate(newVal, this.cachedSrc)
+            } else {
+                const src = this.cachedSrc
+                // copy old computed state, not setted in constructor (via setters) to new object
+                for (const k in src) { // eslint-disable-line
+                    if (!newVal[k]) {
+                        newVal[k] = src[k]
+                    }
+                }
             }
             this.cachedSrc = newVal
             if (this._meta.ender) {
