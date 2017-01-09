@@ -68,13 +68,13 @@ class Todos extends IndexCollection {
     static Item = Todo
 }
 
-@deps(Fetcher)
+@deps(Fetcher, Todos)
 @hooks(Todos)
 class TodosHooks {
     _fetcher: Fetcher
     _updater: Updater<Todos>
 
-    constructor(fetcher: Fetcher) {
+    constructor(fetcher: Fetcher, _todos: Todos) {
         this._fetcher = fetcher
     }
 

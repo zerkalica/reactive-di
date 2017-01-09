@@ -36,7 +36,8 @@ export type {
     IRawArg,
     IErrorHandler,
     IMiddlewares,
-    IDepInfo
+    IDepInfo,
+    ResultOf
 } from './atoms/interfaces'
 
 export {

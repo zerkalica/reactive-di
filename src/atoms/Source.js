@@ -33,6 +33,7 @@ export default class Source<V> {
     _isPending: boolean
     _meta: ISourceMeta<V>
     _parent: ?ISource<*>
+    isResolving: boolean
 
     constructor(
         meta: ISourceMeta<V>,
@@ -53,8 +54,9 @@ export default class Source<V> {
         this._configValue = meta.configValue
         ;(meta.initialValue: any)[setterKey] = this // eslint-disable-line
         this.cached = meta.initialValue
-        this._hook = this.context.resolveHook(meta.hook)
         this._meta = meta
+        this.isResolving = !!meta.hook
+        this._hook = !meta.hook ? context.resolveHook(null) : (null: any)
         this._isFetching = meta.isFetching
         this._isPending = meta.isPending
     }
@@ -91,6 +93,14 @@ export default class Source<V> {
     }
 
     resolve(): void {
+        if (this.isResolving) {
+            this.isResolving = false
+            if (!this._hook) {
+                this._hook = this.context.resolveHook(this._meta.hook)
+            }
+            return
+        }
+
         const {stack, level} = this.context.binder
         let source: ISource<any> = this
         let computeds = source.computeds

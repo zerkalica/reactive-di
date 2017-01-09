@@ -340,3 +340,6 @@ export type IHasCreateComponent<Element> = {
         props?: ?{[id: string]: mixed}
     ): Element;
 }
+
+export type ResultOf<F> = _ResultOf<*, F>
+type _ResultOf<V, F: (...x: any[]) => V> = V // eslint-disable-line
