@@ -42,7 +42,7 @@ export default class IdIndexer<Item: {id: string}> {
         }
     }
 
-    get(ids: string[]): Item[] {
+    pick(ids: string[]): Item[] {
         const map = this._map
         const result: Item[] = []
         for (let i = 0, l = ids.length; i < l; i++) {

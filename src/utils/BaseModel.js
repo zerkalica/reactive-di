@@ -18,6 +18,12 @@ export default class BaseModel {
         return val
     }
 
+    commit(): this {
+        (this: any)[setterKey].set(this)
+
+        return this
+    }
+
     reset(): this {
         const val = new this.constructor()
         ;(this: any)[setterKey].set(val)

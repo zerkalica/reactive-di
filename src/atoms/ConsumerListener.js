@@ -28,9 +28,9 @@ export default class ConsumerListener<
     _updater: IHasForceUpdate<Props>
     closed: boolean
     cached: ?Props
+    props: Props
 
     _context: IContext
-    _props: Props
     _lastProps: ?Props
     _hook: IGetable<IConsumerHook<Props>>
 
@@ -64,7 +64,7 @@ export default class ConsumerListener<
         this._errorComponent = errorComponent
         this._lastState = parent.state
         this._lastError = null
-        this._props = (null: any)
+        this.props = (null: any)
         this._lastProps = null
         this._hook = hook
         this._parent = parent
@@ -75,7 +75,7 @@ export default class ConsumerListener<
 
     _setError(e: Error) {
         this._lastError = e
-        this._context.errorHandler.setError(e)
+        this._context.notifier.onError(e, this.displayName)
     }
 
     _willUpdate(props: Props, oldProps: ?Props): void {
@@ -83,9 +83,9 @@ export default class ConsumerListener<
         if (prop && (prop: Object)[itemKey]) {
             (prop: Object)[itemKey].listener = (this: ItemListener<*>)
         }
-
+        const hook: any = this._hook
         try {
-            (this._hook: any).willUpdate(props, oldProps)
+            (hook.cached || hook.get()).willUpdate(props, oldProps)
         } catch (e) {
             this._setError(e)
         }
@@ -93,10 +93,12 @@ export default class ConsumerListener<
 
     update<V>(newItem: V): void {
         this._lastProps = null
-        this._lastState = null
-        this._props = {...this._props, item: newItem}
-        this._context.notifier.notify([this], this, this._props)
-        this._updater.setProps(this._props)
+        // this._lastState = null
+        const newProps = {...this.props, item: newItem}
+        if (this.shouldUpdate(newProps)) {
+            this._context.notifier.notify([this], this.displayName, this.props, newProps)
+            this._updater.setProps(this.props)
+        }
     }
 
     pull(): void {
@@ -113,13 +115,16 @@ export default class ConsumerListener<
         if (oldProps === props) {
             return false
         }
+        const hasReceiveProps = !!(this._hook.cached || this._hook.get()).willUpdate
 
         if ((!oldProps && props) || (!props && oldProps)) {
-            this._props = props
+            this.props = props
+            if (hasReceiveProps) {
+                this._willUpdate(props, oldProps)
+            }
             return true
         }
 
-        const hasReceiveProps = !!(this._hook.cached || this._hook.get()).willUpdate
 
         let lpKeys: number = 0
         for (let k in oldProps) { // eslint-disable-line
@@ -127,7 +132,7 @@ export default class ConsumerListener<
                 if (hasReceiveProps) {
                     this._willUpdate(props, oldProps)
                 }
-                this._props = props
+                this.props = props
                 return true
             }
             lpKeys++
@@ -139,7 +144,7 @@ export default class ConsumerListener<
             if (hasReceiveProps) {
                 this._willUpdate(props, oldProps)
             }
-            this._props = props
+            this.props = props
             return true
         }
 
@@ -150,7 +155,7 @@ export default class ConsumerListener<
         try {
             const hook = this._hook.cached || this._hook.get()
             if (hook.didMount) {
-                hook.didMount(this._props)
+                hook.didMount(this.props)
             }
         } catch (e) {
             this._setError(e)
@@ -161,7 +166,7 @@ export default class ConsumerListener<
         try {
             const hook = this._hook.cached || this._hook.get()
             if (hook.didUpdate) {
-                hook.didUpdate(this._props)
+                hook.didUpdate(this.props)
             }
         } catch (e) {
             this._setError(e)
@@ -174,9 +179,10 @@ export default class ConsumerListener<
         const errorComponent = this._errorComponent
         if (!errorComponent) {
             console.error('Can\'t render error: error component is not defined') // eslint-disable-line
-            throw error
+            // throw error
+            return (null: any)
         }
-        errorComponent.shouldUpdate({error})
+        errorComponent.props = {error}
         return errorComponent.render()
     }
 
@@ -234,14 +240,14 @@ export default class ConsumerListener<
         if (this._lastError) {
             return this._renderError()
         }
-        this._lastProps = this._props
+        this._lastProps = this.props
         this._lastState = this._parent.state
         try {
             const notifier = this._context.notifier
             const oldTrace = notifier.trace
             notifier.trace = this._trace
             const result = (this._proto.cached || this._proto.get())(
-                this._props,
+                this.props,
                 this._lastState,
                 (this: IHasCreateComponent<Element>)
             )
@@ -258,11 +264,14 @@ export default class ConsumerListener<
             this._parent.willUnmount(this._updater)
             const hook = this._hook.cached || this._hook.get()
             if (hook.willUnmount) {
-                hook.willUnmount(this._props)
+                hook.willUnmount(this.props)
             }
-            const prop = this._props.item
-            if (prop && (prop: Object)[itemKey]) {
-                (prop: Object)[itemKey].listener = fakeListener
+            const prop = this.props.item
+            if (prop) {
+                const p = (prop: Object)[itemKey]
+                if (p && p.listener === this) {
+                    p.listener = fakeListener
+                }
             }
         } catch (e) {
             this._setError(e)
@@ -270,7 +279,7 @@ export default class ConsumerListener<
     }
 
     willMount(props: Props): void {
-        this._props = props
+        this.props = props
         const prop = props.item
         if (prop && (prop: Object)[itemKey]) {
             (prop: Object)[itemKey].listener = (this: ItemListener<*>)
@@ -279,7 +288,7 @@ export default class ConsumerListener<
             this._parent.willMount()
             const hook = this._hook.cached || this._hook.get()
             if (hook.willMount) {
-                hook.willMount(this._props)
+                hook.willMount(this.props)
             }
         } catch (e) {
             this._setError(e)

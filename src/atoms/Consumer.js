@@ -89,7 +89,9 @@ export default class Consumer<
                 : ({cached: meta.key}: Object)
 
             this._errorComponent = meta.errorComponent
-                ? context.resolveConsumer(meta.errorComponent).create(fakeUpdater, {})
+                ? context
+                    .resolveConsumer(meta.errorComponent)
+                    .create(fakeUpdater)
                 : null
 
             this._args = meta.args ? context.resolveDeps(meta.args) : null
@@ -117,7 +119,7 @@ export default class Consumer<
 
     _pull(): void {
         this.state = this.cached = this._argVals[0]
-        if (!this._args || resolveArgs(this._args, this._argVals)) {
+        if (!this._args || resolveArgs(this._args, (this._argVals: any))) {
             const updaters = this._updaters
             for (let i = 0, l = updaters.length; i < l; i++) {
                 updaters[i].forceUpdate()
@@ -132,7 +134,7 @@ export default class Consumer<
         try {
             this._pull()
         } catch (e) {
-            this.context.errorHandler.setError(e)
+            this.context.notifier.onError(e, this.displayName)
         }
     }
 
@@ -189,7 +191,7 @@ export default class Consumer<
                 master.refs++ // eslint-disable-line
             }
             if (this._args) {
-                resolveArgs(this._args, this._argVals)
+                resolveArgs(this._args, (this._argVals: any))
             }
             this.state = this.cached = this._argVals[0]
         }

@@ -3,7 +3,6 @@
 import type {
     IDepFactory,
     IComponentFactory,
-    IErrorHandler,
     IContext,
     IRelationBinder,
     INotifier,
@@ -36,7 +35,6 @@ export default class Di<Component, Element> {
     displayName: string
 
     componentFactory: IComponentFactory<Component, Element>
-    errorHandler: IErrorHandler
     protoFactory: ?IContext
     binder: IRelationBinder
     notifier: INotifier
@@ -58,7 +56,6 @@ export default class Di<Component, Element> {
         this.items = items
         this._depFactory = c.depFactory
         this.componentFactory = c.componentFactory
-        this.errorHandler = c.errorHandler
         this.protoFactory = c.protoFactory
         this.binder = c.binder
         this.notifier = c.notifier
@@ -178,6 +175,13 @@ export default class Di<Component, Element> {
             rec = this._depFactory.source(key, this)
             this.items[rec.id] = rec
         }
+        rec.resolve()
+
+        return rec
+    }
+
+    resolveComputed<V>(key: IKey): IComputed<V> {
+        const rec: IComputed<V> = this._depFactory.computed(key, this)
         rec.resolve()
 
         return rec

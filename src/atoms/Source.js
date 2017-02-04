@@ -61,10 +61,12 @@ export default class Source<V> {
         this._isPending = meta.isPending
     }
 
-    willMount(_parent: ?IContext): void {
+    willMount(parent: ?IContext): void {
         if (this._parent) {
+            if (!this._parent.refs) {
+                this._parent.willMount(parent)
+            }
             this._parent.refs++
-            this._parent.willMount(_parent)
         }
         const hook = this._hook.cached || this._hook.get()
         if (hook.init && !this._initialized) {
@@ -98,7 +100,7 @@ export default class Source<V> {
             if (!this._hook) {
                 this._hook = this.context.resolveHook(this._meta.hook)
             }
-            return
+            // return
         }
 
         const {stack, level} = this.context.binder
@@ -110,8 +112,8 @@ export default class Source<V> {
         while (--i >= 0) {
             const rec = stack[i]
             if (!rec.has[source.id]) {
-                rec.has[source.id] = true
                 if (rec.v.t === 3) { // status
+                    rec.has[source.id] = true
                     if (isFetching) {
                         source = this.status || this.getStatus()
                         computeds = source.computeds
@@ -120,6 +122,7 @@ export default class Source<V> {
                         rec.v.masters.push(source)
                     }
                 } else if (i >= level || source !== this) {
+                    rec.has[source.id] = true
                     // consumer or computed
                     if (rec.v.t === 2) { // consumer
                         consumers.push(rec.v)
@@ -185,7 +188,7 @@ export default class Source<V> {
         for (let i = 0, l = computeds.length; i < l; i++) {
             computeds[i].cached = null
         }
-        context.notifier.notify(this.consumers.items, this, v)
+        context.notifier.notify(this.consumers.items, this.displayName, this.cached, v)
         this.cached = v
     }
 }

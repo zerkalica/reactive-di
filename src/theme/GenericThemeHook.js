@@ -7,7 +7,7 @@ export default class GenericThemeHook {
     _sheet: ?StyleSheet
     _sheetFactory: AbstractSheetFactory
 
-    static _rdiArgs = [AbstractSheetFactory]
+    static _rdiArg = [AbstractSheetFactory]
 
     constructor(sheetFactory: AbstractSheetFactory) {
         this._sheetFactory = sheetFactory

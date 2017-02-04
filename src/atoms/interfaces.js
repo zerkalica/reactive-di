@@ -78,6 +78,7 @@ export type Component = any
 export type IConsumerListener<Props, Element, Component> = {
     displayName: string;
     closed: boolean;
+    props: Props;
     willUnmount(): void;
     willMount(prop: Props): void;
     didMount(): void;
@@ -91,7 +92,7 @@ export type IConsumerFactory<Props, Element> = {
     id: number;
     component: Component;
     context: IContext;
-    create(updater: IHasForceUpdate<Props>, props: Props): IConsumerListener<Props, Element, Component>;
+    create(updater: IHasForceUpdate<Props>): IConsumerListener<Props, Element, Component>;
 }
 
 type State = any
@@ -223,21 +224,31 @@ export type IDepInfo<V> = {
     cached: ?V;
 }
 
-export type ICallerInfo = {
+export type ICallerInfo<V> = {
     trace: string;
+    modelName: string;
+    oldValue: ?V;
+    newValue: V;
     asyncType: null | 'next' | 'error' | 'complete';
     callerId: number;
 }
 
-export type IMiddlewares = {
-    onSetValue<V>(src: IDepInfo<V>, newVal: V, trace: ICallerInfo): void;
+export type ILogger = {
+    onError(error: Error, name: string): void;
+    onSetValue<V>(info: ICallerInfo<V>): void;
 }
 
-export type INotifier = ICallerInfo & {
+export type INotifier = {
+    trace: string;
+    callerId: number;
+    asyncType: null | 'next' | 'error' | 'complete';
+
     lastId: number;
+    logger: ?IComputed<ILogger>;
 
     end(): void;
-    notify<V>(c: IPullable<*>[], info: IDepInfo<V>, newVal: V): void;
+    onError(e: Error, name: string): void;
+    notify<V>(c: IPullable<*>[], name: string, oldValue: V, newValue: V): void;
 }
 
 export type ICreateElement<Element> = (...args: any) => Element
@@ -252,16 +263,11 @@ export interface IComponentFactory<Component, Element> {
     ): Component;
 }
 
-export interface IErrorHandler {
-    setError(e: Error): void;
-}
-
 export type IStaticContext<Component, Element> = {
     binder: IRelationBinder;
     depFactory: IDepFactory<Element>;
     notifier: INotifier;
     componentFactory: IComponentFactory<*, *>;
-    errorHandler: IErrorHandler;
     protoFactory: ?IContext;
     contexts: ?IDisposableCollection<IContext>;
 }
@@ -279,7 +285,6 @@ export type ICacheItem = {
 export type IContext = {
     items: ICacheItem[];
     componentFactory: IComponentFactory<Component, *>;
-    errorHandler: IErrorHandler;
     protoFactory: ?IContext;
     binder: IRelationBinder;
     notifier: INotifier;

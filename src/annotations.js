@@ -18,7 +18,7 @@ export interface ComponentMetaRec {
 export function deps<V: Function>(...args: IRawArg[]): (target: V) => V {
     return (target: V) => {
         if (args.length) {
-            target._rdiArgs = args
+            target._rdiArg = args
         }
         return target
     }
@@ -46,6 +46,7 @@ export function theme<V: Function>(target: V): V {
 export function source<V: Function>(rec: SourceMetaRec): (target: V) => V {
     return (target: V) => {
         target._rdiKey = rec.key
+        target._rdiConstr = rec.construct || false
         target._rdiInst = rec.instance || false
         target._rdiLoaded = rec.loaded || false
         return target

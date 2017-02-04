@@ -3,8 +3,8 @@
 import IdIndexer from './IdIndexer'
 import {setterKey} from '../atoms/interfaces'
 
-export type MapFn<T, V> = (v: T, index?: number) => V
-export type FilterFn<T> = (v: T, index?: number) => boolean
+export type MapFn<T, V> = (v: T, index: number) => V
+export type FilterFn<T> = (v: T, index: number) => boolean
 export type SortFn<T> = (a: T, b: T) => number
 export type FindFn<T> = (element: T, index?: number, arr?: T[], thisArg?: Object) => boolean
 export type UpdateFn<V> = (oldItem: V) => V
@@ -22,39 +22,48 @@ export const fakeListener: ItemListener<*> = {
     update() {}
 }
 
-export interface IIndexer<V> {
+export interface IIndexer<V, Id> {
     removeAll(): void;
     add(item: V, index: number): void;
     remove(item: V, index: number): void;
     update(newItem: V, oldItem: ?V, index: number): void;
+    pick(ids: Id[]): V[];
 }
 
-export default class IndexCollection<Item: Object, Indexer: IIndexer<Item>> {
+export default class IndexCollection<Item: Object, Id, Indexer: IIndexer<Item, Id>> {
     // @@iterator(): Iterator<Item>;
     _items: Item[]
+    _indexer: Indexer
+
     length: number
-    indexer: Indexer
 
     static Item: Class<Item>
     static Indexer: ?Class<Indexer>
+    static autoNotify: ?boolean
 
     constructor(recs?: ?$Shape<Item>[], newItems?: ?Item[], indexer?: ?Indexer) {
         this._items = (recs ? this._recsToItems(recs) : newItems) || []
         this.length = this._items.length
         const Idxr = this.constructor.Indexer
-        this.indexer = indexer || (Idxr ? new Idxr() : new (IdIndexer: any)())
+        this._indexer = indexer || (Idxr ? new Idxr() : new (IdIndexer: any)())
     }
 
     copy(items: $Shape<Item>[]): this {
-        return new this.constructor(items, null, this.indexer)
+        return new this.constructor(items, null, this._indexer)
     }
 
     _copy(items: Item[]): this {
-        const newObj = new this.constructor(null, items, this.indexer)
+        const newObj = new this.constructor(null, items, this._indexer)
         const source = (newObj: any)[setterKey] = (this: any)[setterKey]
 
         source.set(newObj)
         return newObj
+    }
+
+    _notify(items?: Item[]): this {
+        return this.constructor.autoNotify
+            ? this._copy(items || this._items)
+            : this
     }
 
     _recsToItems(recs: $Shape<Item>[]): Item[] {
@@ -78,8 +87,8 @@ export default class IndexCollection<Item: Object, Indexer: IIndexer<Item>> {
     }
 
     removeAll(): this {
-        if (this.indexer) {
-            this.indexer.removeAll()
+        if (this._indexer) {
+            this._indexer.removeAll()
         }
         return this._copy([])
     }
@@ -88,15 +97,21 @@ export default class IndexCollection<Item: Object, Indexer: IIndexer<Item>> {
         return this._items[index]
     }
 
+    pick(ids: Id[]): Item[] {
+        if (!this._indexer) {
+            throw new Error('Indexer not implemented')
+        }
+
+        return this._indexer.pick(ids)
+    }
+
     remove(ptr: Item, count?: number): this {
         const index: number = ptr[itemKey].i
         const cnt = count || 1
         const items = this._items
 
-        items.splice(index, cnt)
-
-        if (this.indexer) {
-            const indexer = this.indexer
+        if (this._indexer) {
+            const indexer = this._indexer
             for (let i = index, l = index + cnt; i < l; i++) {
                 indexer.remove(items[i], i)
             }
@@ -105,15 +120,17 @@ export default class IndexCollection<Item: Object, Indexer: IIndexer<Item>> {
             const item = items[i]
             item[itemKey].i -= cnt
         }
-        return this._copy(this._items)
+        items.splice(index, cnt)
+
+        return this._copy(items)
     }
 
     insertMultiple(ptr: Item, newItems: Item[]): this {
         const index: number = ptr[itemKey].i
-        this._items.splice(index, 0, ...newItems)
         const items = this._items
+        items.splice(index, 0, ...newItems)
         let cnt: number = index
-        const indexer = this.indexer
+        const indexer = this._indexer
         const nl = indexer ? index + newItems.length : 0
         for (let i = index, l = items.length; i < l; i++) {
             const item = items[i]
@@ -122,25 +139,27 @@ export default class IndexCollection<Item: Object, Indexer: IIndexer<Item>> {
                 (indexer: any).add(item, index)
             }
         }
-        return this._copy(this._items)
+        return this._copy(items)
     }
 
     insert(ptr: Item, newItem: Item): this {
         return this.insertMultiple(ptr, [newItem])
     }
 
-    set(ptr: Item, newItem: Item): this {
+    set(ptr: Item, ni?: Item): this {
         const index: number = ptr[itemKey].i
+        const newItem = ni || ptr
         const item = this._items[index]
         if (item !== newItem) {
-            if (this.indexer) {
-                this.indexer.update(newItem, item, index)
+            if (this._indexer) {
+                this._indexer.update(newItem, item, index)
             }
             this._items[index] = newItem
             const updater = (newItem: Object)[itemKey] = (item: Object)[itemKey] // eslint-disable-line
             updater.listener.update(newItem, item, index)
         }
-        return this
+
+        return this._notify()
     }
 
     update(ptr: Item, updateFn?: UpdateFn<Item>): this {
@@ -156,19 +175,20 @@ export default class IndexCollection<Item: Object, Indexer: IIndexer<Item>> {
             newItem = ptr
         }
         if (oldItem !== newItem || !updateFn) {
-            if (this.indexer) {
-                this.indexer.update(newItem, oldItem, index)
+            if (this._indexer) {
+                this._indexer.update(newItem, oldItem, index)
             }
             this._items[index] = newItem
             const updater = (newItem: Object)[itemKey] = (oldItem: Object)[itemKey]
             updater.listener.update(newItem, oldItem, index)
         }
-        return this
+
+        return this._notify()
     }
 
     updateAll(updateFn: UpdateFn<Item>): this {
         const items: Item[] = this._items
-        const indexer = this.indexer
+        const indexer = this._indexer
         for (let i = 0, l = items.length; i < l; i++) {
             const item = items[i]
             const newItem: Item = updateFn(item)
@@ -182,12 +202,12 @@ export default class IndexCollection<Item: Object, Indexer: IIndexer<Item>> {
             items[i] = newItem
         }
 
-        return this
+        return this._notify()
     }
 
     updateByFn(selFn: SelectorFn<Item>, updateFn: UpdateFn<Item>): this {
         const items: Item[] = this._items
-        const indexer = this.indexer
+        const indexer = this._indexer
         for (let i = 0, l = items.length; i < l; i++) {
             const item = items[i]
             if (selFn(item)) {
@@ -203,7 +223,7 @@ export default class IndexCollection<Item: Object, Indexer: IIndexer<Item>> {
             }
         }
 
-        return this
+        return this._notify()
     }
 
     push(item: Item): this {
@@ -212,8 +232,8 @@ export default class IndexCollection<Item: Object, Indexer: IIndexer<Item>> {
             listener: fakeListener,
             i
         }
-        if (this.indexer) {
-            this.indexer.add(item, i)
+        if (this._indexer) {
+            this._indexer.add(item, i)
         }
 
         this._items.push(item)
@@ -222,8 +242,8 @@ export default class IndexCollection<Item: Object, Indexer: IIndexer<Item>> {
 
     pop(): this {
         const item = this._items.pop()
-        if (this.indexer) {
-            this.indexer.remove(item, this._items.length)
+        if (this._indexer) {
+            this._indexer.remove(item, this._items.length)
         }
         return this._copy(this._items)
     }
@@ -236,12 +256,31 @@ export default class IndexCollection<Item: Object, Indexer: IIndexer<Item>> {
         return this._items.map(mapFn)
     }
 
-    filter(filterFn: FilterFn<Item>): Item[] {
-        return this._items.filter(filterFn)
+    filter(filterFn: FilterFn<Item>): this {
+        const indexer = this._indexer
+        const items = this._items
+        const newItems: Item[] = []
+        for (let i = 0, j = 0, l = items.length; i < l; i++) {
+            const item = items[i]
+            item[itemKey].i = j
+            if (filterFn(item, i)) {
+                newItems.push(item)
+                j++
+            } else {
+                indexer.remove(item, i)
+            }
+        }
+
+        return this._copy(newItems)
     }
 
-    sort(sortFn: SortFn<Item>): Item[] {
-        return this._items.sort(sortFn)
+    sort(sortFn: SortFn<Item>): this {
+        const sorted = this._items.sort(sortFn)
+        for (let i = 0, l = sorted.length; i < l; i++) {
+            sorted[i][itemKey].i = i
+        }
+
+        return this._copy(sorted)
     }
 }
 

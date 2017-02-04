@@ -8,7 +8,7 @@ import Updater, {RecoverableError} from './utils/Updater'
 import BaseModel from './utils/BaseModel'
 import debugName from './utils/debugName'
 import {setter, eventSetter} from './utils/wrapObject'
-
+import {setterKey} from './atoms/interfaces'
 import SourceStatus from './atoms/SourceStatus'
 import ReactComponentFactory from './adapters/ReactComponentFactory'
 
@@ -17,6 +17,7 @@ export {
     SourceStatus,
     debugName,
     setter,
+    setterKey,
     eventSetter,
     refsSetter,
     BaseModel,
@@ -34,8 +35,7 @@ export type {
     IConsumerHook,
     IDepRegister,
     IRawArg,
-    IErrorHandler,
-    IMiddlewares,
+    ILogger,
     IDepInfo,
     ResultOf
 } from './atoms/interfaces'

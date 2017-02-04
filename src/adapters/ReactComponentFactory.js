@@ -21,10 +21,8 @@ export default class ReactComponentFactory<Element: React$Element<any>, Componen
             props: Props
 
             componentWillMount() {
-                this._consumer = this.constructor.__factory.create(
-                    (this: IHasForceUpdate<Props>),
-                    this.props
-                )
+                this._consumer = this.constructor.__factory.create((this: IHasForceUpdate<Props>))
+                this._consumer.willMount(this.props)
             }
 
             setProps(props: Props): void {

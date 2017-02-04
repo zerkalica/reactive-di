@@ -12,14 +12,7 @@ fallback.push(path.resolve(__dirname, '..', '..', '..', 'node_modules'))
 export default {
     cwd: path.resolve(__dirname, '..'),
     cache: true,
-    debug: true,
     devtool: 'source-map',
-    resolve: {
-        fallback
-    },
-    resolveLoader: {
-        fallback
-    },
     output: {
         publicPath: '/',
         path: path.resolve(__dirname, 'build'),

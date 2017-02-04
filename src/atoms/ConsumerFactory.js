@@ -36,16 +36,12 @@ export default class ConsumerFactory<V, Element, Component> {
         )
     }
 
-    create(updater: IHasForceUpdate<V>, props: V): IConsumerListener<V, Element, Component> {
-        const listener = this._cached
+    create(updater: IHasForceUpdate<V>): IConsumerListener<V, Element, Component> {
+        return this._cached
             ? this._cached.create(updater)
             : (new Consumer(
                 this._meta,
                 this.context.copy(this.displayName).register(this._meta.register)
             )).create(updater)
-
-        listener.willMount(props)
-
-        return listener
     }
 }

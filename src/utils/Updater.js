@@ -27,11 +27,11 @@ export class RecoverableError extends Err {
         this._controllable = controllable
     }
 
-    retry(): void {
+    retry = () => {
         this._controllable.run()
     }
 
-    abort(): void {
+    abort = () => {
         this._controllable.abort()
     }
 }
@@ -51,7 +51,7 @@ export type IUpdater<V> = IUpdaterBase<V> & {
 }
 
 export default class Updater<V> {
-    _source: ISettable<V>
+    _source: ISettable<V> & {displayName: string}
     _status: ISettable<ISourceStatus>
     _updater: IUpdater<V>
     _notifier: INotifier
@@ -130,6 +130,7 @@ export default class Updater<V> {
         notifier.trace = this._trace
         notifier.asyncType = 'error'
         notifier.callerId = this._id
+        notifier.onError(error, this._source.displayName)
         this._status.merge({error, complete: false, pending: false})
         const observer = this._updater
         if (observer && observer.error) {

@@ -7,6 +7,8 @@ import {fastCallMethod, fastCall} from './fastCreate'
 export type IRef<V> = {
     displayName: string;
     cachedSrc: V;
+    cached: ?V;
+    get(): V;
     notifier: INotifier;
 }
 /* eslint-disable no-param-reassign */
@@ -20,6 +22,9 @@ function wrapMethod<V: Object, R>(
         const oldTrace = notifier.trace
         notifier.callerId = ++notifier.lastId
         notifier.trace = trace
+        if (!ref.cached) {
+            ref.get()
+        }
         const result: R = fastCallMethod(ref.cachedSrc, ref.cachedSrc[name], args)
         notifier.trace = oldTrace
         ref.notifier.end()
@@ -38,6 +43,9 @@ export function wrapFunction<V: Function>(ref: IRef<V>): V {
         const oldTrace = notifier.trace
         notifier.callerId = ++notifier.lastId
         notifier.trace = trace
+        if (!ref.cached) {
+            ref.get()
+        }
         const result = fastCall(ref.cachedSrc, args) // eslint-disable-line
         notifier.trace = oldTrace
         notifier.end()
@@ -141,7 +149,7 @@ export default function wrapObject<V: Object>(ref: IRef<V>): V {
                         result[propName] = wrapMethod(ref, propName)
                     }
                 } else if (typeof propName === 'string' && propName[0] !== '_') {
-                    if (typeof prop === 'object' && prop.__rdiSetter) {
+                    if (prop && typeof prop === 'object' && prop.__rdiSetter) {
                         prop.displayName = `${ref.displayName}.${propName}`
                         result[propName] = prop
                     } else {

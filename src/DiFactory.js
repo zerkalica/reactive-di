@@ -5,8 +5,7 @@ import type {
     IStaticContext,
     IComponentFactory,
     IKey,
-    IMiddlewares,
-    IErrorHandler
+    ILogger
 } from './atoms/interfaces'
 
 import type {SheetFactory} from './theme/interfaces'
@@ -20,31 +19,25 @@ import Di from './Di'
 export type IOpts<Component, Element> = {
     values?: {[id: string]: any};
     defaultErrorComponent: IKey;
-    errorHandler?: IErrorHandler;
     themeFactory: SheetFactory,
     componentFactory: IComponentFactory<Component, Element>;
     debug?: boolean;
-    middlewares?: IMiddlewares;
-}
-
-class DefaultErrorHandler {
-    setError(e: Error): void {
-        console.error(e) // eslint-disable-line
-    }
+    logger?: Class<ILogger>;
 }
 
 export default class DiFactory<Component, Element> {
     _staticContext: IStaticContext<Component, Element>
+    _loggerKey: ?IKey
 
     constructor(opts: IOpts<Component, Element>) {
         const values = opts.values || {}
         values.AbstractSheetFactory = opts.themeFactory
+        this._loggerKey = opts.logger || null
         const context: IStaticContext<Component, Element> = this._staticContext = {
             depFactory: new DepFactory(values, opts.defaultErrorComponent),
-            notifier: new Transact(opts.middlewares || null),
+            notifier: new Transact(),
             componentFactory: opts.componentFactory,
             binder: new RelationBinder(),
-            errorHandler: opts.errorHandler || new DefaultErrorHandler(),
             protoFactory: null,
             contexts: opts.debug ? new DisposableCollection() : null
         }
@@ -54,7 +47,12 @@ export default class DiFactory<Component, Element> {
     }
 
     create(): Di<Component, Element> {
-        return new Di('root', [], this._staticContext, [])
+        const di = new Di('root', [], this._staticContext, [])
+        if (this._loggerKey) {
+            this._staticContext.notifier.logger = di.resolveComputed(this._loggerKey)
+        }
+
+        return di
     }
 
     setState<V>(id: number, value: V): void {

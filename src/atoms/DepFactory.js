@@ -48,7 +48,7 @@ export default class DepFactory<Element> {
                 id,
                 name,
                 key,
-                args: key._rdiArgs || null,
+                args: key._rdiArg || null,
                 hook: key._rdiHook || null,
                 errorComponent: componentMeta.onError || key === this._defaultErrorComponent
                     ? null
@@ -69,7 +69,7 @@ export default class DepFactory<Element> {
                 name: key._rdiKey || debugName(key),
                 key,
                 func: key._rdiFn || false,
-                args: key._rdiArgs || null,
+                args: key._rdiArg || null,
                 ender: key._rdiEnd || isHook || false,
                 hook: key._rdiHook || null
             },
@@ -79,13 +79,16 @@ export default class DepFactory<Element> {
 
     source<V>(key: Function, context: IContext): ISource<V> {
         const instance = !!key._rdiInst
+        const construct = !!key._rdiConstr
         const name = key._rdiKey || debugName(key)
         const configValue = this._values[name] || null
         let initialValue: ?V
         if (configValue) {
             initialValue = instance
                 ? configValue
-                : Object.assign(new key(), configValue) // eslint-disable-line
+                : construct
+                    ? new (key: any)(configValue) // eslint-disable-line
+                    : Object.assign(new key(), configValue) // eslint-disable-line
         } else {
             initialValue = (new key(): any) // eslint-disable-line
         }

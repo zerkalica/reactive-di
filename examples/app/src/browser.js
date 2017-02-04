@@ -21,7 +21,7 @@ import {
     ReactComponentFactory,
     IndexCollection
 } from 'reactive-di/index'
-import type {ICallerInfo, IDepInfo} from 'reactive-di/index'
+import type {ICallerInfo} from 'reactive-di/index'
 import {actions, hooks, deps, theme, component, source} from 'reactive-di/annotations'
 
 const todosFixture: any = []
@@ -377,14 +377,19 @@ component()(ErrorView)
 
 jss.use(jssCamel)
 
-class Middleware {
-    onSetValue<V>(src: IDepInfo<V>, newVal: V, info: ICallerInfo): void {
+class Logger {
+    onError(e: Error, name: string): void {
+        /* eslint-disable no-console */
+        console.error(e, name)
+    }
+
+    onSetValue<V>(info: ICallerInfo<V>): void {
         /* eslint-disable no-console */
         console.log(
-            `\nframe ${info.trace}#${info.callerId}/${String(info.asyncType)} set ${src.displayName}\nfrom`,
-            src.cached,
+            `\nframe ${info.trace}#${info.callerId}/${String(info.asyncType)} set ${info.modelName}\nfrom`,
+            info.oldValue,
             '\nto',
-            newVal
+            info.newValue
         )
     }
 }
@@ -393,7 +398,7 @@ const di = (new DiFactory({
     values: {
         Fetcher: new Fetcher()
     },
-    middlewares: new Middleware(),
+    logger: Logger,
     defaultErrorComponent: ErrorView,
     themeFactory: jss,
     componentFactory: new ReactComponentFactory({
