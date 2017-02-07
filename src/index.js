@@ -3,7 +3,7 @@
 import DiFactory from './DiFactory'
 
 import IndexCollection from './utils/IndexCollection'
-import refsSetter from './utils/refsSetter'
+import Thenable from './utils/Thenable'
 import Updater, {RecoverableError} from './utils/Updater'
 import BaseModel from './utils/BaseModel'
 import debugName from './utils/debugName'
@@ -19,7 +19,7 @@ export {
     setter,
     setterKey,
     eventSetter,
-    refsSetter,
+    Thenable,
     BaseModel,
     Updater,
     RecoverableError,

@@ -12,7 +12,7 @@ import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
 import {
-    refsSetter,
+    Thenable,
     eventSetter,
     BaseModel,
     Updater,
@@ -104,8 +104,7 @@ class ThemeVars extends BaseModel {
 }
 
 class TodoRefs {
-    title: ?HTMLElement = null
-    set = refsSetter(this)
+    title: Thenable<HTMLElement> = new Thenable()
 }
 
 @source({key: 'TodoServiceSubmit'})
@@ -340,7 +339,7 @@ function TodosView(
 
     return <div className={t.wrapper}>
         <span className={t.title}>Todo: <input
-            ref={refs.set.title}
+            ref={refs.title.set}
             value={addedTodo.title}
             title="todo.title"
             id="todo.id"
