@@ -1,62 +1,69 @@
 // @flow
 
-import type {IHasForceUpdate, ICreateElement, IConsumerFactory, IConsumerListener} from '../atoms/interfaces'
+import type {IHasForceUpdate, ICreateElement, IConsumerFactory} from '../atoms/interfaces'
 
 interface IReact<Component> {
     Component: Component;
     createElement: any;
 }
 
-export default class ReactComponentFactory<Element: React$Element<any>, Component: ReactClass<*>> {
+const ComponentMixin = {
+    // static __factory: IConsumerFactory<Props, Element>
+    // _consumer: IConsumerListener<Props, Element, Component>
+    // props: Props
+
+    componentWillMount() {
+        this._consumer = this.constructor.__factory.create((this: IHasForceUpdate<Object>))
+        this._consumer.willMount(this.props)
+    },
+
+    setProps(props: Object): void {
+        this.props = props
+    },
+
+    componentDidMount() {
+        this._consumer.didMount()
+    },
+
+    componentDidUpdate() {
+        this._consumer.didUpdate()
+    },
+
+    componentWillUnmount() {
+        this._consumer.willUnmount()
+    },
+
+    shouldComponentUpdate(nextProps: Object): boolean {
+        return this._consumer.shouldUpdate(nextProps)
+    },
+
+    render(): Element {
+        return this._consumer.render()
+    }
+}
+
+export default class ReactComponentFactory<Element: React$Element<any>, TComponent: ReactClass<*>> {
     createElement: ICreateElement<Element>
     _Component: Function
+    _ComponentProto: Object
 
-    constructor(react: IReact<Component>) {
-        this.createElement = (react.createElement: any)
-
-        this._Component = class WrappedComponent<Props> extends react.Component {
-            static __factory: IConsumerFactory<Props, Element>
-
-            _consumer: IConsumerListener<Props, Element, Component>
-            props: Props
-
-            componentWillMount() {
-                this._consumer = this.constructor.__factory.create((this: IHasForceUpdate<Props>))
-                this._consumer.willMount(this.props)
-            }
-
-            setProps(props: Props): void {
-                this.props = props
-            }
-
-            componentDidMount() {
-                this._consumer.didMount()
-            }
-
-            componentDidUpdate() {
-                this._consumer.didUpdate()
-            }
-
-            componentWillUnmount() {
-                this._consumer.willUnmount()
-            }
-
-            shouldComponentUpdate(nextProps: Props): boolean {
-                return this._consumer.shouldUpdate(nextProps)
-            }
-
-            render(): Element {
-                return this._consumer.render()
-            }
-        }
+    constructor({createElement, Component}: IReact<TComponent>) {
+        this.createElement = (createElement: any)
+        this._ComponentProto = Object.assign({}, Component.prototype, ComponentMixin)
+        this._Component = Component
     }
 
-    wrapComponent<Props: Object, State: Object>(
+    wrapComponent<Props: Object>(
         factory: IConsumerFactory<Props, Element>
-    ): Component {
-        return (class WrappedComponent extends (this._Component: any)<Props, State> {
-            static displayName = factory.displayName
-            static __factory = factory
-        }: any)
+    ): TComponent {
+        const component = this._Component
+        function WrappedComponent(props: Props, context?: Object) {
+            component.call(this, props, context)
+        }
+        WrappedComponent.displayName = factory.displayName
+        WrappedComponent.__factory = factory
+        WrappedComponent.prototype = Object.create(this._ComponentProto)
+        WrappedComponent.prototype.constructor = WrappedComponent
+        return (WrappedComponent: any)
     }
 }
