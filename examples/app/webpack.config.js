@@ -3,14 +3,7 @@
 import path from 'path'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 
-const fallback = []
-if (process.env.NVM_PATH) {
-    fallback.push(path.resolve(process.env.NVM_PATH, '..', 'node_modules'))
-}
-fallback.push(path.resolve(__dirname, '..', '..', '..', 'node_modules'))
-
 export default {
-    cwd: path.resolve(__dirname, '..'),
     cache: true,
     devtool: 'source-map',
     output: {

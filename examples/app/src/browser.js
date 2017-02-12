@@ -4,7 +4,7 @@
 // import {Component, createElement} from 'react'
 // import {render} from 'react-dom'
 
-import {render} from 'inferno-dom'
+import {render} from 'inferno'
 import Component from 'inferno-component'
 import createElement from 'inferno-create-element'
 
@@ -231,7 +231,7 @@ function TodoView(
             <input
                 name="editTodo"
                 value={editingTodo.title}
-                onChange={eventSetter(editingTodo).title}
+                onInput={eventSetter(editingTodo).title}
             />
             <button onClick={service.submitEdit}>Save</button>
             <button onClick={service.cancelEdit}>Cancel</button>
@@ -343,7 +343,7 @@ function TodosView(
             value={addedTodo.title}
             title="todo.title"
             id="todo.id"
-            onChange={todoSetter.title}
+            onInput={todoSetter.title}
         /></span>
         <button disabled={saving.pending} onClick={service.submit}>
             {saving.pending ? 'Saving...' : 'Save'}

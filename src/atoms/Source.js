@@ -124,8 +124,8 @@ export default class Source<V> {
                 } else if (i >= level || source !== this) {
                     rec.has[source.id] = true
                     // consumer or computed
-                    if (rec.v.t === 2) { // consumer
-                        consumers.push(rec.v)
+                    if (rec.v.t === 2 || rec.v.isHook) { // consumer, hook
+                        consumers.push((rec.v: any))
                     }
                     computeds.push(rec.v)
                     rec.v.masters.push(source)

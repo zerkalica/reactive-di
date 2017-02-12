@@ -191,7 +191,7 @@ export default class Di<Component, Element> {
         if (!key) {
             return emptyCached
         }
-        const rec: IComputed<V> = this._depFactory.computed(key, this, true)
+        const rec: IComputed<V> = this._depFactory.hook(key, this)
         rec.resolve()
 
         return rec

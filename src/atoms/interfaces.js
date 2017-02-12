@@ -43,6 +43,7 @@ export interface IBaseHook<V> {
     willMount?: (v: V) => void;
     willUnmount?: (v: V) => void;
     willUpdate?: (next: V, prev: ?V) => void;
+    didDepsUpdate?: () => void;
 }
 
 export type IConsumerHook<Props: Object> = {
@@ -139,6 +140,9 @@ export type IComputed<V> = {
     displayName: string;
     id: number;
     closed: boolean;
+
+    isHook: boolean;
+    pull(): void;
 
     refs: number;
     context: IContext;
@@ -306,6 +310,7 @@ export type IContext = {
 export type IDepFactory<Element> = {
     consumer<V>(key: Function, context: IContext): IConsumerFactory<V, Element>;
     computed<V>(key: Function, context: IContext): IComputed<V>;
+    hook<V>(key: Function, context: IContext): IComputed<V>;
     source<V>(key: Function, context: IContext): ISource<V>;
     status(key: Function, context: IContext): IStatus;
     anyDep<V>(key: Function, context: IContext): ISource<V> | IComputed<V> | IStatus;

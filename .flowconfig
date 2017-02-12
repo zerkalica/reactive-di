@@ -1,5 +1,8 @@
 [ignore]
-.*fbjs.*
+
+[libs]
+flow-typed
+node_modules/jss/flow-typed
 
 [options]
 munge_underscores=true

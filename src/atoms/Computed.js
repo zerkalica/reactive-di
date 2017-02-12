@@ -24,7 +24,7 @@ export default class Computed<V: Object> {
     id: number
     refs: number
     closed: boolean
-
+    isHook: boolean
     callId: number
     cached: ?V
     cachedSrc: V
@@ -45,10 +45,12 @@ export default class Computed<V: Object> {
 
     constructor(
         meta: IComputedMeta,
-        context: IContext
+        context: IContext,
+        isHook: boolean
     ) {
         this.t = 0
         this.callId = 0
+        this.isHook = isHook
         this.closed = false
         this.cached = null
         this.refs = 0
@@ -125,6 +127,13 @@ export default class Computed<V: Object> {
                     }
                 }
             }
+        }
+    }
+
+    pull(): void {
+        const value = this.cached || this.get()
+        if (value.didSelfUpdate) {
+            value.didSelfUpdate()
         }
     }
 

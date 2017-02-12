@@ -96,6 +96,7 @@
   },
   "dependencies": {
     "derivable": "^0.12.1",
-    "es6-error": "^4.0.1"
+    "es6-error": "^4.0.1",
+    "inferno": "^1.2.2"
   }
 }

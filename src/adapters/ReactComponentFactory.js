@@ -13,7 +13,7 @@ const ComponentMixin = {
     // props: Props
 
     componentWillMount() {
-        this._consumer = this.constructor.__factory.create((this: IHasForceUpdate<Object>))
+        this._consumer = this.__factory.create((this: IHasForceUpdate<Object>))
         this._consumer.willMount(this.props)
     },
 
@@ -59,11 +59,13 @@ export default class ReactComponentFactory<Element: React$Element<any>, TCompone
         const component = this._Component
         function WrappedComponent(props: Props, context?: Object) {
             component.call(this, props, context)
+            this.__factory = factory
         }
+
         WrappedComponent.displayName = factory.displayName
-        WrappedComponent.__factory = factory
         WrappedComponent.prototype = Object.create(this._ComponentProto)
         WrappedComponent.prototype.constructor = WrappedComponent
+
         return (WrappedComponent: any)
     }
 }
