@@ -1,6 +1,27 @@
 // @flow
 
-import type {IArg} from './interfaces'
+export type ICacheable<V: Object> = {
+    cached: ?V;
+}
+
+export type IGetable<V: Object> = {
+    cached: ?V;
+    get(): V;
+}
+
+type ValuesRec = {k: string, v: IGetable<*>}
+
+type IArgGetable = {
+    t: 0;
+    v: IGetable<*>;
+}
+
+type IArgRec = {
+    t: 1;
+    v: ValuesRec[];
+}
+
+export type IArg = IArgGetable | IArgRec
 
 export default function resolveArgs(args: IArg[], result: mixed[]): boolean {
     let isChanged: boolean = !args.length
@@ -14,7 +35,7 @@ export default function resolveArgs(args: IArg[], result: mixed[]): boolean {
                 result[i] = value // eslint-disable-line
             }
         } else {
-            const values = arg.r
+            const values = arg.v
             const obj: {[id: string]: any} = (result[i]: any) || {}
             result[i] = obj // eslint-disable-line
             for (let j = 0, k = values.length; j < k; j++) {

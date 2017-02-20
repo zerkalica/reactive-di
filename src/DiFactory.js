@@ -1,24 +1,20 @@
 // @flow
 
-import type {
-    IContext,
-    IStaticContext,
-    IComponentFactory,
-    IKey,
-    ILogger
-} from './atoms/interfaces'
+import type {IComponentFactory} from './consumer/interfaces'
+import Notifier from './hook/Notifier'
+import Computed from './computed/Computed'
+
+import type {IContext, IStaticContext} from './commonInterfaces'
 
 import type {SheetFactory} from './theme/interfaces'
 
-import DisposableCollection from './atoms/DisposableCollection'
-import DepFactory from './atoms/DepFactory'
-import Transact from './atoms/Transact'
-import RelationBinder from './atoms/RelationBinder'
+import RelationBinder from './RelationBinder'
 import Di from './Di'
+import type {ILogger} from './interfaces'
 
 export type IOpts<Component, Element> = {
     values?: {[id: string]: any};
-    defaultErrorComponent: IKey;
+    defaultErrorComponent: Function;
     themeFactory: SheetFactory,
     componentFactory: IComponentFactory<Component, Element>;
     debug?: boolean;
@@ -27,19 +23,18 @@ export type IOpts<Component, Element> = {
 
 export default class DiFactory<Component, Element> {
     _staticContext: IStaticContext<Component, Element>
-    _loggerKey: ?IKey
+    _loggerKey: ?Function
 
     constructor(opts: IOpts<Component, Element>) {
         const values = opts.values || {}
         values.AbstractSheetFactory = opts.themeFactory
         this._loggerKey = opts.logger || null
         const context: IStaticContext<Component, Element> = this._staticContext = {
-            depFactory: new DepFactory(values, opts.defaultErrorComponent),
-            notifier: new Transact(),
+            defaultErrorComponent: opts.defaultErrorComponent,
+            notifier: new Notifier(),
             componentFactory: opts.componentFactory,
-            binder: new RelationBinder(),
-            protoFactory: null,
-            contexts: opts.debug ? new DisposableCollection() : null
+            binder: new RelationBinder(values),
+            protoFactory: null
         }
         if (opts.debug) {
             context.protoFactory = (new Di('proto', [], this._staticContext, []): IContext)
@@ -49,23 +44,11 @@ export default class DiFactory<Component, Element> {
     create(): Di<Component, Element> {
         const di = new Di('root', [], this._staticContext, [])
         if (this._loggerKey) {
-            this._staticContext.notifier.logger = di.resolveComputed(this._loggerKey)
+            const logger = this._staticContext.notifier.logger = new Computed(this._loggerKey, di)
+            logger.resolve()
         }
 
         return di
-    }
-
-    setState<V>(id: number, value: V): void {
-        if (!this._staticContext.contexts) {
-            throw new Error('setState enabled only in debug mode')
-        }
-        const contexts = this._staticContext.contexts.items
-        for (let i = 0; i < contexts.length; i++) {
-            const context = contexts[i]
-            if (!context.closed) {
-                context.set(id, value)
-            }
-        }
     }
 
     setProto(from: Function, to: Function): void {

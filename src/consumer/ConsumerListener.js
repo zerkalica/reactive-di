@@ -2,71 +2,75 @@
 
 import type {
     ICreateElement,
-    IHasForceUpdate,
+    ISetProps,
     IHasCreateComponent,
-    IContext,
     IConsumerListener,
-    IGetable,
-    IConsumerHook
+    IConsumerMeta,
+    IComponent
 } from './interfaces'
+
+import Hook from '../hook/Hook'
+import type {IHasForceUpdate, IHook} from '../hook/interfaces'
+
+import type {
+    IContext
+} from '../commonInterfaces'
+
+import type {IGetable} from '../utils/resolveArgs'
 import {fakeListener, itemKey} from '../utils/IndexCollection'
 import type {ItemListener} from '../utils/IndexCollection'
 
 interface IParent<Props, State> {
-    state: State;
+    cached: ?State;
     willMount(): void;
-    willUnmount(updater: IHasForceUpdate<Props>): void;
+    willUnmount(): void;
 }
 
 export default class ConsumerListener<
-    Props: any,
-    State,
-    Element,
-    Component
+    Props: Object,
+    State: Object,
+    Element
 > {
     displayName: string
-    _updater: IHasForceUpdate<Props>
+    updater: ISetProps<Props>
     closed: boolean
+
     cached: ?Props
-    props: Props
+
+    _meta: IConsumerMeta
 
     _context: IContext
-    _lastProps: ?Props
-    _hook: IGetable<IConsumerHook<Props>>
+    _hook: ?IHook<Props>
 
     _parent: IParent<Props, State>
     _lastState: ?State
+
     _createElement: ICreateElement<Element>
-    _errorComponent: ?IConsumerListener<{error: Error}, Element, Component>
     _lastError: ?Error
-    _proto: IGetable<Function>
+    _proto: IGetable<IComponent<Props, State, Element>>
 
     _items: Object[]
-    _trace: string
 
     constructor(
-        displayName: string,
-        updater: IHasForceUpdate<Props>,
-        hook: IGetable<IConsumerHook<Props>>,
+        meta: IConsumerMeta,
+        updater: ISetProps<Props>,
         parent: IParent<Props, State>,
-        proto: IGetable<Function>,
-        errorComponent: ?IConsumerListener<{error: Error}, Element, Component>,
         context: IContext,
+        proto: IGetable<IComponent<Props, State, Element>>,
         id: number
     ) {
-        ;(this: IConsumerListener<Props, Element, Component>) // eslint-disable-line
-        this._updater = updater
-        this.displayName = displayName
+        ;(this: IConsumerListener<Props, Element>) // eslint-disable-line
+        this._meta = meta
+        this.updater = updater
+        this.displayName = meta.name + id
         this.closed = false
-        this.cached = null
-        this._trace = this.displayName + '' + id
         this._items = context.items
-        this._errorComponent = errorComponent
-        this._lastState = parent.state
+        this._lastState = null
         this._lastError = null
-        this.props = (null: any)
-        this._lastProps = null
-        this._hook = hook
+        this.cached = (null: any)
+        this._hook = meta.hook
+            ? new Hook(meta.hook, context, this)
+            : null
         this._parent = parent
         this._proto = proto
         this._context = context
@@ -83,56 +87,56 @@ export default class ConsumerListener<
         if (prop && (prop: Object)[itemKey]) {
             (prop: Object)[itemKey].listener = (this: ItemListener<*>)
         }
-        const hook: any = this._hook
+        const hook = this._hook
         try {
-            (hook.cached || hook.get()).willUpdate(props, oldProps)
+            if (hook && oldProps) {
+                hook.shouldUpdate(props, oldProps)
+            }
         } catch (e) {
             this._setError(e)
         }
     }
 
-    update<V>(newItem: V): void {
-        this._lastProps = null
-        // this._lastState = null
-        const newProps = {...this.props, item: newItem}
-        if (this.shouldUpdate(newProps)) {
-            this._context.notifier.notify([this], this.displayName, this.props, newProps)
-            this._updater.setProps(this.props)
-        }
+    pull(): ?IHasForceUpdate {
+        return this.updater
     }
 
-    pull(): void {
-        this._updater.forceUpdate()
+    update<V>(newItem: V): void {
+        const oldProps = this.cached
+        const newProps = {...oldProps, item: newItem}
+        if (this.shouldUpdate(newProps)) {
+            this._context.notifier.notify([this], this.displayName, oldProps, newProps)
+            this.updater.setProps(newProps)
+        }
     }
 
     shouldUpdate(props: Props): boolean {
-        if (this._parent.state !== this._lastState) {
+        if (this._parent.cached !== this._lastState) {
             return true
         }
 
-        const oldProps = this._lastProps
+        const oldProps = this.cached
 
         if (oldProps === props) {
             return false
         }
-        const hasReceiveProps = !!(this._hook.cached || this._hook.get()).willUpdate
+        const hook = this._hook
 
         if ((!oldProps && props) || (!props && oldProps)) {
-            this.props = props
-            if (hasReceiveProps) {
+            this.cached = props
+            if (hook) {
                 this._willUpdate(props, oldProps)
             }
             return true
         }
 
-
         let lpKeys: number = 0
         for (let k in oldProps) { // eslint-disable-line
             if (oldProps[k] !== props[k]) {
-                if (hasReceiveProps) {
+                if (hook) {
                     this._willUpdate(props, oldProps)
                 }
-                this.props = props
+                this.cached = props
                 return true
             }
             lpKeys++
@@ -141,49 +145,25 @@ export default class ConsumerListener<
             lpKeys--
         }
         if (lpKeys) {
-            if (hasReceiveProps) {
+            if (hook) {
                 this._willUpdate(props, oldProps)
             }
-            this.props = props
+            this.cached = props
             return true
         }
 
         return false
     }
 
-    didMount(): void {
-        try {
-            const hook = this._hook.cached || this._hook.get()
-            if (hook.didMount) {
-                hook.didMount(this.props)
-            }
-        } catch (e) {
-            this._setError(e)
-        }
-    }
-
-    didUpdate(): void {
-        try {
-            const hook = this._hook.cached || this._hook.get()
-            if (hook.didUpdate) {
-                hook.didUpdate(this.props)
-            }
-        } catch (e) {
-            this._setError(e)
-        }
-    }
-
     _renderError(): Element {
         const error = this._lastError || new Error('Unknown error')
         this._lastError = null
-        const errorComponent = this._errorComponent
-        if (!errorComponent) {
+        if (!this._meta.errorComponent) {
             console.error('Can\'t render error: error component is not defined') // eslint-disable-line
-            // throw error
             return (null: any)
         }
-        errorComponent.props = {error}
-        return errorComponent.render()
+
+        return this.h(this._meta.errorComponent, {error})
     }
 
     h(
@@ -240,19 +220,13 @@ export default class ConsumerListener<
         if (this._lastError) {
             return this._renderError()
         }
-        this._lastProps = this.props
-        this._lastState = this._parent.state
+        this._lastState = this._parent.cached
         try {
-            const notifier = this._context.notifier
-            const oldTrace = notifier.trace
-            notifier.trace = this._trace
-            const result = (this._proto.cached || this._proto.get())(
-                this.props,
-                this._lastState,
+            return (this._proto.cached || this._proto.get())(
+                (this.cached: any),
+                (this._lastState: any),
                 (this: IHasCreateComponent<Element>)
             )
-            notifier.trace = oldTrace
-            return result
         } catch (error) {
             this._setError(error)
             return this._renderError()
@@ -261,12 +235,12 @@ export default class ConsumerListener<
 
     willUnmount(): void {
         try {
-            this._parent.willUnmount(this._updater)
-            const hook = this._hook.cached || this._hook.get()
-            if (hook.willUnmount) {
-                hook.willUnmount(this.props)
+            this.closed = true
+            if (this._hook) {
+                this._hook.willUnmount()
             }
-            const prop = this.props.item
+            this._parent.willUnmount()
+            const prop = (this.cached: any).item
             if (prop) {
                 const p = (prop: Object)[itemKey]
                 if (p && p.listener === this) {
@@ -279,17 +253,16 @@ export default class ConsumerListener<
     }
 
     willMount(props: Props): void {
-        this.props = props
+        this.cached = props
         const prop = props.item
         if (prop && (prop: Object)[itemKey]) {
             (prop: Object)[itemKey].listener = (this: ItemListener<*>)
         }
         try {
-            this._parent.willMount()
-            const hook = this._hook.cached || this._hook.get()
-            if (hook.willMount) {
-                hook.willMount(this.props)
+            if (this._hook) {
+                this._hook.willMount()
             }
+            this._parent.willMount()
         } catch (e) {
             this._setError(e)
         }

@@ -13,6 +13,10 @@ export default class GenericThemeHook {
         this._sheetFactory = sheetFactory
     }
 
+    willMount(rawStyle: RawStyleSheet): void {
+        this.willUpdate(rawStyle)
+    }
+
     willUpdate(rawStyle: RawStyleSheet): void {
         if (this._sheet) {
             this._sheet.detach()

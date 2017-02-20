@@ -1,6 +1,6 @@
 // @flow
 
-import type {IKey, IDepRegister, IRawArg} from './atoms/interfaces'
+import type {IDepRegister, IRawArg} from './interfaces'
 import GenericThemeHook from './theme/GenericThemeHook'
 
 /* eslint-disable no-param-reassign */
@@ -12,7 +12,7 @@ export interface SourceMetaRec {
 
 export interface ComponentMetaRec {
     register?: IDepRegister[];
-    onError?: IKey;
+    onError?: Function;
 }
 
 export function deps<V: Function>(...args: IRawArg[]): (target: V) => V {

@@ -4,23 +4,21 @@ import DiFactory from './DiFactory'
 
 import IndexCollection from './utils/IndexCollection'
 import Thenable from './utils/Thenable'
-import Updater, {RecoverableError} from './utils/Updater'
-import BaseModel from './utils/BaseModel'
 import debugName from './utils/debugName'
-import {setter, eventSetter} from './utils/wrapObject'
-import {setterKey} from './atoms/interfaces'
-import SourceStatus from './atoms/SourceStatus'
+
+import Updater, {RecoverableError} from './source/Updater'
+import SourceStatus from './source/SourceStatus'
+import {getSrc, copy} from './source/createSetterFn'
+
 import ReactComponentFactory from './adapters/ReactComponentFactory'
 
 export {
+    copy,
+    getSrc,
     ReactComponentFactory,
     SourceStatus,
     debugName,
-    setter,
-    setterKey,
-    eventSetter,
     Thenable,
-    BaseModel,
     Updater,
     RecoverableError,
     IndexCollection,
@@ -28,17 +26,22 @@ export {
 }
 
 export type {
-    ICallerInfo,
-    IHasForceUpdate,
-    ISettable,
     IBaseHook,
-    IConsumerHook,
+    IHasForceUpdate
+} from './hook/interfaces'
+
+export type {
+    ISetter,
+    ISettable
+} from './source/interfaces'
+
+export type {
     IDepRegister,
     IRawArg,
+    ICallerInfo,
     ILogger,
-    IDepInfo,
     ResultOf
-} from './atoms/interfaces'
+} from './interfaces'
 
 export {
     AbstractSheetFactory

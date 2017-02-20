@@ -1,8 +1,7 @@
 // @flow
 
-import {setterKey} from '../atoms/interfaces'
-import type {ISource, INotifier} from '../atoms/interfaces'
-import {fastCallMethod, fastCall} from './fastCreate'
+import type {INotifier} from '../hook/interfaces'
+import {fastCallMethod, fastCall} from '../utils/fastCreate'
 
 export type IRef<V> = {
     displayName: string;
@@ -11,108 +10,48 @@ export type IRef<V> = {
     get(): V;
     notifier: INotifier;
 }
+
 /* eslint-disable no-param-reassign */
 function wrapMethod<V: Object, R>(
     ref: IRef<V>,
     name: string | Symbol
 ): (...args: any[]) => R {
     const notifier = ref.notifier
-    const trace = `${notifier.trace}.${typeof name === 'string' ? name : name.toString()}`
+    const traceName = ref.displayName + '.' + (typeof name === 'string' ? name : name.toString())
     function wrappedMethod(...args: any[]): R {
         const oldTrace = notifier.trace
-        notifier.callerId = ++notifier.lastId
-        notifier.trace = trace
+        notifier.trace = traceName
+        notifier.opId++
         if (!ref.cached) {
             ref.get()
         }
         const result: R = fastCallMethod(ref.cachedSrc, ref.cachedSrc[name], args)
         notifier.trace = oldTrace
-        ref.notifier.end()
+        notifier.flush()
         return result
     }
-    wrappedMethod.displayName = trace
+    wrappedMethod.displayName = traceName
 
     return wrappedMethod
 }
 
 export function wrapFunction<V: Function>(ref: IRef<V>): V {
     const notifier = ref.notifier
-    const trace = notifier.trace
-
     function wrappedFn(...args: any[]): V {
         const oldTrace = notifier.trace
-        notifier.callerId = ++notifier.lastId
-        notifier.trace = trace
+        notifier.trace = ref.displayName
+        notifier.opId++
         if (!ref.cached) {
             ref.get()
         }
         const result = fastCall(ref.cachedSrc, args) // eslint-disable-line
         notifier.trace = oldTrace
-        notifier.end()
+        notifier.flush()
         return result
     }
-    wrappedFn.displayName = trace
+    wrappedFn.displayName = ref.displayName
 
     return (wrappedFn: any)
-}
-
-function createSetterFn<V: Object>(
-    src: ISource<V>,
-    notifier: INotifier,
-    ref: {displayName: string},
-    key: string,
-    getValue: ?(rawVal: mixed) => mixed
-) {
-    const name = `${notifier.trace}.${key}`
-    function setVal(rawVal: mixed) {
-        const v: mixed = getValue ? getValue(rawVal) : rawVal
-        const oldTrace = notifier.trace
-        notifier.callerId = ++notifier.lastId
-        notifier.trace = name
-        src.merge({[key]: v})
-        notifier.trace = oldTrace
-        notifier.end()
-    }
-    setVal.displayName = name
-    return setVal
-}
-
-function fromEvent(e: any): mixed {
-    return e.target.value
-}
-
-export type Setter<V: Object> = {
-    // (v: $Shape<$Subtype<V>>): void;
-    [id: $Keys<V>]: (v: mixed) => void;
-}
-
-function createSetter<V: Object>(
-    obj: V,
-    getValue: ?(rawVal: mixed) => mixed
-): Setter<V> {
-    const src = (obj: any)[setterKey]
-    if (src.setter) {
-        return src.setter
-    }
-    const notifier = src.context.notifier
-    const result = src.setter = Object.create(obj.constructor)
-    const propNames: string[] = Object.getOwnPropertyNames(obj)
-    for (let i = 0, l = propNames.length; i < l; i++) {
-        const pn = propNames[i]
-        result[pn] = createSetterFn(src, notifier, result, pn, getValue)
-    }
-    result.displayName = notifier.trace
-    result.__rdiSetter = true
-
-    return result
-}
-
-export function setter<V: Object>(obj: Object): Setter<V> {
-    return createSetter(obj, null)
-}
-
-export function eventSetter<V: Object>(obj: Object): Setter<V> {
-    return createSetter(obj, fromEvent)
 }
 
 function wrapCommonProperty<V: Object>(ref: IRef<V>, propName: string | Symbol) {

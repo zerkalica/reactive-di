@@ -1,49 +1,38 @@
 // @flow
 
-import type {
-    IDepFactory,
-    IComponentFactory,
-    IContext,
-    IRelationBinder,
-    INotifier,
-    IHasDispose,
-    IKey,
-    IRawArg,
-    IArg,
-    IDepRegister,
-    ISource,
-    IStatus,
-    IComputed,
-    IConsumerFactory,
-    IDisposableCollection,
-    IStaticContext,
-    IComponent,
-    ICacheItem
-} from './atoms/interfaces'
+import type {ICacheItem, IStaticContext, IContext, IRelationBinder} from './commonInterfaces'
 
-import DisposableCollection from './atoms/DisposableCollection'
+import type {INotifier} from './hook/interfaces'
 
-declare class Reflect {
-    static getMetadata<V>(key: string, target: Function): V;
-}
+import type {ISource, IStatus} from './source/interfaces'
+import Source from './source/Source'
+import Status from './source/Status'
 
-const emptyCached: any = {
-    cached: {}
-}
+import type {IComputed} from './computed/interfaces'
+import Computed from './computed/Computed'
+
+import type {IComponentFactory, IComponent, IConsumerFactory} from './consumer/interfaces'
+import ConsumerFactory from './consumer/ConsumerFactory'
+
+import DisposableCollection from './utils/DisposableCollection'
+import type {IDisposableCollection, IHasDispose} from './utils/DisposableCollection'
+import type {IArg} from './utils/resolveArgs'
+
+import type {IRawArg, IDepRegister} from './interfaces'
 
 export default class Di<Component, Element> {
     displayName: string
 
+    defaultErrorComponent: Component
     componentFactory: IComponentFactory<Component, Element>
     protoFactory: ?IContext
     binder: IRelationBinder
     notifier: INotifier
     closed: boolean
     disposables: IDisposableCollection<IHasDispose>
+    items: ICacheItem[]
 
     _parents: IContext[]
-    _depFactory: IDepFactory<Element>
-    items: ICacheItem[]
     _context: IStaticContext<Component, Element>
 
     constructor(
@@ -54,19 +43,16 @@ export default class Di<Component, Element> {
     ) {
         this.displayName = displayName
         this.items = items
-        this._depFactory = c.depFactory
         this.componentFactory = c.componentFactory
         this.protoFactory = c.protoFactory
         this.binder = c.binder
         this.notifier = c.notifier
+        this.defaultErrorComponent = c.defaultErrorComponent
         this._context = c
         this.disposables = new DisposableCollection()
         this._parents = parents
         for (let i = 0, l = parents.length; i < l; i++) {
             parents[i].disposables.push(this)
-        }
-        if (c.contexts) {
-            c.contexts.push(this)
         }
         this.closed = false
     }
@@ -77,21 +63,10 @@ export default class Di<Component, Element> {
         for (let i = 0, l = disposables.length; i < l; i++) {
             const disposable = disposables[i]
             if (!disposable.closed) {
-                disposable.closed = true
                 disposable.dispose()
             }
         }
         this.disposables.items = []
-    }
-
-    set<V>(id: number, v: V): boolean {
-        const rec = this.items[id]
-        if (rec) {
-            (rec: any).set(v)
-            return true
-        }
-
-        return false
     }
 
     copy(displayName: string): this {
@@ -106,12 +81,26 @@ export default class Di<Component, Element> {
         ): any)
     }
 
+    _any<V: Object>(
+        k: Function,
+        context: IContext
+    ): ISource<V> | IComputed<V> | IStatus<V> | IConsumerFactory<V, Element, Component> {
+        if (k._rdiKey) {
+            return new Source(k, context)
+        } else if (k.statuses) {
+            return new Status(k, context)
+        } else if (k._rdiJsx) {
+            return new ConsumerFactory(k, context)
+        }
+
+        return new Computed(k, context)
+    }
+
     register(registered?: ?IDepRegister[]): this {
         if (!registered) {
             return this
         }
         const items = this.items
-        const df = this._depFactory
         let rec: ?ICacheItem
 
         for (let i = 0, l = registered.length; i < l; i++) {
@@ -133,7 +122,7 @@ export default class Di<Component, Element> {
                     const fromTo = `Can't create alias from ${binder.debugStr(key)} to ${binder.debugStr(target)}`
                     throw new Error(`Target dependency already initialized. ${fromTo}`)
                 }
-                const depInfo = df.any(
+                const depInfo = this._any(
                     target,
                     rec ? rec.context : this
                 )
@@ -150,7 +139,7 @@ export default class Di<Component, Element> {
                     throw new Error(`Only function as register target, given: ${this.binder.debugStr(pr)}`)
                 }
                 if (!items[pr._rdiId || 0]) {
-                    rec = df.any(pr, this)
+                    rec = this._any(pr, this)
                     items[rec.id] = rec
                 }
             }
@@ -159,20 +148,20 @@ export default class Di<Component, Element> {
         return this
     }
 
-    resolveConsumer<V: Object>(key: IKey): IConsumerFactory<V, Element> {
-        const rec: IConsumerFactory<V, Element> = this._depFactory.consumer(key, this)
+    resolveConsumer<Props: Object>(key: Function): IConsumerFactory<Props, Element, Component> {
+        const rec: IConsumerFactory<Props, Element, Component> = new ConsumerFactory(key, this)
         this.items[rec.id] = rec
         return rec
     }
 
-    wrapComponent<Props, State>(tag: IComponent<Props, State, Element>): Component {
+    wrapComponent<Props: Object, State: Object>(tag: IComponent<Props, State, Element>): Component {
         return ((this.items[tag._rdiId || 0]: any) || this.resolveConsumer(tag)).component
     }
 
-    resolveSource<V>(key: IKey): ISource<V> {
+    resolveSource<V: Object>(key: Function): ISource<V> {
         let rec: ?ISource<V> = (this.items[key._rdiId || 0]: any)
         if (!rec) {
-            rec = this._depFactory.source(key, this)
+            rec = new Source(key, this)
             this.items[rec.id] = rec
         }
         rec.resolve()
@@ -180,28 +169,24 @@ export default class Di<Component, Element> {
         return rec
     }
 
-    resolveComputed<V>(key: IKey): IComputed<V> {
-        const rec: IComputed<V> = this._depFactory.computed(key, this)
-        rec.resolve()
-
-        return rec
-    }
-
-    resolveHook<V>(key: ?IKey): IComputed<V> {
-        if (!key) {
-            return emptyCached
+    _anyDep<V: Object>(
+        k: Function
+    ): ISource<V> | IComputed<V> | IStatus<V> {
+        if (k._rdiKey) {
+            return new Source(k, this)
+        } else if (k.statuses) {
+            return new Status(k, this)
+        } else if (k._rdiAbs) {
+            throw new Error(`Need register Abstract entity ${this.binder.debugStr(k)}`)
         }
-        const rec: IComputed<V> = this._depFactory.hook(key, this)
-        rec.resolve()
 
-        return rec
+        return new Computed(k, this)
     }
 
     resolveDeps(argDeps: IRawArg[]): IArg[] {
         const items = this.items
-        const df = this._depFactory
         const resolvedArgs: IArg[] = []
-        let rec: ?ISource<*> | IComputed<*> | IStatus
+        let rec: ?ISource<*> | IComputed<*> | IStatus<*>
         for (let i = 0, l = argDeps.length; i < l; i++) {
             const argDep = argDeps[i]
             if (typeof argDep === 'object') {
@@ -210,18 +195,18 @@ export default class Di<Component, Element> {
                     const key = argDep[prop]
                     rec = (items[key._rdiId || 0]: any)
                     if (!rec) {
-                        rec = df.anyDep(key, this)
+                        rec = this._anyDep(key)
                         items[rec.id] = rec
                     }
                     rec.resolve()
 
                     values.push({k: prop, v: rec})
                 }
-                resolvedArgs.push({t: 1, r: values})
+                resolvedArgs.push({t: 1, v: values})
             } else {
                 rec = (items[argDep._rdiId || 0]: any)
                 if (!rec) {
-                    rec = df.anyDep(argDep, this)
+                    rec = this._anyDep(argDep)
                     items[rec.id] = rec
                 }
                 rec.resolve()

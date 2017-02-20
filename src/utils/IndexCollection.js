@@ -1,7 +1,8 @@
 /* @flow */
 
 import IdIndexer from './IdIndexer'
-import {setterKey} from '../atoms/interfaces'
+import {setterKey} from '../interfaces'
+import {copy} from '../source/createSetterFn'
 
 export type MapFn<T, V> = (v: T, index: number) => V
 export type FilterFn<T> = (v: T, index: number) => boolean
@@ -70,7 +71,7 @@ export default class IndexCollection<Item: Object, Id, Indexer: IIndexer<Item, I
         const protoItem = new this.constructor.Item()
         const items: Item[] = new Array(recs.length)
         for (let i = 0, l = recs.length; i < l; i++) {
-            const newItem = protoItem.copy(recs[i])
+            const newItem = copy(protoItem, recs[i])
             ;(newItem: Object)[itemKey] = {listener: fakeListener, i}
             items[i] = newItem
         }

@@ -2,16 +2,15 @@
 
 import Err from 'es6-error'
 
-import type {ISettable, ISource, ISourceStatus, INotifier} from '../atoms/interfaces'
-import {setterKey} from '../atoms/interfaces'
+import type {INotifier} from '../hook/interfaces'
 
-const completeObj = {complete: true, pending: false, error: null}
-const pendingObj = {complete: false, pending: true, error: null}
+import type {
+    IUpdater,
+    IControllable,
+    ISource
+} from './interfaces'
 
-interface IControllable {
-    run(): void;
-    abort(): void;
-}
+const completeObj = {complete: true, pending: false, error: null, promise: null}
 
 export class RecoverableError extends Err {
     orig: Error
@@ -36,55 +35,50 @@ export class RecoverableError extends Err {
     }
 }
 
-type IUpdaterBase<V> = {
-    value: V;
-    next?: (v: V) => void;
-    complete?: (v: ?V) => void;
-    error?: (e: Error) => void;
-}
+export default class Updater<V: Object> implements IControllable {
+    displayName: string
 
-export type IUpdater<V> = IUpdaterBase<V> & {
-    promise: () => Promise<V>;
-} | IUpdaterBase<V> & {
-    promise: void;
-    observable: () => Observable<V, Error>;
-}
-
-export default class Updater<V> {
-    _source: ISettable<V> & {displayName: string}
-    _status: ISettable<ISourceStatus>
+    _source: ISource<V>
     _updater: IUpdater<V>
     _notifier: INotifier
     _isCanceled: boolean
 
-    _trace: string
-    _subscription: ?Subscription
     _id: number
+    _subscription: ?Subscription
+    _v: V
 
-    constructor(updater: $Supertype<IUpdater<V>>) {
-        const source: ISource<V> = this._source = (updater.value: any)[setterKey]
-        const status: ISettable<ISourceStatus> = source.getStatus()
-
+    constructor(
+        updater: IUpdater<V>,
+        source: ISource<V>,
+        notifier: INotifier
+    ) {
         this._source = source
-        this._status = status
         this._updater = updater
-        this._notifier = source.context.notifier
+        this._notifier = notifier
         this._isCanceled = false
+        this._v = (null: any)
+        this.displayName = source.displayName
+        this._id = ++notifier.opId
     }
 
     run(): void {
         const updater = this._updater
-        this._trace = this._notifier.trace
-        this._id = this._notifier.callerId
+        const status = this._source.getStatus()
+        const pending = {
+            complete: false,
+            pending: true,
+            error: null
+        }
         if (updater.promise) {
-            this._status.merge(pendingObj)
             const complete = (v: V) => this.complete(v)
             const error = (e: Error) => this.error(e)
             updater.promise()
                 .then(complete)
                 .catch(error)
+
+            status.merge(pending)
         } else if (updater.observable) {
-            this._status.merge(pendingObj)
+            status.merge(pending)
             this._subscription = updater.observable()
                 .subscribe((this: Observer<V, Error>))
         }
@@ -104,19 +98,19 @@ export default class Updater<V> {
         }
         const notifier = this._notifier
         const oldTrace = notifier.trace
-        const oldId = notifier.callerId
-        notifier.trace = this._trace
-        notifier.asyncType = 'next'
-        notifier.callerId = this._id
-        this._source.merge(v)
+        notifier.trace = this.displayName + '.next'
+        const oldId = notifier.opId
+        notifier.opId = this._id
+        const source = this._source
+        source.merge(v)
         const observer = this._updater
         if (observer && observer.next) {
             observer.next(v)
         }
-        notifier.asyncType = null
+        notifier.opId = oldId
         notifier.trace = oldTrace
-        notifier.callerId = oldId
-        notifier.end()
+        notifier.flush()
+        this._v = v
     }
 
     error(e: Error): void {
@@ -126,34 +120,37 @@ export default class Updater<V> {
         const error = new RecoverableError(e, (this: IControllable))
         const notifier = this._notifier
         const oldTrace = notifier.trace
-        const oldId = notifier.callerId
-        notifier.trace = this._trace
-        notifier.asyncType = 'error'
-        notifier.callerId = this._id
+        notifier.trace = this.displayName + '.error'
+        const oldId = notifier.opId
+        notifier.opId = this._id
         notifier.onError(error, this._source.displayName)
-        this._status.merge({error, complete: false, pending: false})
+        const status = this._source.getStatus()
+        const statusValue = status.cached || status.get()
+        status.merge({error, complete: false, pending: false, promise: null})
         const observer = this._updater
         if (observer && observer.error) {
             observer.error(error)
         }
-        notifier.asyncType = null
+        statusValue._reject(error)
+        notifier.opId = oldId
         notifier.trace = oldTrace
-        notifier.callerId = oldId
-        notifier.end()
+        notifier.flush()
     }
 
     complete(v: ?V): void {
         if (this._isCanceled) {
             return
         }
-        // this.abort()
         const notifier = this._notifier
         const oldTrace = notifier.trace
-        const oldId = notifier.callerId
-        notifier.trace = this._trace
-        notifier.callerId = this._id
-        notifier.asyncType = 'complete'
-        this._status.merge(completeObj)
+        notifier.trace = this.displayName + '.complete'
+        const oldId = notifier.opId
+        notifier.opId = this._id
+        const source = this._source
+        const status = source.getStatus()
+        const statusValue = status.cached || status.get()
+
+        status.merge(completeObj)
         if (v) {
             this._source.merge(v)
         }
@@ -161,9 +158,9 @@ export default class Updater<V> {
         if (observer && observer.complete) {
             observer.complete(v)
         }
-        notifier.asyncType = null
+        statusValue._resolve(v || this._v)
+        notifier.opId = oldId
         notifier.trace = oldTrace
-        notifier.callerId = oldId
-        notifier.end()
+        notifier.flush()
     }
 }

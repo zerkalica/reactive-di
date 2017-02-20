@@ -1,6 +1,6 @@
 // @flow
 
-import type {IHasForceUpdate, ICreateElement, IConsumerFactory} from '../atoms/interfaces'
+import type {ISetProps, ICreateElement, IConsumerFactory} from '../consumer/interfaces'
 
 interface IReact<Component> {
     Component: Component;
@@ -13,20 +13,12 @@ const ComponentMixin = {
     // props: Props
 
     componentWillMount() {
-        this._consumer = this.__factory.create((this: IHasForceUpdate<Object>))
+        this._consumer = this.__factory.create((this: ISetProps<Object>))
         this._consumer.willMount(this.props)
     },
 
     setProps(props: Object): void {
         this.props = props
-    },
-
-    componentDidMount() {
-        this._consumer.didMount()
-    },
-
-    componentDidUpdate() {
-        this._consumer.didUpdate()
     },
 
     componentWillUnmount() {
@@ -54,7 +46,7 @@ export default class ReactComponentFactory<Element: React$Element<any>, TCompone
     }
 
     wrapComponent<Props: Object>(
-        factory: IConsumerFactory<Props, Element>
+        factory: IConsumerFactory<Props, Element, *>
     ): TComponent {
         const component = this._Component
         function WrappedComponent(props: Props, context?: Object) {

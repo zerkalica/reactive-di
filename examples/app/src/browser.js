@@ -12,10 +12,8 @@ import jss from 'jss'
 import jssCamel from 'jss-camel-case'
 
 import {
+    getSrc,
     Thenable,
-    eventSetter,
-    BaseModel,
-    Updater,
     SourceStatus,
     DiFactory,
     ReactComponentFactory,
@@ -43,7 +41,7 @@ class Fetcher {
     _count = 0
     fetch<V: Object>(_url: string, _params?: {method: string}): Promise<V> {
         // fake fetcher for example
-
+        console.log(`fetch ${_url} ${JSON.stringify(_params)}`) // eslint-disable-line
         return new Promise((resolve: (v: V) => void, reject: (e: Error) => void) => {
             const isError = false
             setTimeout(() => {
@@ -57,7 +55,7 @@ class Fetcher {
 
 let counter = maxTodos
 @source({key: 'Todo'})
-class Todo extends BaseModel {
+class Todo {
     id = ++counter
     title = ''
     email = ''
@@ -68,38 +66,38 @@ class Todos extends IndexCollection {
     static Item = Todo
 }
 
-@deps(Fetcher, Todos)
+@deps(Fetcher)
 @hooks(Todos)
 class TodosHooks {
     _fetcher: Fetcher
-    _updater: Updater<Todos>
+    _abort: () => void
 
-    constructor(fetcher: Fetcher, _todos: Todos) {
+    constructor(fetcher: Fetcher) {
         this._fetcher = fetcher
     }
 
     willMount(todos: Todos): void {
         const fetcher = this._fetcher
-        this._updater = new Updater({
-            value: todos,
+        this._abort = getSrc(todos).update({
             promise(): Promise<Todos> {
                 return fetcher.fetch('/todos', {method: 'GET'})
             }
         })
-        this._updater.run()
     }
 
     willUnmount(): void {
-        this._updater.abort()
+        this._abort()
     }
 }
 
 @source({key: 'AddedTodo'})
-class AddedTodo extends Todo {}
+class AddedTodo extends Todo {
+    title: string
+}
 
 // Model ThemeVars, could be injected from outside by key 'ThemeVars' as ThemeVarsRec
 @source({key: 'ThemeVars'})
-class ThemeVars extends BaseModel {
+class ThemeVars {
     color = 'black'
 }
 
@@ -107,79 +105,70 @@ class TodoRefs {
     title: Thenable<HTMLElement> = new Thenable()
 }
 
-@source({key: 'TodoServiceSubmit'})
-class TodoServiceSubmit extends SourceStatus {}
-
-
-@deps(Fetcher, AddedTodo, Todos, TodoServiceSubmit)
-class TodoUpdater {
-    _fetcher: Fetcher
-    _addedTodo: AddedTodo
-    _todos: Todos
-
-    value: TodoServiceSubmit
-
-    constructor(
-        fetcher: Fetcher,
-        addedTodo: AddedTodo,
-        todos: Todos,
-        submitStatus: TodoServiceSubmit
-    ) {
-        this._fetcher = fetcher
-        this._todos = todos
-        this._addedTodo = addedTodo
-        this.value = submitStatus
-    }
-
-    promise(): Promise<TodoServiceSubmit> {
-        return this._fetcher.fetch('/todo', {
-            method: 'POST',
-            body: JSON.stringify(this._addedTodo)
-        })
-    }
-
-    complete(): void {
-        this._todos.push(this._addedTodo)
-        this._addedTodo.reset()
-    }
-}
+@source({key: 'TodoServiceSubmitResult'})
+class TodoServiceSubmitResult {}
 
 @deps(
+    Fetcher,
+    Todos,
     TodoRefs,
     ThemeVars,
-    TodoUpdater,
+    TodoServiceSubmitResult,
     AddedTodo
 )
 @actions
 class TodoService {
     _tv: ThemeVars
     _refs: TodoRefs
-    _todoUpdater: Updater<*>
-    event: {[id: string]: (v: any) => void}
+    _todoServiceSubmitResult: TodoServiceSubmitResult
+    _addedTodo: AddedTodo
+    _fetcher: Fetcher
+    _todos: Todos
 
     constructor(
+        fetcher: Fetcher,
+        todos: Todos,
         refs: TodoRefs,
         tv: ThemeVars,
-        todoUpdater: TodoUpdater,
+        todoServiceSubmitResult: TodoServiceSubmitResult,
         addedTodo: AddedTodo
     ) {
+        this._fetcher = fetcher
+        this._todos = todos
         this._tv = tv
         this._refs = refs
-        this.event = eventSetter(addedTodo)
-        this._todoUpdater = new Updater(todoUpdater)
+        this._addedTodo = addedTodo
+        this._todoServiceSubmitResult = todoServiceSubmitResult
     }
 
     submit(): void {
-        this._todoUpdater.run()
+        const fetcher = this._fetcher
+        const addedTodo = this._addedTodo
+        const todos = this._todos
+
+        getSrc(this._todoServiceSubmitResult).update({
+            promise(): Promise<TodoServiceSubmitResult> {
+                return fetcher.fetch('/todo', {
+                    method: 'POST',
+                    body: JSON.stringify(addedTodo)
+                })
+            },
+            complete(): void {
+                todos.push(addedTodo)
+                getSrc(addedTodo).reset()
+            }
+        })
     }
 
     changeColor(): void {
-        this._tv.set({color: 'green'})
+        getSrc(this._tv).merge({color: 'green'})
     }
 }
 
 @source({key: 'EditingTodo'})
-class EditingTodo extends Todo {}
+class EditingTodo extends Todo {
+    title: string
+}
 
 @deps(Todos, EditingTodo)
 @actions
@@ -202,16 +191,16 @@ class TodoViewService {
     }
 
     beginEdit(todo: Todo): void {
-        this._editingTodo.set(this._todo || todo)
+        getSrc(this._editingTodo).set(this._todo || todo)
     }
 
     submitEdit(): void {
         this._todos.update(this._editingTodo)
-        this._editingTodo.reset()
+        getSrc(this._editingTodo).reset()
     }
 
     cancelEdit(): void {
-        this._editingTodo.reset()
+        getSrc(this._editingTodo).reset()
     }
 }
 
@@ -231,7 +220,7 @@ function TodoView(
             <input
                 name="editTodo"
                 value={editingTodo.title}
-                onInput={eventSetter(editingTodo).title}
+                onInput={getSrc(editingTodo).eventSetter().title}
             />
             <button onClick={service.submitEdit}>Save</button>
             <button onClick={service.cancelEdit}>Cancel</button>
@@ -335,7 +324,7 @@ function TodosView(
     if (loading.error) {
         return <div className={t.wrapper}>Loading error: {loading.error.message}</div>
     }
-    const todoSetter = service.event
+    const todoSetter = getSrc(addedTodo).eventSetter()
 
     return <div className={t.wrapper}>
         <span className={t.title}>Todo: <input
@@ -385,7 +374,7 @@ class Logger {
     onSetValue<V>(info: ICallerInfo<V>): void {
         /* eslint-disable no-console */
         console.log(
-            `\nframe ${info.trace}#${info.callerId}/${String(info.asyncType)} set ${info.modelName}\nfrom`,
+            `\n ${info.trace} #${info.opId} set ${info.modelName}\nfrom`,
             info.oldValue,
             '\nto',
             info.newValue
@@ -406,6 +395,7 @@ const di = (new DiFactory({
     })
 }))
     .create()
+
 render(
     createElement(di.wrapComponent(TodosView)),
     window.document.getElementById('app')

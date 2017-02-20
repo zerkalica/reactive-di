@@ -1,6 +1,10 @@
 {
     "extends": ["airplus"],
     "rules": {
+        "no-param-reassign": 0,
+        "no-extra-boolean-cast": 0,
+        "max-len": ["error", 120],
+        "no-lonely-if": 0,
         "import/no-extraneous-dependencies": 0
     }
 }

@@ -1,6 +1,18 @@
 // @flow
 
-import type {IDisposable} from './interfaces'
+export type IDisposable = {
+    closed: boolean;
+}
+
+export type IHasDispose = IDisposable & {
+    dispose(): void;
+}
+
+export interface IDisposableCollection<V: IDisposable> {
+    items: V[];
+    push(v: V): void;
+    gc(): void;
+}
 
 export default class DisposableCollection<V: IDisposable> {
     items: V[] = []

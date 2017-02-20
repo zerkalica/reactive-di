@@ -1,20 +1,24 @@
 // @flow
-import type {
-    IParent,
-    IRelationItem
-} from './interfaces'
 
-import debugName from '../utils/debugName'
+import type {IRelationBinder, IParent, IRelationItem} from './commonInterfaces'
+
+import debugName from './utils/debugName'
 
 function mapNames(rec: IRelationItem): string {
     return rec.v.displayName
 }
 
-export default class RelationBinder<Element> {
+export default class RelationBinder implements IRelationBinder {
     stack: IRelationItem[] = []
     level: number = 0
+    lastId: number = 0
+    values: {[id: string]: any}
 
     _levels: number[] = []
+
+    constructor(values: {[id: string]: any}) {
+        this.values = values
+    }
 
     debugStr(sub: ?mixed): string {
         const name = debugName(sub)
@@ -26,7 +30,7 @@ export default class RelationBinder<Element> {
         return names.join('.')
     }
 
-    begin(depItem: IParent<*, Element>, isEnder?: boolean): void {
+    begin(depItem: IParent, isEnder?: boolean): void {
         if (isEnder) {
             this.level = this.stack.length
             this._levels.push(this.level)
