@@ -8,7 +8,7 @@ import {render} from 'inferno'
 import Component from 'inferno-component'
 import createElement from 'inferno-create-element'
 
-import jss from 'jss'
+import {create as createJss} from 'jss'
 import jssCamel from 'jss-camel-case'
 
 import {
@@ -363,8 +363,6 @@ function ErrorView(
 }
 component()(ErrorView)
 
-jss.use(jssCamel)
-
 class Logger {
     onError(e: Error, name: string): void {
         /* eslint-disable no-console */
@@ -388,7 +386,11 @@ const di = (new DiFactory({
     },
     logger: Logger,
     defaultErrorComponent: ErrorView,
-    themeFactory: jss,
+    themeFactory: createJss({
+        plugins: [
+            jssCamel()
+        ]
+    }),
     componentFactory: new ReactComponentFactory({
         Component,
         createElement
