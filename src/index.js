@@ -26,20 +26,21 @@ export {
 }
 
 export type {
+    ICallerInfo,
+    ILogger,
     IBaseHook,
     IHasForceUpdate
 } from './hook/interfaces'
 
 export type {
     ISetter,
-    ISettable
+    ISettable,
+    ISource
 } from './source/interfaces'
 
 export type {
     IDepRegister,
     IRawArg,
-    ICallerInfo,
-    ILogger,
     ResultOf
 } from './interfaces'
 

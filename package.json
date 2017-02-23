@@ -6,7 +6,7 @@
     "registry": "https://registry.npmjs.org"
   },
   "config": {
-    "builddir": "."
+    "dest": "./out"
   },
   "scripts": {
     "prepublish": "npm run build",
@@ -14,8 +14,8 @@
     "postversion": "git push && git push --tags",
     "prepush": "npm test",
     "update": "ncu -ua && npm install",
-    "clean": "rm -rf $npm_package_config_builddir/dist",
-    "build": "npm run clean && babel src --ignore=__tests__ --source-maps --out-dir $npm_package_config_builddir/dist",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && babel src --ignore=__tests__ --source-maps --out-dir dist",
     "build.dep": "npm-helpers/build-deps.sh",
     "build.dev": "npm run build -- --watch",
     "lint": "eslint .",
@@ -24,7 +24,8 @@
     "test": "eslint . && flow check && mocha",
     "test.dev": "mocha --growl --watch",
     "analyze": "webpack --config examples/app/webpack.config.js --json | webpack-bundle-size-analyzer",
-    "start": "webpack-dev-server --config examples/app/webpack.config.babel.js --hot --history-api-fallback --inline"
+    "start": "webpack-dev-server --config examples/app/webpack.config.babel.js --hot --history-api-fallback --inline",
+    "watch": "chokidar --initial -d 2000 -t 1000 'src/**/*.js' -c 'npm run build && cp -rvf *.js src dist $npm_package_config_dest/node_modules/reactive-di'"
   },
   "author": "Stefan Zerkalica <zerkalica@gmail.com>",
   "license": "MIT",
@@ -73,6 +74,7 @@
     "babel-preset-es2015": "^6.22.0",
     "babel-preset-react": "^6.23.0",
     "babel-preset-stage-0": "^6.22.0",
+    "chokidar-cli": "^1.2.0",
     "eslint-config-airplus": "^2.0.10",
     "flow-bin": "^0.39.0",
     "glob": "^7.1.1",

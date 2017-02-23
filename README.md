@@ -54,6 +54,14 @@ For using zero-dependency components, we need to define jsx pragma in transform-
 
 reactive-di requires some polyfills: Promise, Observable (only if observables used in application code), Map, Set, Proxy (only for middlewares).
 
+## Debug
+
+Build rdi and copy to ../app-project/node_modules/reactive-di
+
+```
+npm run watch --reactive-di:dest=../app-project
+```
+
 ## Basics
 
 Reactive di container use classes or functions as unique identifiers of dependency.

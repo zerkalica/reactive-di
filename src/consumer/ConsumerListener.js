@@ -21,7 +21,10 @@ import {fakeListener, itemKey} from '../utils/IndexCollection'
 import type {ItemListener} from '../utils/IndexCollection'
 
 interface IParent<Props, State> {
+    displayName: string;
     cached: ?State;
+
+    pull(): any;
     willMount(): void;
     willUnmount(): void;
 }
@@ -220,7 +223,14 @@ export default class ConsumerListener<
         if (this._lastError) {
             return this._renderError()
         }
-        this._lastState = this._parent.cached
+        const parent = this._parent
+        if (!parent.cached) {
+            parent.pull()
+            if (!parent.cached) {
+                throw new Error(`${this._parent.displayName}.cached is null`)
+            }
+        }
+        this._lastState = parent.cached
         try {
             return (this._proto.cached || this._proto.get())(
                 (this.cached: any),
@@ -259,8 +269,10 @@ export default class ConsumerListener<
             (prop: Object)[itemKey].listener = (this: ItemListener<*>)
         }
         try {
-            if (this._hook) {
-                this._hook.willMount()
+            const hook = this._hook
+            if (hook) {
+                hook.resolve()
+                hook.willMount()
             }
             this._parent.willMount()
         } catch (e) {

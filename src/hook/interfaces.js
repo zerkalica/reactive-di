@@ -1,11 +1,25 @@
 // @flow
 
-import type {IEntity, ILogger} from '../interfaces'
+import type {IEntity} from '../interfaces'
 import type {IGetable, ICacheable} from '../utils/resolveArgs'
 import type {IHasDispose, IDisposable} from '../utils/DisposableCollection'
 
 export type IHasForceUpdate = {
     forceUpdate(): void;
+}
+
+export type ICallerInfo<V> = {
+    trace: string;
+    opId: number;
+    modelName: string;
+    oldValue: ?V;
+    newValue: V;
+}
+
+export interface ILogger {
+    onRender(upd: IHasForceUpdate[]): void;
+    onError(error: Error, name: string): void;
+    onSetValue<V>(info: ICallerInfo<V>): void;
 }
 
 export type IPullable = {
@@ -14,6 +28,7 @@ export type IPullable = {
 
 export type IBaseHook<V: Object> = {
     shouldUpdate?: (next: V, prev: V) => boolean;
+    selfUpdate?: (v: V) => void;
     willMount?: (v: V) => void;
     willUnmount?: (v: V) => void;
     willUpdate?: (next: V) => void;

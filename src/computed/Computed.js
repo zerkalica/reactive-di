@@ -111,21 +111,21 @@ export default class Computed<V: Object> {
             return this.cached
         }
         const newVal = this._create(this._proto.cached || this._proto.get(), this._argVals || [])
-
-        if (this._hook && this.cachedSrc && !this._hook.shouldUpdate(newVal, this.cachedSrc)) {
-            return this._cachedProxy
-        }
-        this.cachedSrc = newVal
-
         // copy old computed state, not setted in constructor (via setters) to new object
-        const src = this._cachedProxy
+        const src = this.cachedSrc
+
         if (src) {
             for (const k in src) { // eslint-disable-line
                 if (!newVal[k]) {
                     newVal[k] = src[k]
                 }
             }
+            if (this._hook && !this._hook.shouldUpdate(newVal, src)) {
+                return this._cachedProxy
+            }
         }
+
+        this.cachedSrc = newVal
 
         if (this._isWrapped) {
             if (!this._cachedProxy) {

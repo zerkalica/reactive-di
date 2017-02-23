@@ -35,6 +35,7 @@ export default class Hook<P: Object> {
     _protoKey: Function
     _target: ICacheable<P>
     _notifier: INotifier
+    _inHook: boolean
 
     constructor(
         key: Function,
@@ -60,6 +61,7 @@ export default class Hook<P: Object> {
         this._refs = 0
         this.context = context
         this._prev = null
+        this._inHook = false
         this._notifier = context.notifier
     }
 
@@ -121,7 +123,9 @@ export default class Hook<P: Object> {
                 const oldTrace = notifier.trace
                 notifier.trace = this.displayName + '.willMount'
                 notifier.opId++
+                this._inHook = true
                 ;(hook: any).willMount(target)
+                this._inHook = false
                 notifier.trace = oldTrace
             }
         } else {
@@ -134,12 +138,14 @@ export default class Hook<P: Object> {
         const target = this._target.cached
         if (this._refs === 0 && target) {
             const hook = this.cached || this._get()
-            if (hook.willUnmount) {
+            if (hook.willUnmount && !this._inWillMount) {
                 const notifier = this._notifier
                 const oldTrace = notifier.trace
                 notifier.trace = this.displayName + '.willUnmount'
                 notifier.opId++
+                this._inHook = true
                 ;(hook: any).willUnmount(target)
+                this._inHook = false
                 notifier.trace = oldTrace
             }
         }
@@ -153,12 +159,14 @@ export default class Hook<P: Object> {
         ) {
             return false
         }
-        if (hook.willUpdate) {
+        if (hook.willUpdate && !this._inHook) {
             const notifier = this._notifier
             const oldTrace = notifier.trace
             notifier.trace = this.displayName + '.willUpdate'
             notifier.opId++
+            this._inHook = true
             ;(hook: any).willUpdate(target)
+            this._inHook = false
             notifier.trace = oldTrace
         }
         return true
@@ -177,7 +185,9 @@ export default class Hook<P: Object> {
             const oldTrace = notifier.trace
             notifier.trace = this.displayName + '.willUnmount'
             notifier.opId++
+            this._inHook = true
             ;(hook: any).willUnmount(target)
+            this._inHook = false
             notifier.trace = oldTrace
         }
     }
@@ -190,17 +200,13 @@ export default class Hook<P: Object> {
         const hook = this.cached || this._get()
         const notifier = this._notifier
         const oldTrace = notifier.trace
-        notifier.opId++
-        if (hook.willUnmount) {
-            notifier.trace = this.displayName + '.willUnmount'
-            ;(hook: any).willUnmount(target)
-        }
-        if (hook.willMount) {
-            notifier.trace = this.displayName + '.willMount'
-            ;(hook: any).willMount(target)
+        this._inHook = true
+        if (hook.selfUpdate) {
+            notifier.trace = this.displayName + '.selfUpdate'
+            ;(hook: any).selfUpdate(target)
         }
         notifier.trace = oldTrace
-        this.context.notifier.flush()
+        this._inHook = false
     }
 
     _get(): IBaseHook<P> {

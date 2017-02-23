@@ -369,6 +369,10 @@ class Logger {
         console.error(e, name)
     }
 
+    onRender() {
+        console.log('render frame')
+    }
+
     onSetValue<V>(info: ICallerInfo<V>): void {
         /* eslint-disable no-console */
         console.log(

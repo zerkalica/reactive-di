@@ -223,12 +223,11 @@ export default class Source<V: Object> {
         if (this._hook && this.cached && !this._hook.shouldUpdate(v, this.cached)) {
             return
         }
-        const context = this.context
         const computeds = this.computeds.items
         for (let i = 0, l = computeds.length; i < l; i++) {
             computeds[i].cached = null
         }
-        context.notifier.notify(this.consumers.items, this.displayName, this.cached, v)
+        this.context.notifier.notify(this.consumers.items, this.displayName, this.cached, v)
         this.cached = v
     }
 }

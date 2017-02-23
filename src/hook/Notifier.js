@@ -1,9 +1,8 @@
 // @flow
 
-import type {ILogger} from '../interfaces'
 import type {IGetable} from '../utils/resolveArgs'
 
-import type {IHasForceUpdate, INotifierItem} from './interfaces'
+import type {ILogger, IHasForceUpdate, INotifierItem} from './interfaces'
 
 export default class Notifier {
     logger: ?IGetable<ILogger>
@@ -42,19 +41,24 @@ export default class Notifier {
         if (this.trace) {
             return
         }
-
-        const consumers = this._consumers
-        // consumer.pull can recursively run Transact.end, protect from this
-        this._consumers = []
         const upd: IHasForceUpdate[] = []
-        for (let i = 0, l = consumers.length; i < l; i++) {
-            const consumer = consumers[i]
-            if (!consumer.cached && !consumer.closed) {
-                const updater: ?IHasForceUpdate = consumer.pull()
-                if (updater) {
-                    upd.push(updater)
+        do {
+            const consumers = this._consumers
+            // consumer.pull can recursively run Transact.end, protect from this
+            this._consumers = []
+            for (let i = 0, l = consumers.length; i < l; i++) {
+                const consumer = consumers[i]
+                if (!consumer.cached && !consumer.closed) {
+                    const updater: ?IHasForceUpdate = consumer.pull()
+                    if (updater) {
+                        // updater.forceUpdate()
+                        upd.push(updater)
+                    }
                 }
             }
+        } while (this._consumers.length > 0)
+        if (this.logger) {
+            this.logger.get().onRender(upd)
         }
 
         for (let i = 0, l = upd.length; i < l; i++) {
