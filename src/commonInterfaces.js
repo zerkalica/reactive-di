@@ -1,7 +1,7 @@
 // @flow
 
 import type {IArg, IGetable} from './utils/resolveArgs'
-import type {ISource, IStatus} from './source/interfaces'
+import type {IControllable, ISource, IStatus} from './source/interfaces'
 import type {INotifier, IHook} from './hook/interfaces'
 import type {IComputed} from './computed/interfaces'
 import type {IComponent, IConsumerFactory, IComponentFactory, IConsumer} from './consumer/interfaces'
@@ -42,6 +42,7 @@ export type IStaticContext<Component, Element> = {
     notifier: INotifier;
     componentFactory: IComponentFactory<Component, Element>;
     protoFactory: ?IContext;
+    Updater: Class<IControllable>;
 }
 
 type Component = any

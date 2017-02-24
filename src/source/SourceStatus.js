@@ -2,37 +2,24 @@
 
 import type {SourceStatusOpts, ISourceStatus} from './interfaces'
 
-export default class SourceStatus<V: Object> implements ISourceStatus<V> {
+export default class SourceStatus implements ISourceStatus {
     complete: boolean
     pending: boolean
     error: ?Error
-    promise: Promise<V>
 
-    constructor(opts?: ?SourceStatusOpts<V>) {
+    constructor(opts?: ?SourceStatusOpts) {
         this.complete = !opts || !!opts.complete
         this.pending = !!opts && !!opts.pending
         this.error = opts ? (opts.error || null) : null
-        this.promise = opts
-            ? opts.promise || this._createPromise()
-            : this._createPromise()
     }
 
-    _resolve: (v: V) => void
-    _reject: (e: Error) => void
-    _createPromise(): Promise<V> {
-        return new Promise((resolve: (v: V) => void, reject: (e: Error) => void) => {
-            this._resolve = resolve
-            this._reject = reject
-        })
-    }
-
-    isEqual(status: ISourceStatus<V>): boolean {
+    isEqual(status: ISourceStatus): boolean {
         return (status.complete && this.complete)
             || (status.pending && this.pending)
             || (!!status.error && status.error === this.error)
     }
 
-    copy(opts: SourceStatusOpts<V>): ISourceStatus<V> {
+    copy(opts: SourceStatusOpts): ISourceStatus {
         const newStatus = new SourceStatus(opts)
         return newStatus.isEqual(this) ? this : newStatus
     }

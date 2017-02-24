@@ -10,7 +10,9 @@ import type {SheetFactory} from './theme/interfaces'
 
 import RelationBinder from './RelationBinder'
 import Di from './Di'
-import type {ILogger} from './interfaces'
+import type {ILogger} from './hook/interfaces'
+import type {IControllable} from './source/interfaces'
+import Updater from './source/Updater'
 
 export type IOpts<Component, Element> = {
     values?: {[id: string]: any};
@@ -19,6 +21,7 @@ export type IOpts<Component, Element> = {
     componentFactory: IComponentFactory<Component, Element>;
     debug?: boolean;
     logger?: Class<ILogger>;
+    updater?: Class<IControllable>;
 }
 
 export default class DiFactory<Component, Element> {
@@ -34,7 +37,8 @@ export default class DiFactory<Component, Element> {
             notifier: new Notifier(),
             componentFactory: opts.componentFactory,
             binder: new RelationBinder(values),
-            protoFactory: null
+            protoFactory: null,
+            Updater: opts.updater || Updater
         }
         if (opts.debug) {
             context.protoFactory = (new Di('proto', [], this._staticContext, []): IContext)

@@ -5,12 +5,14 @@ import Err from 'es6-error'
 import type {INotifier} from '../hook/interfaces'
 
 import type {
+    ISourceStatus,
     IUpdater,
     IControllable,
-    ISource
+    ISource,
+    IPromisable
 } from './interfaces'
 
-const completeObj = {complete: true, pending: false, error: null, promise: null}
+const completeObj = {complete: true, pending: false, error: null}
 
 export class RecoverableError extends Err {
     orig: Error
@@ -39,6 +41,7 @@ export default class Updater<V: Object> implements IControllable {
     displayName: string
 
     _source: ISource<V>
+    _status: ISource<ISourceStatus>
     _updater: IUpdater<V>
     _notifier: INotifier
     _isCanceled: boolean
@@ -46,24 +49,29 @@ export default class Updater<V: Object> implements IControllable {
     _id: number
     _subscription: ?Subscription
     _v: V
+    _promisable: IPromisable<V>
 
     constructor(
         updater: IUpdater<V>,
         source: ISource<V>,
+        status: ISource<ISourceStatus>,
+        promisable: IPromisable<V>,
         notifier: INotifier
     ) {
         this._source = source
-        this._updater = updater
+        this._status = status
         this._notifier = notifier
+        this._updater = updater
+        this._promisable = promisable
         this._isCanceled = false
         this._v = (null: any)
         this.displayName = source.displayName
-        this._id = ++notifier.opId
+        this._id = ++this._notifier.opId
     }
 
     run(): void {
         const updater = this._updater
-        const status = this._source.getStatus()
+        const status = this._status
         const pending = {
             complete: false,
             pending: true,
@@ -124,14 +132,12 @@ export default class Updater<V: Object> implements IControllable {
         const oldId = notifier.opId
         notifier.opId = this._id
         notifier.onError(error, this._source.displayName)
-        const status = this._source.getStatus()
-        const statusValue = status.cached || status.get()
-        status.merge({error, complete: false, pending: false, promise: null})
+        this._status.merge({error, complete: false, pending: false})
         const observer = this._updater
         if (observer && observer.error) {
             observer.error(error)
         }
-        statusValue._reject(error)
+        this._promisable.reject(error)
         notifier.opId = oldId
         notifier.trace = oldTrace
         notifier.flush()
@@ -147,18 +153,17 @@ export default class Updater<V: Object> implements IControllable {
         const oldId = notifier.opId
         notifier.opId = this._id
         const source = this._source
-        const status = source.getStatus()
-        const statusValue = status.cached || status.get()
+        const status = this._status
 
         status.merge(completeObj)
         if (v) {
-            this._source.merge(v)
+            source.merge(v)
         }
         const observer = this._updater
         if (observer && observer.complete) {
             observer.complete(v)
         }
-        statusValue._resolve(v || this._v)
+        this._promisable.resolve(v || this._v)
         notifier.opId = oldId
         notifier.trace = oldTrace
         notifier.flush()

@@ -12,8 +12,8 @@ import debugName from '../utils/debugName'
 
 import createSetterFn, {copy, fromEvent} from './createSetterFn'
 import SourceStatus from './SourceStatus'
-import type {IUpdater, ISourceStatus, ISetter, ISource} from './interfaces'
-import Updater from './Updater'
+import type {IPromisable, IUpdater, ISourceStatus, ISetter, ISource, IControllable} from './interfaces'
+import Promisable from './Promisable'
 
 export default class Source<V: Object> {
     t: 1
@@ -24,7 +24,7 @@ export default class Source<V: Object> {
     cached: ?V
 
     closed: boolean
-    status: ?ISource<ISourceStatus<V>>
+    status: ?ISource<ISourceStatus>
 
     _hook: ?IHook<V>
     _isResolving: boolean
@@ -71,6 +71,7 @@ export default class Source<V: Object> {
         ;(this.cached: any)[setterKey] = this // eslint-disable-line
         this._setter = null
         this._eventSetter = null
+        this._promisable = null
     }
 
     resolve(): void {
@@ -100,7 +101,7 @@ export default class Source<V: Object> {
                     computeds = source.computeds
                     consumers = source.consumers
                     computeds.push(v)
-                    v.sources.push((source: ISource<ISourceStatus<V>>))
+                    v.sources.push((source: ISource<ISourceStatus>))
                     if (source !== this) {
                         level = 0
                     }
@@ -176,20 +177,33 @@ export default class Source<V: Object> {
         throw new Error('Source always cached')
     }
 
-    getStatus(): ISource<ISourceStatus<V>> {
+    getStatus(): ISource<ISourceStatus> {
         if (!this.status) {
-            const status: ISource<ISourceStatus<V>> = new Source(
+            const status: ISource<ISourceStatus> = new Source(
                 null,
                 this.context,
                 this.id - 1,
                 this.displayName + 'Status',
-                (new SourceStatus(): ISourceStatus<V>)
+                (new SourceStatus(): ISourceStatus)
             )
             // status.status = status
             this.status = status
         }
 
         return this.status
+    }
+
+    _promisable: ?IPromisable<V>
+    _getPromisable(): IPromisable<V> {
+        if (!this._promisable) {
+            this._promisable = new Promisable()
+        }
+
+        return this._promisable
+    }
+
+    promise(): Promise<V> {
+        return this._getPromisable().promise
     }
 
     merge(v?: {[id: $Keys<V>]: mixed}): void {
@@ -201,7 +215,13 @@ export default class Source<V: Object> {
     }
 
     update(updaterPayload: IUpdater<V>): () => void {
-        const updater = new Updater(updaterPayload, (this: ISource<V>), this.context.notifier)
+        const updater: IControllable = new this.context.Updater(
+            updaterPayload,
+            (this: ISource<V>),
+            this.getStatus(),
+            this._getPromisable(),
+            this.context.notifier
+        )
         updater.run()
 
         return () => updater.abort()

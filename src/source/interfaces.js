@@ -3,24 +3,20 @@
 import type {IEntity} from '../interfaces'
 import type {IGetable, ICacheable} from '../utils/resolveArgs'
 import type {IDisposable, IDisposableCollection} from '../utils/DisposableCollection'
-import type {INotifierItem} from '../hook/interfaces'
+import type {INotifier, INotifierItem} from '../hook/interfaces'
 
-export type SourceStatusOpts<V: Object> = {
+export type SourceStatusOpts = {
     complete?: boolean;
     pending?: boolean;
     error?: ?Error;
-    promise?: ?Promise<V>;
 }
 
-export interface ISourceStatus<V: Object> {
+export interface ISourceStatus {
     complete: boolean;
     pending: boolean;
     error: ?Error;
-    promise: Promise<V>;
-    isEqual(src: ISourceStatus<*>): boolean;
-    copy(opts: SourceStatusOpts<V>): ISourceStatus<V>;
-    _resolve: (v: V) => void;
-    _reject: (e: Error) => void;
+    isEqual(src: ISourceStatus): boolean;
+    copy(opts: SourceStatusOpts): ISourceStatus;
 }
 
 export type ISettable<V: Object> = {
@@ -29,11 +25,6 @@ export type ISettable<V: Object> = {
 
 export type ISetter<V: Object> = {
     [id: $Keys<V>]: (v: mixed) => void;
-}
-
-export interface IControllable {
-    run(): void;
-    abort(): void;
 }
 
 type IUpdaterBase<V> = {
@@ -49,21 +40,40 @@ export type IUpdater<V> = IUpdaterBase<V> & {
     observable: () => Observable<V, Error>;
 }
 
+export interface IPromisable<V> {
+    resolve(v: V): void;
+    reject(e: Error): void;
+    promise: Promise<V>;
+}
+
+export interface IControllable {
+    constructor<V: Object>(
+        updater: IUpdater<V>,
+        source: ISource<V>,
+        status: ISource<ISourceStatus>,
+        promisable: IPromisable<V>,
+        notifier: INotifier
+    ): IControllable;
+    run(): void;
+    abort(): void;
+}
+
 export interface ISource<V: Object> extends IEntity, IGetable<V>, ISettable<V> {
     t: 1;
-    status: ?ISource<ISourceStatus<V>>;
-    getStatus(): ISource<ISourceStatus<V>>;
+    status: ?ISource<ISourceStatus>;
+    getStatus(): ISource<ISourceStatus>;
 
     computeds: IDisposableCollection<ICacheable<any> & IDisposable>;
     consumers: IDisposableCollection<INotifierItem>;
     setter(): ISetter<V>;
     eventSetter(): ISetter<V>;
+    promise(): Promise<V>;
     reset(): void;
     merge(v?: {[id: $Keys<V>]: mixed}): void;
     update(updaterPayload: IUpdater<V>): () => void;
 }
 
-export interface IStatus<V: Object> extends IEntity, IGetable<ISourceStatus<V>>, IDisposable {
+export interface IStatus<V: Object> extends IEntity, IGetable<ISourceStatus>, IDisposable {
     t: 3;
-    sources: ISource<ISourceStatus<V>>[];
+    sources: ISource<ISourceStatus>[];
 }

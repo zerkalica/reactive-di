@@ -12,14 +12,14 @@ export default class Status<V: Object> {
     displayName: string
     id: number
     closed: boolean
-    cached: ?ISourceStatus<V>
+    cached: ?ISourceStatus
 
-    sources: ISource<ISourceStatus<V>>[]
+    sources: ISource<ISourceStatus>[]
 
     context: IContext
     _resolved: boolean
     _rawStatuses: IRawArg[]
-    _key: Class<ISourceStatus<V>>
+    _key: Class<ISourceStatus>
 
     constructor(
         key: Function,
@@ -57,12 +57,12 @@ export default class Status<V: Object> {
         }
     }
 
-    get(): ISourceStatus<V> {
+    get(): ISourceStatus {
         const sources = this.sources
-        const newStatus: ISourceStatus<V> = new this._key() // eslint-disable-line
+        const newStatus: ISourceStatus = new this._key() // eslint-disable-line
         for (let i = 0, l = sources.length; i < l; i++) {
-            const st: ISource<ISourceStatus<V>> = sources[i]
-            const status: ?ISourceStatus<V> = st.cached
+            const st: ISource<ISourceStatus> = sources[i]
+            const status: ?ISourceStatus = st.cached
             if (!status || status.pending) {
                 newStatus.pending = true
                 newStatus.complete = false

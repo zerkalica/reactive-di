@@ -3,9 +3,11 @@
 import type {IGetable} from '../utils/resolveArgs'
 
 import type {ILogger, IHasForceUpdate, INotifierItem} from './interfaces'
+import type {IControllable} from '../source/interfaces'
 
 export default class Notifier {
     logger: ?IGetable<ILogger>
+    Updater: Class<IControllable>
 
     _consumers: INotifierItem[] = []
 

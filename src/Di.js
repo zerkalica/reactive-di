@@ -4,7 +4,7 @@ import type {ICacheItem, IStaticContext, IContext, IRelationBinder} from './comm
 
 import type {INotifier} from './hook/interfaces'
 
-import type {ISource, IStatus} from './source/interfaces'
+import type {IControllable, ISource, IStatus} from './source/interfaces'
 import Source from './source/Source'
 import Status from './source/Status'
 
@@ -32,6 +32,8 @@ export default class Di<Component, Element> {
     disposables: IDisposableCollection<IHasDispose>
     items: ICacheItem[]
 
+    Updater: Class<IControllable>;
+
     _parents: IContext[]
     _context: IStaticContext<Component, Element>
 
@@ -46,6 +48,7 @@ export default class Di<Component, Element> {
         this.componentFactory = c.componentFactory
         this.protoFactory = c.protoFactory
         this.binder = c.binder
+        this.Updater = c.Updater
         this.notifier = c.notifier
         this.defaultErrorComponent = c.defaultErrorComponent
         this._context = c
