@@ -88,7 +88,7 @@ export default class Updater<V: Object> implements IControllable {
         } else if (updater.observable) {
             status.merge(pending)
             this._subscription = updater.observable()
-                .subscribe((this: Observer<V, Error>))
+                .subscribe((this: Observer<?V, Error>))
         }
     }
 
@@ -100,7 +100,7 @@ export default class Updater<V: Object> implements IControllable {
         }
     }
 
-    next(v: V): void {
+    next(v: ?V): void {
         if (this._isCanceled) {
             return
         }
@@ -110,15 +110,17 @@ export default class Updater<V: Object> implements IControllable {
         const oldId = notifier.opId
         notifier.opId = this._id
         const source = this._source
-        source.merge(v)
         const observer = this._updater
-        if (observer && observer.next) {
-            observer.next(v)
+        if (v) {
+            source.merge(v)
+            if (observer && observer.next) {
+                observer.next(v)
+            }
+            this._v = v
         }
         notifier.opId = oldId
         notifier.trace = oldTrace
         notifier.flush()
-        this._v = v
     }
 
     error(e: Error): void {

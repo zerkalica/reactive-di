@@ -28,16 +28,16 @@ export type ISetter<V: Object> = {
 }
 
 type IUpdaterBase<V> = {
-    next?: (v: V) => void;
+    next?: (v: ?V) => void;
     complete?: (v: ?V) => void;
     error?: (e: Error) => void;
 }
 
 export type IUpdater<V> = IUpdaterBase<V> & {
-    promise: () => Promise<V>;
+    promise: () => Promise<any>;
 } | IUpdaterBase<V> & {
     promise: void;
-    observable: () => Observable<V, Error>;
+    observable: () => Observable<any | void, Error>;
 }
 
 export interface IPromisable<V> {
