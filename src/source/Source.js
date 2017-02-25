@@ -214,7 +214,7 @@ export default class Source<V: Object> {
         this.set(copy(this.cached, v || {}))
     }
 
-    update(updaterPayload: IUpdater<V>): () => void {
+    update(updaterPayload: IUpdater<any>): () => void {
         const updater: IControllable = new this.context.Updater(
             updaterPayload,
             (this: ISource<V>),

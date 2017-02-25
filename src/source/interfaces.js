@@ -27,17 +27,11 @@ export type ISetter<V: Object> = {
     [id: $Keys<V>]: (v: mixed) => void;
 }
 
-type IUpdaterBase<V> = {
+export type IUpdater<V> = {
+    run: () => (Promise<V> | Observable<V, Error>);
     next?: (v: ?V) => void;
-    complete?: (v: ?V) => void;
+    complete?: (v: V) => void;
     error?: (e: Error) => void;
-}
-
-export type IUpdater<V> = IUpdaterBase<V> & {
-    promise: () => Promise<any>;
-} | IUpdaterBase<V> & {
-    promise: void;
-    observable: () => Observable<any | void, Error>;
 }
 
 export interface IPromisable<V> {
@@ -70,7 +64,7 @@ export interface ISource<V: Object> extends IEntity, IGetable<V>, ISettable<V> {
     promise(): Promise<V>;
     reset(): void;
     merge(v?: {[id: $Keys<V>]: mixed}): void;
-    update(updaterPayload: IUpdater<V>): () => void;
+    update(updaterPayload: IUpdater<any>): () => void;
 }
 
 export interface IStatus<V: Object> extends IEntity, IGetable<ISourceStatus>, IDisposable {

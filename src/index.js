@@ -33,6 +33,7 @@ export type {
 } from './hook/interfaces'
 
 export type {
+    IUpdater,
     ISetter,
     ISettable,
     ISource

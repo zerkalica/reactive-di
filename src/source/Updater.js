@@ -77,18 +77,21 @@ export default class Updater<V: Object> implements IControllable {
             pending: true,
             error: null
         }
-        if (updater.promise) {
+
+        const some: Promise<V> | Observable<V, Error> = updater.run()
+
+        if (typeof some.subscribe === 'function') {
+            status.merge(pending)
+            this._subscription = ((some: any): Observable<V, Error>)
+                .subscribe((this: Observer<V, Error>))
+        } else {
             const complete = (v: V) => this.complete(v)
             const error = (e: Error) => this.error(e)
-            updater.promise()
+            ;((some: any): Promise<V>)
                 .then(complete)
                 .catch(error)
 
             status.merge(pending)
-        } else if (updater.observable) {
-            status.merge(pending)
-            this._subscription = updater.observable()
-                .subscribe((this: Observer<?V, Error>))
         }
     }
 
@@ -163,7 +166,7 @@ export default class Updater<V: Object> implements IControllable {
         }
         const observer = this._updater
         if (observer && observer.complete) {
-            observer.complete(v)
+            observer.complete(v || this._v)
         }
         this._promisable.resolve(v || this._v)
         notifier.opId = oldId

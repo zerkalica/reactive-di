@@ -79,7 +79,7 @@ class TodosHooks {
     willMount(todos: Todos): void {
         const fetcher = this._fetcher
         this._abort = getSrc(todos).update({
-            promise(): Promise<Todos> {
+            run(): Promise<Todos> {
                 return fetcher.fetch('/todos', {method: 'GET'})
             }
         })
@@ -147,7 +147,7 @@ class TodoService {
         const todos = this._todos
 
         getSrc(this._todoServiceSubmitResult).update({
-            promise(): Promise<TodoServiceSubmitResult> {
+            run(): Promise<TodoServiceSubmitResult> {
                 return fetcher.fetch('/todo', {
                     method: 'POST',
                     body: JSON.stringify(addedTodo)
