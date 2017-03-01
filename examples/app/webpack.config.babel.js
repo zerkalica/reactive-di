@@ -9,11 +9,14 @@ export default {
     output: {
         publicPath: '/',
         path: path.resolve(__dirname, 'build'),
-        filename: 'app.js'
+        filename: '[name].js'
     },
     entry: {
         browser: [
             path.resolve(__dirname, 'src', 'browser.js')
+        ],
+        perfomance: [
+            path.resolve(__dirname, 'src', 'perfomance.js')
         ]
     },
     module: {
@@ -28,7 +31,15 @@ export default {
     },
     plugins: [
         new HtmlWebpackPlugin({
+            chunks: ['browser'],
             title: 'example demo',
+            filename: 'index.html',
+            template: path.resolve(__dirname, 'index.ejs')
+        }),
+        new HtmlWebpackPlugin({
+            chunks: ['perfomance'],
+            title: 'perfomance',
+            filename: 'perf.html',
             template: path.resolve(__dirname, 'index.ejs')
         })
     ]

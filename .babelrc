@@ -1,10 +1,10 @@
 {
     "presets": [
-//       ["es2015", {"loose": true}],
         "stage-0",
         "react"
     ],
     "plugins": [
+        "transform-decorators-legacy",
         ["transform-class-properties", {"loose": true}],
         ["transform-es2015-template-literals", {"loose": true}],
         "transform-es2015-literals",
@@ -20,12 +20,11 @@
         "transform-es2015-parameters",
         ["transform-es2015-destructuring", {"loose": true}],
         "transform-es2015-block-scoping",
-        ["transform-es2015-modules-commonjs", {"loose": true, "strict": false}],
+        ["transform-es2015-modules-commonjs", {"loose": true}],
         ["transform-object-rest-spread", {"useBuiltIns": true}],
         ["transform-react-jsx", {
             "pragma": "_t.h"
         }],
-        "transform-decorators-legacy",
         "transform-flow-strip-types",
         ["module-resolver", {
             "root": [""],
