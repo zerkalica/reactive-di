@@ -25,7 +25,7 @@ export interface IRelationBinder {
     level: number;
     lastId: number;
     values: {[id: string]: any};
-
+    status: ?IStatus<*>;
     debugStr(sub: ?mixed): string;
     begin(dep: IParent, isEnder: boolean): void;
     end(): void;

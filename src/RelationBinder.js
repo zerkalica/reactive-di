@@ -1,7 +1,7 @@
 // @flow
 
 import type {IRelationBinder, IParent, IRelationItem} from './commonInterfaces'
-
+import type {IStatus} from './source/interfaces'
 import debugName from './utils/debugName'
 
 function mapNames(rec: IRelationItem): string {
@@ -13,7 +13,7 @@ export default class RelationBinder implements IRelationBinder {
     level: number = 0
     lastId: number = 0
     values: {[id: string]: any}
-
+    status: ?IStatus<*>
     _levels: number[] = []
 
     constructor(values: {[id: string]: any}) {

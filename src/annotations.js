@@ -26,6 +26,7 @@ export function deps<V: Function>(...args: IRawArg[]): (target: V) => V {
 
 export function factory<V: Function>(target: V): V {
     target._rdiFn = true
+    target._rdiId = 0
 
     return target
 }
@@ -45,6 +46,7 @@ export function theme<V: Function>(target: V): V {
 
 export function source<V: Function>(rec: SourceMetaRec): (target: V) => V {
     return (target: V) => {
+        target._rdiId = 0
         target._rdiKey = rec.key
         target._rdiConstr = rec.construct || false
         target._rdiInst = rec.instance || false

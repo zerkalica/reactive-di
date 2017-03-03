@@ -28,11 +28,4 @@ export default class GenericThemeHook {
             Object.assign(rawStyle, sheet.classes)
         }
     }
-
-    willUnmount(): void {
-        if (this._sheet) {
-            this._sheet.detach()
-            this._sheet = null
-        }
-    }
 }

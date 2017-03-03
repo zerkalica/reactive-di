@@ -45,9 +45,9 @@ export default class Status<V: Object> {
         if (!this._resolved) {
             this._resolved = true
             const context = this.context
-            context.binder.begin(this, false)
+            context.binder.status = this
             context.resolveDeps(this._rawStatuses)
-            context.binder.end()
+            context.binder.status = null
             return
         }
 

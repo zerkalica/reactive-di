@@ -33,9 +33,9 @@ export default class Notifier {
         }
     }
 
-    onError(e: Error, name: string) {
+    onError(e: Error, name: string, isHandled: boolean) {
         if (this.logger) {
-            this.logger.get().onError(e, name)
+            this.logger.get().onError(e, name, isHandled)
         }
     }
 
@@ -60,7 +60,9 @@ export default class Notifier {
             }
         } while (this._consumers.length > 0)
         if (this.logger) {
+            this.trace = `${(this.logger: any).displayName}.onRender`
             this.logger.get().onRender(upd)
+            this.trace = ''
         }
 
         for (let i = 0, l = upd.length; i < l; i++) {

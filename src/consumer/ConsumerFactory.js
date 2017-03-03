@@ -47,7 +47,7 @@ export default class ConsumerFactory<
             hook: key._rdiHook || null,
             errorComponent: key === context.defaultErrorComponent
                 ? null
-                : componentMeta.onError || context.defaultErrorComponent,
+                : componentMeta.onError || null,
             register: componentMeta.register || null
         }
 

@@ -72,9 +72,9 @@ export default class Computed<V: Object> {
 
     resolve(): void {
         const hook: ?IHook<V> = this._hook
+        const context = this.context
         if (!this._resolved) {
             this._resolved = true
-            const context = this.context
             context.binder.begin(this, this._isWrapped)
             if (context.protoFactory) {
                 this._proto = context.protoFactory.resolveSource(this._protoKey)
@@ -95,7 +95,7 @@ export default class Computed<V: Object> {
             hooks[i].resolve()
         }
 
-        if (!this._isWrapped) {
+        if (!this._isWrapped || context.binder.status) {
             const sources = this.sources
             for (let i = 0, l = sources.length; i < l; i++) {
                 sources[i].resolve()

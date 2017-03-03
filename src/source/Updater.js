@@ -136,7 +136,7 @@ export default class Updater<V: Object> implements IControllable {
         notifier.trace = this.displayName + '.error'
         const oldId = notifier.opId
         notifier.opId = this._id
-        notifier.onError(error, this._source.displayName)
+        notifier.onError(error, this._source.displayName, true)
         this._status.merge({error, complete: false, pending: false})
         const observer = this._updater
         if (observer && observer.error) {
@@ -161,12 +161,12 @@ export default class Updater<V: Object> implements IControllable {
         const status = this._status
 
         status.merge(completeObj)
-        if (v) {
-            source.merge(v)
-        }
         const observer = this._updater
         if (observer && observer.complete) {
             observer.complete(v || this._v)
+        }
+        if (v) {
+            source.merge(v)
         }
         this._promisable.resolve(v || this._v)
         notifier.opId = oldId

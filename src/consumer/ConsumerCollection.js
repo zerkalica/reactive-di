@@ -85,8 +85,8 @@ export default class ConsumerCollection<
             this._args = meta.args ? context.resolveDeps(meta.args) : null
             if (this._args) {
                 this._argVals = (new Array(this._args.length): any)
-                resolveArgs(this._args, this._argVals)
-                this.cached = this._argVals[0]
+                // resolveArgs(this._args, this._argVals)
+                // this.cached = this._argVals[0]
             }
             context.binder.end()
         }
@@ -112,7 +112,7 @@ export default class ConsumerCollection<
                 ? this
                 : null
         } catch (e) {
-            this._context.notifier.onError(e, this.displayName)
+            this._context.notifier.onError(e, this.displayName, !!this._meta.errorComponent)
             return null
         }
     }
@@ -149,14 +149,15 @@ export default class ConsumerCollection<
 
     willMount(): void {
         if (this._refs === 0) {
-            const hooks = this.hooks
-            for (let i = 0, l = hooks.length; i < l; i++) {
-                hooks[i].willMount()
-            }
             if (this._args) {
                 resolveArgs(this._args, (this._argVals: any))
             }
             this.cached = this._argVals[0]
+
+            const hooks = this.hooks
+            for (let i = 0, l = hooks.length; i < l; i++) {
+                hooks[i].willMount()
+            }
         }
 
         this._refs++

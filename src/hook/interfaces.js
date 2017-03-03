@@ -49,6 +49,6 @@ export interface INotifier {
     opId: number;
     trace: string;
     flush(): void;
-    onError(e: Error, name: string): void;
+    onError(e: Error, name: string, isHandled: boolean): void;
     notify<V>(c: INotifierItem[], name: string, oldValue: V, newValue: V): void;
 }

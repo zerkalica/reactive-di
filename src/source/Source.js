@@ -81,56 +81,56 @@ export default class Source<V: Object> {
         }
 
         const binder = this.context.binder
-        let level = binder.level
+        const level = binder.level
         const stack = binder.stack
         let source: ISource<any> = (this: ISource<V>)
         let consumers = source.consumers
         let computeds = source.computeds
         let i = stack.length
+        const status = binder.status
+        if (status) {
+            /**
+             * status(3) - status -> source.computeds (for cache invalidating)
+             *     source -> status.sources (for caching, pass to another computed in future)
+             */
+            source = this.getStatus()
+            consumers = source.consumers
+            computeds = source.computeds
+            source.computeds.push(status)
+            status.sources.push((source: ISource<ISourceStatus>))
+        }
+
         while (--i >= 0) {
             const rec = stack[i]
             if (!rec.has[source.id]) {
                 const v = rec.v
-                if (v.t === 3) { // status
-                    /**
-                     * status(3) - status -> source.computeds (for cache invalidating)
-                     *     source -> status.sources (for caching, pass to another computed in future)
-                     */
+                if (v.t === 3) {
+                    throw new Error('not here')
+                }
+                if (i >= level) {
                     rec.has[source.id] = true
-                    source = this.status || this.getStatus()
-                    computeds = source.computeds
-                    consumers = source.consumers
-                    computeds.push(v)
-                    v.sources.push((source: ISource<ISourceStatus>))
-                    if (source !== this) {
-                        level = 0
-                    }
-                } else {
-                    if (i >= level) {
-                        rec.has[source.id] = true
-                        /**
-                         * v is
-                         *
-                         * computed(1) - computed -> source.computeds (for cache invalidating),
-                         *     source -> computed.sources (for caching, pass to another computed in future)
-                         *
-                         * consumer(2) - consumer -> source.consumers (for triggering state changes),
-                         *     consumer -> source.computeds (for cache invalidating),
-                         *     source.hook -> consumer.hooks (for livecycle callbacks)
-                         *
-                         * hook(4) - hook -> source.consumers (for triggering state changes),
-                         *     hook -> source.computeds (for cache invalidating)
-                         */
-                        if (v.t === 0) { // computed
-                            computeds.push((v: ICacheable<*> & IDisposable))
-                            v.sources.push((source: ISource<*>))
-                        } else if (v.t === 2) { // consumer
-                            consumers.push((v: INotifierItem))
-                            computeds.push((v: ICacheable<*> & IDisposable))
-                        } else { // hook
-                            consumers.push((v: INotifierItem))
-                            computeds.push((v: ICacheable<*> & IDisposable))
-                        }
+                    /**
+                     * v is
+                     *
+                     * computed(1) - computed -> source.computeds (for cache invalidating),
+                     *     source -> computed.sources (for caching, pass to another computed in future)
+                     *
+                     * consumer(2) - consumer -> source.consumers (for triggering state changes),
+                     *     consumer -> source.computeds (for cache invalidating),
+                     *     source.hook -> consumer.hooks (for livecycle callbacks)
+                     *
+                     * hook(4) - hook -> source.consumers (for triggering state changes),
+                     *     hook -> source.computeds (for cache invalidating)
+                     */
+                    if (v.t === 0) { // computed
+                        computeds.push((v: ICacheable<*> & IDisposable))
+                        v.sources.push((source: ISource<*>))
+                    } else if (v.t === 2) { // consumer
+                        consumers.push((v: INotifierItem))
+                        computeds.push((v: ICacheable<*> & IDisposable))
+                    } else { // hook
+                        consumers.push((v: INotifierItem))
+                        computeds.push((v: ICacheable<*> & IDisposable))
                     }
                 }
             }
@@ -186,7 +186,7 @@ export default class Source<V: Object> {
                 this.displayName + 'Status',
                 (new SourceStatus(): ISourceStatus)
             )
-            // status.status = status
+            status.status = status
             this.status = status
         }
 

@@ -12,7 +12,11 @@ import {getSrc, copy} from './source/createSetterFn'
 
 import ReactComponentFactory from './adapters/ReactComponentFactory'
 
+import wrapObject, {wrapFunction} from './computed/wrapObject'
+
 export {
+    wrapFunction,
+    wrapObject,
     copy,
     getSrc,
     ReactComponentFactory,
@@ -29,7 +33,8 @@ export type {
     ICallerInfo,
     ILogger,
     IBaseHook,
-    IHasForceUpdate
+    IHasForceUpdate,
+    INotifier
 } from './hook/interfaces'
 
 export type {

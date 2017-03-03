@@ -82,7 +82,7 @@ export default class ConsumerListener<
 
     _setError(e: Error) {
         this._lastError = e
-        this._context.notifier.onError(e, this.displayName)
+        this._context.notifier.onError(e, this.displayName, !!this._meta.errorComponent)
     }
 
     _willUpdate(props: Props, oldProps: ?Props): void {
@@ -162,7 +162,7 @@ export default class ConsumerListener<
         const error = this._lastError || new Error('Unknown error')
         this._lastError = null
         if (!this._meta.errorComponent) {
-            console.error('Can\'t render error: error component is not defined') // eslint-disable-line
+            // console.error('Can\'t render error: error component is not defined') // eslint-disable-line
             return (null: any)
         }
 
