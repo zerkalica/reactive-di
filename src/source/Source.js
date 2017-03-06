@@ -81,12 +81,10 @@ export default class Source<V: Object> {
         }
 
         const binder = this.context.binder
-        const level = binder.level
         const stack = binder.stack
         let source: ISource<any> = (this: ISource<V>)
         let consumers = source.consumers
         let computeds = source.computeds
-        let i = stack.length
         const status = binder.status
         if (status) {
             /**
@@ -100,38 +98,34 @@ export default class Source<V: Object> {
             status.sources.push((source: ISource<ISourceStatus>))
         }
 
-        while (--i >= 0) {
+        for (let i = binder.level, l = stack.length; i < l; i++) {
             const rec = stack[i]
             if (!rec.has[source.id]) {
                 const v = rec.v
                 if (v.t === 3) {
                     throw new Error('not here')
                 }
-                if (i >= level) {
-                    rec.has[source.id] = true
-                    /**
-                     * v is
-                     *
-                     * computed(1) - computed -> source.computeds (for cache invalidating),
-                     *     source -> computed.sources (for caching, pass to another computed in future)
-                     *
-                     * consumer(2) - consumer -> source.consumers (for triggering state changes),
-                     *     consumer -> source.computeds (for cache invalidating),
-                     *     source.hook -> consumer.hooks (for livecycle callbacks)
-                     *
-                     * hook(4) - hook -> source.consumers (for triggering state changes),
-                     *     hook -> source.computeds (for cache invalidating)
-                     */
-                    if (v.t === 0) { // computed
-                        computeds.push((v: ICacheable<*> & IDisposable))
-                        v.sources.push((source: ISource<*>))
-                    } else if (v.t === 2) { // consumer
-                        consumers.push((v: INotifierItem))
-                        computeds.push((v: ICacheable<*> & IDisposable))
-                    } else { // hook
-                        consumers.push((v: INotifierItem))
-                        computeds.push((v: ICacheable<*> & IDisposable))
-                    }
+                rec.has[source.id] = true
+                /**
+                 * v is
+                 *
+                 * computed(1) - computed -> source.computeds (for cache invalidating),
+                 *     source -> computed.sources (for caching, pass to another computed in future)
+                 *
+                 * consumer(2) - consumer -> source.consumers (for triggering state changes),
+                 *     consumer -> source.computeds (for cache invalidating),
+                 *     source.hook -> consumer.hooks (for livecycle callbacks)
+                 *
+                 * hook(4) - hook -> source.consumers (for triggering state changes),
+                 *     hook -> source.computeds (for cache invalidating)
+                 */
+                computeds.push((v: ICacheable<*> & IDisposable))
+                if (v.t === 0) { // computed
+                    v.sources.push((source: ISource<*>))
+                } else if (v.t === 2) { // consumer
+                    consumers.push((v: INotifierItem))
+                } else { // hook
+                    consumers.push((v: INotifierItem))
                 }
             }
         }
@@ -186,7 +180,6 @@ export default class Source<V: Object> {
                 this.displayName + 'Status',
                 (new SourceStatus(): ISourceStatus)
             )
-            status.status = status
             this.status = status
         }
 
@@ -242,6 +235,9 @@ export default class Source<V: Object> {
         ;(v: any)[setterKey] = this // eslint-disable-line
         if (this._hook && this.cached && !this._hook.shouldUpdate(v, this.cached)) {
             return
+        }
+        if (this.status) {
+            this.status.reset()
         }
         const computeds = this.computeds.items
         for (let i = 0, l = computeds.length; i < l; i++) {

@@ -130,6 +130,7 @@ export default class Di<Component, Element> {
                     rec ? rec.context : this
                 )
                 items[depInfo.id] = depInfo
+                key._rdiJsx = target._rdiJsx
 
                 if (key._rdiId) {
                     const binder = this.binder

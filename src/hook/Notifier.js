@@ -35,6 +35,7 @@ export default class Notifier {
 
     onError(e: Error, name: string, isHandled: boolean) {
         if (this.logger) {
+            this.trace = ''
             this.logger.get().onError(e, name, isHandled)
         }
     }

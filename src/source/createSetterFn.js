@@ -11,8 +11,8 @@ export function fromEvent(e: Event): mixed {
 }
 
 export function copy<V: Object>(src: V, rec?: {[id: $Keys<V>]: any}): V {
-    return typeof src.copy === 'function'
-        ? src.copy(rec || {})
+    return Array.isArray(rec)
+        ? rec
         : Object.assign((Object.create(src.constructor.prototype): any), src, rec || {})
 }
 

@@ -12,8 +12,6 @@ import type {
     IPromisable
 } from './interfaces'
 
-const completeObj = {complete: true, pending: false, error: null}
-
 export class RecoverableError extends Err {
     orig: Error
     _controllable: IControllable
@@ -65,7 +63,8 @@ export default class Updater<V: Object> implements IControllable {
         this._promisable = promisable
         this._isCanceled = false
         this._v = (null: any)
-        this.displayName = source.displayName
+        this.displayName = this._notifier.trace
+        //  + source.displayName
         this._id = ++this._notifier.opId
     }
 
@@ -136,13 +135,13 @@ export default class Updater<V: Object> implements IControllable {
         notifier.trace = this.displayName + '.error'
         const oldId = notifier.opId
         notifier.opId = this._id
-        notifier.onError(error, this._source.displayName, true)
         this._status.merge({error, complete: false, pending: false})
         const observer = this._updater
         if (observer && observer.error) {
             observer.error(error)
         }
         this._promisable.reject(error)
+        notifier.onError(error, this._source.displayName, true)
         notifier.opId = oldId
         notifier.trace = oldTrace
         notifier.flush()
@@ -158,15 +157,15 @@ export default class Updater<V: Object> implements IControllable {
         const oldId = notifier.opId
         notifier.opId = this._id
         const source = this._source
-        const status = this._status
 
-        status.merge(completeObj)
         const observer = this._updater
         if (observer && observer.complete) {
             observer.complete(v || this._v)
         }
         if (v) {
             source.merge(v)
+        } else {
+            this._status.reset()
         }
         this._promisable.resolve(v || this._v)
         notifier.opId = oldId

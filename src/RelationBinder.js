@@ -32,8 +32,8 @@ export default class RelationBinder implements IRelationBinder {
 
     begin(depItem: IParent, isEnder?: boolean): void {
         if (isEnder) {
-            this.level = this.stack.length
             this._levels.push(this.level)
+            this.level = this.stack.length
         }
         this.stack.push({has: [], v: depItem, ender: isEnder || false})
     }

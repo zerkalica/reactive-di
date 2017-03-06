@@ -124,7 +124,12 @@ export default class Hook<P: Object> {
                 notifier.trace = this.displayName + '.willMount'
                 notifier.opId++
                 this._inHook = true
-                ;(hook: any).willMount(target)
+                try {
+                    (hook: any).willMount(target)
+                } catch (e) {
+                    this._inHook = false
+                    throw e
+                }
                 this._inHook = false
                 notifier.trace = oldTrace
             }
@@ -144,7 +149,12 @@ export default class Hook<P: Object> {
                 notifier.trace = this.displayName + '.willUnmount'
                 notifier.opId++
                 this._inHook = true
-                ;(hook: any).willUnmount(target)
+                try {
+                    (hook: any).willUnmount(target)
+                } catch (e) {
+                    this._inHook = false
+                    throw e
+                }
                 this._inHook = false
                 notifier.trace = oldTrace
             }
@@ -165,7 +175,12 @@ export default class Hook<P: Object> {
             notifier.trace = this.displayName + '.willUpdate'
             notifier.opId++
             this._inHook = true
-            ;(hook: any).willUpdate(target)
+            try {
+                (hook: any).willUpdate(target)
+            } catch (e) {
+                this._inHook = false
+                throw e
+            }
             this._inHook = false
             notifier.trace = oldTrace
         }
@@ -186,7 +201,12 @@ export default class Hook<P: Object> {
             notifier.trace = this.displayName + '.willUnmount'
             notifier.opId++
             this._inHook = true
-            ;(hook: any).willUnmount(target)
+            try {
+                (hook: any).willUnmount(target)
+            } catch (e) {
+                this._inHook = false
+                throw e
+            }
             this._inHook = false
             notifier.trace = oldTrace
         }
@@ -203,7 +223,12 @@ export default class Hook<P: Object> {
         this._inHook = true
         if (hook.selfUpdate) {
             notifier.trace = this.displayName + '.selfUpdate'
-            ;(hook: any).selfUpdate(target)
+            try {
+                (hook: any).selfUpdate(target)
+            } catch (e) {
+                this._inHook = false
+                throw e
+            }
         }
         notifier.trace = oldTrace
         this._inHook = false
