@@ -220,12 +220,23 @@ export default class Source<V: Object> {
         return () => updater.abort()
     }
 
+    pend(): void {
+        this.getStatus().merge({pending: true, complete: false, error: null})
+    }
+
+    error(error: Error): void {
+        this.getStatus().merge({pending: false, complete: false, error})
+    }
+
     reset(): void {
         if (!this.cached) {
             throw new Error('cached not defined')
         }
         const val = new this.cached.constructor()
         this.set(val)
+        if (this.status) {
+            this.status.reset()
+        }
     }
 
     set(v: V): void {
@@ -235,9 +246,6 @@ export default class Source<V: Object> {
         ;(v: any)[setterKey] = this // eslint-disable-line
         if (this._hook && this.cached && !this._hook.shouldUpdate(v, this.cached)) {
             return
-        }
-        if (this.status) {
-            this.status.reset()
         }
         const computeds = this.computeds.items
         for (let i = 0, l = computeds.length; i < l; i++) {

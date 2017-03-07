@@ -6,8 +6,9 @@ import type {ILogger, IHasForceUpdate, INotifierItem} from './interfaces'
 import type {IControllable} from '../source/interfaces'
 
 export default class Notifier {
-    logger: ?IGetable<ILogger>
+    logger: ?IGetable<ILogger> = null
     Updater: Class<IControllable>
+    hook: ?INotifierItem = null
 
     _consumers: INotifierItem[] = []
 
@@ -19,9 +20,13 @@ export default class Notifier {
             throw new Error('Call begin before notify')
         }
         const ac = this._consumers
-        this._consumers = ac.length
-            ? ac.concat(consumers)
-            : consumers
+        const hook = this.hook
+        for (let i = 0, l = consumers.length; i < l; i++) {
+            const consumer = consumers[i]
+            if (consumer !== hook) {
+                ac.push(consumer)
+            }
+        }
         if (this.logger) {
             this.logger.get().onSetValue({
                 trace: this.trace,

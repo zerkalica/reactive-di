@@ -63,6 +63,8 @@ export interface ISource<V: Object> extends IEntity, IGetable<V>, ISettable<V> {
     eventSetter(): ISetter<V>;
     promise(): Promise<V>;
     reset(): void;
+    pend(): void;
+    error(error: Error): void;
     merge(v?: {[id: $Keys<V>]: mixed}): void;
     update(updaterPayload: IUpdater<any>): () => void;
 }

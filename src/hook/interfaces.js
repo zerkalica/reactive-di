@@ -4,7 +4,10 @@ import type {IEntity} from '../interfaces'
 import type {IGetable, ICacheable} from '../utils/resolveArgs'
 import type {IHasDispose, IDisposable} from '../utils/DisposableCollection'
 
-export type IHasForceUpdate = {
+export type IHasDisplayName = {
+    displayName: string;
+}
+export type IHasForceUpdate = IHasDisplayName & {
     forceUpdate(): void;
 }
 
@@ -29,6 +32,7 @@ export type IPullable = {
 export type IBaseHook<V: Object> = {
     shouldUpdate?: (next: V, prev: V) => boolean;
     selfUpdate?: (v: V) => void;
+    pull?: (v: V) => void;
     willMount?: (v: V) => void;
     willUnmount?: (v: V) => void;
     willUpdate?: (next: V) => void;
@@ -48,6 +52,7 @@ export interface INotifier {
     logger: ?IGetable<ILogger>;
     opId: number;
     trace: string;
+    hook: ?INotifierItem;
     flush(): void;
     onError(e: Error, name: string, isHandled: boolean): void;
     notify<V>(c: INotifierItem[], name: string, oldValue: V, newValue: V): void;

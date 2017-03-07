@@ -164,9 +164,8 @@ export default class Updater<V: Object> implements IControllable {
         }
         if (v) {
             source.merge(v)
-        } else {
-            this._status.reset()
         }
+        this._status.reset()
         this._promisable.resolve(v || this._v)
         notifier.opId = oldId
         notifier.trace = oldTrace

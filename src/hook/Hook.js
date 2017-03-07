@@ -113,23 +113,33 @@ export default class Hook<P: Object> {
         }
     }
 
+    _mounted: boolean = false
+
     willMount(): void {
         if (this._refs === 0) {
             this._refs++
             const hook = this.cached || this._get()
             const target = this._target.cached
-            if (hook.willMount && target) {
+            if ((hook.willMount || hook.pull) && target) {
                 const notifier = this._notifier
                 const oldTrace = notifier.trace
                 notifier.trace = this.displayName + '.willMount'
                 notifier.opId++
                 this._inHook = true
+                const oldHook = notifier.hook
+                notifier.hook = this
                 try {
-                    (hook: any).willMount(target)
+                    if ((hook: any).pull && !this._mounted) {
+                        this._mounted = true
+                        ;(hook: any).pull(target)
+                    }
+                    if ((hook: any).willMount) {
+                        (hook: any).willMount(target)
+                    }
                 } catch (e) {
-                    this._inHook = false
-                    throw e
+                    notifier.onError(e, this.displayName, false)
                 }
+                notifier.hook = oldHook
                 this._inHook = false
                 notifier.trace = oldTrace
             }
@@ -149,12 +159,14 @@ export default class Hook<P: Object> {
                 notifier.trace = this.displayName + '.willUnmount'
                 notifier.opId++
                 this._inHook = true
+                const oldHook = notifier.hook
+                notifier.hook = this
                 try {
                     (hook: any).willUnmount(target)
                 } catch (e) {
-                    this._inHook = false
-                    throw e
+                    notifier.onError(e, this.displayName, false)
                 }
+                notifier.hook = oldHook
                 this._inHook = false
                 notifier.trace = oldTrace
             }
@@ -175,12 +187,14 @@ export default class Hook<P: Object> {
             notifier.trace = this.displayName + '.willUpdate'
             notifier.opId++
             this._inHook = true
+            const oldHook = notifier.hook
+            notifier.hook = this
             try {
                 (hook: any).willUpdate(target)
             } catch (e) {
-                this._inHook = false
-                throw e
+                notifier.onError(e, this.displayName, false)
             }
+            notifier.hook = oldHook
             this._inHook = false
             notifier.trace = oldTrace
         }
@@ -200,13 +214,15 @@ export default class Hook<P: Object> {
             const oldTrace = notifier.trace
             notifier.trace = this.displayName + '.willUnmount'
             notifier.opId++
+            const oldHook = notifier.hook
+            notifier.hook = this
             this._inHook = true
             try {
                 (hook: any).willUnmount(target)
             } catch (e) {
-                this._inHook = false
-                throw e
+                notifier.onError(e, this.displayName, false)
             }
+            notifier.hook = oldHook
             this._inHook = false
             notifier.trace = oldTrace
         }
@@ -214,22 +230,24 @@ export default class Hook<P: Object> {
 
     pull(): ?IHasForceUpdate {
         const target = this._target.cached
-        if (!target) {
+        if (!target || this._inHook) {
             return
         }
         const hook = this.cached || this._get()
         const notifier = this._notifier
         const oldTrace = notifier.trace
         this._inHook = true
+        const oldHook = notifier.hook
+        notifier.hook = this
         if (hook.selfUpdate) {
             notifier.trace = this.displayName + '.selfUpdate'
             try {
                 (hook: any).selfUpdate(target)
             } catch (e) {
-                this._inHook = false
-                throw e
+                notifier.onError(e, this.displayName, false)
             }
         }
+        notifier.hook = oldHook
         notifier.trace = oldTrace
         this._inHook = false
     }
