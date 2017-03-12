@@ -114,7 +114,11 @@ export default class Updater<V: Object> implements IControllable {
         const source = this._source
         const observer = this._updater
         if (v) {
-            source.merge(v)
+            if (this._updater.noPut) {
+                source.push(v)
+            } else {
+                source.merge(v)
+            }
             if (observer && observer.next) {
                 observer.next(v)
             }
@@ -163,7 +167,11 @@ export default class Updater<V: Object> implements IControllable {
             observer.complete(v || this._v)
         }
         if (v) {
-            source.merge(v)
+            if (this._updater.noPut) {
+                source.push(v)
+            } else {
+                source.merge(v)
+            }
         }
         this._status.reset()
         this._promisable.resolve(v || this._v)

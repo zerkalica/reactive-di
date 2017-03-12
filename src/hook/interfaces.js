@@ -42,6 +42,7 @@ export interface IHook<P: Object> extends IEntity, IPullable, IHasDispose, ICach
     hooks: IHook<*>[];
     willMount(): void;
     detach(): void;
+    put(target: IShape<P>, oldValue: P): ?P;
     merge(target: any, oldValue: P): ?P;
 }
 

@@ -59,6 +59,6 @@ export default class DiFactory<Component, Element> {
         if (!this._staticContext.protoFactory) {
             throw new Error('setProto enabled only in debug mode')
         }
-        this._staticContext.protoFactory.resolveSource(from).push(to)
+        this._staticContext.protoFactory.resolveSource(from).set(to)
     }
 }

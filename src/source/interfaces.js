@@ -28,6 +28,7 @@ export type ISetter<V: Object> = {
 }
 
 export type IUpdater<V> = {
+    noPut?: boolean;
     run: () => (Promise<V> | Observable<V, Error>);
     next?: (v: ?V) => void;
     complete?: (v: V) => void;
@@ -65,8 +66,11 @@ export interface ISource<V: Object> extends IEntity, IGetable<V>, ISettable<V> {
     reset(v?: IShape<V>): void;
     pend(): void;
     error(error: Error): void;
+
     merge(v: IShape<V>): void;
-    // push(v: V): void;
+    push(v: IShape<V>): void;
+    set(v: V): void;
+
     update(updaterPayload: IUpdater<any>, throttleTime?: ?number): () => void;
 }
 

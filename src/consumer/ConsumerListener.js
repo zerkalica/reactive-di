@@ -9,8 +9,8 @@ import type {
     IComponent
 } from './interfaces'
 
-import Hook from '../hook/Hook'
-import type {IHasForceUpdate, IHook} from '../hook/interfaces'
+import type {IHasForceUpdate} from '../hook/interfaces'
+import type {ISource} from '../source/interfaces'
 
 import type {
     IContext
@@ -43,7 +43,6 @@ export default class ConsumerListener<
     _meta: IConsumerMeta
 
     _context: IContext
-    _hook: ?IHook<Props>
 
     _parent: IParent<Props, State>
     _lastState: ?State
@@ -71,9 +70,6 @@ export default class ConsumerListener<
         this._lastState = null
         this._lastError = null
         this.cached = (null: any)
-        this._hook = meta.hook
-            ? new Hook(meta.hook, context, this)
-            : null
         this._parent = parent
         this._proto = proto
         this._context = context
@@ -83,21 +79,6 @@ export default class ConsumerListener<
     _setError(e: Error) {
         this._lastError = e
         this._context.notifier.onError(e, this.displayName, !!this._meta.errorComponent)
-    }
-
-    _put(props: Props, oldProps: ?Props): void {
-        const prop = props.item
-        if (prop && (prop: Object)[itemKey]) {
-            (prop: Object)[itemKey].listener = (this: ItemListener<*>)
-        }
-        const hook = this._hook
-        // try {
-        //     if (hook && oldProps) {
-        //         hook.shouldUpdate(props, oldProps)
-        //     }
-        // } catch (e) {
-        //     this._setError(e)
-        // }
     }
 
     pull(): ?IHasForceUpdate {
@@ -123,12 +104,12 @@ export default class ConsumerListener<
         if (oldProps === props) {
             return false
         }
-        const hook = this._hook
+        const propsModel = this._propsModel
 
         if ((!oldProps && props) || (!props && oldProps)) {
             this.cached = props
-            if (hook) {
-                this._put(props, oldProps)
+            if (propsModel) {
+                propsModel.merge(props)
             }
             return true
         }
@@ -136,8 +117,8 @@ export default class ConsumerListener<
         let lpKeys: number = 0
         for (let k in oldProps) { // eslint-disable-line
             if (oldProps[k] !== props[k]) {
-                if (hook) {
-                    this._put(props, oldProps)
+                if (propsModel) {
+                    propsModel.merge(props)
                 }
                 this.cached = props
                 return true
@@ -148,8 +129,8 @@ export default class ConsumerListener<
             lpKeys--
         }
         if (lpKeys) {
-            if (hook) {
-                this._put(props, oldProps)
+            if (propsModel) {
+                propsModel.merge(props)
             }
             this.cached = props
             return true
@@ -246,9 +227,6 @@ export default class ConsumerListener<
     detach(): void {
         try {
             this.closed = true
-            if (this._hook) {
-                this._hook.detach()
-            }
             this._parent.detach()
             const prop = (this.cached: any).item
             if (prop) {
@@ -262,6 +240,8 @@ export default class ConsumerListener<
         }
     }
 
+    _propsModel: ?ISource<Props>
+
     willMount(props: Props): void {
         this.cached = props
         const prop = props.item
@@ -269,10 +249,9 @@ export default class ConsumerListener<
             (prop: Object)[itemKey].listener = (this: ItemListener<*>)
         }
         try {
-            if (hook) {
-                const proto = context.resolveSource(this._meta.propsTo)
-                hook.resolve()
-                hook.willMount()
+            if (this._meta.propsTo) {
+                const propsModel = this._propsModel = this._context.resolveSource(this._meta.propsTo)
+                propsModel.merge(props)
             }
             this._parent.willMount()
         } catch (e) {

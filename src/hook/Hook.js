@@ -145,13 +145,14 @@ export default class Hook<P: Object> {
 
     merge(target: IShape<P>, oldValue: P): ?P {
         const hook = this.cached || this._get()
-        const newVal: ?P = hook.merge
+        return hook.merge
             ? hook.merge(target, oldValue)
             : defaultMerge(target, oldValue)
+    }
 
-        if (!newVal) {
-            return null
-        }
+    put(target: IShape<P>, oldValue: P): ?P {
+        const hook = this.cached || this._get()
+        const newVal = target
         if (hook.put && !this._inHook) {
             const notifier = this._notifier
             const oldTrace = notifier.trace
@@ -163,7 +164,7 @@ export default class Hook<P: Object> {
             try {
                 const result = (hook: any).put(newVal)
                 if (result) {
-                    this._unsubscribe = target.update({
+                    this._unsubscribe = (this._target: any).update({
                         run() {
                             return result
                         }
@@ -176,6 +177,7 @@ export default class Hook<P: Object> {
             this._inHook = false
             notifier.trace = oldTrace
         }
+
         return newVal
     }
 
@@ -230,7 +232,7 @@ export default class Hook<P: Object> {
             try {
                 const result = (hook: any).pull(target)
                 if (result) {
-                    this._unsubscribe = target.update({
+                    this._unsubscribe = (this._target: any).update({
                         run() {
                             return result
                         }

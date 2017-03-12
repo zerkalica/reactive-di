@@ -17,47 +17,6 @@ import SourceStatus from './SourceStatus'
 import type {IPromisable, IUpdater, ISourceStatus, ISetter, ISource, IControllable} from './interfaces'
 import Promisable from './Promisable'
 
-class ProxyHook<P: Object> {
-    t: 4
-    id: number
-    displayName: string
-
-    closed: boolean
-    cached: ?IBaseHook<P>
-    hooks: IHook<*>[]
-    context: IContext
-
-    _parent: IHook<P>
-
-    constructor(parent: IHook<P>) {
-        this.t = 4
-        this.id = parent.id
-        this.displayName = parent.displayName + 'Status'
-        this.closed = parent.closed
-        this.cached = null
-        this.hooks = []
-        this.context = parent.context
-        this._parent = parent
-    }
-
-    willMount(): void {
-        this._parent.willMount()
-    }
-
-    dispose() {
-        this.closed = true
-        this._parent.dispose()
-    }
-
-    detach(): void {
-        this._parent.detach()
-    }
-
-    merge(target: any, oldValue: ISourceStatus): any {
-        return defaultMerge(target, oldValue)
-    }
-}
-
 export default class Source<V: Object> {
     t: 1
     displayName: string
@@ -223,7 +182,7 @@ export default class Source<V: Object> {
                 this.id - 1,
                 this.displayName + 'Status',
                 (new SourceStatus(): ISourceStatus),
-                this._hook ? new ProxyHook(this._hook) : null
+                null
             )
             this.status = status
         }
@@ -288,7 +247,7 @@ export default class Source<V: Object> {
         }
     }
 
-    _push(newVal: V): void {
+    set(newVal: V): void {
         this.cached = newVal
         ;(newVal: any)[setterKey] = this // eslint-disable-line
         this.cached = newVal
@@ -298,6 +257,23 @@ export default class Source<V: Object> {
         }
         this.context.notifier.notify(this.consumers.items, this.displayName, this.cached, newVal)
         this.cached = newVal
+    }
+
+    push(v: IShape<V>): void {
+        if (v === this.cached) {
+            return
+        }
+        const cached = this.cached
+        if (!cached) {
+            throw new Error('Cached is empty')
+        }
+        const newVal: ?V = this._hook
+            ? this._hook.merge(v, cached)
+            : defaultMerge(v, cached)
+        if (!newVal) {
+            return
+        }
+        this.set(newVal)
     }
 
     merge(v: IShape<V>): void {
@@ -314,6 +290,9 @@ export default class Source<V: Object> {
         if (!newVal) {
             return
         }
-        this._push(newVal)
+        if (this._hook) {
+            this._hook.put(newVal, cached)
+        }
+        this.set(newVal)
     }
 }
