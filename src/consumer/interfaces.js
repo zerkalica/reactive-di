@@ -13,8 +13,8 @@ export interface IConsumerMeta {
     key: Function;
     id: number;
     name: string;
+    propsTo: ?Function;
     args: ?IRawArg[];
-    hook: ?Function;
     errorComponent: ?Function;
     register: ?IDepRegister[];
 }

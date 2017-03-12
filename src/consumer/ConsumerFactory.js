@@ -44,7 +44,7 @@ export default class ConsumerFactory<
             name,
             key,
             args: key._rdiArg || null,
-            hook: key._rdiHook || null,
+            propsTo: componentMeta.propsTo || null,
             errorComponent: key === context.defaultErrorComponent
                 ? null
                 : componentMeta.onError || null,

@@ -8,7 +8,7 @@ import debugName from './utils/debugName'
 
 import Updater, {RecoverableError} from './source/Updater'
 import SourceStatus from './source/SourceStatus'
-import {getSrc, copy} from './source/createSetterFn'
+import {getSrc} from './source/createSetterFn'
 
 import ReactComponentFactory from './adapters/ReactComponentFactory'
 
@@ -17,7 +17,6 @@ import wrapObject, {wrapFunction} from './computed/wrapObject'
 export {
     wrapFunction,
     wrapObject,
-    copy,
     getSrc,
     ReactComponentFactory,
     SourceStatus,

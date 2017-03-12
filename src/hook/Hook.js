@@ -113,11 +113,16 @@ export default class Hook<P: Object> {
         }
     }
 
+    _unsubscribe: ?() => void
+
     detach(): void {
         this._refs--
         const target = this._target.cached
         if (this._refs === 0 && target) {
             const hook = this.cached || this._get()
+            if (this._unsubscribe) {
+                this._unsubscribe()
+            }
             if (hook.detach && !this._inWillMount) {
                 const notifier = this._notifier
                 const oldTrace = notifier.trace
@@ -156,7 +161,14 @@ export default class Hook<P: Object> {
             const oldHook = notifier.hook
             notifier.hook = this
             try {
-                (hook: any).put(newVal)
+                const result = (hook: any).put(newVal)
+                if (result) {
+                    this._unsubscribe = target.update({
+                        run() {
+                            return result
+                        }
+                    })
+                }
             } catch (e) {
                 notifier.onError(e, this.displayName, false)
             }
@@ -195,11 +207,9 @@ export default class Hook<P: Object> {
     }
 
     willMount(): void {
-        if (this._refs === 0) {
-            this._refs++
+        this._refs++
+        if (this._refs === 1) {
             this.pull()
-        } else {
-            this._refs++
         }
     }
 
@@ -218,7 +228,14 @@ export default class Hook<P: Object> {
         if (hook.pull) {
             notifier.trace = this.displayName + '.pull'
             try {
-                (hook: any).pull(target)
+                const result = (hook: any).pull(target)
+                if (result) {
+                    this._unsubscribe = target.update({
+                        run() {
+                            return result
+                        }
+                    })
+                }
             } catch (e) {
                 notifier.onError(e, this.displayName, false)
             }

@@ -91,13 +91,13 @@ export default class ConsumerListener<
             (prop: Object)[itemKey].listener = (this: ItemListener<*>)
         }
         const hook = this._hook
-        try {
-            if (hook && oldProps) {
-                hook.shouldUpdate(props, oldProps)
-            }
-        } catch (e) {
-            this._setError(e)
-        }
+        // try {
+        //     if (hook && oldProps) {
+        //         hook.shouldUpdate(props, oldProps)
+        //     }
+        // } catch (e) {
+        //     this._setError(e)
+        // }
     }
 
     pull(): ?IHasForceUpdate {
@@ -269,8 +269,8 @@ export default class ConsumerListener<
             (prop: Object)[itemKey].listener = (this: ItemListener<*>)
         }
         try {
-            const hook = this._hook
             if (hook) {
+                const proto = context.resolveSource(this._meta.propsTo)
                 hook.resolve()
                 hook.willMount()
             }

@@ -12,6 +12,7 @@ export interface SourceMetaRec {
 
 export interface ComponentMetaRec {
     register?: IDepRegister[];
+    propsTo?: Function;
     onError?: Function;
 }
 

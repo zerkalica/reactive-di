@@ -20,7 +20,7 @@ export interface ISourceStatus {
 }
 
 export type ISettable<V: Object> = {
-    push(v: V): void;
+    // push(v: V): void;
 }
 
 export type ISetter<V: Object> = {
@@ -66,7 +66,7 @@ export interface ISource<V: Object> extends IEntity, IGetable<V>, ISettable<V> {
     pend(): void;
     error(error: Error): void;
     merge(v: IShape<V>): void;
-    push(v: V): void;
+    // push(v: V): void;
     update(updaterPayload: IUpdater<any>, throttleTime?: ?number): () => void;
 }
 

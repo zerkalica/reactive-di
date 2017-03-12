@@ -245,9 +245,13 @@ export default class Source<V: Object> {
     }
 
     _lastTimer: number = 0
+    _updater: ?IControllable = null
 
     update(updaterPayload: IUpdater<any>, throttleTime?: ?number): () => void {
-        const updater: IControllable = new this.context.Updater(
+        if (this._updater) {
+            this._updater.abort()
+        }
+        const updater: IControllable = this._updater = new this.context.Updater(
             updaterPayload,
             (this: ISource<V>),
             this.getStatus(),
@@ -284,7 +288,7 @@ export default class Source<V: Object> {
         }
     }
 
-    push(newVal: V): void {
+    _push(newVal: V): void {
         this.cached = newVal
         ;(newVal: any)[setterKey] = this // eslint-disable-line
         this.cached = newVal
@@ -310,6 +314,6 @@ export default class Source<V: Object> {
         if (!newVal) {
             return
         }
-        this.push(newVal)
+        this._push(newVal)
     }
 }
