@@ -26,7 +26,7 @@ export type IComponent<Props: Object, State: Object, Element> = (props: Props, s
 export interface IConsumerListener<Props: Object, Element> extends ICacheable<Props>, IDisposable, IPullable {
     displayName: string;
     updater: ISetProps<Props>;
-    willUnmount(): void;
+    detach(): void;
     willMount(prop: Props): void;
     render(): Element;
     shouldUpdate(newProps: Props): boolean;

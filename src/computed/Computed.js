@@ -120,7 +120,7 @@ export default class Computed<V: Object> {
                     newVal[k] = src[k]
                 }
             }
-            if (this._hook && !this._hook.shouldUpdate(newVal, src)) {
+            if (this._hook && !this._hook.merge(newVal, src)) {
                 return this._cachedProxy
             }
         }

@@ -2,18 +2,61 @@
 import type {IContext} from '../commonInterfaces'
 
 import {setterKey} from '../interfaces'
+import type {IShape} from '../interfaces'
 import Hook from '../hook/Hook'
-import type {INotifierItem, IHook} from '../hook/interfaces'
+import defaultMerge from '../hook/defaultMerge'
+import type {IBaseHook, INotifierItem, IHook} from '../hook/interfaces'
 
 import DisposableCollection from '../utils/DisposableCollection'
 import type {IDisposableCollection, IDisposable} from '../utils/DisposableCollection'
 import type {ICacheable} from '../utils/resolveArgs'
 import debugName from '../utils/debugName'
 
-import createSetterFn, {copy, fromEvent} from './createSetterFn'
+import createSetterFn, {fromEvent} from './createSetterFn'
 import SourceStatus from './SourceStatus'
 import type {IPromisable, IUpdater, ISourceStatus, ISetter, ISource, IControllable} from './interfaces'
 import Promisable from './Promisable'
+
+class ProxyHook<P: Object> {
+    t: 4
+    id: number
+    displayName: string
+
+    closed: boolean
+    cached: ?IBaseHook<P>
+    hooks: IHook<*>[]
+    context: IContext
+
+    _parent: IHook<P>
+
+    constructor(parent: IHook<P>) {
+        this.t = 4
+        this.id = parent.id
+        this.displayName = parent.displayName + 'Status'
+        this.closed = parent.closed
+        this.cached = null
+        this.hooks = []
+        this.context = parent.context
+        this._parent = parent
+    }
+
+    willMount(): void {
+        this._parent.willMount()
+    }
+
+    dispose() {
+        this.closed = true
+        this._parent.dispose()
+    }
+
+    detach(): void {
+        this._parent.detach()
+    }
+
+    merge(target: any, oldValue: ISourceStatus): any {
+        return defaultMerge(target, oldValue)
+    }
+}
 
 export default class Source<V: Object> {
     t: 1
@@ -35,7 +78,8 @@ export default class Source<V: Object> {
         context: IContext,
         id?: number,
         name?: string,
-        initialValue?: V
+        initialValue?: V,
+        parentHook?: ?IHook<*>
     ) {
         (this: ISource<V>) // eslint-disable-line
         if (key) {
@@ -55,7 +99,7 @@ export default class Source<V: Object> {
             this._isResolving = !!this._hook
             key._rdiId = this.id // eslint-disable-line
         } else {
-            this._hook = null
+            this._hook = parentHook
             this._isResolving = false
             this.id = id || 0
             this.displayName = name || ''
@@ -178,7 +222,8 @@ export default class Source<V: Object> {
                 this.context,
                 this.id - 1,
                 this.displayName + 'Status',
-                (new SourceStatus(): ISourceStatus)
+                (new SourceStatus(): ISourceStatus),
+                this._hook ? new ProxyHook(this._hook) : null
             )
             this.status = status
         }
@@ -199,15 +244,9 @@ export default class Source<V: Object> {
         return this._getPromisable().promise
     }
 
-    merge(v?: {[id: $Keys<V>]: mixed}): void {
-        if (!this.cached) {
-            throw new Error('cached not defined')
-        }
+    _lastTimer: number = 0
 
-        this.set(copy(this.cached, v || {}))
-    }
-
-    update(updaterPayload: IUpdater<any>): () => void {
+    update(updaterPayload: IUpdater<any>, throttleTime?: ?number): () => void {
         const updater: IControllable = new this.context.Updater(
             updaterPayload,
             (this: ISource<V>),
@@ -215,7 +254,14 @@ export default class Source<V: Object> {
             this._getPromisable(),
             this.context.notifier
         )
-        updater.run()
+        if (this._lastTimer) {
+            clearTimeout(this._lastTimer)
+        }
+        if (throttleTime) {
+            this._lastTimer = setTimeout(() => updater.run(), throttleTime)
+        } else {
+            updater.run()
+        }
 
         return () => updater.abort()
     }
@@ -228,30 +274,42 @@ export default class Source<V: Object> {
         this.getStatus().merge({pending: false, complete: false, error})
     }
 
-    reset(): void {
+    reset(v?: IShape<V>): void {
         if (!this.cached) {
             throw new Error('cached not defined')
         }
-        const val = new this.cached.constructor()
-        this.set(val)
+        this.merge(v || new this.cached.constructor())
         if (this.status) {
             this.status.reset()
         }
     }
 
-    set(v: V): void {
-        if (v === this.cached) {
-            return
-        }
-        ;(v: any)[setterKey] = this // eslint-disable-line
-        if (this._hook && this.cached && !this._hook.shouldUpdate(v, this.cached)) {
-            return
-        }
+    push(newVal: V): void {
+        this.cached = newVal
+        ;(newVal: any)[setterKey] = this // eslint-disable-line
+        this.cached = newVal
         const computeds = this.computeds.items
         for (let i = 0, l = computeds.length; i < l; i++) {
             computeds[i].cached = null
         }
-        this.context.notifier.notify(this.consumers.items, this.displayName, this.cached, v)
-        this.cached = v
+        this.context.notifier.notify(this.consumers.items, this.displayName, this.cached, newVal)
+        this.cached = newVal
+    }
+
+    merge(v: IShape<V>): void {
+        if (v === this.cached) {
+            return
+        }
+        const cached = this.cached
+        if (!cached) {
+            throw new Error('Cached is empty')
+        }
+        const newVal: ?V = this._hook
+            ? this._hook.merge(v, cached)
+            : defaultMerge(v, cached)
+        if (!newVal) {
+            return
+        }
+        this.push(newVal)
     }
 }

@@ -127,7 +127,7 @@ export default class ConsumerCollection<
         }
     }
 
-    willUnmount(): void {
+    detach(): void {
         this._refs--
         if (this._refs === 0) {
             if (this._isOwnContext) {
@@ -141,7 +141,7 @@ export default class ConsumerCollection<
             } else {
                 const hooks = this.hooks
                 for (let i = 0, l = hooks.length; i < l; i++) {
-                    hooks[i].willUnmount()
+                    hooks[i].detach()
                 }
             }
         }

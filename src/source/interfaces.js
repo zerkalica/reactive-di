@@ -1,6 +1,6 @@
 // @flow
 
-import type {IEntity} from '../interfaces'
+import type {IEntity, IShape} from '../interfaces'
 import type {IGetable, ICacheable} from '../utils/resolveArgs'
 import type {IDisposable, IDisposableCollection} from '../utils/DisposableCollection'
 import type {INotifier, INotifierItem} from '../hook/interfaces'
@@ -20,7 +20,7 @@ export interface ISourceStatus {
 }
 
 export type ISettable<V: Object> = {
-    set(v: V): void;
+    push(v: V): void;
 }
 
 export type ISetter<V: Object> = {
@@ -62,11 +62,12 @@ export interface ISource<V: Object> extends IEntity, IGetable<V>, ISettable<V> {
     setter(): ISetter<V>;
     eventSetter(): ISetter<V>;
     promise(): Promise<V>;
-    reset(): void;
+    reset(v?: IShape<V>): void;
     pend(): void;
     error(error: Error): void;
-    merge(v?: {[id: $Keys<V>]: mixed}): void;
-    update(updaterPayload: IUpdater<any>): () => void;
+    merge(v: IShape<V>): void;
+    push(v: V): void;
+    update(updaterPayload: IUpdater<any>, throttleTime?: ?number): () => void;
 }
 
 export interface IStatus<V: Object> extends IEntity, IGetable<ISourceStatus>, IDisposable {

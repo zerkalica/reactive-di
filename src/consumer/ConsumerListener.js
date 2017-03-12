@@ -26,7 +26,7 @@ interface IParent<Props, State> {
 
     pull(): any;
     willMount(): void;
-    willUnmount(): void;
+    detach(): void;
 }
 
 export default class ConsumerListener<
@@ -85,7 +85,7 @@ export default class ConsumerListener<
         this._context.notifier.onError(e, this.displayName, !!this._meta.errorComponent)
     }
 
-    _willUpdate(props: Props, oldProps: ?Props): void {
+    _put(props: Props, oldProps: ?Props): void {
         const prop = props.item
         if (prop && (prop: Object)[itemKey]) {
             (prop: Object)[itemKey].listener = (this: ItemListener<*>)
@@ -128,7 +128,7 @@ export default class ConsumerListener<
         if ((!oldProps && props) || (!props && oldProps)) {
             this.cached = props
             if (hook) {
-                this._willUpdate(props, oldProps)
+                this._put(props, oldProps)
             }
             return true
         }
@@ -137,7 +137,7 @@ export default class ConsumerListener<
         for (let k in oldProps) { // eslint-disable-line
             if (oldProps[k] !== props[k]) {
                 if (hook) {
-                    this._willUpdate(props, oldProps)
+                    this._put(props, oldProps)
                 }
                 this.cached = props
                 return true
@@ -149,7 +149,7 @@ export default class ConsumerListener<
         }
         if (lpKeys) {
             if (hook) {
-                this._willUpdate(props, oldProps)
+                this._put(props, oldProps)
             }
             this.cached = props
             return true
@@ -243,13 +243,13 @@ export default class ConsumerListener<
         }
     }
 
-    willUnmount(): void {
+    detach(): void {
         try {
             this.closed = true
             if (this._hook) {
-                this._hook.willUnmount()
+                this._hook.detach()
             }
-            this._parent.willUnmount()
+            this._parent.detach()
             const prop = (this.cached: any).item
             if (prop) {
                 const p = (prop: Object)[itemKey]

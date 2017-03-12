@@ -1,6 +1,6 @@
 // @flow
 
-import type {IEntity} from '../interfaces'
+import type {IShape, IEntity} from '../interfaces'
 import type {IGetable, ICacheable} from '../utils/resolveArgs'
 import type {IHasDispose, IDisposable} from '../utils/DisposableCollection'
 
@@ -30,20 +30,19 @@ export type IPullable = {
 }
 
 export type IBaseHook<V: Object> = {
-    shouldUpdate?: (next: V, prev: V) => boolean;
-    selfUpdate?: (v: V) => void;
+    merge?: (next: IShape<V>, prev: V) => ?V;
+    init?: (args: any[]) => void;
     pull?: (v: V) => void;
-    willMount?: (v: V) => void;
-    willUnmount?: (v: V) => void;
-    willUpdate?: (next: V) => void;
+    detach?: (v: V) => void;
+    put?: (next: V) => void;
 }
 
 export interface IHook<P: Object> extends IEntity, IPullable, IHasDispose, ICacheable<IBaseHook<P>> {
     t: 4;
     hooks: IHook<*>[];
     willMount(): void;
-    willUnmount(): void;
-    shouldUpdate(target: P, oldValue: P): boolean;
+    detach(): void;
+    merge(target: any, oldValue: P): ?P;
 }
 
 export type INotifierItem = IPullable & ICacheable<*> & IDisposable

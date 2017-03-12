@@ -2,14 +2,15 @@
 
 import type {IContext} from '../commonInterfaces'
 
-import type {IRawArg} from '../interfaces'
+import type {IShape, IRawArg} from '../interfaces'
 
-import {fastCreateObject} from '../utils/fastCreate'
+import {fastCreateObject, fastCallMethod} from '../utils/fastCreate'
 import debugName from '../utils/debugName'
 import resolveArgs from '../utils/resolveArgs'
 import type {ICacheable, IGetable, IArg} from '../utils/resolveArgs'
 
 import type {INotifier, IHasForceUpdate, IBaseHook, IHook} from './interfaces'
+import defaultMerge from './defaultMerge'
 
 export default class Hook<P: Object> {
     t: 4
@@ -18,17 +19,16 @@ export default class Hook<P: Object> {
 
     closed: boolean
     cached: ?IBaseHook<P>
-    _prev: ?IBaseHook<P>
-
     hooks: IHook<*>[]
+    context: IContext
 
+    _prev: ?IBaseHook<P>
     _target: ?P
     _proto: IGetable<Function>
     _args: ?IArg[]
     _argVals: mixed[]
 
     _resolved: boolean
-    context: IContext
     _refs: number
 
     _rawArgs: ?IRawArg[]
@@ -113,56 +113,21 @@ export default class Hook<P: Object> {
         }
     }
 
-    _mounted: boolean = false
-
-    willMount(): void {
-        if (this._refs === 0) {
-            this._refs++
-            const hook = this.cached || this._get()
-            const target = this._target.cached
-            if ((hook.willMount || hook.pull) && target) {
-                const notifier = this._notifier
-                const oldTrace = notifier.trace
-                notifier.trace = this.displayName + '.willMount'
-                notifier.opId++
-                this._inHook = true
-                const oldHook = notifier.hook
-                notifier.hook = this
-                try {
-                    if ((hook: any).pull && !this._mounted) {
-                        this._mounted = true
-                        ;(hook: any).pull(target)
-                    }
-                    if ((hook: any).willMount) {
-                        (hook: any).willMount(target)
-                    }
-                } catch (e) {
-                    notifier.onError(e, this.displayName, false)
-                }
-                notifier.hook = oldHook
-                this._inHook = false
-                notifier.trace = oldTrace
-            }
-        } else {
-            this._refs++
-        }
-    }
-
-    willUnmount(): void {
+    detach(): void {
         this._refs--
         const target = this._target.cached
         if (this._refs === 0 && target) {
             const hook = this.cached || this._get()
-            if (hook.willUnmount && !this._inWillMount) {
+            if (hook.detach && !this._inWillMount) {
                 const notifier = this._notifier
                 const oldTrace = notifier.trace
-                notifier.trace = this.displayName + '.willUnmount'
+                notifier.trace = this.displayName + '.detach'
                 notifier.opId++
                 this._inHook = true
                 const oldHook = notifier.hook
                 notifier.hook = this
                 try {
-                    (hook: any).willUnmount(target)
+                    (hook: any).detach(target)
                 } catch (e) {
                     notifier.onError(e, this.displayName, false)
                 }
@@ -173,24 +138,25 @@ export default class Hook<P: Object> {
         }
     }
 
-    shouldUpdate(target: P, oldValue: P): boolean {
+    merge(target: IShape<P>, oldValue: P): ?P {
         const hook = this.cached || this._get()
-        if (
-            hook.shouldUpdate
-            && !hook.shouldUpdate(target, oldValue)
-        ) {
-            return false
+        const newVal: ?P = hook.merge
+            ? hook.merge(target, oldValue)
+            : defaultMerge(target, oldValue)
+
+        if (!newVal) {
+            return null
         }
-        if (hook.willUpdate && !this._inHook) {
+        if (hook.put && !this._inHook) {
             const notifier = this._notifier
             const oldTrace = notifier.trace
-            notifier.trace = this.displayName + '.willUpdate'
+            notifier.trace = this.displayName + '.put'
             notifier.opId++
             this._inHook = true
             const oldHook = notifier.hook
             notifier.hook = this
             try {
-                (hook: any).willUpdate(target)
+                (hook: any).put(newVal)
             } catch (e) {
                 notifier.onError(e, this.displayName, false)
             }
@@ -198,7 +164,7 @@ export default class Hook<P: Object> {
             this._inHook = false
             notifier.trace = oldTrace
         }
-        return true
+        return newVal
     }
 
     dispose(): void {
@@ -209,22 +175,31 @@ export default class Hook<P: Object> {
         }
         this.closed = true
         const hook = this.cached || this._get()
-        if (hook.willUnmount) {
+        if (hook.detach) {
             const notifier = this._notifier
             const oldTrace = notifier.trace
-            notifier.trace = this.displayName + '.willUnmount'
+            notifier.trace = this.displayName + '.detach'
             notifier.opId++
             const oldHook = notifier.hook
             notifier.hook = this
             this._inHook = true
             try {
-                (hook: any).willUnmount(target)
+                (hook: any).detach(target)
             } catch (e) {
                 notifier.onError(e, this.displayName, false)
             }
             notifier.hook = oldHook
             this._inHook = false
             notifier.trace = oldTrace
+        }
+    }
+
+    willMount(): void {
+        if (this._refs === 0) {
+            this._refs++
+            this.pull()
+        } else {
+            this._refs++
         }
     }
 
@@ -237,12 +212,13 @@ export default class Hook<P: Object> {
         const notifier = this._notifier
         const oldTrace = notifier.trace
         this._inHook = true
+        notifier.opId++
         const oldHook = notifier.hook
         notifier.hook = this
-        if (hook.selfUpdate) {
-            notifier.trace = this.displayName + '.selfUpdate'
+        if (hook.pull) {
+            notifier.trace = this.displayName + '.pull'
             try {
-                (hook: any).selfUpdate(target)
+                (hook: any).pull(target)
             } catch (e) {
                 notifier.onError(e, this.displayName, false)
             }
@@ -257,20 +233,17 @@ export default class Hook<P: Object> {
             if (this._args) {
                 resolveArgs(this._args, this._argVals)
             }
-            const cached = this.cached = fastCreateObject(
-                this._proto.cached || this._proto.get(),
-                this._argVals || []
-            )
+            const proto = this._proto.cached || this._proto.get()
             const prev = this._prev
             if (prev) {
-                // copy properties, injected after initializing
-                for (const k in prev) { // eslint-disable-line
-                    if (!cached[k]) {
-                        cached[k] = (prev: Object)[k]
-                    }
-                }
+                fastCallMethod(prev, prev.init || proto, this._argVals || [])
+                this.cached = prev
+            } else {
+                this._prev = this.cached = fastCreateObject(
+                    proto,
+                    this._argVals || []
+                )
             }
-            this._prev = this.cached
         }
 
         return this.cached

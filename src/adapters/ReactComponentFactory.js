@@ -22,7 +22,7 @@ const ComponentMixin = {
     },
 
     componentWillUnmount() {
-        this._consumer.willUnmount()
+        this._consumer.detach()
     },
 
     shouldComponentUpdate(nextProps: Object): boolean {

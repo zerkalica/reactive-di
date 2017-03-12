@@ -57,7 +57,7 @@ export default class IndexCollection<Item: Object, Id, Indexer: IIndexer<Item, I
         const newObj = new this.constructor(null, items, this._indexer)
         const source = (newObj: any)[setterKey] = (this: any)[setterKey]
 
-        source.set(newObj)
+        source.push(newObj)
         return newObj
     }
 

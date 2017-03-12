@@ -10,12 +10,6 @@ export function fromEvent(e: Event): mixed {
     return (e.target: any).value
 }
 
-export function copy<V: Object>(src: V, rec?: {[id: $Keys<V>]: any}): V {
-    return Array.isArray(rec)
-        ? rec
-        : Object.assign((Object.create(src.constructor.prototype): any), src, rec || {})
-}
-
 export function getSrc<V: Object>(obj: V): ISource<V> {
     return (obj: any)[setterKey]
 }
@@ -31,12 +25,10 @@ export default function createSetterFn<V: Object>(
         const v: mixed = getValue ? getValue(rawVal) : rawVal
         const cached = src.cached
         if (cached) {
-            const obj = copy(cached)
-            obj[key] = v
             const oldTrace = notifier.trace
             notifier.trace = name
             notifier.opId++
-            src.set(obj)
+            src.merge({[key]: v})
             notifier.trace = oldTrace
             notifier.flush()
         }
