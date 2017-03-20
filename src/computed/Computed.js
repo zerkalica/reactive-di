@@ -1,142 +1,172 @@
 // @flow
 
 import type {IRawArg} from '../interfaces'
+
 import type {IContext} from '../commonInterfaces'
 
+import type {
+    IRelationBinder,
+    IBaseHook,
+    IGetable,
+    IComputed,
+    IMaster,
+    INotifier
+} from '../source/interfaces'
+
 import debugName from '../utils/debugName'
-import {fastCreateObject, fastCall} from '../utils/fastCreate'
-import resolveArgs from '../utils/resolveArgs'
-import type {IGetable, IArg} from '../utils/resolveArgs'
-import type {ISource} from '../source/interfaces'
-import Hook from '../hook/Hook'
-import type {INotifier, IHook} from '../hook/interfaces'
-
+import {fastCallMethod, fastCreateObject, fastCall} from './fastCreate'
 import wrapObject, {wrapFunction} from './wrapObject'
-import type {IRef} from './wrapObject'
+import type {IResolverTarget} from './wrapObject'
+import resolveArgs from './resolveArgs'
+import type {IArg} from './resolveArgs'
 
-export default class Computed<V: Object> {
-    t: 0
+const fakeHook: any = {
+    cached: {}
+}
+
+export default class Computed<V: Object> implements IComputed<V> {
+    t: 0 = 0 // computed
+
     displayName: string
     id: number
+    masters: IMaster[] = []
+    closed: boolean = false
+    cached: ?V = null
 
-    closed: boolean
-    cached: ?V
-    sources: ISource<*>[]
-    hooks: IHook<*>[]
+    refs: number = 0
 
-    cachedSrc: V
     notifier: INotifier
-
     context: IContext
-    _resolved: boolean
-    _hook: ?IHook<V>
+    rawValue: V = (null: any)
+
+    _oldValue: V = (null: any)
+    _hook: IComputed<IBaseHook<V, V>>
     _create: (proto: Function, args: mixed[]) => V
+
+    _wrap: ?((v: IResolverTarget<V>) => V)
+
     _proto: IGetable<Function>
-    _args: ?IArg[]
-    _argVals: mixed[]
+    _args: ?IArg[] = null
+    _argVals: mixed[] = (null: any)
 
-    _rawArgs: ?IRawArg[]
     _protoKey: Function
-    _isWrapped: boolean
+    _rawArgs: ?IRawArg[]
 
-    constructor(
-        key: Function,
-        context: IContext
-    ) {
-        // ;(this: IComputed<V>) // eslint-disable-line
-        this.t = 0
-
-        this.id = key._rdiId || ++context.binder.lastId // eslint-disable-line
-        key._rdiId = this.id // eslint-disable-line
-        this._rawArgs = key._rdiArg || null
-        this.displayName = key._rdiKey || debugName(key)
+    constructor(key: Function, context: IContext) {
+        this.id = key._r0 || ++context.notifier.lastId // eslint-disable-line
+        key._r0 = this.id // eslint-disable-line
+        this.displayName = key.displayName || debugName(key)
+        this._rawArgs = key._r1
         this._proto = ({cached: key}: Object)
         this._protoKey = key
-        this._create = key._rdiFn ? fastCall : fastCreateObject
-        this._isWrapped = key._rdiEnd || false
-        this._hook = key._rdiHook
-            ? new Hook(key._rdiHook, context, this)
-            : null
-        this.sources = []
-        this.hooks = this._hook ? [this._hook] : []
-        this.notifier = context.notifier
-        this.cachedSrc = (null: any)
-        this.closed = false
-        this.cached = null
-        this._cachedProxy = (null: any)
-        this._resolved = false
-        this._args = null
-        this._argVals = (null: any)
+        this._create = key._r2 & 2 ? fastCall : fastCreateObject
+        this._hook = fakeHook
+        if (key._rdiHook) {
+            this._hook = new Computed(key._rdiHook, context)
+            context.disposables.push(this)
+        }
         this.context = context
+        this._wrap = key._r2 & 16
+            ? key._r2 & 2 ? wrapFunction : wrapObject
+            : null
+        this.notifier = context.notifier
     }
 
-    resolve(): void {
-        const hook: ?IHook<V> = this._hook
-        const context = this.context
-        if (!this._resolved) {
-            this._resolved = true
-            context.binder.begin(this, this._isWrapped)
+    resolve(binder: IRelationBinder) {
+        const hook = this._hook
+        const consumer = binder.consumer
+        if (!this._argVals) {
+            const context = this.context
+
+            binder.begin(this, !!this._wrap)
             if (context.protoFactory) {
                 this._proto = context.protoFactory.resolveSource(this._protoKey)
             }
-            if (hook) {
-                hook.resolve()
+            if (hook !== fakeHook) {
+                hook.resolve(binder)
+                if (consumer) {
+                    consumer.hooks.push(hook)
+                }
             }
             this._args = this._rawArgs ? context.resolveDeps(this._rawArgs) : null
-            if (this._args) {
-                this._argVals = new Array(this._args.length)
-            }
-            context.binder.end()
+            this._argVals = this._args ? new Array(this._args.length) : []
+            binder.end()
+
             return
         }
 
-        const hooks = this.hooks
-        for (let i = 0, l = hooks.length; i < l; i++) {
-            hooks[i].resolve()
+        if (consumer && hook !== fakeHook) {
+            consumer.hooks.push(hook)
         }
-
-        if (!this._isWrapped || context.binder.status) {
-            const sources = this.sources
-            for (let i = 0, l = sources.length; i < l; i++) {
-                sources[i].resolve()
-            }
+        if (this._wrap) {
+            binder.consumer = null
         }
+        const masters = this.masters || []
+        for (let i = 0, l = masters.length; i < l; i++) {
+            masters[i].resolve(binder)
+        }
+        binder.consumer = consumer
     }
 
-    _cachedProxy: V
+    dispose() {
+        this.reap()
+        if (this._hook !== fakeHook) {
+            this._hook.closed = true
+        }
+        this.closed = true
+    }
+
+    reap() {
+        const hook = this._hook.cached || this._hook.get()
+        if (hook.reap) {
+            hook.reap(this.cached || this.get(), this._oldValue)
+        }
+        this.cached = null
+    }
 
     get(): V {
-        this.cached = this._cachedProxy
         if (this._args && !resolveArgs(this._args, this._argVals)) {
-            return this.cached
+            return this._oldValue
         }
-        const newVal = this._create(this._proto.cached || this._proto.get(), this._argVals || [])
-        // copy old computed state, not setted in constructor (via setters) to new object
-        const src = this.cachedSrc
-
-        if (src) {
-            for (const k in src) { // eslint-disable-line
-                if (!newVal[k]) {
-                    newVal[k] = src[k]
+        const proto = this._proto.cached || this._proto.get()
+        const wrap = this._wrap
+        let newValue: ?V
+        const hook = this._hook.cached || this._hook.get()
+        const oldId = this.context.notifier.begin(this.displayName)
+        if (this.rawValue) {
+            newValue = this.rawValue
+            fastCallMethod(newValue, proto, this._argVals)
+            if (hook.merge) {
+                newValue = hook.merge(newValue, null)
+                if (newValue) {
+                    this.rawValue = newValue
                 }
             }
-            if (this._hook && !this._hook.merge(newVal, src)) {
-                return this._cachedProxy
-            }
-        }
-
-        this.cachedSrc = newVal
-
-        if (this._isWrapped) {
-            if (!this._cachedProxy) {
-                this._cachedProxy = this.cached = this._isFunc
-                    ? wrapFunction((this: IRef<any>))
-                    : wrapObject((this: IRef<any>))
+        } else if (wrap) {
+            newValue = this._create(proto, this._argVals)
+            this.rawValue = hook.merge
+                ? hook.merge(newValue, this.rawValue) || newValue
+                : newValue
+            this._oldValue = wrap(this)
+        } else if (hook.merge) {
+            newValue = (hook: any).merge(this._create(proto, this._argVals), this._oldValue)
+            if (newValue) {
+                this._oldValue = newValue
             }
         } else {
-            this._cachedProxy = this.cached = newVal
+            newValue = this._create(proto, this._argVals)
+            const oldValue = this._oldValue
+            // Copy old state to new object
+            for (const i in oldValue) { // eslint-disable-line
+                if (newValue[i] === undefined) {
+                    newValue[i] = oldValue[i]
+                }
+            }
+            this._oldValue = newValue
         }
+        this.context.notifier.end(oldId)
+        this.cached = this._oldValue
 
-        return this._cachedProxy
+        return this.cached
     }
 }

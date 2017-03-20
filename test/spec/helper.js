@@ -1,21 +1,13 @@
 // @flow
 
-import React from 'react'
-import {component} from 'reactive-di/annotations'
-import {DiFactory, ReactComponentFactory} from 'reactive-di/index'
+import {createVNode} from 'inferno'
+import Component from 'inferno-component'
+import {DiFactory, createReactRdiAdapter} from 'reactive-di/index'
 
 export function createDi() {
-    function defaultErrorComponent(
-        {error}: {error: Error}
-    ) {
-        return <div>{error.message}</div>
-    }
-    component({})(defaultErrorComponent)
-
     const diFactory = new DiFactory({
-        defaultErrorComponent,
-        themeFactory: (0: any),
-        componentFactory: new ReactComponentFactory(React)
+        createVNode,
+        createComponent: createReactRdiAdapter(Component)
     })
 
     return diFactory

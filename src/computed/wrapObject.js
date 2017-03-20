@@ -1,52 +1,55 @@
 // @flow
 
-import type {INotifier} from '../hook/interfaces'
-import {fastCallMethod, fastCall} from '../utils/fastCreate'
+import type {INotifier} from '../source/interfaces'
+import {fastCallMethod, fastCall} from './fastCreate'
 
-export type IRef<V> = {
+export interface IResolverTarget<V> {
+    rawValue: V;
     displayName: string;
-    cachedSrc: V;
+    notifier: INotifier;
+
     cached: ?V;
     get(): V;
-    notifier: INotifier;
 }
 
 /* eslint-disable no-param-reassign */
 function wrapMethod<V: Object, R>(
-    ref: IRef<V>,
+    ref: IResolverTarget<V>,
     name: string | Symbol
 ): (...args: any[]) => R {
     const notifier = ref.notifier
     const traceName = ref.displayName + '.' + (typeof name === 'string' ? name : name.toString())
+
     function wrappedMethod(...args: any[]): R {
-        const oldTrace = notifier.trace
-        notifier.trace = traceName
-        notifier.opId++
+        const oldId = notifier.begin(traceName)
         if (!ref.cached) {
             ref.get()
         }
-        const result: R = fastCallMethod(ref.cachedSrc, ref.cachedSrc[name], args)
-        notifier.trace = oldTrace
-        notifier.flush()
+        const result: R = fastCallMethod(ref.rawValue, ref.rawValue[name], args)
+        notifier.end(oldId)
+
         return result
     }
+
     wrappedMethod.displayName = traceName
 
     return wrappedMethod
 }
 
-export function wrapFunction<V: Function>(ref: IRef<V>): V {
+export function wrapFunction<V: Object>(ref: IResolverTarget<V>): V {
     const notifier = ref.notifier
     function wrappedFn(...args: any[]): V {
-        const oldTrace = notifier.trace
-        notifier.trace = ref.displayName
-        notifier.opId++
+        const oldId = notifier.begin(ref.displayName)
         if (!ref.cached) {
             ref.get()
         }
-        const result = fastCall(ref.cachedSrc, args) // eslint-disable-line
-        notifier.trace = oldTrace
-        notifier.flush()
+        const v = (ref.rawValue: any)
+        if (typeof v !== 'function') {
+            throw new Error('Can\'t wrap function, that returns not a function')
+        }
+        const result = fastCall(v, args) // eslint-disable-line
+        notifier.end(oldId)
+
         return result
     }
     wrappedFn.displayName = ref.displayName
@@ -54,19 +57,19 @@ export function wrapFunction<V: Function>(ref: IRef<V>): V {
     return (wrappedFn: any)
 }
 
-function wrapCommonProperty<V: Object>(ref: IRef<V>, propName: string | Symbol) {
+function wrapCommonProperty<V: Object>(ref: IResolverTarget<V>, propName: string | Symbol) {
     return {
         set(v: V) {
-            ref.cachedSrc[propName] = v
+            ref.rawValue[propName] = v
         },
         get(): V {
-            return ref.cachedSrc[propName]
+            return ref.rawValue[propName]
         }
     }
 }
 
-export default function wrapObject<V: Object>(ref: IRef<V>): V {
-    let obj: V = ref.cachedSrc
+export default function wrapObject<V: Object>(ref: IResolverTarget<V>): V {
+    let obj: V = ref.rawValue
     const result: V = (Object.create(obj.constructor.prototype): any)
     const setted: {[id: string | Symbol]: boolean} = Object.create(null)
     do {
@@ -88,7 +91,7 @@ export default function wrapObject<V: Object>(ref: IRef<V>): V {
                         result[propName] = wrapMethod(ref, propName)
                     }
                 } else if (typeof propName === 'string' && propName[0] !== '_') {
-                    if (prop && typeof prop === 'object' && prop.__rdiSetter) {
+                    if (prop && typeof prop === 'object') {
                         prop.displayName = `${ref.displayName}.${propName}`
                         result[propName] = prop
                     } else {

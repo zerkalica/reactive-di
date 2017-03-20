@@ -1,63 +1,84 @@
 // @flow
 
-import type {ICacheItem, IStaticContext, IContext, IRelationBinder} from './commonInterfaces'
+import type {IStaticContext, IContext} from './commonInterfaces'
 
-import type {INotifier} from './hook/interfaces'
-
-import type {IControllable, ISource, IStatus} from './source/interfaces'
+import type {INotifier, ISource, IRelationBinder} from './source/interfaces'
 import Source from './source/Source'
 import Status from './source/Status'
 
-import type {IComputed} from './computed/interfaces'
 import Computed from './computed/Computed'
-
-import type {IComponentFactory, IComponent, IConsumerFactory} from './consumer/interfaces'
 import ConsumerFactory from './consumer/ConsumerFactory'
+import type {ICreateComponent} from './consumer/interfaces'
 
 import DisposableCollection from './utils/DisposableCollection'
 import type {IDisposableCollection, IHasDispose} from './utils/DisposableCollection'
-import type {IArg} from './utils/resolveArgs'
+import type {IArg} from './computed/resolveArgs'
 
 import type {IRawArg, IDepRegister} from './interfaces'
 
-export default class Di<Component, Element> {
+import type {
+    CreateVNode,
+    VNodeFlags,
+    Ref,
+    InfernoChildren,
+    Type,
+    VNode,
+    Props
+} from './adapters/inferno'
+
+type ICacheItem = Object
+
+interface IAliasedDep {
+    id: number;
+    context: IContext;
+}
+
+interface IGettableResolvable<V> extends IAliasedDep {
+    cached: ?V;
+    get(): V;
+    resolve(binder: IRelationBinder): void;
+}
+
+interface IResolvableSource<V: Object, M> extends ISource<V, M> {
+    resolve(binder: IRelationBinder): void;
+}
+
+export default class Di implements IContext {
     displayName: string
 
-    defaultErrorComponent: Component
-    componentFactory: IComponentFactory<Component, Element>
     protoFactory: ?IContext
-    binder: IRelationBinder
     notifier: INotifier
-    closed: boolean
-    disposables: IDisposableCollection<IHasDispose>
-    items: ICacheItem[]
+    closed: boolean = false
+    disposables: IDisposableCollection<IHasDispose> = new DisposableCollection()
+    values: {[id: string]: any}
+    binder: IRelationBinder
+    createComponent: ICreateComponent
 
-    Updater: Class<IControllable>;
-
+    _items: ICacheItem[]
     _parents: IContext[]
-    _context: IStaticContext<Component, Element>
+    _context: IStaticContext
+    _createVNode: CreateVNode
 
     constructor(
         displayName: string,
         items: ICacheItem[],
-        c: IStaticContext<Component, Element>,
+        c: IStaticContext,
         parents: IContext[]
     ) {
         this.displayName = displayName
-        this.items = items
-        this.componentFactory = c.componentFactory
+        this._items = items
         this.protoFactory = c.protoFactory
         this.binder = c.binder
-        this.Updater = c.Updater
+        this.values = c.values
         this.notifier = c.notifier
-        this.defaultErrorComponent = c.defaultErrorComponent
+        this.createComponent = c.createComponent
+
+        this._createVNode = c.createVNode
         this._context = c
-        this.disposables = new DisposableCollection()
         this._parents = parents
         for (let i = 0, l = parents.length; i < l; i++) {
             parents[i].disposables.push(this)
         }
-        this.closed = false
     }
 
     dispose(): void {
@@ -72,56 +93,41 @@ export default class Di<Component, Element> {
         this.disposables.items = []
     }
 
-    copy(displayName: string): this {
+    copy(displayName: string): IContext {
         const newParents = this._parents.slice(0)
         newParents.push(this)
 
-        return (new Di(
+        return new Di(
             displayName,
-            this.items.slice(0),
+            this._items.slice(0),
             this._context,
             newParents
-        ): any)
-    }
-
-    _any<V: Object>(
-        k: Function,
-        context: IContext
-    ): ISource<V> | IComputed<V> | IStatus<V> | IConsumerFactory<V, Element, Component> {
-        if (k._rdiKey) {
-            return new Source(k, context)
-        } else if (k.statuses) {
-            return new Status(k, context)
-        } else if (k._rdiJsx) {
-            return new ConsumerFactory(k, context)
-        }
-
-        return new Computed(k, context)
+        )
     }
 
     register(registered?: ?IDepRegister[]): this {
         if (!registered) {
             return this
         }
-        const items = this.items
+        const items = this._items
         let rec: ?ICacheItem
+        const binder = this.binder
 
         for (let i = 0, l = registered.length; i < l; i++) {
             const pr: IDepRegister = registered[i]
             if (Array.isArray(pr)) {
                 if (pr.length !== 2) {
-                    throw new Error(`Provide tuple of two items in register() ${this.binder.debugStr(pr)}`)
+                    throw new Error(`Provide tuple of two items in register() ${binder.debugStr(pr)}`)
                 }
                 if (typeof pr[1] !== 'function') {
-                    throw new Error(`Only function as register target, given: ${this.binder.debugStr(pr[1])}`)
+                    throw new Error(`Only function as register target, given: ${binder.debugStr(pr[1])}`)
                 }
                 const [key, target] = pr
 
-                rec = items[target._rdiId || 0]
+                rec = items[target._r0 || 0]
 
                 // @todo expose resolved
                 if (rec && rec.resolved) {
-                    const binder = this.binder
                     const fromTo = `Can't create alias from ${binder.debugStr(key)} to ${binder.debugStr(target)}`
                     throw new Error(`Target dependency already initialized. ${fromTo}`)
                 }
@@ -130,19 +136,13 @@ export default class Di<Component, Element> {
                     rec ? rec.context : this
                 )
                 items[depInfo.id] = depInfo
-                key._rdiJsx = target._rdiJsx
-
-                if (key._rdiId) {
-                    const binder = this.binder
-                    const fromTo = `Can't create alias from ${binder.debugStr(key)} to ${binder.debugStr(target)}`
-                    throw new Error(`Aliased dependency already resolved. ${fromTo}`)
-                }
-                key._rdiId = depInfo.id // eslint-disable-line
+                key._r2 = target._r2
+                key._r0 = depInfo.id // eslint-disable-line
             } else {
                 if (typeof pr !== 'function') {
-                    throw new Error(`Only function as register target, given: ${this.binder.debugStr(pr)}`)
+                    throw new Error(`Only function as register target, given: ${binder.debugStr(pr)}`)
                 }
-                if (!items[pr._rdiId || 0]) {
+                if (!items[pr._r0 || 0]) {
                     rec = this._any(pr, this)
                     items[rec.id] = rec
                 }
@@ -152,35 +152,68 @@ export default class Di<Component, Element> {
         return this
     }
 
-    resolveConsumer<Props: Object>(key: Function): IConsumerFactory<Props, Element, Component> {
-        const rec: IConsumerFactory<Props, Element, Component> = new ConsumerFactory(key, this)
-        this.items[rec.id] = rec
-        return rec
+    h(
+        flags: VNodeFlags,
+        type?: Type,
+        className?: string,
+        children?: InfernoChildren,
+        props?: Props,
+        key?: any,
+        ref?: Ref,
+        noNormalise?: boolean
+    ): VNode {
+        /* eslint-disable no-bitwise */
+        if ((flags & 16) && ((type: any)._r2 & 1)) {
+            let factory: ?ConsumerFactory<*, *, *> = (type: any)._r0
+                ? this._items[(type: any)._r0]
+                : undefined
+
+            if (!factory) {
+                factory = new ConsumerFactory((type: any), this)
+                this._items[factory.id] = factory
+            }
+            props = (props || {}: Object)
+            props._rdi = factory.create(this.notifier.parentId)
+            type = factory.component
+        }
+
+        return this._createVNode(flags, type, className, children, props, key, ref, noNormalise)
     }
 
-    wrapComponent<Props: Object, State: Object>(tag: IComponent<Props, State, Element>): Component {
-        return ((this.items[tag._rdiId || 0]: any) || this.resolveConsumer(tag)).component
-    }
-
-    resolveSource<V: Object>(key: Function): ISource<V> {
-        let rec: ?ISource<V> = (this.items[key._rdiId || 0]: any)
+    resolveSource<V: Object, M>(key: Function): ISource<V, M> {
+        let rec: ?IResolvableSource<V, M> = (this._items[key._r0 || 0]: any)
         if (!rec) {
             rec = new Source(key, this)
-            this.items[rec.id] = rec
+            this._items[rec.id] = rec
         }
-        rec.resolve()
+        rec.resolve(this.binder)
 
         return rec
     }
 
-    _anyDep<V: Object>(
+    _any(
+        k: Function,
+        context: IContext
+    ): IAliasedDep {
+        if (k.statuses) {
+            return new Status(k, context)
+        } else if (k._r2 & 1) {
+            return new ConsumerFactory(k, context)
+        } else if ((k._r2 & (128 + 64)) || (!k._r1 && !(k._r2 & 8) && !(k._r2 & 16))) {
+            return new Source(k, context)
+        }
+
+        return new Computed(k, context)
+    }
+
+    _anyDep(
         k: Function
-    ): ISource<V> | IComputed<V> | IStatus<V> {
-        if (k._rdiKey) {
-            return new Source(k, this)
-        } else if (k.statuses) {
+    ): IGettableResolvable<*> {
+        if (k.statuses) {
             return new Status(k, this)
-        } else if (k._rdiAbs) {
+        } else if ((k._r2 & (128 + 64)) || (!k._r1 && !(k._r2 & 8) && !(k._r2 & 16))) {
+            return new Source(k, this)
+        } else if (k._r2 & 32) {
             throw new Error(`Need register Abstract entity ${this.binder.debugStr(k)}`)
         }
 
@@ -188,34 +221,47 @@ export default class Di<Component, Element> {
     }
 
     resolveDeps(argDeps: IRawArg[]): IArg[] {
-        const items = this.items
+        const items = this._items
         const resolvedArgs: IArg[] = []
-        let rec: ?ISource<*> | IComputed<*> | IStatus<*>
+        const binder = this.binder
+        let rec: ?IGettableResolvable<*>
         for (let i = 0, l = argDeps.length; i < l; i++) {
-            const argDep = argDeps[i]
+            let argDep = argDeps[i]
+            let asSrc = false
             if (typeof argDep === 'object') {
                 const values = []
                 for (let prop in argDep) { // eslint-disable-line
-                    const key = argDep[prop]
-                    rec = (items[key._rdiId || 0]: any)
+                    let key = argDep[prop]
+                    if (key._r4) {
+                        asSrc = true
+                        // @todo accept arrays
+                        key = key.v[0]
+                    }
+
+                    rec = (items[key._r0 || 0]: any)
                     if (!rec) {
                         rec = this._anyDep(key)
                         items[rec.id] = rec
                     }
-                    rec.resolve()
+                    rec.resolve(binder)
 
-                    values.push({k: prop, v: rec})
+                    values.push({k: prop, v: rec, asSrc})
                 }
                 resolvedArgs.push({t: 1, v: values})
             } else {
-                rec = (items[argDep._rdiId || 0]: any)
+                if (argDep._r4) {
+                    asSrc = true
+                    // @todo accept arrays
+                    argDep = argDep.v[0]
+                }
+                rec = (items[argDep._r0 || 0]: any)
                 if (!rec) {
                     rec = this._anyDep(argDep)
                     items[rec.id] = rec
                 }
-                rec.resolve()
+                rec.resolve(binder)
 
-                resolvedArgs.push({t: 0, v: rec})
+                resolvedArgs.push({t: 0, v: rec, asSrc})
             }
         }
 

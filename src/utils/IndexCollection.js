@@ -10,7 +10,7 @@ export type FindFn<T> = (element: T, index?: number, arr?: T[], thisArg?: Object
 export type UpdateFn<V> = (oldItem: V) => V
 export type SelectorFn<V> = (item: V) => boolean
 
-export const itemKey = Symbol('coll:key')
+export const itemKey = setterKey
 
 export type ListenerFn<Item> = (newItem: Item, oldItem: Item, index: number) => void
 
@@ -22,7 +22,7 @@ export const fakeListener: ItemListener<*> = {
     update() {}
 }
 
-export interface IIndexer<V, Id> {
+export interface IIndexer<Id, V> {
     removeAll(): void;
     add(item: V, index: number): void;
     remove(item: V, index: number): void;
@@ -30,22 +30,26 @@ export interface IIndexer<V, Id> {
     pick(ids: Id[]): V[];
 }
 
-export default class IndexCollection<Item: Object, Id, Indexer: IIndexer<Item, Id>> {
+export default class IndexCollection<Item: Object, Id = string> {
     // @@iterator(): Iterator<Item>;
     _items: Item[]
-    _indexer: Indexer
+    _indexer: IIndexer<Id, Item>
 
     length: number
 
     static Item: Class<Item>
-    static Indexer: ?Class<Indexer>
+    static Indexer: ?Class<IIndexer<Id, Item>>
     static autoNotify: ?boolean
 
-    constructor(recs?: ?$Shape<Item>[], newItems?: ?Item[], indexer?: ?Indexer) {
+    constructor(recs?: ?$Shape<Item>[], newItems?: ?Item[], indexer?: ?IIndexer<Id, Item>) {
         this._items = (recs ? this._recsToItems(recs) : newItems) || []
         this.length = this._items.length
         const Idxr = this.constructor.Indexer
         this._indexer = indexer || (Idxr ? new Idxr() : new (IdIndexer: any)())
+    }
+
+    isUpdated(_item: Item, _prevItem: Item): boolean {
+        return false
     }
 
     copy(items: $Shape<Item>[]): this {

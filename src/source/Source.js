@@ -1,298 +1,339 @@
 // @flow
-import type {IContext} from '../commonInterfaces'
-
-import {setterKey} from '../interfaces'
-import type {IShape} from '../interfaces'
-import Hook from '../hook/Hook'
-import defaultMerge from '../hook/defaultMerge'
-import type {IBaseHook, INotifierItem, IHook} from '../hook/interfaces'
 
 import DisposableCollection from '../utils/DisposableCollection'
-import type {IDisposableCollection, IDisposable} from '../utils/DisposableCollection'
-import type {ICacheable} from '../utils/resolveArgs'
+import type {IDisposableCollection} from '../utils/DisposableCollection'
+import {setterKey} from '../interfaces'
+import type {IContext} from '../commonInterfaces'
+
 import debugName from '../utils/debugName'
 
-import createSetterFn, {fromEvent} from './createSetterFn'
-import SourceStatus from './SourceStatus'
-import type {IPromisable, IUpdater, ISourceStatus, ISetter, ISource, IControllable} from './interfaces'
-import Promisable from './Promisable'
+import type {
+    ISlave,
+    IComputed,
+    IRelationBinder,
+    IAsyncValue,
+    ISourceStatus,
+    IBaseHook,
+    IUpdatePayload,
+    ISource,
+    INotifier,
+    ISourceInt
+} from './interfaces'
+import Computed from '../computed/Computed'
+import SourceObservable from './SourceObservable'
 
-export default class Source<V: Object> {
-    t: 1
-    displayName: string
+const fakeHook: any = {
+    cached: {},
+    resolve() {},
+    init() {},
+    closed: false
+}
+
+function defaultMerge<V: any, M: any>(newVal: M, oldVal: V): V {
+    return Array.isArray(newVal)
+        ? newVal
+        : Object.assign((Object.create(oldVal.constructor.prototype): any), oldVal, newVal || {})
+}
+
+export default class Source<V: Object, M> implements ISourceInt<V, M> {
+    t: 2 = 2
     id: number
-    computeds: IDisposableCollection<ICacheable<any> & IDisposable>
-    consumers: IDisposableCollection<INotifierItem>
-    cached: ?V
-
-    closed: boolean
-    status: ?ISource<ISourceStatus>
-
-    _hook: ?IHook<V>
-    _isResolving: boolean
+    displayName: string
+    cached: ?V = null
+    closed: boolean = false
+    refs: number = 0
+    status: ?ISourceStatus = null
     context: IContext
 
-    constructor(
-        key: ?Function,
-        context: IContext,
-        id?: number,
-        name?: string,
-        initialValue?: V,
-        parentHook?: ?IHook<*>
-    ) {
-        (this: ISource<V>) // eslint-disable-line
-        if (key) {
-            this.displayName = key._rdiKey || debugName(key)
-            const configValue: ?V = context.binder.values[this.displayName] || null
-            if (configValue) {
-                this.cached = key._rdiInst
-                    ? configValue
-                    : !!key._rdiConstr
-                        ? new (key: any)(configValue) // eslint-disable-line
-                        : Object.assign(new key(), configValue) // eslint-disable-line
-            } else {
-                this.cached = (new key(): any) // eslint-disable-line
-            }
-            this.id = key._rdiId || (++context.binder.lastId, ++context.binder.lastId) // eslint-disable-line
-            this._hook = key._rdiHook ? new Hook(key._rdiHook, context, this) : null
-            this._isResolving = !!this._hook
-            key._rdiId = this.id // eslint-disable-line
-        } else {
-            this._hook = parentHook
-            this._isResolving = false
-            this.id = id || 0
-            this.displayName = name || ''
-            this.cached = initialValue
-        }
+    _notifier: INotifier
 
-        this.t = 1
-        this.closed = false
-        this.status = null
-        this.computeds = new DisposableCollection()
-        this.consumers = new DisposableCollection()
+    _oldValue: V
+    _initVal: V
+    _hook: IComputed<IBaseHook<V, M>>
+    _slaves: IDisposableCollection<ISlave> = new DisposableCollection()
+    _observable: ?SourceObservable<V, M> = null
+    _cbs: ?((v: V) => void)[] = null
+    _errCbs: ?((e: Error) => void)[] = null
+    _statusSlaves: ?IDisposableCollection<ISlave> = null
+
+    constructor(key: any, context: IContext) {
+        this.id = key._r0 || (++context.notifier.lastId, ++context.notifier.lastId) // eslint-disable-line
+        key._r0 = this.id // eslint-disable-line
+        this.displayName = key.displayName || debugName(key)
         this.context = context
-        ;(this.cached: any)[setterKey] = this // eslint-disable-line
-        this._setter = null
-        this._eventSetter = null
-        this._promisable = null
-    }
-
-    resolve(): void {
-        if (this._isResolving && this._hook) {
-            this._isResolving = false
-            this._hook.resolve()
+        this._notifier = context.notifier
+        this._oldValue = (null: any)
+        this._hook = fakeHook
+        if (key._rdiHook) {
+            this._hook = new Computed(key._rdiHook, context, (this: ISource<any, M>))
+            context.disposables.push(this)
         }
 
-        const binder = this.context.binder
-        const stack = binder.stack
-        let source: ISource<any> = (this: ISource<V>)
-        let consumers = source.consumers
-        let computeds = source.computeds
-        const status = binder.status
-        if (status) {
-            /**
-             * status(3) - status -> source.computeds (for cache invalidating)
-             *     source -> status.sources (for caching, pass to another computed in future)
-             */
-            source = this.getStatus()
-            consumers = source.consumers
-            computeds = source.computeds
-            source.computeds.push(status)
-            status.sources.push((source: ISource<ISourceStatus>))
-        }
-
-        for (let i = binder.level, l = stack.length; i < l; i++) {
-            const rec = stack[i]
-            if (!rec.has[source.id]) {
-                const v = rec.v
-                if (v.t === 3) {
-                    throw new Error('not here')
-                }
-                rec.has[source.id] = true
-                /**
-                 * v is
-                 *
-                 * computed(1) - computed -> source.computeds (for cache invalidating),
-                 *     source -> computed.sources (for caching, pass to another computed in future)
-                 *
-                 * consumer(2) - consumer -> source.consumers (for triggering state changes),
-                 *     consumer -> source.computeds (for cache invalidating),
-                 *     source.hook -> consumer.hooks (for livecycle callbacks)
-                 *
-                 * hook(4) - hook -> source.consumers (for triggering state changes),
-                 *     hook -> source.computeds (for cache invalidating)
-                 */
-                computeds.push((v: ICacheable<*> & IDisposable))
-                if (v.t === 0) { // computed
-                    v.sources.push((source: ISource<*>))
-                } else if (v.t === 2) { // consumer
-                    consumers.push((v: INotifierItem))
-                } else { // hook
-                    consumers.push((v: INotifierItem))
-                }
+        const initialValue: any = context.values[this.displayName] || null
+        if (initialValue) {
+            if (!(key._r2 & 128)) {
+                this._oldValue = key._r2 & 64
+                    ? new key((initialValue: M)) // eslint-disable-line
+                    : Object.assign(new key(), (initialValue: M)) // eslint-disable-line
+            } else {
+                this._oldValue = initialValue
             }
+        } else {
+            this._oldValue = new key() // eslint-disable-line
         }
-    }
-
-    _createSetter(
-        getValue: ?(rawVal: any) => mixed
-    ): ISetter<V> {
-        const notifier = this.context.notifier
-        const obj = this.cached
-        if (!obj) {
-            throw new Error('Not cached')
-        }
-        const result = Object.create(obj.constructor)
-        const propNames: string[] = Object.getOwnPropertyNames(obj)
-        for (let i = 0, l = propNames.length; i < l; i++) {
-            const pn = propNames[i]
-            result[pn] = createSetterFn((this: ISource<V>), notifier, pn, getValue)
-        }
-        result.displayName = this.displayName + 'Setter'
-        result.__rdiSetter = true
-
-        return result
-    }
-
-    _setter: ?ISetter<V>
-    setter(): ISetter<V> {
-        if (!this._setter) {
-            this._setter = this._createSetter()
-        }
-        return this._setter
-    }
-
-    _eventSetter: ?ISetter<V>
-    eventSetter(): ISetter<V> {
-        if (!this._eventSetter) {
-            this._eventSetter = this._createSetter(fromEvent)
-        }
-        return this._eventSetter
+        this._initVal = this._oldValue
+        ;(this._oldValue: any)[setterKey] = this // eslint-disable-line
     }
 
     get(): V {
-        throw new Error('Source always cached')
+        let newValue: ?V = this._oldValue
+
+        const hook = this._hook.cached || this._hook.get()
+
+        if (hook.merge && newValue) {
+            newValue = hook.merge((newValue: any), this._oldValue)
+        }
+
+        if (hook.pull && newValue) {
+            const result: ?IAsyncValue<M> | void = hook.pull(newValue, this._oldValue, this)
+            if (result) {
+                if (this._observable) {
+                    this._observable.abort()
+                }
+                if (!this.status) {
+                    this.status = 'PENDING'
+                }
+                this._observable = new SourceObservable(result, this, 'pull', this._notifier)
+            }
+        } else {
+            newValue = this._oldValue
+        }
+
+        this.cached = this._oldValue = newValue
+
+        return this._oldValue
     }
 
-    getStatus(): ISource<ISourceStatus> {
+    update(payload: IUpdatePayload<V, M>): () => void {
+        if (this._observable) {
+            this._observable.abort()
+        }
+        const obs = this._observable = new SourceObservable(payload.run(), this, 'update', this._notifier)
+        if (payload.complete) {
+            this.then(payload.complete)
+        }
+        if (payload.error) {
+            this.catch(payload.error)
+        }
+
+        return () => obs.abort()
+    }
+
+    getStatus(): ISourceStatus {
+        if (!this.cached) {
+            this.get()
+        }
         if (!this.status) {
-            const status: ISource<ISourceStatus> = new Source(
-                null,
-                this.context,
-                this.id - 1,
-                this.displayName + 'Status',
-                (new SourceStatus(): ISourceStatus),
-                null
-            )
-            this.status = status
+            this.status = 'COMPLETE'
         }
 
         return this.status
     }
 
-    _promisable: ?IPromisable<V>
-    _getPromisable(): IPromisable<V> {
-        if (!this._promisable) {
-            this._promisable = new Promisable()
+    _resolved: boolean = false
+
+    resolve(binder: IRelationBinder) {
+        if (!this._resolved) {
+            this._resolved = true
+            binder.begin(this, false)
+            this._hook.resolve(binder)
+            binder.end()
+        }
+        let slaves = this._slaves.items
+        const id = this.id
+        const stack = binder.stack
+        const status = binder.status
+
+        for (let i = binder.level, l = stack.length; i < l; i++) {
+            const rec = stack[i]
+            if (!rec.has[id]) {
+                const v = rec.v
+                rec.has[id] = true
+                slaves.push(v)
+                if (v.t === 0) {
+                    v.masters.push(this)
+                }
+            }
         }
 
-        return this._promisable
+        if (status) {
+            slaves = this._statusSlaves = this._statusSlaves || new DisposableCollection()
+            slaves.push(status)
+            status.masters.push(this)
+        }
+        const v = binder.consumer
+        if (!binder.level && v) {
+            slaves.push(v)
+            if (this._hook !== fakeHook) {
+                v.hooks.push(this)
+            }
+        }
     }
 
-    promise(): Promise<V> {
-        return this._getPromisable().promise
+    _actualize(slaves: ISlave[]) {
+        const {consumers: allConsumers} = this._notifier
+        for (let i = 0, l = slaves.length; i < l; i++) {
+            const v = slaves[i]
+            v.cached = null
+            if (!v.closed && v.t === 1) {
+                allConsumers.push(v)
+            }
+        }
     }
 
-    _lastTimer: number = 0
-    _updater: ?IControllable = null
+    then(cb: (v: V) => void): this {
+        if (this.status === 'COMPLETE' && this.cached !== this._initVal) {
+            cb(this.cached || this.get())
+            return this
+        }
+        if (!this._cbs) {
+            this._cbs = []
+        }
+        this._cbs.push(cb)
 
-    update(updaterPayload: IUpdater<any>, throttleTime?: ?number): () => void {
-        if (this._updater) {
-            this._updater.abort()
+        return this
+    }
+
+    catch(cb: (e: Error) => void): this {
+        if (this.status instanceof Error) {
+            cb(this.status)
+            return this
         }
-        const updater: IControllable = this._updater = new this.context.Updater(
-            updaterPayload,
-            (this: ISource<V>),
-            this.getStatus(),
-            this._getPromisable(),
-            this.context.notifier
-        )
-        if (this._lastTimer) {
-            clearTimeout(this._lastTimer)
+        if (!this._errCbs) {
+            this._errCbs = []
         }
-        if (throttleTime) {
-            this._lastTimer = setTimeout(() => updater.run(), throttleTime)
+        this._errCbs.push(cb)
+
+        return this
+    }
+
+    dispose() {
+        this.reap()
+        if (this._hook !== fakeHook) {
+            this._hook.closed = true
+        }
+    }
+
+    reap() {
+        this._cbs = null
+        this._errCbs = null
+        if (this._observable) {
+            this._observable.abort()
+            this._observable = null
+        }
+        const hook = this._hook.cached || this._hook.get()
+        if (hook.reap) {
+            hook.reap(this.cached || this.get(), this._oldValue)
+        }
+        this.cached = null
+    }
+
+    error(err: Error) {
+        const cbs = this._errCbs
+        const oldStatus = this.status
+        if (oldStatus === err) {
+            return
+        }
+        this.status = err
+        if (cbs) {
+            for (let i = 0; i < cbs.length; i++) {
+                cbs[i](err)
+            }
+            this._cbs = null
+            this._errCbs = null
+        }
+        if (this._statusSlaves) {
+            this._actualize(this._statusSlaves.items)
+        }
+        this._notifier.changed(this.displayName, this.status, oldStatus)
+    }
+
+    pend(isPending: boolean) {
+        const oldStatus = this.status
+        const newStatus = isPending ? 'PENDING' : 'COMPLETE'
+        if (oldStatus === newStatus) {
+            return
+        }
+        this.status = newStatus
+        if (this._statusSlaves) {
+            this._actualize(this._statusSlaves.items)
+        }
+        if (!isPending) {
+            const cbs = this._cbs
+            if (cbs) {
+                const oldVal = this._oldValue
+                for (let i = 0; i < cbs.length; i++) {
+                    cbs[i](oldVal)
+                }
+            }
+            this._cbs = null
+            this._errCbs = null
+        }
+
+        this._notifier.changed(this.displayName + 'Status', this.status, oldStatus)
+    }
+
+    reset(rawNewVal?: ?M) {
+        const oldId = this._notifier.begin(this._notifier.trace || this.displayName)
+        this.pend(false)
+        this.set(rawNewVal, true)
+        this._notifier.end(oldId)
+    }
+
+    set(rawNewVal?: ?M, noPut?: boolean) {
+        const hook = this._hook.cached || this._hook.get()
+        const oldValue: V = this._oldValue
+        let newVal: ?V
+        if (!rawNewVal) {
+            newVal = this._initVal
+        } else if (hook.merge) {
+            newVal = hook.merge(rawNewVal, oldValue)
+        } else if (oldValue) {
+            newVal = defaultMerge(rawNewVal, oldValue)
         } else {
-            updater.run()
+            newVal = (rawNewVal: any)
         }
 
-        return () => updater.abort()
-    }
-
-    pend(): void {
-        this.getStatus().merge({pending: true, complete: false, error: null})
-    }
-
-    error(error: Error): void {
-        this.getStatus().merge({pending: false, complete: false, error})
-    }
-
-    reset(v?: IShape<V>): void {
-        if (!this.cached) {
-            throw new Error('cached not defined')
+        if (!newVal || newVal === oldValue) {
+            return
         }
-        this.merge(v || new this.cached.constructor())
-        if (this.status) {
-            this.status.reset()
-        }
-    }
-
-    set(newVal: V): void {
-        this.cached = newVal
+        this.cached = this._oldValue = newVal
         ;(newVal: any)[setterKey] = this // eslint-disable-line
-        this.cached = newVal
-        const computeds = this.computeds.items
-        for (let i = 0, l = computeds.length; i < l; i++) {
-            computeds[i].cached = null
-        }
-        this.context.notifier.notify(this.consumers.items, this.displayName, this.cached, newVal)
-        this.cached = newVal
-    }
 
-    push(v: IShape<V>): void {
-        if (v === this.cached) {
-            return
-        }
-        const cached = this.cached
-        if (!cached) {
-            throw new Error('Cached is empty')
-        }
-        const newVal: ?V = this._hook
-            ? this._hook.merge(v, cached)
-            : defaultMerge(v, cached)
-        if (!newVal) {
-            return
-        }
-        this.set(newVal)
-    }
+        this._actualize(this._slaves.items)
 
-    merge(v: IShape<V>): void {
-        if (v === this.cached) {
-            return
+        if (!noPut && hook.put) {
+            const result: IAsyncValue<M> | void = hook.put(newVal, oldValue, this)
+            if (result) {
+                if (this._observable) {
+                    this._observable.abort()
+                }
+                if (!this.status) {
+                    this.status = 'PENDING'
+                }
+                this._observable = new SourceObservable(result, this, 'put', this._notifier)
+            }
         }
-        const cached = this.cached
-        if (!cached) {
-            throw new Error('Cached is empty')
+
+        const cbs = this._cbs
+        if (cbs) {
+            for (let i = 0; i < cbs.length; i++) {
+                cbs[i](newVal)
+            }
         }
-        const newVal: ?V = this._hook
-            ? this._hook.merge(v, cached)
-            : defaultMerge(v, cached)
-        if (!newVal) {
-            return
-        }
-        if (this._hook) {
-            this._hook.put(newVal, cached)
-        }
-        this.set(newVal)
+        this._cbs = null
+        this._errCbs = null
+
+        this._notifier.changed(this.displayName, newVal, oldValue)
     }
 }

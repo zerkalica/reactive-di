@@ -1,9 +1,4 @@
 // @flow
-import type {IContext} from '../commonInterfaces'
-import type {IPullable, IHook, IHasForceUpdate} from '../hook/interfaces'
-import type {ICacheable} from '../utils/resolveArgs'
-import type {IDisposable} from '../utils/DisposableCollection'
-
 import type {
     IRawArg,
     IDepRegister
@@ -15,7 +10,6 @@ export interface IConsumerMeta {
     name: string;
     propsTo: ?Function;
     args: ?IRawArg[];
-    errorComponent: ?Function;
     register: ?IDepRegister[];
 }
 
@@ -23,45 +17,25 @@ export type ICreateElement<Element> = (...args: any[]) => Element
 
 export type IComponent<Props: Object, State: Object, Element> = (props: Props, state: State) => Element
 
-export interface IConsumerListener<Props: Object, Element> extends ICacheable<Props>, IDisposable, IPullable {
+export interface IConsumerProps<Props, Element> {
     displayName: string;
-    updater: ISetProps<Props>;
-    detach(): void;
-    willMount(prop: Props): void;
-    render(): Element;
-    shouldUpdate(newProps: Props): boolean;
+    hasHooks: boolean;
+    props: Props;
+    init(rc: IRawComponent<Props>, props: Props): void;
+    onComponentWillMount(): void;
+    onComponentWillUnmount(): void;
+    render(props: Props): ?Element;
+    onComponentShouldUpdate(newProps: Props): boolean;
 }
 
-export interface IComponentFactory<Component, Element> {
-    createElement: ICreateElement<Element>;
+export type IComponentFn = Function
+export type ICreateComponent = (dn: string) => IComponentFn
 
-    wrapComponent<Props: Object>(
-        factory: IConsumerFactory<Props, Element, Component>
-    ): Component;
+export interface IRawComponent<Props: Object> {
+    props: Props;
+    forceUpdate(): void;
 }
 
-export interface ISetProps<Props: Object> extends IHasForceUpdate {
-    setProps(props: Props): void;
-}
-
-export interface IConsumerFactory<Props: Object, Element, Component> {
-    displayName: string;
-    id: number;
-    component: Component;
-    context: IContext;
-    create(updater: ISetProps<Props>): IConsumerListener<Props, Element>;
-}
-
-export interface IConsumer<V: Object> extends ICacheable<V>, IHasForceUpdate, IDisposable, IPullable {
-    displayName: string;
-    id: number;
-    t: 2;
-    hooks: IHook<*>[];
-}
-
-export interface IHasCreateComponent<Element> {
-    h(
-        tag: any,
-        props?: ?{[id: string]: mixed}
-    ): Element;
+export interface RdiProps {
+    _rdi: IConsumerProps<RdiProps, Element>;
 }

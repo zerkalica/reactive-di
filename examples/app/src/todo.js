@@ -1,26 +1,24 @@
 // @flow
 /* eslint-env browser */
+/* eslint-disable no-console */
 
 // import {Component, createElement} from 'react'
 // import {render} from 'react-dom'
 
-import {render} from 'inferno'
+import {render, createVNode as infernoCreateVNode} from 'inferno'
 import Component from 'inferno-component'
-import createElement from 'inferno-create-element'
 
 import {create as createJss} from 'jss'
 import jssCamel from 'jss-camel-case'
 
 import {
-    getSrc,
-    Thenable,
+    createReactRdiAdapter,
     SourceStatus,
     DiFactory,
-    ReactComponentFactory,
-    IndexCollection
+    BaseSetter
 } from 'reactive-di/index'
-import type {ICallerInfo} from 'reactive-di/index'
-import {actions, hooks, deps, theme, component, source} from 'reactive-di/annotations'
+import type {ResultOf, ICallbacks, IComponentInfo, ICallerInfo} from 'reactive-di/index'
+import {src, actions, component, hooks, theme, source} from 'reactive-di/annotations'
 
 const todosFixture: any = []
 
@@ -36,7 +34,7 @@ for (let i = 0; i < maxTodos; i++) {
 }
 
 // Fetcher service, could be injected from outside by key 'Fetcher' as is
-@source({key: 'Fetcher', instance: true})
+@source({instance: true})
 class Fetcher {
     _count = 0
     fetch<V: Object>(_url: string, _params?: {method: string}): Promise<V> {
@@ -54,68 +52,56 @@ class Fetcher {
 }
 
 let counter = maxTodos
-@source({key: 'Todo'})
 class Todo {
     id = ++counter
     title = ''
     email = ''
 }
 
-@source({key: 'Todos'})
-class Todos extends IndexCollection {
-    static Item = Todo
-}
+class Todos extends Array<Todo> {}
 
-@deps(Fetcher)
 @hooks(Todos)
 class TodosHooks {
     _fetcher: Fetcher
-    _abort: () => void
-
     constructor(fetcher: Fetcher) {
         this._fetcher = fetcher
     }
 
-    willMount(todos: Todos): void {
-        const fetcher = this._fetcher
-        this._abort = getSrc(todos).update({
-            run(): Promise<Todos> {
-                return fetcher.fetch('/todos', {method: 'GET'})
-            }
-        })
-    }
-
-    willUnmount(): void {
-        this._abort()
+    pull(): Promise<Todo[]> {
+        return this._fetcher.fetch('/todos', {method: 'GET'})
     }
 }
 
-@source({key: 'AddedTodo'})
 class AddedTodo extends Todo {
     title: string
 }
 
 // Model ThemeVars, could be injected from outside by key 'ThemeVars' as ThemeVarsRec
-@source({key: 'ThemeVars'})
 class ThemeVars {
-    color = 'black'
+    color = 0
 }
 
 class TodoRefs {
-    title: Thenable<HTMLElement> = new Thenable()
+    title: ?HTMLElement = null
+}
+@hooks(TodoRefs)
+class TodoRefsHooks {
+
+    merge(m: TodoRefs, old: TodoRefs): ?TodoRefs {
+        return m.title === old.title ? null : m
+    }
+
+    put(ref: TodoRefs) {
+        console.log('after attach to dom: ', ref.title)
+    }
+
+    reap(ref: TodoRefs) {
+        console.log('will detached from dom: ', ref.title)
+    }
 }
 
-@source({key: 'TodoServiceSubmitResult'})
 class TodoServiceSubmitResult {}
 
-@deps(
-    Fetcher,
-    Todos,
-    TodoRefs,
-    ThemeVars,
-    TodoServiceSubmitResult,
-    AddedTodo
-)
 @actions
 class TodoService {
     _tv: ThemeVars
@@ -125,6 +111,8 @@ class TodoService {
     _fetcher: Fetcher
     _todos: Todos
 
+    setRefs: ICallbacks<TodoRefs, HTMLElement>
+
     constructor(
         fetcher: Fetcher,
         todos: Todos,
@@ -133,6 +121,7 @@ class TodoService {
         todoServiceSubmitResult: TodoServiceSubmitResult,
         addedTodo: AddedTodo
     ) {
+        this.setRefs = new BaseSetter(refs).create(BaseSetter.createSet)
         this._fetcher = fetcher
         this._todos = todos
         this._tv = tv
@@ -146,31 +135,33 @@ class TodoService {
         const addedTodo = this._addedTodo
         const todos = this._todos
 
-        getSrc(this._todoServiceSubmitResult).update({
-            run(): Promise<TodoServiceSubmitResult> {
+        src(this._todoServiceSubmitResult).update({
+            run(): Promise<$Shape<TodoServiceSubmitResult>> {
                 return fetcher.fetch('/todo', {
                     method: 'POST',
                     body: JSON.stringify(addedTodo)
-                })
+                }).then(() => {})
             },
             complete(): void {
-                todos.push(addedTodo)
-                getSrc(addedTodo).reset()
+                const newTodos = todos.slice(0)
+                newTodos.push(Object.assign(new Todo(), addedTodo))
+                src(todos).set(newTodos)
+                src(addedTodo).reset({
+                    id: addedTodo.id++
+                })
             }
         })
     }
 
     changeColor(): void {
-        getSrc(this._tv).merge({color: 'green'})
+        src(this._tv).set({color: 'green'})
     }
 }
 
-@source({key: 'EditingTodo'})
 class EditingTodo extends Todo {
     title: string
 }
 
-@deps(Todos, EditingTodo)
 @actions
 class TodoViewService {
     _todos: Todos
@@ -182,49 +173,72 @@ class TodoViewService {
         this._editingTodo = editingTodo
     }
 
-    setTodo(todo: Todo) {
-        this._todo = todo
-    }
-
     removeTodo(todo: Todo): void {
-        this._todos.remove(this._todo || todo)
+        src(this._todos).set(this._todos.filter((t: Todo) => t !== todo))
     }
 
     beginEdit(todo: Todo): void {
-        getSrc(this._editingTodo).set(this._todo || todo)
+        src(this._editingTodo).set(this._todo || todo)
     }
 
     submitEdit(): void {
-        this._todos.update(this._editingTodo)
-        getSrc(this._editingTodo).reset()
+        const et = this._editingTodo
+        const newTodos: Todo[] = this._todos.map(
+            (t: Todo) => (
+                t.id === et.id ? et : t
+            )
+        )
+        src(this._todos).set(newTodos)
+        src(this._editingTodo).reset()
     }
 
     cancelEdit(): void {
-        getSrc(this._editingTodo).reset()
+        src(this._editingTodo).reset()
     }
+}
+
+class EditingTodoSetter {
+    eventSet: ICallbacks<EditingTodo, Event>
+
+    constructor(v: EditingTodo) {
+        const bs = new BaseSetter(v)
+        this.eventSet = bs.create(BaseSetter.createEventSet)
+    }
+}
+function EditTodoView(
+    {item}: {
+        item: Todo;
+    },
+    {editingTodo, service, setter}: {
+        editingTodo: EditingTodo;
+        service: TodoViewService;
+        setter: EditingTodoSetter;
+    }
+) {
+    return <div>
+        <input
+            name="editTodo"
+            value={editingTodo.title}
+            onInput={setter.eventSet.title}
+        />
+        <button onClick={service.submitEdit}>Save</button>
+        <button onClick={service.cancelEdit}>Cancel</button>
+    </div>
 }
 
 function TodoView(
     {item}: {
         item: Todo
-    }, {editingTodo, service}: {
-        editingTodo: EditingTodo,
-        service: TodoViewService
     },
-    _t: any
+    {editingTodo, service}: {
+        editingTodo: EditingTodo;
+        service: TodoViewService;
+    }
 ) {
     const isEdited = editingTodo.id === item.id
 
     if (isEdited) {
-        return <div>
-            <input
-                name="editTodo"
-                value={editingTodo.title}
-                onInput={getSrc(editingTodo).eventSetter().title}
-            />
-            <button onClick={service.submitEdit}>Save</button>
-            <button onClick={service.cancelEdit}>Cancel</button>
-        </div>
+        return <EditTodoView item={item} />
     }
 
     return <div>
@@ -234,31 +248,11 @@ function TodoView(
     </div>
 }
 component({
-    // register: [
-    //     TodoViewService
-    // ]
+    // Separate state per TodoView
+    register: []
 })(TodoView)
-deps({
-    editingTodo: EditingTodo,
-    service: TodoViewService
-})(TodoView)
-
-// @hooks(TodoView)
-@deps(TodoViewService)
-export class TodoViewHook {
-    _service: TodoViewService
-
-    constructor(service: TodoViewService) {
-        this._service = service
-    }
-
-    willMount({item}: {item: Todo}) {
-        this._service.setTodo(item)
-    }
-}
 
 // Provide class names and data for jss in __css property
-@deps(ThemeVars)
 @theme
 class TodosViewTheme {
     wrapper: string
@@ -270,7 +264,7 @@ class TodosViewTheme {
     constructor(vars: ThemeVars) {
         this.__css = {
             wrapper: {
-                color: `${vars.color}`
+                color: `rgb(${vars.color}, 0, 0)`
             },
             status: {
                 color: 'red'
@@ -290,33 +284,40 @@ class SavingStatus extends SourceStatus {
     static statuses = [TodoService]
 }
 
-interface TodosState {
-    theme: TodosViewTheme;
-    addedTodo: AddedTodo;
-    refs: TodoRefs;
-    loading: LoadingStatus;
-    saving: SavingStatus;
-    service: TodoService;
+class AddedTodoSetter {
+    set: ICallbacks<AddedTodo, string>
+    eventSet: ICallbacks<AddedTodo, Event>
+
+    constructor(v: AddedTodo) {
+        const bs = new BaseSetter(v)
+        this.set = bs.create(BaseSetter.createSet)
+        this.eventSet = bs.create(BaseSetter.createEventSet)
+    }
 }
 
-interface TodosProps {
-    children?: mixed;
+function createThemeVarsSetter(m: ThemeVars): ICallbacks<ThemeVars, *> {
+    return new BaseSetter(m).create(BaseSetter.createEventSet)
 }
 
-function TodosViewColl(_p: {}, {items}: {items: Todos}, _t: any) {
+function TodosViewColl(_p: {}, {items}: {items: Todos}) {
     return <div>
         {items.map((todo: Todo) => <TodoView key={todo.id} item={todo} />)}
     </div>
 }
-deps({
-    items: Todos
-})(TodosViewColl)
-component()(TodosViewColl)
 
 function TodosView(
     props: {},
-    {theme: t, addedTodo, saving, loading, refs, service}: TodosState,
-    _t: any
+    {theme: t, setTheme, addedTodo, saving, loading, service, setter, themeVars}: {
+        theme: TodosViewTheme;
+        addedTodo: AddedTodo;
+        refs: TodoRefs;
+        loading: LoadingStatus;
+        saving: SavingStatus;
+        service: TodoService;
+        setter: AddedTodoSetter;
+        themeVars: ThemeVars;
+        setTheme: ResultOf<typeof createThemeVarsSetter>;
+    }
 ) {
     if (loading.pending) {
         return <div className={t.wrapper}>Loading...</div>
@@ -324,15 +325,14 @@ function TodosView(
     if (loading.error) {
         return <div className={t.wrapper}>Loading error: {loading.error.message}</div>
     }
-    const todoSetter = getSrc(addedTodo).eventSetter()
 
     return <div className={t.wrapper}>
         <span className={t.title}>Todo: <input
-            ref={refs.title.set}
+            ref={service.setRefs.title}
             value={addedTodo.title}
             title="todo.title"
             id="todo.id"
-            onInput={todoSetter.title}
+            onInput={setter.eventSet.title}
         /></span>
         <button disabled={saving.pending} onClick={service.submit}>
             {saving.pending ? 'Saving...' : 'Save'}
@@ -342,26 +342,17 @@ function TodosView(
             : null
         }
         <TodosViewColl />
+        Set color via css: <input
+            type="range"
+            min="0"
+            max="255"
+            step="5"
+            name="color"
+            value={themeVars.color}
+            onInput={setTheme.color}
+        />
     </div>
 }
-deps({
-    theme: TodosViewTheme,
-    addedTodo: AddedTodo,
-    refs: TodoRefs,
-    loading: LoadingStatus,
-    saving: SavingStatus,
-    service: TodoService
-})(TodosView)
-component()(TodosView)
-
-function ErrorView(
-    {error}: {error: Error},
-    _state: {},
-    _t: any
-) {
-    return <div>{error.message}</div>
-}
-component()(ErrorView)
 
 class Logger {
     onError(e: Error, name: string): void {
@@ -369,40 +360,37 @@ class Logger {
         console.error(e, name)
     }
 
-    onRender() {
-        console.log('render frame')
+    onRender<Props: Object>(info: IComponentInfo<Props>) {
+        delete info.props._rdi
+        console.log(`render ${info.displayName}#${info.id}` + JSON.stringify(info.props))
     }
 
     onSetValue<V>(info: ICallerInfo<V>): void {
         /* eslint-disable no-console */
         console.log(
-            `\n ${info.trace} #${info.opId} set ${info.modelName}\nfrom`,
-            info.oldValue,
-            '\nto',
-            info.newValue
+            `${info.trace} #${info.opId} set ${info.modelName} `
+                + String(info.oldValue) + ' -> ' + String(info.newValue)
         )
     }
 }
 
-const di = (new DiFactory({
+// used in jsx below, jsx pragma t
+const _t = new DiFactory({ // eslint-disable-line
     values: {
         Fetcher: new Fetcher()
     },
+    createVNode: infernoCreateVNode,
+    createComponent: createReactRdiAdapter(Component),
     logger: Logger,
-    defaultErrorComponent: ErrorView,
     themeFactory: createJss({
         plugins: [
             jssCamel()
         ]
-    }),
-    componentFactory: new ReactComponentFactory({
-        Component,
-        createElement
     })
-}))
+})
     .create()
 
 render(
-    createElement(di.wrapComponent(TodosView)),
+    <TodosView/>,
     window.document.getElementById('app')
 )

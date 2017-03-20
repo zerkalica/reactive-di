@@ -1,80 +1,149 @@
 // @flow
 
-import type {IEntity, IShape} from '../interfaces'
-import type {IGetable, ICacheable} from '../utils/resolveArgs'
-import type {IDisposable, IDisposableCollection} from '../utils/DisposableCollection'
-import type {INotifier, INotifierItem} from '../hook/interfaces'
+import type {IContext} from '../commonInterfaces'
 
-export type SourceStatusOpts = {
-    complete?: boolean;
-    pending?: boolean;
-    error?: ?Error;
+export type IAsyncValue<M> = Promise<M> | Observable<M, Error>
+
+export interface IGetable<V: Object> {
+    cached: ?V;
+    get(): V;
 }
 
-export interface ISourceStatus {
-    complete: boolean;
-    pending: boolean;
-    error: ?Error;
-    isEqual(src: ISourceStatus): boolean;
-    copy(opts: SourceStatusOpts): ISourceStatus;
+export type IBaseHook<V: Object, M> = {
+    merge?: (next: M, prev: ?V) => ?V;
+    pull?: (v: V, prev: V, src: ISource<V, M>) => IAsyncValue<M> | void;
+    put?: (v: V, prev: V, src: ISource<V, M>) => IAsyncValue<M> | void;
+    reap?: (v: V, prev: V) => void;
 }
 
-export type ISettable<V: Object> = {
-    // push(v: V): void;
+export interface IUpdatePayload<V: Object, M> {
+    run(): IAsyncValue<M>;
+    +next?: (v: ?V) => void;
+    +complete?: (v: ?V) => void;
+    +error?: (e: Error) => void;
 }
 
-export type ISetter<V: Object> = {
-    [id: $Keys<V>]: (v: mixed) => void;
+export type ISourceStatus = 'PENDING' | 'COMPLETE' | Error
+export interface ISource<V, M> {
+    id: number;
+    displayName: string;
+    cached: ?V;
+
+    getStatus(): ISourceStatus;
+    get(): V;
+    set(v?: ?M): void;
+    reset(v?: ?M): void;
+    pend(isPending: boolean): void;
+    error(err: Error): void;
+
+    then(cb: (v: V) => void): ISource<V, M>;
+    catch(cb: (v: Error) => void): ISource<V, M>;
+    reap(): void;
+
+    update(payload: IUpdatePayload<V, M>): () => void;
 }
 
-export type IUpdater<V> = {
-    noPut?: boolean;
-    run: () => (Promise<V> | Observable<V, Error>);
-    next?: (v: ?V) => void;
-    complete?: (v: V) => void;
-    error?: (e: Error) => void;
+export interface ISourceInt<V, M> extends ISource<V, M> {
+    t: 2;
+    refs: number;
+    closed: boolean;
+    status: ?ISourceStatus;
+    context: IContext;
+
+    getStatus(): ISourceStatus;
+    resolve(binder: IRelationBinder): void;
 }
 
-export interface IPromisable<V> {
-    resolve(v: V): void;
-    reject(e: Error): void;
-    promise: Promise<V>;
+export type IMaster = ISourceInt<*, *>
+
+export interface IComputed<V: Object> {
+    t: 0; // computed
+    masters: IMaster[];
+    displayName: string;
+
+    closed: boolean;
+    cached: ?V;
+
+    refs: number;
+
+    get(): V;
+    resolve(binder: IRelationBinder): void;
+    reap(): void;
 }
 
-export interface IControllable {
-    constructor<V: Object>(
-        updater: IUpdater<V>,
-        source: ISource<V>,
-        status: ISource<ISourceStatus>,
-        promisable: IPromisable<V>,
-        notifier: INotifier
-    ): IControllable;
-    run(): void;
-    abort(): void;
+export interface IComponentInfo<Props> {
+    displayName: string;
+    id: number;
+    props: Props;
 }
 
-export interface ISource<V: Object> extends IEntity, IGetable<V>, ISettable<V> {
+export interface IComponentUpdater<Props: Object = {}> extends IComponentInfo<Props> {
+    parentId: number;
+    forceUpdate(): void;
+}
+
+export type IRelationHook = ISourceInt<*, *> | IComputed<*>
+
+export interface IConsumer {
     t: 1;
-    status: ?ISource<ISourceStatus>;
-    getStatus(): ISource<ISourceStatus>;
+    closed: boolean;
+    cached: ?any;
+    displayName: string;
+    hooks: IRelationHook[];
 
-    computeds: IDisposableCollection<ICacheable<any> & IDisposable>;
-    consumers: IDisposableCollection<INotifierItem>;
-    setter(): ISetter<V>;
-    eventSetter(): ISetter<V>;
-    promise(): Promise<V>;
-    reset(v?: IShape<V>): void;
-    pend(): void;
-    error(error: Error): void;
-
-    merge(v: IShape<V>): void;
-    push(v: IShape<V>): void;
-    set(v: V): void;
-
-    update(updaterPayload: IUpdater<any>, throttleTime?: ?number): () => void;
+    actualize(updaters: IComponentUpdater<*>[]): void;
 }
 
-export interface IStatus<V: Object> extends IEntity, IGetable<ISourceStatus>, IDisposable {
-    t: 3;
-    sources: ISource<ISourceStatus>[];
+export type ISlave = IComputed<*> | IConsumer | ISourceInt<*, *>
+
+export type IRelationItemValue = IComputed<*> | ISourceInt<*, *>
+
+export interface IRelationItem {
+    has: boolean[];
+    v: IRelationItemValue;
+    ender: boolean;
+}
+
+export interface IRelationBinder {
+    level: number;
+    stack: IRelationItem[];
+    status: ?IComputed<any>;
+    consumer: ?IConsumer;
+    debugStr(sub: ?mixed): string;
+    begin(item: IRelationItemValue, isEnder: boolean): void;
+    end(): void;
+}
+
+export type ICallerInfo<V> = {
+    trace: string;
+    opId: number;
+    modelName: string;
+    oldValue: ?V;
+    newValue: V;
+}
+
+export interface ILogger {
+    onRender<Props: Object>(info: IComponentInfo<Props>): void;
+    onError(error: Error, name: string): void;
+    onSetValue<V>(info: ICallerInfo<V>): void;
+}
+
+export interface IHasForceUpdate {
+    forceUpdate(): void;
+}
+export type ITraceId = string
+
+export interface INotifier {
+    _logger: ?IGetable<ILogger>;
+    lastId: number;
+    opId: number;
+    parentId: number;
+
+    consumers: IConsumer[];
+    trace: string;
+    changed<V>(name: string, newValue: V, oldValue: V): void;
+    error(name: string, err: Error): void;
+
+    begin(name: string, id?: number): ITraceId;
+    end(tid: ITraceId): void;
 }

@@ -4,70 +4,76 @@ import type {IContext} from '../commonInterfaces'
 import debugName from '../utils/debugName'
 
 import type {
-    ISetProps,
-    IConsumerFactory,
-    IConsumerListener,
+    IComponentFn,
+    IConsumerProps,
     IConsumerMeta
 } from './interfaces'
 
-import ConsumerCollection from './ConsumerCollection'
+import ConsumerState from './ConsumerState'
 
 const emptyObj = {}
 
 export default class ConsumerFactory<
     Props: Object,
     State: Object,
-    Element,
-    Component
+    Element
 > {
     displayName: string
     id: number
-    component: Component
-
     context: IContext
-    _cached: ?ConsumerCollection<Props, State, Element>
+
+    _cached: ?ConsumerState<Props, State, Element>
     _meta: IConsumerMeta
+    _needResolve: boolean
+
+    component: IComponentFn
 
     constructor(
         key: Function,
         context: IContext
     ) {
-        (this: IConsumerFactory<Props, Element, Component>) // eslint-disable-line
         const componentMeta = key._rdiCmp || emptyObj
-        const name = key._rdiKey || debugName(key)
+        const name = key.displayName || debugName(key)
 
-        const id = key._rdiId || ++context.binder.lastId // eslint-disable-line
-        key._rdiId = id // eslint-disable-line
-        context.items[id] = this
+        const id = key._r0 || ++context.notifier.lastId // eslint-disable-line
+        key._r0 = id // eslint-disable-line
         const meta: IConsumerMeta = this._meta = {
             id,
             name,
             key,
-            args: key._rdiArg || null,
+            args: key._r1 || null,
             propsTo: componentMeta.propsTo || null,
-            errorComponent: key === context.defaultErrorComponent
-                ? null
-                : componentMeta.onError || null,
             register: componentMeta.register || null
         }
 
         this.id = meta.id
         this.displayName = meta.name
         this.context = context
-        this._cached = meta.register
-            ? null
-            : new ConsumerCollection(this._meta, context)
-        this.component = context.componentFactory.wrapComponent(
-            (this: IConsumerFactory<Props, Element, Component>)
-        )
+        if (meta.register) {
+            this._needResolve = false
+            this._cached = null
+        } else {
+            this._cached = new ConsumerState(this._meta, context)
+            this._needResolve = true
+        }
+        this.component = context.createComponent(name)
     }
 
-    create(updater: ISetProps<Props>): IConsumerListener<Props, Element> {
+    create(parentId: number): IConsumerProps<Props, Element> {
+        if (this._needResolve && this._cached) {
+            this._needResolve = false
+            this._cached.resolve(this.context.binder)
+        }
+
         return this._cached
-            ? this._cached.create(updater)
-            : (new ConsumerCollection(
+            ? this._cached.create(parentId)
+            : new ConsumerState(
                 this._meta,
-                this.context.copy(this.displayName).register(this._meta.register)
-            )).create(updater)
+                this.context
+                    .copy(this.displayName)
+                    .register(this._meta.register)
+            )
+                .resolve(this.context.binder)
+                .create(parentId)
     }
 }

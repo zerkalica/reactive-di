@@ -1,55 +1,54 @@
 // @flow
 
-import type {IComponentFactory} from './consumer/interfaces'
-import Notifier from './hook/Notifier'
+import Notifier from './source/Notifier'
 import Computed from './computed/Computed'
 
 import type {IContext, IStaticContext} from './commonInterfaces'
 
 import type {SheetFactory} from './theme/interfaces'
+import type {CreateVNode} from './adapters/inferno'
 
 import RelationBinder from './RelationBinder'
 import Di from './Di'
-import type {ILogger} from './hook/interfaces'
-import type {IControllable} from './source/interfaces'
-import Updater from './source/Updater'
+import type {ILogger} from './source/interfaces'
+import type {ICreateComponent} from './consumer/interfaces'
 
-export type IOpts<Component, Element> = {
+export type IOpts = {
     values?: {[id: string]: any};
-    defaultErrorComponent: Function;
-    themeFactory: SheetFactory,
-    componentFactory: IComponentFactory<Component, Element>;
+    themeFactory?: SheetFactory,
     debug?: boolean;
+    createVNode: CreateVNode;
+    createComponent: ICreateComponent;
     logger?: Class<ILogger>;
-    updater?: Class<IControllable>;
 }
 
-export default class DiFactory<Component, Element> {
-    _staticContext: IStaticContext<Component, Element>
+export default class DiFactory {
+    _staticContext: IStaticContext
     _loggerKey: ?Function
 
-    constructor(opts: IOpts<Component, Element>) {
+    constructor(opts: IOpts) {
         const values = opts.values || {}
         values.AbstractSheetFactory = opts.themeFactory
         this._loggerKey = opts.logger || null
-        const context: IStaticContext<Component, Element> = this._staticContext = {
-            defaultErrorComponent: opts.defaultErrorComponent,
+        const context: IStaticContext = this._staticContext = {
             notifier: new Notifier(),
-            componentFactory: opts.componentFactory,
-            binder: new RelationBinder(values),
+            createVNode: opts.createVNode,
+            binder: new RelationBinder(),
             protoFactory: null,
-            Updater: opts.updater || Updater
+            values,
+            createComponent: opts.createComponent
         }
         if (opts.debug) {
             context.protoFactory = (new Di('proto', [], this._staticContext, []): IContext)
         }
     }
 
-    create(): Di<Component, Element> {
-        const di = new Di('root', [], this._staticContext, [])
+    create(): Di {
+        const sc = this._staticContext
+        const di = new Di('root', [], sc, [])
         if (this._loggerKey) {
-            const logger = this._staticContext.notifier.logger = new Computed(this._loggerKey, di)
-            logger.resolve()
+            const logger = sc.notifier._logger = new Computed(this._loggerKey, di)
+            logger.resolve(sc.binder)
         }
 
         return di

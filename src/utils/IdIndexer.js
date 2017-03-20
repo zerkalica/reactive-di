@@ -20,8 +20,8 @@ if (!isRealMap) {
     }
 }
 
-export default class IdIndexer<Item: {id: string}> {
-    _map: Map<string, Item> = new Map()
+export default class IdIndexer<Id, Item: {id: Id}> {
+    _map: Map<Id, Item> = new Map()
 
     add(item: Item): void {
         this._map.set(item.id, item)
@@ -42,13 +42,13 @@ export default class IdIndexer<Item: {id: string}> {
         }
     }
 
-    pick(ids: string[]): Item[] {
+    pick(ids: Id[]): Item[] {
         const map = this._map
         const result: Item[] = []
         for (let i = 0, l = ids.length; i < l; i++) {
             const item = map.get(ids[i])
             if (!item) {
-                throw new Error(`Item not found in index: ${ids[i]}`)
+                throw new Error(`Item not found in index: ${String(ids[i])}`)
             }
             result.push(item)
         }

@@ -9,11 +9,16 @@ export type IGetable<V: Object> = {
     get(): V;
 }
 
-type ValuesRec = {k: string, v: IGetable<*>}
+type ValuesRec = {
+    k: string;
+    v: IGetable<*>;
+    asSrc: boolean;
+}
 
 type IArgGetable = {
     t: 0;
     v: IGetable<*>;
+    asSrc: boolean;
 }
 
 type IArgRec = {
@@ -28,8 +33,8 @@ export default function resolveArgs(args: IArg[], result: mixed[]): boolean {
 
     for (let i = 0, l = args.length; i < l; i++) {
         const arg = args[i]
-        if (!arg.t) {
-            const value = arg.v.cached || arg.v.get()
+        if (arg.t === 0) {
+            const value = arg.asSrc ? arg.v : (arg.v.cached || arg.v.get())
             if (result[i] !== value) {
                 isChanged = true
                 result[i] = value // eslint-disable-line
@@ -40,7 +45,7 @@ export default function resolveArgs(args: IArg[], result: mixed[]): boolean {
             result[i] = obj // eslint-disable-line
             for (let j = 0, k = values.length; j < k; j++) {
                 const rec = values[j]
-                const value = rec.v.cached || rec.v.get()
+                const value = rec.asSrc ? rec.v : (rec.v.cached || rec.v.get())
                 if (obj[rec.k] !== value) {
                     isChanged = true
                     obj[rec.k] = value

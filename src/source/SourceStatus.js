@@ -1,8 +1,12 @@
 // @flow
 
-import type {SourceStatusOpts, ISourceStatus} from './interfaces'
+export type SourceStatusOpts = {
+    complete?: boolean;
+    pending?: boolean;
+    error?: ?Error;
+}
 
-export default class SourceStatus implements ISourceStatus {
+export default class SourceStatus {
     complete: boolean
     pending: boolean
     error: ?Error
@@ -13,14 +17,27 @@ export default class SourceStatus implements ISourceStatus {
         this.error = opts ? (opts.error || null) : null
     }
 
-    isEqual(status: ISourceStatus): boolean {
+    isEqual(status: SourceStatus): boolean {
         return (status.complete && this.complete)
             || (status.pending && this.pending)
             || (!!status.error && status.error === this.error)
     }
 
-    copy(opts: SourceStatusOpts): ISourceStatus {
-        const newStatus = new SourceStatus(opts)
-        return newStatus.isEqual(this) ? this : newStatus
+    merge(statuses: SourceStatus[]): SourceStatus {
+        const newStatus: SourceStatus = new SourceStatus()
+        for (let i = 0, l = statuses.length; i < l; i++) {
+            const status: ?SourceStatus = statuses[i]
+            if (!status || status.pending) {
+                newStatus.pending = true
+                newStatus.complete = false
+            } else if (status.error) {
+                newStatus.error = status.error
+                newStatus.complete = false
+                newStatus.pending = false
+                break
+            }
+        }
+
+        return this.isEqual(newStatus) ? this : newStatus
     }
 }

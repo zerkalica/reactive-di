@@ -3,44 +3,36 @@
 import DiFactory from './DiFactory'
 
 import IndexCollection from './utils/IndexCollection'
-import Thenable from './utils/Thenable'
 import debugName from './utils/debugName'
 
-import Updater, {RecoverableError} from './source/Updater'
 import SourceStatus from './source/SourceStatus'
-import {getSrc} from './source/createSetterFn'
-
-import ReactComponentFactory from './adapters/ReactComponentFactory'
-
 import wrapObject, {wrapFunction} from './computed/wrapObject'
+import BaseSetter from './source/BaseSetter'
+
+import createReactRdiAdapter from './adapters/createReactRdiAdapter'
+import {src} from './annotations'
 
 export {
+    src,
+    createReactRdiAdapter,
     wrapFunction,
     wrapObject,
-    getSrc,
-    ReactComponentFactory,
     SourceStatus,
     debugName,
-    Thenable,
-    Updater,
-    RecoverableError,
     IndexCollection,
-    DiFactory
+    DiFactory,
+    BaseSetter
 }
+
+export type {
+    ICallbacks
+} from './source/BaseSetter'
 
 export type {
     ICallerInfo,
     ILogger,
-    IBaseHook,
-    IHasForceUpdate,
-    INotifier
-} from './hook/interfaces'
-
-export type {
-    IUpdater,
-    ISetter,
-    ISettable,
-    ISource
+    ISource,
+    IComponentInfo
 } from './source/interfaces'
 
 export type {

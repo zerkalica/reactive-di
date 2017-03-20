@@ -17,9 +17,8 @@ export interface SheetFactory {
 }
 
 export class AbstractSheetFactory {
-    static _rdiAbs = true
-    static _rdiKey = 'AbstractSheetFactory'
-    static _rdiInst = true
+    static displayName = 'AbstractSheetFactory'
+    static _r2 = 32 + 128 // abstract + instance
 
     createStyleSheet(_cssObj: CssObj): StyleSheet {
         throw new Error('implement')

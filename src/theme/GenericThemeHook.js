@@ -7,17 +7,13 @@ export default class GenericThemeHook {
     _sheet: ?StyleSheet
     _sheetFactory: AbstractSheetFactory
 
-    static _rdiArg = [AbstractSheetFactory]
+    static _r1 = [AbstractSheetFactory]
 
     constructor(sheetFactory: AbstractSheetFactory) {
         this._sheetFactory = sheetFactory
     }
 
-    pull(rawStyle: RawStyleSheet): void {
-        this.put(rawStyle)
-    }
-
-    put(rawStyle: RawStyleSheet): void {
+    merge(rawStyle: RawStyleSheet, _oldSheet: ?RawStyleSheet): ?RawStyleSheet {
         if (this._sheet) {
             this._sheet.detach()
         }
@@ -27,5 +23,7 @@ export default class GenericThemeHook {
             sheet.attach()
             Object.assign(rawStyle, sheet.classes)
         }
+
+        return rawStyle
     }
 }

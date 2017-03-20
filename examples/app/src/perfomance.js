@@ -1,15 +1,12 @@
 // @flow
 /* eslint-disable */
 import {
-    getSrc,
-    Thenable,
     SourceStatus,
     DiFactory,
-    ReactComponentFactory,
     IndexCollection
 } from 'reactive-di/index'
 import type {ICallerInfo} from 'reactive-di/index'
-import {actions, hooks, deps, theme, component, source} from 'reactive-di/annotations'
+import {src, actions, hooks, deps, theme, component, source} from 'reactive-di/annotations'
 
 function testRdi(report, layerCount, done) {
     // const di = (new DiFactory({

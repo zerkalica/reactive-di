@@ -1,7 +1,6 @@
 // @flow
 
-import type {IRelationBinder, IParent, IRelationItem} from './commonInterfaces'
-import type {IStatus} from './source/interfaces'
+import type {IComputed, IConsumer, IRelationItemValue, IRelationBinder, IRelationItem} from './source/interfaces'
 import debugName from './utils/debugName'
 
 function mapNames(rec: IRelationItem): string {
@@ -9,16 +8,12 @@ function mapNames(rec: IRelationItem): string {
 }
 
 export default class RelationBinder implements IRelationBinder {
-    stack: IRelationItem[] = []
     level: number = 0
-    lastId: number = 0
-    values: {[id: string]: any}
-    status: ?IStatus<*>
+    stack: IRelationItem[] = []
+    status: ?IComputed<any> = null
+    consumer: ?IConsumer = null
+    _prevConsumer: ?IConsumer = null
     _levels: number[] = []
-
-    constructor(values: {[id: string]: any}) {
-        this.values = values
-    }
 
     debugStr(sub: ?mixed): string {
         const name = debugName(sub)
@@ -30,18 +25,21 @@ export default class RelationBinder implements IRelationBinder {
         return names.join('.')
     }
 
-    begin(depItem: IParent, isEnder?: boolean): void {
+    begin(v: IRelationItemValue, isEnder: boolean): void {
         if (isEnder) {
+            this._prevConsumer = this.consumer
+            this.consumer = null
             this._levels.push(this.level)
             this.level = this.stack.length
         }
-        this.stack.push({has: [], v: depItem, ender: isEnder || false})
+        this.stack.push({has: [], v, ender: isEnder || false})
     }
 
     end(): void {
         if (this.stack.pop().ender) {
             this.level = this._levels.pop()
             if (this._levels.length === 0) {
+                this.consumer = this._prevConsumer
                 this.level = 0
             }
         }

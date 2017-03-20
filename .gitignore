@@ -1,6 +1,7 @@
 logs
 *.log
 pids
+*.sh
 *.pid
 *.seed
 .grunt
