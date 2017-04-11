@@ -18,7 +18,8 @@ import {
     BaseSetter
 } from 'reactive-di/index'
 import type {ResultOf, ICallbacks, IComponentInfo, ICallerInfo} from 'reactive-di/index'
-import {src, actions, component, hooks, theme, source} from 'reactive-di/annotations'
+import {src, actions, component, hooks, theme} from 'reactive-di/annotations'
+import Fetcher from './common/Fetcher'
 
 const todosFixture: any = []
 
@@ -31,24 +32,6 @@ for (let i = 0; i < maxTodos; i++) {
         title: 'John Doe ' + i,
         email: 'john' + i + '@example.com'
     })
-}
-
-// Fetcher service, could be injected from outside by key 'Fetcher' as is
-@source({instance: true})
-class Fetcher {
-    _count = 0
-    fetch<V: Object>(_url: string, _params?: {method: string}): Promise<V> {
-        // fake fetcher for example
-        console.log(`fetch ${_url} ${JSON.stringify(_params)}`) // eslint-disable-line
-        return new Promise((resolve: (v: V) => void, reject: (e: Error) => void) => {
-            const isError = false
-            setTimeout(() => {
-                return isError
-                    ? reject(new Error('Fake error'))
-                    : resolve(todosFixture)
-            }, 600)
-        })
-    }
 }
 
 let counter = maxTodos
@@ -377,7 +360,14 @@ class Logger {
 // used in jsx below, jsx pragma t
 const _t = new DiFactory({ // eslint-disable-line
     values: {
-        Fetcher: new Fetcher()
+        Fetcher: new Fetcher({
+            '/todos': (_params: Object) => {
+                return todosFixture
+            },
+            '/todo': (_params: Object) => {
+                return ''
+            }
+        })
     },
     createVNode: infernoCreateVNode,
     createComponent: createReactRdiAdapter(Component),

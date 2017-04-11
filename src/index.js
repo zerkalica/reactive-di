@@ -10,10 +10,10 @@ import wrapObject, {wrapFunction} from './computed/wrapObject'
 import BaseSetter from './source/BaseSetter'
 
 import createReactRdiAdapter from './adapters/createReactRdiAdapter'
-import {src} from './annotations'
+import {src as getSrc} from './annotations'
 
 export {
-    src,
+    getSrc,
     createReactRdiAdapter,
     wrapFunction,
     wrapObject,
@@ -32,6 +32,7 @@ export type {
     ICallerInfo,
     ILogger,
     ISource,
+    INotifier,
     IComponentInfo
 } from './source/interfaces'
 

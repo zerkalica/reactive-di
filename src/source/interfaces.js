@@ -19,7 +19,7 @@ export type IBaseHook<V: Object, M> = {
 export interface IUpdatePayload<V: Object, M> {
     run(): IAsyncValue<M>;
     +next?: (v: ?V) => void;
-    +complete?: (v: ?V) => void;
+    +complete?: (v: any) => void;
     +error?: (e: Error) => void;
 }
 
@@ -32,6 +32,7 @@ export interface ISource<V, M> {
     getStatus(): ISourceStatus;
     get(): V;
     set(v?: ?M): void;
+    merge(rawNewVal?: ?M): void;
     reset(v?: ?M): void;
     pend(isPending: boolean): void;
     error(err: Error): void;
@@ -44,7 +45,8 @@ export interface ISource<V, M> {
 }
 
 export interface ISourceInt<V, M> extends ISource<V, M> {
-    t: 2;
+    t: 0;
+    masters: IMaster[];
     refs: number;
     closed: boolean;
     status: ?ISourceStatus;

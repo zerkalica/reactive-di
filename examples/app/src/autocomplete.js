@@ -4,7 +4,8 @@
 import {render, createVNode as infernoCreateVNode} from 'inferno'
 import Component from 'inferno-component'
 import {createReactRdiAdapter, DiFactory, BaseSetter, SourceStatus} from 'reactive-di/index'
-import {hooks, source} from 'reactive-di/annotations'
+import {hooks} from 'reactive-di/annotations'
+import Fetcher from './common/Fetcher'
 
 const fixture: any = []
 
@@ -15,29 +16,6 @@ for (let i = 0; i < maxItems; i++) {
         id: i + 1,
         name: 'John Doe ' + i
     })
-}
-
-// Fetcher service, could be injected from outside by key 'Fetcher' as is
-@source({instance: true})
-class Fetcher {
-    _count = 0
-    fetch(_url: string, params: {body: Object; method?: string}): Promise<any> {
-        // fake fetcher for example
-        console.log(`fetch ${_url} ${JSON.stringify(params)}`) // eslint-disable-line
-        return new Promise((resolve: (v: any) => void, reject: (e: Error) => void) => {
-            const isError = false
-            setTimeout(() => {
-                return isError
-                    ? reject(new Error('Fake error'))
-                    : resolve(params.body.name
-                        ? fixture.filter((item: Object) => {
-                            return item.name.indexOf(params.body.name) !== -1
-                        })
-                        : []
-                    )
-            }, 600)
-        })
-    }
 }
 
 class User {
@@ -120,7 +98,13 @@ function AutoComplete(
 // used in jsx below, jsx pragma t
 const _t = new DiFactory({ // eslint-disable-line
     values: {
-        Fetcher: new Fetcher()
+        Fetcher: new Fetcher({
+            '/users': (params: Object) => {
+                return params.body.name
+                    ? fixture.filter(({name}: Object) => name.indexOf(params.body.name) === 0)
+                    : []
+            }
+        })
     },
     createVNode: infernoCreateVNode,
     createComponent: createReactRdiAdapter(Component)

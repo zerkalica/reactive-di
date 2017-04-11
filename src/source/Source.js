@@ -9,6 +9,7 @@ import debugName from '../utils/debugName'
 
 import type {
     ISlave,
+    IMaster,
     IComputed,
     IRelationBinder,
     IAsyncValue,
@@ -36,7 +37,8 @@ function defaultMerge<V: any, M: any>(newVal: M, oldVal: V): V {
 }
 
 export default class Source<V: Object, M> implements ISourceInt<V, M> {
-    t: 2 = 2
+    t: 0 = 0
+    masters: IMaster[] = [this]
     id: number
     displayName: string
     cached: ?V = null
@@ -96,6 +98,10 @@ export default class Source<V: Object, M> implements ISourceInt<V, M> {
 
         if (hook.pull && newValue) {
             const result: ?IAsyncValue<M> | void = hook.pull(newValue, this._oldValue, this)
+            // hook.pull can set current source value via this.set
+            if (this.cached) {
+                newValue = this.cached
+            }
             if (result) {
                 if (this._observable) {
                     this._observable.abort()
@@ -167,9 +173,17 @@ export default class Source<V: Object, M> implements ISourceInt<V, M> {
         }
 
         if (status) {
-            slaves = this._statusSlaves = this._statusSlaves || new DisposableCollection()
-            slaves.push(status)
-            status.masters.push(this)
+            // slaves = this._statusSlaves = this._statusSlaves || new DisposableCollection()
+            // slaves.push(status)
+            const masters = this.masters
+            const statusMasters = status.masters
+            for (let i = 0, l = masters.length; i < l; i++) {
+                const master = masters[i]
+                slaves = master._statusSlaves = master._statusSlaves || new DisposableCollection()
+                slaves.push(status)
+
+                statusMasters.push(master)
+            }
         }
         const v = binder.consumer
         if (!binder.level && v) {
@@ -288,6 +302,10 @@ export default class Source<V: Object, M> implements ISourceInt<V, M> {
         this.pend(false)
         this.set(rawNewVal, true)
         this._notifier.end(oldId)
+    }
+
+    merge(rawNewVal?: ?M) {
+        this.set(rawNewVal)
     }
 
     set(rawNewVal?: ?M, noPut?: boolean) {

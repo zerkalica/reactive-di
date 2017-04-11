@@ -1,6 +1,7 @@
 // @flow
 
 import path from 'path'
+import fs from 'fs'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import {
     optimize
@@ -8,6 +9,30 @@ import {
 
 const template = path.resolve(__dirname, 'index.ejs')
 const isProduction = process.env.NODE_ENV === 'production'
+
+const srcRoot = path.join(__dirname, 'src')
+const files: string[] = fs.readdirSync(srcRoot)
+
+const entry = {}
+const pages = []
+
+files.forEach((file: string) => {
+    const {ext, name} = path.parse(file)
+    if (ext !== '.js') {
+        return
+    }
+    entry[name] = [
+        path.resolve(srcRoot, file)
+    ]
+
+    pages.push(
+        new HtmlWebpackPlugin({
+            chunks: ['common', name],
+            filename: `${name}.html`,
+            template
+        })
+    )
+})
 
 export default {
     cache: true,
@@ -17,23 +42,7 @@ export default {
         path: path.resolve(__dirname, 'build'),
         filename: '[name].js'
     },
-    entry: {
-        hello: [
-            path.resolve(__dirname, 'src', 'hello.js')
-        ],
-        autocomplete: [
-            path.resolve(__dirname, 'src', 'autocomplete.js')
-        ],
-        todo: [
-            path.resolve(__dirname, 'src', 'todo.js')
-        ],
-        opts: [
-            path.resolve(__dirname, 'src', 'opts.js')
-        ],
-        perfomance: [
-            path.resolve(__dirname, 'src', 'perfomance.js')
-        ] /**/
-    },
+    entry,
     module: {
         rules: [
             {
@@ -63,33 +72,13 @@ export default {
             }
         ]
     },
-    plugins: [
-        new HtmlWebpackPlugin({
-            chunks: ['hello'],
-            filename: 'hello.html',
-            template
-        }),
-        new HtmlWebpackPlugin({
-            chunks: ['opts'],
-            filename: 'opts.html',
-            template
-        }),
-        new HtmlWebpackPlugin({
-            chunks: ['todo'],
-            filename: 'todo.html',
-            template
-        }),
-        new HtmlWebpackPlugin({
-            chunks: ['perfomance'],
-            filename: 'perf.html',
-            template
-        }),
-        new HtmlWebpackPlugin({
-            chunks: ['autocomplete'],
-            filename: 'autocomplete.html',
-            template
-        })
-    ].concat(
+    plugins: [].concat(
+        [new optimize.CommonsChunkPlugin({
+            minChunks: Infinity,
+            // children: true,
+            name: 'common'
+        })],
+        pages,
         isProduction
             ? [
                 new optimize.OccurrenceOrderPlugin(),
