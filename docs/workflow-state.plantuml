@@ -1,27 +1,50 @@
 @startuml
 
-Component: render,\nmount,\nunmount
-Hooks: onMount\nonUnmount\nonUpdate
-Theme: attach css to dom\non mount/unmount
-Action: Function or class method.\nValidate, fetch,\ncall Updater. <<Action>>
-Updater: Transactional state updates.\nRollbacks.\nPromise resolving.
-Source: immutable observable model
-Computed: dependencies,\ndescribed in component state interface
-UpdaterStatus: Combine fetch status from many Updaters.
-Loader: Invoke updater on onMount
+skinparam componentStyle uml2
 
-Component ..> Hooks: on mount, unmount\n
-Hooks --> Theme
-Theme --> Computed: provide class names
-Computed --> Component: component state
+() Component #Red
+() Source #Green
+() Source2 #Green
+() Hook #Cyan
+() Hook2 #Cyan
+() Derivable #Lightgray
+() Derivable2 #Lightgray
+() Action #Magenta
+() Status #Yellow
 
-Source-->Computed: data
-Hooks-->Loader: on mount
-Action-->Updater: new Source() or \nPromise<Source>
-Updater-->Source: new data
-Updater-->UpdaterStatus: loader status
-UpdaterStatus-->Computed: loading status
-Loader-->Updater: invoke
-Component-->Action: user events
+note as N1
+<b>Component</b> - Pure function with JSX
+<b>Source</b> - Only data struct: model
+<b>Hook</b> - Source lifecycle callbacks: pull, put,reap
+<b>Derivable</b> - Derivable from source: or other derivable
+<b>Action</b> - Univeral source manager, modify source
+<b>Status</b> - Grab and combine sources statuses from any entity
+end note
+
+skinparam interface {
+  borderColor Gray
+}
+
+skinparam component {
+  ArrowColor Gray
+}
+
+Status --> Component
+Source ..> Status: Grabbed\nsrc
+Source2 ..> Status: Grabbed\nsrc
+
+Source --> Component
+Component --> Action: Event\nchanges
+Action .> Hook: Change source\nvia hooks
+Action .> Hook2
+Hook --> Source
+Derivable --> Component
+Source --> Derivable
+Status .> Derivable: Grab src
+Status ..> Action: Grab src
+Source2 --> Derivable2
+Derivable2 --> Derivable
+Source2 --> Hook2
+Source2 --> Hook
 
 @enduml

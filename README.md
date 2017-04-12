@@ -29,6 +29,10 @@ http://localhost:8080/opts.html - demonstartion of some rendering optimistation
 * reduce boilerplate code, by maximally using flow-types. Many decorators are unnecessary: use reflection metadata for classes, functions and components
 * Any stream is wrapper on top of domain data. We need to automate and move most of all reactive-data stream manipulations behind the scene. For example, [mobx](http://mobxjs.github.io/mobx/) is good there.
 
+## Architecture overview
+
+<img src="https://rawgithub.com/zerkalica/reactive-di/master/docs/workflow-state.svg" alt="reactive-di flow diagram" />
+
 ## Install
 
 ```
