@@ -54,6 +54,7 @@ export interface ISourceInt<V, M> extends ISource<V, M> {
 
     getStatus(): ISourceStatus;
     resolve(binder: IRelationBinder): void;
+    resolveStack(binder: IRelationBinder): void;
 }
 
 export type IMaster = ISourceInt<*, *>
@@ -91,6 +92,7 @@ export interface IConsumer {
     closed: boolean;
     cached: ?any;
     displayName: string;
+    master: IMaster[];
     hooks: IRelationHook[];
 
     actualize(updaters: IComponentUpdater<*>[]): void;

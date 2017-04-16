@@ -2,7 +2,7 @@
 
 import type {IContext} from '../commonInterfaces'
 
-import type {IRelationBinder, IRelationHook, IConsumer, IComponentUpdater} from '../source/interfaces'
+import type {IMaster, IRelationBinder, IRelationHook, IConsumer, IComponentUpdater} from '../source/interfaces'
 
 import resolveArgs from '../computed/resolveArgs'
 import type {IGetable, IArg} from '../computed/resolveArgs'
@@ -33,6 +33,7 @@ export default class ConsumerState<
     id: number
     closed: boolean = false
     cached: ?State = null
+    masters: IMaster[] = []
     hooks: IRelationHook[] = []
     listeners: IDisposableCollection<IHasActualize> = new DisposableCollection()
 

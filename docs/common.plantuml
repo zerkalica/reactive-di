@@ -1,0 +1,22 @@
+``@startuml
+
+skinparam interface {
+  BackgroundColor<<Model>> 7AFF7F
+  BackgroundColor<<PureFn>> FFEF7A
+  BackgroundColor<<ImpureFn>> FF7A7A
+  BorderColor 7A7A7A
+}
+
+skinparam component {
+  ArrowColor 7A7A7A
+}
+
+
+() S1 <<Model>>
+() F1 <<PureFn>>
+() F2 <<ImpureFn>>
+
+F2 --> F1
+F2 <-- S1
+
+@enduml

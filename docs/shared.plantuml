@@ -1,0 +1,43 @@
+skinparam interface {
+  BackgroundColor<<Source>> 7AFF7F
+  BackgroundColor<<Status>> FFEF7A
+  BackgroundColor<<Component>> FF7A7A
+  BackgroundColor<<Computed>> D1DAFF
+  BackgroundColor<<Hook>> 7AFFFF
+  BackgroundColor<<Action>> FF7AFF
+  BorderColor 7A3A7A
+  ArrowColor 7A7A7A
+  FontColor 333333
+  FontSize 11
+  StereotypeFontColor 000033
+  StereotypeFontSize 14
+}
+
+skinparam object {
+  BackgroundColor<<Source>> 7AFF7F
+  BackgroundColor<<Status>> FFEF7A
+  BackgroundColor<<Component>> FF7A7A
+  BackgroundColor<<Computed>> D1DAFF
+  BackgroundColor<<Hook>> 7AFFFF
+  BackgroundColor<<Action>> FF7AFF
+  BorderColor 7A3A7A
+  ArrowColor 7A7A7A
+  FontColor 333333
+  StereotypeFontColor 000033
+  StereotypeFontSize 14
+}
+
+skinparam component {
+  ArrowFontColor #333333
+  ArrowColor 7A7A7A
+  ArrowFontSize 11
+}
+
+legend bottom
+  <b><back:FF7A7A>Component</back></b> - Pure function with JSX
+  <b><back:7AFF7F>Source</back></b> - Only data struct: model
+  <b><back:7AFFFF>Hook</back></b> - Source lifecycle callbacks: pull, put,reap
+  <b><back:D1DAFF>Computed</back></b> - Computed from source: or other derivable
+  <b><back:FF7AFF>Action</back></b> - Univeral source manager, modify source
+  <b><back:FFEF7A>Status</back></b> - Grab and combine sources statuses from any entity
+endlegend

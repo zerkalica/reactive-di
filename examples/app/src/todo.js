@@ -130,7 +130,8 @@ class TodoService {
                 newTodos.push(Object.assign(new Todo(), addedTodo))
                 src(todos).set(newTodos)
                 src(addedTodo).reset({
-                    id: addedTodo.id++
+                    id: addedTodo.id++,
+                    title: ''
                 })
             }
         })

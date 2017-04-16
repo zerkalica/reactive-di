@@ -97,7 +97,7 @@ class SelectedTodosService {
     some() {}
 }
 
-class TodoStatus extends SourceStatus {
+class TodoLoadingStatus extends SourceStatus {
     static statuses = [SelectedTodosService]
 }
 
@@ -108,7 +108,7 @@ function SelectedTodoView(
         status
     }: {
         selectedTodo: SelectedTodo;
-        status: TodoStatus;
+        status: TodoLoadingStatus;
     }
 ) {
     return <div>

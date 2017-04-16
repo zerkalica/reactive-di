@@ -1,50 +1,43 @@
 @startuml
 
-skinparam componentStyle uml2
+!include ./shared.plantuml
 
-() Component #Red
-() Source #Green
-() Source2 #Green
-() Hook #Cyan
-() Hook2 #Cyan
-() Derivable #Lightgray
-() Derivable2 #Lightgray
-() Action #Magenta
-() Status #Yellow
+title Common dependency relations
 
-note as N1
-<b>Component</b> - Pure function with JSX
-<b>Source</b> - Only data struct: model
-<b>Hook</b> - Source lifecycle callbacks: pull, put,reap
-<b>Derivable</b> - Derivable from source: or other derivable
-<b>Action</b> - Univeral source manager, modify source
-<b>Status</b> - Grab and combine sources statuses from any entity
-end note
+() Todos <<Source>>
+() TodosHook <<Hook>>
+() User <<Source>>
+() UserHook <<Hook>>
+() UserId <<Computed>>
+() FilteredTodos <<Computed>>
+() UserService <<Action>>
+() UserLoadingStatus <<Status>>
+() TodosFilter <<Source>>
+() TodosView <<Component>>
 
-skinparam interface {
-  borderColor Gray
-}
+Todos <- TodosHook
 
-skinparam component {
-  ArrowColor Gray
-}
+UserHook <- Todos
 
-Status --> Component
-Source ..> Status: Grabbed\nsrc
-Source2 ..> Status: Grabbed\nsrc
+User <-- TodosHook
+User -> UserHook
 
-Source --> Component
-Component --> Action: Event\nchanges
-Action .> Hook: Change source\nvia hooks
-Action .> Hook2
-Hook --> Source
-Derivable --> Component
-Source --> Derivable
-Status .> Derivable: Grab src
-Status ..> Action: Grab src
-Source2 --> Derivable2
-Derivable2 --> Derivable
-Source2 --> Hook2
-Source2 --> Hook
+UserId <--User
+
+UserService ..> TodosHook: Change source\nvia hooks
+UserService ..> UserHook
+
+
+FilteredTodos <-- Todos
+FilteredTodos <- UserId
+FilteredTodos <-- TodosFilter
+
+UserLoadingStatus <.. Todos: Grabbed\nsrc
+UserLoadingStatus <.. User: Grabbed\nsrc
+UserLoadingStatus ..> FilteredTodos: Look into deep\ntree
+
+TodosView <-- FilteredTodos
+TodosView <-- UserLoadingStatus
+TodosView <-- UserService: EventChanges
 
 @enduml

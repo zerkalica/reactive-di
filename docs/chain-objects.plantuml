@@ -1,0 +1,91 @@
+``@startuml
+
+!include ./shared.plantuml
+
+title Chain example objects
+
+object SelectedTodoView <<Component>> {
+  hooks = [
+    SelectedTodo,
+    Todos,
+    User
+  ]
+}
+
+object TodoLoadingStatus <<Status>> {
+  masters = [
+    SelectedTodo,
+    Todos,
+    User
+  ]
+}
+
+object SelectedTodo <<Source>> {
+  slaves = [
+    SelectedTodoView,
+    SelectedTodosService
+  ]
+  statusSlaves = [
+    TodoLoadingStatus,
+    SelectedTodoView
+  ]
+}
+
+object SelectedTodoHook <<Hook>> {
+}
+
+object Todos <<Source>> {
+  slaves = [
+    SelectedTodo,
+    SelectedTodoView,
+    SelectedTodosService
+  ]
+  statusSlaves = [
+    TodoLoadingStatus,
+    SelectedTodoView
+  ]
+}
+
+object TodosHooks <<Hook>> {
+
+}
+
+object User <<Source>> {
+  slaves = [
+    Todos,
+    SelectedTodo,
+    SelectedTodoView,
+    SelectedTodosService
+  ]
+
+  statusSlaves = [
+    TodoLoadingStatus,
+    SelectedTodoView
+  ]
+}
+
+object UserHooks <<Hook>> {
+
+}
+
+object SelectedTodosService <<Action>> {
+
+}
+
+SelectedTodoView <- TodoLoadingStatus
+SelectedTodoView <-- SelectedTodosService
+SelectedTodoView <-- SelectedTodo
+SelectedTodoView ..> SelectedTodosService: events
+
+SelectedTodosService <-- SelectedTodo
+SelectedTodosService ..> TodoLoadingStatus: sources\n from subtree
+
+SelectedTodoHook <-- Todos
+SelectedTodoHook --> SelectedTodo
+
+TodosHooks <-- User
+TodosHooks --> Todos
+
+UserHooks --> User
+
+@enduml

@@ -148,19 +148,10 @@ export default class Source<V: Object, M> implements ISourceInt<V, M> {
 
     _resolved: boolean = false
 
-    resolve(binder: IRelationBinder) {
-        if (!this._resolved) {
-            this._resolved = true
-            binder.begin(this, false)
-            this._hook.resolve(binder)
-            binder.end()
-        }
-        let slaves = this._slaves.items
+    resolveStack({stack, level, status, consumer}: IRelationBinder) {
+        const slaves = this._slaves.items
         const id = this.id
-        const stack = binder.stack
-        const status = binder.status
-
-        for (let i = binder.level, l = stack.length; i < l; i++) {
+        for (let i = level, l = stack.length; i < l; i++) {
             const rec = stack[i]
             if (!rec.has[id]) {
                 const v = rec.v
@@ -173,24 +164,34 @@ export default class Source<V: Object, M> implements ISourceInt<V, M> {
         }
 
         if (status) {
-            // slaves = this._statusSlaves = this._statusSlaves || new DisposableCollection()
-            // slaves.push(status)
-            const masters = this.masters
-            const statusMasters = status.masters
-            for (let i = 0, l = masters.length; i < l; i++) {
-                const master = masters[i]
-                slaves = master._statusSlaves = master._statusSlaves || new DisposableCollection()
-                slaves.push(status)
-
-                statusMasters.push(master)
+            status.masters.push(this)
+            if (!this._statusSlaves) {
+                this._statusSlaves = new DisposableCollection()
+            }
+            this._statusSlaves.items.push(status)
+            if (consumer) {
+                this._statusSlaves.items.push(consumer)
+            }
+        } else if (consumer) {
+            slaves.push(consumer)
+            if (this._hook !== fakeHook) {
+                consumer.hooks.push(this)
             }
         }
-        const v = binder.consumer
-        if (!binder.level && v) {
-            slaves.push(v)
-            if (this._hook !== fakeHook) {
-                v.hooks.push(this)
-            }
+    }
+
+    resolve(binder: IRelationBinder) {
+        const masters = this.masters
+
+        for (let j = 0, k = masters.length; j < k; j++) {
+            masters[j].resolveStack(binder)
+        }
+
+        if (!this._resolved) {
+            this._resolved = true
+            binder.begin(this, false)
+            this._hook.resolve(binder)
+            binder.end()
         }
     }
 
