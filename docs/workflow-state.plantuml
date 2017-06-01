@@ -22,7 +22,7 @@ UserHook <- Todos
 User <-- TodosHook
 User -> UserHook
 
-UserId <--User
+UserId <-- User
 
 UserService ..> TodosHook: Change source\nvia hooks
 UserService ..> UserHook

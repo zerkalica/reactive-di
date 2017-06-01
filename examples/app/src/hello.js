@@ -15,12 +15,12 @@ function Hello(
     },
     {user}: {
         user: User;
-    }
+    },
+    h: CreateElement
 ) {
-    const set = new BaseSetter(user).create(BaseSetter.createEventSet)
     return <div>
         <h1>Hello {user.name}</h1>
-        <input value={user.name} onInput={set.name} />
+        <input value={user.name} onInput={(name: string) => {user.name = name}} />
     </div>
 }
 
