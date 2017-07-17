@@ -16,6 +16,40 @@ import type {IArg} from './computed/resolveArgs'
 
 import type {IRawArg, IDepRegister} from './interfaces'
 
+class A {
+    a: number = 1
+}
+
+class B {
+    // b: string = '2'
+    a = '1'
+}
+
+type Obj<V> = { [key: $Keys<V>]: mixed }
+
+// type $Object<V> = {+[key: string]: V}
+// type _$Values<V, O: $Object<V>> = V// eslint-disable-line
+// type $Values<O: Object> = _$Values<*, O>
+//
+// type Obj<V: Object> = {+[key: string]: $Values<V>}
+//
+function src<V: Object>(o: Obj<V>): (newO: $Shape<V>) => any {
+    return (newO: $Shape<V>) => (
+        {
+            ...o,
+            ...newO
+        }
+    )
+}
+const set = src(new A())
+set(new B())
+
+// function cloneObject<T: { [key: string]: mixed }>(obj: T): $Shape<T> {
+//     return (obj: any)
+// }
+//
+// cloneObject(new A()).w = 2
+
 import type {
     CreateVNode,
     VNodeFlags,
@@ -137,6 +171,7 @@ export default class Di implements IContext {
                 )
                 items[depInfo.id] = depInfo
                 key._r2 = target._r2
+                // @todo bug here
                 key._r0 = depInfo.id // eslint-disable-line
             } else {
                 if (typeof pr !== 'function') {
@@ -166,7 +201,7 @@ export default class Di implements IContext {
         if ((flags & 16) && ((type: any)._r2 & 1)) {
             let factory: ?ConsumerFactory<*, *, *> = (type: any)._r0
                 ? this._items[(type: any)._r0]
-                : undefined
+                : null
 
             if (!factory) {
                 factory = new ConsumerFactory((type: any), this)
