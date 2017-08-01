@@ -1,13 +1,10 @@
 [ignore]
-
-[libs]
-flow-typed
-node_modules/jss/flow-typed
+.*/node_modules/conventional-changelog-core/.*
 
 [options]
 munge_underscores=true
 esproposal.decorators=ignore
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
-module.name_mapper='^reactive-di/\(.*\)' -> '<PROJECT_ROOT>/src/\1'
+module.name_mapper='^reactive-di' -> '<PROJECT_ROOT>/src/index.js'
 unsafe.enable_getters_and_setters=true
