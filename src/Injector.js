@@ -1,6 +1,6 @@
 // @flow
 
-import {mem, memkey} from 'lom_atom'
+import {memkey} from 'lom_atom'
 
 export type IArg = Function | {+[id: string]: Function}
 export type IProvideItem = Function | Object | [Function, mixed]
@@ -23,18 +23,18 @@ export interface IProcessor {
 
 let chainCount = 0
 
-class FakeSheet<V> implements ISheet<V> {
+class FakeSheet<V: Object> implements ISheet<V> {
     classes: Object = {}
 
-    update(props: V) {
+    update(props: V): ISheet<V> {
         return this
     }
 
-    attach() {
+    attach(): ISheet<V> {
         return this
     }
 
-    detach() {
+    detach(): ISheet<V> {
         return this
     }
 }
@@ -104,7 +104,7 @@ export default class Injector {
     }
 
     _destroyProp(key?: string | Function, value?: mixed) {
-        if (typeof key === 'function' && key.theme !== undefined && value !== undefined) {
+        if (this === this.top && typeof key === 'function' && key.theme !== undefined && value !== undefined) {
             (value: any).detach()
             return
         }

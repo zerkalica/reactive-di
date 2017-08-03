@@ -6,8 +6,9 @@ import {mem, defaultContext} from 'lom_atom'
 import Injector from '../src/Injector'
 import type {ISheet} from '../src/Injector'
 
-function createSheet() {
+function createSheet(): ISheet<*> {
     return {
+        classes: ({}: Object),
         attach: sinon.spy(function () {
             return this
         }),

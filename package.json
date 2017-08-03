@@ -19,7 +19,7 @@
     "build": "rimraf dist && rollup -c",
     "test": "flow check && mocha",
     "test.dev": "mocha --growl --watch",
-    "watch": "chokidar --initial -d 2000 -t 1000 'src/**/*.js' -c 'npm run build && cp -rvf *.js src dist $npm_package_config_dest/node_modules/reactive-di'"
+    "watch": "chokidar --initial -d 2000 -t 1000 'src/**/*.js' -c 'npm run build && cp -rvf *.js src dist ../rdi-examples/node_modules/reactive-di'"
   },
   "author": "Stefan Zerkalica <zerkalica@gmail.com>",
   "license": "MIT",
