@@ -4,22 +4,7 @@
 
 Dependency injection with reactivity, state-management, state-to-css, state-to-dom rendering.
 
-Running examples:
-
-```js
-    npm start
-```
-
-And open:
-
-```
-http://localhost:8080/autocomplete.html - autocomplete with debounce
-http://localhost:8080/hello.html - hello world
-http://localhost:8080/todo.html - simple todomvc
-http://localhost:8080/opts.html - demonstartion of some rendering optimistation
-```
-
-[complex todomvc](https://github.com/zerkalica/reactive-di-todomvc) example app.
+Examples: [source](https://github.com/zerkalica/rdi-examples), [demo](http://zerkalica.github.io/rdi-examples/)
 
 ## Motivation
 

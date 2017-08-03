@@ -147,7 +147,6 @@ export default function createReactWrapper<IElement>(
         static instances: number
         _propsChanged: boolean = true
         _injector: Injector | void = undefined
-        sheet: ISheet<*> | void = undefined
 
         constructor(
             props: IPropsWithContext,
@@ -167,7 +166,7 @@ export default function createReactWrapper<IElement>(
         }
 
         componentWillUnmount() {
-            defaultContext.getAtom(this, this.r, 'r').destroyed(true)
+            defaultContext.getAtom('r$', this).destroyed(true)
         }
 
         _destroy() {
@@ -175,11 +174,6 @@ export default function createReactWrapper<IElement>(
             if (render.deps !== undefined || render.props !== undefined) {
                 this.constructor.instances--
             }
-
-            if (this.sheet !== undefined && this.constructor.instances === 0) {
-                this.sheet.detach()
-            }
-            this.sheet = undefined
             this._el = undefined
             this.props = (undefined: any)
             this._injector = undefined
@@ -196,18 +190,13 @@ export default function createReactWrapper<IElement>(
             return this._injector
         }
 
-        @mem
+        // @mem
         _state(next?: State, force?: boolean): State {
             const injector = this._injector || this._getInjector()
             if (this._render.props && force) {
                 injector.value(this._render.props, this.props, true)
             }
-            const oldSheet = this.sheet
-            const state = injector.resolve(this._render.deps, this)[0]
-
-            if (oldSheet !== undefined && this.sheet !== oldSheet) {
-                oldSheet.detach()
-            }
+            const state = injector.resolve(this._render.deps)[0]
 
             return state
         }

@@ -13,8 +13,8 @@
   "main": "dist/reactive-di.js",
   "umd:main": "dist/reactive-di.umd.js",
   "scripts": {
-    "major": "npm run release -- --release-as major",
-    "release": "npm test && npm run build && standard-version",
+    "major": "npm run release -- --release-as major && npm run postversion",
+    "release": "npm test && npm run build && standard-version && npm run postversion",
     "postversion": "git push --follow-tags origin master && npm publish",
     "build": "rimraf dist && rollup -c",
     "test": "flow check && mocha",
@@ -68,10 +68,11 @@
     "rollup-plugin-babel": "^3.0.0-alpha.17",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-uglify": "^2.0.1",
+    "sinon": "^3.0.0",
     "standard-version": "^4.2.0",
     "uglify-es": "^3.0.27"
   },
   "dependencies": {
-    "lom_atom": "^1.0.0"
+    "lom_atom": "^1.0.4"
   }
 }
