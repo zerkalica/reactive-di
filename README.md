@@ -14,31 +14,24 @@ Examples: [source](https://github.com/zerkalica/rdi-examples), [demo](http://zer
 * reduce boilerplate code, by maximally using flow-types. Many decorators are unnecessary: use reflection metadata for classes, functions and components
 * Any stream is wrapper on top of domain data. We need to automate and move most of all reactive-data stream manipulations behind the scene. For example, [mobx](http://mobxjs.github.io/mobx/) is good there.
 
-## Architecture overview
-
-<img src="https://rawgithub.com/zerkalica/reactive-di/master/docs/workflow-state.svg" alt="reactive-di flow diagram" />
-
 ## Install
 
 ```
-npm install --save reactive-di
-npm install --save-dev babel-plugin-transform-metadata babel-plugin-inferno
+npm install --save reactive-di lom_atom
 ```
 
-For using zero-dependency components, we need to define jsx pragma in transform-metadata:
-
-.babelrc:
+Example .babelrc:
 
 ```json
 {
+    "presets": [
+      "flow",
+      "react",
+      ["es2015", {"loose": true}]
+    ],
     "plugins": [
-        ["transform-metadata", {
-            "addDisplayName": true,
-            "jsxPragma": "_t"
-        }],
-        ["inferno", {
-            "pragma": "_t.h"
-        }]
+        "transform-decorators-legacy",
+        ["transform-react-jsx", {"pragma": "lom_h"}]
     ]
 }
 ```
@@ -57,79 +50,57 @@ In:
 
 ```js
 // @flow
-/* eslint-env browser */
+import {mem} from 'lom_atom'
+import {createReactWrapper, createCreateElement, Injector} from 'reactive-di'
+import {render, h, Component} from 'preact'
 
-import {render, createVNode as infernoCreateVNode} from 'inferno'
-import Component from 'inferno-component'
-import {createReactRdiAdapter, DiFactory, BaseSetter} from 'reactive-di'
-
-class User {
-    name = ''
-}
-
-function Hello(
-    {text}: {
-        text: string;
-    },
-    {user}: {
-        user: User;
-    }
-) {
-    const set = new BaseSetter(user).create(BaseSetter.createEventSet)
+function ErrorableView({error}: {error: Error}) {
     return <div>
-        <h1>Hello {user.name}</h1>
-        <input value={user.name} onInput={set.name} />
+        {error instanceof mem.Wait
+            ? <div>
+                Loading...
+            </div>
+            : <div>
+                <h3>Fatal error !</h3>
+                <div>{error.message}</div>
+                <pre>
+                    {error.stack.toString()}
+                </pre>
+            </div>
+        }
     </div>
 }
 
-// used in jsx below, jsx pragma t
-const _t = new DiFactory({ // eslint-disable-line
-    createVNode: infernoCreateVNode,
-    component: createReactRdiAdapter(Component)
-})
-    .create()
-
-render(
-    <Hello text="test"/>,
-    window.document.getElementById('app')
+const lomCreateElement = createCreateElement(
+    createReactWrapper(
+        Component,
+        ErrorableView
+    ),
+    h
 )
-```
+global['lom_h'] = lomCreateElement
 
-Out:
-
-```js
-// ...
-var User = function User() {
-    _classCallCheck(this, User);
-
-    this.name = '';
-};
-
-
-function Hello(_ref, _ref2, _t) {
-    var text = _ref.text;
-    var user = _ref2.user;
-
-    var set = new _src.BaseSetter(user).create(_src.BaseSetter.createEventSet);
-    return _t.h(2, 'div', null, [_t.h(2, 'h1', null, ['Hello ', user.name]), _t.h(512, 'input', {
-        'value': user.name
-    }, null, {
-        'onInput': set.name
-    })]);
+class HelloContext {
+    @mem name = ''
 }
 
-Hello.displayName = 'Hello';
-Hello._r2 = 1;
-Hello._r1 = [{
-    user: User
-}];
-var _t = new _src.DiFactory({
-    createVNode: _inferno.createVNode,
-    component: (0, _src.createReactRdiAdapter)(_infernoComponent2.default)
-}).create();
+function HelloView(
+  {prefix}: {prefix: string},
+  {context}: {context: HelloContext}
+) {
+    return <div>
+        {prefix}, {context.name}
+        <br/><input value={context.name} onInput={
+            (e: Event) => {
+                context.name = (e.target: any).value
+            }
+        } />
+    </div>
+}
+HelloView.deps = [{context: HelloContext}]
 
-(0, _inferno.render)(_t.h(16, Hello, null, null, { text: 'test' }), window.document.getElementById('app'));
 
+render(<HelloView prefix="Hello" />, document.body)
 ```
 
 ## Credits
@@ -137,7 +108,5 @@ var _t = new _src.DiFactory({
 * [Ninject](https://github.com/ninject/Ninject) best dependency injector, writen in C#.
 * [inversify.io](http://inversify.io/) nice try of reimplementing Ninject in typescript.
 * [angular2](https://angular.io) ideas of hierarchical injectors.
-* [mobx](http://mobxjs.github.io/mobx/) ideas of unobtrusive reactive state.
-* [derivablejs](http://ds300.github.io/derivablejs) core engine of reactive-di
 * [babel-plugin-angular2-annotations](https://github.com/shuhei/babel-plugin-angular2-annotations) ideas of metadata for resolving dependencies.
 * [babel-plugin-type-metadata](https://github.com/stephanos/babel-plugin-type-metadata) ideas of generating metadata for flowtypes.
