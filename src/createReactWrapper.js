@@ -1,5 +1,5 @@
 // @flow
-import {defaultContext, detached} from 'lom_atom'
+import {defaultContext, mem, detached} from 'lom_atom'
 import type {NamesOf} from 'lom_atom'
 
 import Injector from './Injector'
@@ -25,16 +25,6 @@ type IFromError<IElement> = (props: {error: Error}, state?: any) => IElement
 type IAtomize<IElement, State> = (
     render: IRenderFn<IElement, State>
 ) => Class<IReactComponent<IElement>>
-
-function createEventFix(origin: (e: Event) => void): (e: Event) => void {
-    function fixEvent(e: Event) {
-        origin(e)
-        defaultContext.run()
-    }
-    fixEvent.displayName = origin.displayName || origin.name
-
-    return fixEvent
-}
 
 function shouldUpdate<Props: Object>(oldProps: Props, props: Props): boolean {
     if (oldProps === props) {
@@ -82,23 +72,6 @@ export function createCreateElement<IElement, State>(
             }
         } else {
             newEl = el
-        }
-        if (attrs) {
-            if (attrs.onKeyPress) {
-                attrs.onKeyPress = createEventFix(attrs.onKeyPress)
-            }
-            if (attrs.onKeyDown) {
-                attrs.onKeyDown = createEventFix(attrs.onKeyDown)
-            }
-            if (attrs.onKeyUp) {
-                attrs.onKeyUp = createEventFix(attrs.onKeyUp)
-            }
-            if (attrs.onInput) {
-                attrs.onChange = createEventFix(attrs.onInput)
-            }
-            if (attrs.onChange) {
-                attrs.onChange = createEventFix(attrs.onChange)
-            }
         }
 
         switch(arguments.length) {
@@ -190,11 +163,10 @@ export default function createReactWrapper<IElement>(
             return this._injector
         }
 
-        // @mem
         _state(next?: State, force?: boolean): State {
             const injector = this._injector || this._getInjector()
             if (this._render.props && force) {
-                injector.value(this._render.props, this.props, true)
+                injector.value(this._render.props, this.props)
             }
             const state = injector.resolve(this._render.deps)[0]
 
