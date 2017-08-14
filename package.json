@@ -16,7 +16,7 @@
     "major": "npm run release -- --release-as major && npm run postversion",
     "release": "npm test && npm run build && standard-version && npm run postversion",
     "postversion": "git push --follow-tags origin master && npm publish",
-    "build": "rimraf dist && rollup -c",
+    "build": "rimraf dist && rollup -c && cp index.js.flow.tpl $npm_package_main.flow && cp index.js.flow.tpl $npm_package_module.flow",
     "test": "flow check && mocha",
     "test.dev": "mocha --growl --watch",
     "watch": "chokidar --initial -d 2000 -t 1000 'src/**/*.js' -c 'npm run build && cp -rvf *.js src dist $npm_package_config_dest/node_modules/reactive-di'"
@@ -73,6 +73,6 @@
     "uglify-es": "^3.0.27"
   },
   "dependencies": {
-    "lom_atom": "^1.0.8"
+    "lom_atom": "^1.0.9"
   }
 }
