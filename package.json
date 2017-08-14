@@ -53,26 +53,26 @@
     "dist"
   ],
   "devDependencies": {
-    "babel-plugin-external-helpers": "^7.0.0-alpha.17",
-    "babel-plugin-transform-class-properties": "^7.0.0-alpha.17",
-    "babel-plugin-transform-decorators": "^7.0.0-alpha.17",
-    "babel-preset-es2015": "^7.0.0-alpha.17",
-    "babel-preset-flow": "^7.0.0-alpha.17",
-    "babel-register": "^7.0.0-alpha.17",
+    "babel-plugin-external-helpers": "^7.0.0-alpha.19",
+    "babel-plugin-transform-class-properties": "^7.0.0-alpha.19",
+    "babel-plugin-transform-decorators": "^7.0.0-alpha.19",
+    "babel-preset-es2015": "^7.0.0-alpha.19",
+    "babel-preset-flow": "^7.0.0-alpha.19",
+    "babel-register": "^7.0.0-alpha.19",
     "babelrc-rollup": "^3.0.0",
     "chokidar-cli": "^1.2.0",
-    "flow-bin": "^0.51.1",
+    "flow-bin": "^0.52.0",
     "mocha": "^3.5.0",
     "rimraf": "^2.6.1",
-    "rollup": "^0.45.2",
-    "rollup-plugin-babel": "^3.0.0-alpha.17",
+    "rollup": "^0.47.4",
+    "rollup-plugin-babel": "=3.0.0-alpha.17",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-uglify": "^2.0.1",
-    "sinon": "^3.0.0",
+    "sinon": "^3.2.0",
     "standard-version": "^4.2.0",
     "uglify-es": "^3.0.27"
   },
   "dependencies": {
-    "lom_atom": "^1.0.6"
+    "lom_atom": "^1.0.8"
   }
 }
