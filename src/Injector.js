@@ -10,8 +10,8 @@ export type IPropsWithContext = {
     __lom_ctx?: Injector;
 }
 
-export interface ISheet<V: Object> {
-    update(props: V): ISheet<V>;
+export interface ISheet<V: any> {
+    update(name?: string, props: V): ISheet<V>;
     attach(): ISheet<V>;
     detach(): ISheet<V>;
     classes: {+[id: $Keys<V>]: string};
@@ -26,7 +26,7 @@ let chainCount = 0
 class FakeSheet<V: Object> implements ISheet<V> {
     classes: Object = {}
 
-    update(props: V): ISheet<V> {
+    update(name?: string, props: V): ISheet<V> {
         return this
     }
 
@@ -50,9 +50,11 @@ export default class Injector {
     top: Injector
     _sheetProcessor: IProcessor
     _sticky: Set<Function> | void
+    displayName: string
 
-    constructor(items?: IProvideItem[], sheetProcessor?: IProcessor, parent?: Injector) {
+    constructor(items?: IProvideItem[], sheetProcessor?: IProcessor, parent?: Injector, displayName?: string) {
         this.parent = parent
+        this.displayName = displayName || 'Injector'
         this.top = parent ? parent.top : this
         this._sheetProcessor = sheetProcessor || defaultSheetProcessor
         this._sticky = undefined
@@ -81,27 +83,29 @@ export default class Injector {
             if (this.top === this) {
                 const sheet = oldValue === undefined
                     ? this._sheetProcessor.createStyleSheet(this._fastCall(key))
-                    : (oldValue: any).update(this._fastCall(key))
+                    : (oldValue: any).update(undefined, this._fastCall(key))
                 sheet.attach()
                 return (sheet: any)
             }
             return this.top.value(key)
         }
 
-        if (this.parent !== undefined && (this._sticky === undefined || !this._sticky.has(key))) {
-            chainCount++
-            const value: V | void = this.parent.value(key)
-            chainCount--
-            if (value !== undefined) {
-                return value
-            }
-        }
-        if (chainCount === 0) {
-            return this._fastNew(key)
+        let current = this.parent
+        if (current !== undefined && (this._sticky === undefined || !this._sticky.has(key))) {
+            do {
+                if ((current: any)['value$?'](key)) {
+                    return current.value(key, next, force)
+                }
+                current = current.parent
+            } while (current !== undefined)
         }
 
-        return (undefined: any)
+        return this._fastNew(key)
     }
+
+    // value<V>(key: Function, next?: V, force?: boolean): V {
+    //     return this._value(key, next, force)
+    // }
 
     _destroyProp(key?: string | Function, value?: mixed) {
         if (this === this.top && typeof key === 'function' && key.theme !== undefined && value !== undefined) {
@@ -143,8 +147,8 @@ export default class Injector {
         }
     }
 
-    copy(items?: IProvideItem[]): Injector {
-        return new Injector(items, this._sheetProcessor, this)
+    copy(items?: IProvideItem[], displayName: string): Injector {
+        return new Injector(items, this._sheetProcessor, this, this.displayName + '_' + displayName)
     }
 
     resolve(argDeps?: IArg[]): any[] {

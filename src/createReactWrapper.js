@@ -13,7 +13,7 @@ type IReactComponent<IElement> = {
 
 interface IRenderFn<IElement, State> {
     (props: IPropsWithContext, state?: State): IElement;
-
+    __lom?: Class<IReactComponent<IElement>>;
     displayName?: string;
     deps?: IArg[];
     props?: Function;
@@ -59,15 +59,20 @@ export function createCreateElement<IElement, State>(
         let attrs = arguments[1]
 
         let newEl
-        const isAtomic = typeof el === 'function' && el.prototype.render === undefined
+        const isAtomic = typeof el === 'function'
         if (isAtomic) {
-            if (el.__lom === undefined) {
-                el.__lom = atomize(el)
+            if (el.prototype.render === undefined) {
+                if (el.__lom === undefined) {
+                    el.__lom = atomize(el)
+                }
+                newEl = el.__lom
+            } else {
+                newEl = el
             }
-            newEl = el.__lom
             if (!attrs) {
                 attrs = {__lom_ctx: parentContext}
             } else {
+                newEl.isKey = attrs.key !== undefined
                 attrs.__lom_ctx = parentContext
             }
         } else {
@@ -111,13 +116,15 @@ export default function createReactWrapper<IElement>(
     BaseComponent: Class<*>,
     defaultFromError: IFromError<IElement>,
     rootInjector?: Injector = new Injector(),
+    useContext?: boolean
 ): IAtomize<IElement, *> {
     class AtomizedComponent<State> extends BaseComponent {
         _render: IRenderFn<IElement, State>
 
         props: IPropsWithContext
-
+        static displayName: string
         static instances: number
+        static isKey: ?boolean
         _propsChanged: boolean = true
         _injector: Injector | void = undefined
 
@@ -128,9 +135,6 @@ export default function createReactWrapper<IElement>(
         ) {
             super(props, reactContext)
             this._render = render
-            if (render.deps !== undefined || render.props !== undefined) {
-                this.constructor.instances++
-            }
         }
 
         shouldComponentUpdate(props: IPropsWithContext) {
@@ -144,9 +148,7 @@ export default function createReactWrapper<IElement>(
 
         _destroy() {
             const render = this._render
-            if (render.deps !== undefined || render.props !== undefined) {
-                this.constructor.instances--
-            }
+            // this.constructor.instances--
             this._el = undefined
             this.props = (undefined: any)
             this._injector = undefined
@@ -156,8 +158,10 @@ export default function createReactWrapper<IElement>(
         _getInjector(): Injector {
             const parentInjector: Injector = this.props.__lom_ctx || rootInjector
             // Autodetect separate state per component instance
-            this._injector = this.constructor.instances > 0
-                ? parentInjector.copy()
+            // this._injector = parentInjector.copy(undefined, this.constructor.displayName)
+            // this._injector = parentInjector
+            this._injector = this.constructor.isKey
+                ? parentInjector.copy(undefined, this.constructor.displayName)
                 : parentInjector
 
             return this._injector
@@ -221,10 +225,13 @@ export default function createReactWrapper<IElement>(
     return function reactWrapper<State>(
         render: IRenderFn<IElement, State>
     ): Class<IReactComponent<IElement>> {
-        function WrappedComponent(props: IPropsWithContext, context?: Object) {
+        if (render.__lom !== undefined) {
+            return render.__lom
+        }
+
+        const WrappedComponent = function(props: IPropsWithContext, context?: Object) {
             AtomizedComponent.call(this, props, context, render)
         }
-        WrappedComponent.instances = 0
         WrappedComponent.displayName = render.displayName || render.name
         WrappedComponent.prototype = Object.create(AtomizedComponent.prototype)
         WrappedComponent.prototype.constructor = WrappedComponent
