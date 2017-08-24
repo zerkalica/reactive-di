@@ -59,20 +59,16 @@ export function createCreateElement<IElement, State>(
         let attrs = arguments[1]
 
         let newEl
-        const isAtomic = typeof el === 'function'
+        const isAtomic = typeof el === 'function' && el.constructor.render === undefined
         if (isAtomic) {
-            if (el.prototype.render === undefined) {
-                if (el.__lom === undefined) {
-                    el.__lom = atomize(el)
-                }
-                newEl = el.__lom
-            } else {
-                newEl = el
+            if (el.__lom === undefined) {
+                el.__lom = atomize(el)
             }
+            newEl = el.__lom
             if (!attrs) {
                 attrs = {__lom_ctx: parentContext}
             } else {
-                newEl.isKey = attrs.key !== undefined
+                // newEl.isKey = attrs.key !== undefined
                 attrs.__lom_ctx = parentContext
             }
         } else {
@@ -112,6 +108,25 @@ export function createCreateElement<IElement, State>(
     }
 }
 
+const wrapperProxyDescr = {
+    get(t: PropsWrapper<*>, name: string) {
+        return t.writableProps[name]
+    },
+    ownKeys(t: PropsWrapper<*>) {
+        return Object.keys(t.writableProps.valueOf())
+    }
+}
+
+class PropsWrapper<Props: Object> {
+    @mem writableProps: Props
+    props: Props
+
+    constructor(props: Props) {
+        this.writableProps = props
+        this.props = new Proxy((this: any), wrapperProxyDescr)
+    }
+}
+
 export default function createReactWrapper<IElement>(
     BaseComponent: Class<*>,
     defaultFromError: IFromError<IElement>,
@@ -119,27 +134,61 @@ export default function createReactWrapper<IElement>(
     useContext?: boolean
 ): IAtomize<IElement, *> {
     class AtomizedComponent<State> extends BaseComponent {
-        _render: IRenderFn<IElement, State>
-
         props: IPropsWithContext
         static displayName: string
-        static instances: number
-        static isKey: ?boolean
         _propsChanged: boolean = true
-        _injector: Injector | void = undefined
+        _injector: Injector
+        _propsWrapper: PropsWrapper<IPropsWithContext> | void
+
+        static render: IRenderFn<IElement, State>
+
+        _keys: string[]
 
         constructor(
             props: IPropsWithContext,
-            reactContext?: Object,
-            render: IRenderFn<IElement, State>
+            reactContext?: Object
         ) {
             super(props, reactContext)
-            this._render = render
+            const render = this.constructor.render
+            const injector: Injector = props.__lom_ctx || rootInjector
+            this._keys = Object.keys(props)
+            const propsKey = render.props
+            if (props && propsKey !== undefined) {
+                injector._map.set(propsKey, props)
+                this._propsWrapper = new PropsWrapper(props)
+                this._injector = (props.__lom_ctx || rootInjector).copy(
+                    [[propsKey, this._propsWrapper.props]],
+                    this.constructor.displayName
+                )
+            } else {
+                this._propsWrapper = undefined
+                this._injector = (props.__lom_ctx || rootInjector).copy(
+                    undefined,
+                    this.constructor.displayName
+                )
+            }
         }
 
         shouldComponentUpdate(props: IPropsWithContext) {
-            this._propsChanged = shouldUpdate(this.props, props)
-            return this._propsChanged
+            const keys = this._keys
+            const oldProps = this.props
+            for (let i = 0; i < keys.length; i++) { // eslint-disable-line
+                const k = keys[i]
+                if (oldProps[k] !== props[k]) {
+                    this._propsChanged = true
+                    if (this._propsWrapper !== undefined) {
+                        this._propsWrapper.writableProps = props
+                    }
+                    return true
+                }
+            }
+            return false
+
+            // this._propsChanged = shouldUpdate(this.props, props)
+            // if (this._propsChanged && this._propsWrapper !== undefined) {
+            //     this._propsWrapper.writableProps = props
+            // }
+            // return this._propsChanged
         }
 
         componentWillUnmount() {
@@ -147,34 +196,10 @@ export default function createReactWrapper<IElement>(
         }
 
         _destroy() {
-            const render = this._render
-            // this.constructor.instances--
             this._el = undefined
             this.props = (undefined: any)
-            this._injector = undefined
-            this._render = (undefined: any)
-        }
-
-        _getInjector(): Injector {
-            const parentInjector: Injector = this.props.__lom_ctx || rootInjector
-            // Autodetect separate state per component instance
-            // this._injector = parentInjector.copy(undefined, this.constructor.displayName)
-            // this._injector = parentInjector
-            this._injector = this.constructor.isKey
-                ? parentInjector.copy(undefined, this.constructor.displayName)
-                : parentInjector
-
-            return this._injector
-        }
-
-        _state(next?: State, force?: boolean): State {
-            const injector = this._injector || this._getInjector()
-            if (this._render.props && force) {
-                injector.value(this._render.props, this.props)
-            }
-            const state = injector.resolve(this._render.deps)[0]
-
-            return state
+            this._injector = (undefined: any)
+            this._propsWrapper = undefined
         }
 
         _el: IElement | void = undefined
@@ -183,13 +208,13 @@ export default function createReactWrapper<IElement>(
         r(element?: IElement, force?: boolean): IElement {
             let data: IElement
 
-            const render = this._render
+            const render = this.constructor.render
 
             const prevContext = parentContext
-            parentContext = this._injector || this._getInjector()
+            parentContext = this._injector
 
             const state = render.deps !== undefined
-                ? this._state(undefined, force)
+                ? this._injector.resolve(render.deps)[0]
                 : undefined
 
             try {
@@ -230,8 +255,10 @@ export default function createReactWrapper<IElement>(
         }
 
         const WrappedComponent = function(props: IPropsWithContext, context?: Object) {
-            AtomizedComponent.call(this, props, context, render)
+            AtomizedComponent.call(this, props, context)
         }
+        WrappedComponent.render = render
+        // render.props = render.props || (render.deps ? render.deps[0] : undefined)
         WrappedComponent.displayName = render.displayName || render.name
         WrappedComponent.prototype = Object.create(AtomizedComponent.prototype)
         WrappedComponent.prototype.constructor = WrappedComponent

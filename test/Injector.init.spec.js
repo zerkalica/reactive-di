@@ -28,16 +28,6 @@ describe('Injector.init', () => {
         assert(a1 === a2)
     })
 
-    it('create new dependency if master changed', () => {
-        const injector = new Injector()
-        const a1: A = injector.value(A)
-        const b2 = new B()
-        injector.value(B, b2)
-        const a2: A = injector.value(A)
-        assert(a1 !== a2)
-        assert(a2.b === b2)
-    })
-
     it('register class => instance', () => {
         const b = new B()
         const injector = new Injector([

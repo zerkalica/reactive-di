@@ -23,13 +23,13 @@ describe('Injector.hierarchy', () => {
         assert(aChild.b === aParent.b)
     })
 
-    it('dependency resolved from child, if not exists in parent, parent dependency set to undefined', () => {
+    it('dependency resolved from child, if not exists in parent', () => {
         const parent = new Injector()
         const child = parent.copy()
 
         const aChild: A = child.value(A)
         const aParent: A = parent.value(A)
-        assert(aParent === undefined)
+        assert(aParent !== aChild)
     })
 
     it('dependency resolved from child, if exists in parent, but registered in child', () => {

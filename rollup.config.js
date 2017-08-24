@@ -10,30 +10,27 @@ import fs from 'fs'
 const pkg = JSON.parse(fs.readFileSync('./package.json'))
 
 const commonConf = {
-    entry: 'src/index.js',
-    sourceMap: true,
+    input: 'src/index.js',
+    sourcemap: true,
     plugins: [
         resolve(),
         babel(babelrc())
-    ],
-    targets: [
-        {dest: pkg.module, format: 'es'},
+    ].concat(process.env.UGLIFY === '1' ? [uglify({}, minify)] : []),
+    output: [
+        {file: pkg.module, format: 'es'},
     ],
     external: Object.keys(pkg.dependencies || {})
 }
 
 const cjsConf = Object.assign({}, commonConf, {
-    plugins: commonConf.plugins.concat([
-        uglify({}, minify)
-    ]),
-    targets: [
-        {dest: pkg.main, format: 'cjs'},
+    output: [
+        {file: pkg.main, format: 'cjs'},
     ]
 })
 
 const umdConf = Object.assign({}, cjsConf, {
-    targets: [
-        {dest: pkg['umd:main'], format: 'umd', moduleName: pkg.name}
+    output: [
+        {file: pkg['umd:main'], format: 'umd', name: pkg.name}
     ],
     globals: {
         lom_atom: 'lom_atom'

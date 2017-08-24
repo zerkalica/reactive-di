@@ -64,15 +64,15 @@
     "flow-bin": "^0.53.1",
     "mocha": "^3.5.0",
     "rimraf": "^2.6.1",
-    "rollup": "^0.47.4",
+    "rollup": "^0.48.2",
     "rollup-plugin-babel": "=3.0.0-alpha.17",
     "rollup-plugin-node-resolve": "^3.0.0",
     "rollup-plugin-uglify": "^2.0.1",
-    "sinon": "^3.2.0",
+    "sinon": "^3.2.1",
     "standard-version": "^4.2.0",
-    "uglify-es": "^3.0.27"
+    "uglify-es": "^3.0.28"
   },
   "dependencies": {
-    "lom_atom": "^1.0.9"
+    "lom_atom": "^1.0.11"
   }
 }

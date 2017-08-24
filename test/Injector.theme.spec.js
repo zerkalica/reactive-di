@@ -6,16 +6,18 @@ import {mem, defaultContext} from 'lom_atom'
 import Injector from '../src/Injector'
 import type {ISheet} from '../src/Injector'
 
-function createSheet(): ISheet<*> {
+
+function createSheet(classes?: Object = {}): ISheet<*> {
     return {
-        classes: ({}: Object),
-        attach: sinon.spy(function () {
+        classes,
+        attach: sinon.spy(function (orig) {
             return this
         }),
         detach: sinon.spy(function () {
             return this
         }),
-        update: sinon.spy(function () {
+        update: sinon.spy(function (name, newClasses) {
+            this.classes = newClasses
             return this
         })
     }
@@ -24,7 +26,7 @@ function createSheet(): ISheet<*> {
 describe('Injector.theme', () => {
     it('theme always resolved in top injector', () => {
         function Theme() {
-            return {}
+            return {a: {}}
         }
         Theme.theme = true
         class A {
@@ -35,12 +37,17 @@ describe('Injector.theme', () => {
             }
         }
 
-        const parent = new Injector()
+        const sheet = createSheet()
+        const parent = new Injector(undefined, {
+            createStyleSheet<V: Object>(cssProps: V): ISheet<*> {
+                return sheet
+            }
+        })
         const child = parent.copy()
 
         const aChild: A = child.value(A)
-
-        assert(parent.value(Theme) === aChild.theme)
+        const aParent: A = parent.value(A)
+        assert(aParent.theme === aChild.theme)
     })
 
 
@@ -55,7 +62,6 @@ describe('Injector.theme', () => {
         }
 
         const sheet = createSheet()
-
         const inj = new Injector(undefined, {
             createStyleSheet<V: Object>(cssProps: V): ISheet<*> {
                 return sheet
@@ -69,27 +75,32 @@ describe('Injector.theme', () => {
 
 
     it('theme update on dependency changes', () => {
-        class B {}
-        function Theme(b: B) {
-            return {}
+        class B {
+            @mem v = 1
         }
+        function Theme(b: B) {
+            return {
+                v: b.v
+            }
+        }
+
         Theme.deps = [B]
         Theme.theme = true
-        class A {
-            theme: Theme
-            static deps = [Theme]
-        }
 
-        const sheet = createSheet()
+        function A(t) {
+            return t.v
+        }
+        A.deps = [Theme]
+
+        let sheet = createSheet()
         const inj = new Injector(undefined, {
             createStyleSheet<V: Object>(cssProps: V): ISheet<*> {
-                return sheet
+                return sheet = createSheet(cssProps)
             }
         })
-        inj.value(A)
-        inj.value(B, new B())
-        inj.value(A)
-
+        assert(inj.invoke(A) === 1)
+        inj.value(B).v = 2
+        assert(inj.invoke(A) === 2)
         assert(sheet.attach.calledTwice)
         assert(sheet.update.calledOnce)
     })

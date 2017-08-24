@@ -10,7 +10,7 @@ export type IPropsWithContext = {
     __lom_ctx?: Injector;
 }
 
-export interface ISheet<V: any> {
+export interface ISheet<V: Object> {
     update(name?: string, props: V): ISheet<V>;
     attach(): ISheet<V>;
     detach(): ISheet<V>;
@@ -24,7 +24,7 @@ export interface IProcessor {
 let chainCount = 0
 
 class FakeSheet<V: Object> implements ISheet<V> {
-    classes: Object = {}
+    classes: {+[id: $Keys<V>]: string} = {}
 
     update(name?: string, props: V): ISheet<V> {
         return this
@@ -40,90 +40,105 @@ class FakeSheet<V: Object> implements ISheet<V> {
 }
 
 const defaultSheetProcessor: IProcessor = {
-    createStyleSheet<V: Object>(cssProps: V): ISheet<*> {
+    createStyleSheet<V: Object>(cssProps: V): ISheet<V> {
         return new FakeSheet()
     }
 }
 
+class SheetManager {
+    _sheetProcessor: IProcessor
+    _injector: Injector
+
+    constructor(sheetProcessor?: IProcessor, injector: Injector) {
+        this._sheetProcessor = sheetProcessor || defaultSheetProcessor
+        this._injector = injector
+    }
+
+    @memkey
+    sheet<V: Object>(key: Function, value?: ISheet<V>, force?: boolean, oldValue?: ISheet<V>): ISheet<V> {
+        if (value !== undefined) return value
+
+        if (oldValue === undefined) {
+            const newValue: ISheet<V> = this._sheetProcessor.createStyleSheet(this._injector.invoke(key))
+            newValue.attach()
+            return newValue
+        }
+
+        oldValue.update(undefined, this._injector.invoke(key))
+        oldValue.attach()
+        return oldValue
+    }
+
+    _destroyProp(key?: string | Function, value?: ISheet<*>) {
+        if (value !== undefined) {
+            value.detach()
+        }
+    }
+}
+
+function empty() {}
+
 export default class Injector {
     parent: Injector | void
-    top: Injector
-    _sheetProcessor: IProcessor
-    _sticky: Set<Function> | void
     displayName: string
+    _sheetManager: SheetManager
+    _map: WeakMap<Function, any>
 
-    constructor(items?: IProvideItem[], sheetProcessor?: IProcessor, parent?: Injector, displayName?: string) {
+    constructor(items?: IProvideItem[], sheetProcessor?: IProcessor | SheetManager, parent?: Injector, displayName?: string) {
         this.parent = parent
         this.displayName = displayName || 'Injector'
-        this.top = parent ? parent.top : this
-        this._sheetProcessor = sheetProcessor || defaultSheetProcessor
-        this._sticky = undefined
+        this._sheetManager = sheetProcessor instanceof SheetManager
+            ? sheetProcessor
+            : new SheetManager(sheetProcessor, this)
+        const map = this._map = new WeakMap()
         if (items !== undefined) {
             for (let i = 0; i < items.length; i++) {
                 const item = items[i]
                 if (item instanceof Array) {
-                    this.value(item[0], item[1], true)
+                    map.set(item[0], item[1])
                 } else if (typeof item === 'function') {
-                    if (this._sticky === undefined) {
-                        this._sticky = new Set()
-                    }
-                    this._sticky.add(item)
+                    map.set(item, empty)
                 } else {
-                    this.value(item.constructor, item, true)
+                    map.set(item.constructor, item)
                 }
             }
         }
     }
 
-    @memkey
-    value<V>(key: Function, next?: V, force?: boolean, oldValue?: V): V {
-        if (next !== undefined) return next
-
-        if (key.theme === true) {
-            if (this.top === this) {
-                const sheet = oldValue === undefined
-                    ? this._sheetProcessor.createStyleSheet(this._fastCall(key))
-                    : (oldValue: any).update(undefined, this._fastCall(key))
-                sheet.attach()
-                return (sheet: any)
+    value<V>(key: Function): V {
+        let value = this._map.get(key)
+        if (value === undefined) {
+            let current = this.parent
+            if (current !== undefined) {
+                do {
+                    value = current._map.get(key)
+                    if (value !== undefined) {
+                        this._map.set(key, value)
+                        return value
+                    }
+                    current = current.parent
+                } while (current !== undefined)
             }
-            return this.top.value(key)
+
+            value = this._fastNew(key)
+            this._map.set(key, value)
+        } else if (value === empty) {
+            value = this._fastNew(key)
+            this._map.set(key, value)
         }
 
-        let current = this.parent
-        if (current !== undefined && (this._sticky === undefined || !this._sticky.has(key))) {
-            do {
-                if ((current: any)['value$?'](key)) {
-                    return current.value(key, next, force)
-                }
-                current = current.parent
-            } while (current !== undefined)
-        }
-
-        return this._fastNew(key)
+        return value
     }
 
-    // value<V>(key: Function, next?: V, force?: boolean): V {
-    //     return this._value(key, next, force)
-    // }
-
-    _destroyProp(key?: string | Function, value?: mixed) {
-        if (this === this.top && typeof key === 'function' && key.theme !== undefined && value !== undefined) {
-            (value: any).detach()
-            return
-        }
-    }
-
-    _destroy() {
-        this._sticky = undefined
+    destroy() {
         this.parent = undefined
-        this.top = (undefined: any)
-        this._sheetProcessor = (undefined: any)
+        this._sheetManager = (undefined: any)
     }
 
     _fastNew<V>(key: any): V {
         const args = this.resolve(key.deps)
         switch (args.length) {
+            case 0: return new key()
             case 1: return new key(args[0])
             case 2: return new key(args[0], args[1])
             case 3: return new key(args[0], args[1], args[2])
@@ -134,9 +149,10 @@ export default class Injector {
         }
     }
 
-    _fastCall<V>(key: Function): V {
+    invoke<V>(key: Function): V {
         const args = this.resolve(key.deps)
         switch (args.length) {
+            case 0: return key()
             case 1: return key(args[0])
             case 2: return key(args[0], args[1])
             case 3: return key(args[0], args[1], args[2])
@@ -148,11 +164,12 @@ export default class Injector {
     }
 
     copy(items?: IProvideItem[], displayName: string): Injector {
-        return new Injector(items, this._sheetProcessor, this, this.displayName + '_' + displayName)
+        return new Injector(items, this._sheetManager, this, this.displayName + '_' + displayName)
     }
 
     resolve(argDeps?: IArg[]): any[] {
         const result = []
+        const map = this._map
         if (argDeps !== undefined) {
             for (let i = 0, l = argDeps.length; i < l; i++) {
                 let argDep = argDeps[i]
@@ -162,11 +179,15 @@ export default class Injector {
                         const key = argDep[prop]
                         obj[prop] = key.theme === undefined
                             ? this.value(key)
-                            : ((this.value(key): any): ISheet<*>).classes
+                            : this._sheetManager.sheet(key).classes
                     }
+
                     result.push(obj)
                 } else {
-                    result.push(this.value(argDep))
+                    result.push(argDep.theme === undefined
+                        ? this.value(argDep)
+                        : this._sheetManager.sheet(argDep).classes
+                    )
                 }
             }
         }
