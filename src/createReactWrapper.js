@@ -108,27 +108,6 @@ export function createCreateElement<IElement, State>(
     }
 }
 
-const wrapperProxyDescr = {
-    get(t: PropsWrapper<*>, name: string) {
-        return t.writableProps[name]
-    },
-    ownKeys(t: PropsWrapper<*>) {
-        return Object.keys(t.writableProps.valueOf())
-    }
-}
-
-class PropsWrapper<Props: Object> {
-    @mem writableProps: Props
-    props: Props
-
-    constructor(props: Props) {
-        this.writableProps = props
-        this.props = new Proxy((this: any), wrapperProxyDescr)
-    }
-}
-
-const emptyArgs = []
-
 export default function createReactWrapper<IElement>(
     BaseComponent: Class<*>,
     defaultFromError: IFromError<IElement>,
@@ -140,7 +119,6 @@ export default function createReactWrapper<IElement>(
         static displayName: string
         _propsChanged: boolean = true
         _injector: Injector
-        _propsWrapper: PropsWrapper<IPropsWithContext> | void
 
         static render: IRenderFn<IElement, State>
 
@@ -154,21 +132,10 @@ export default function createReactWrapper<IElement>(
             const render = this.constructor.render
             const injector: Injector = props.__lom_ctx || rootInjector
             this._keys = Object.keys(props)
-            const propsKey = render.props
-            if (props && propsKey !== undefined) {
-                injector._map.set(propsKey, props)
-                this._propsWrapper = new PropsWrapper(props)
-                this._injector = (props.__lom_ctx || rootInjector).copy(
-                    [[propsKey, this._propsWrapper.props]],
-                    this.constructor.displayName
-                )
-            } else {
-                this._propsWrapper = undefined
-                this._injector = (props.__lom_ctx || rootInjector).copy(
-                    undefined,
-                    this.constructor.displayName
-                )
-            }
+            this._injector = (props.__lom_ctx || rootInjector).copy(
+                undefined,
+                this.constructor.displayName
+            )
         }
 
         shouldComponentUpdate(props: IPropsWithContext) {
@@ -178,18 +145,12 @@ export default function createReactWrapper<IElement>(
                 const k = keys[i]
                 if (oldProps[k] !== props[k]) {
                     this._propsChanged = true
-                    if (this._propsWrapper !== undefined) {
-                        this._propsWrapper.writableProps = props
-                    }
                     return true
                 }
             }
             return false
 
             // this._propsChanged = shouldUpdate(this.props, props)
-            // if (this._propsChanged && this._propsWrapper !== undefined) {
-            //     this._propsWrapper.writableProps = props
-            // }
             // return this._propsChanged
         }
 
@@ -201,7 +162,6 @@ export default function createReactWrapper<IElement>(
             this._el = undefined
             this.props = (undefined: any)
             this._injector = (undefined: any)
-            this._propsWrapper = undefined
         }
 
         _el: IElement | void = undefined
@@ -214,9 +174,8 @@ export default function createReactWrapper<IElement>(
 
             const prevContext = parentContext
             parentContext = this._injector
-
             try {
-                data = parentContext.invokeWithProps(render, this.props)
+                data = parentContext.invokeWithProps(render, this.props, force)
             } catch (error) {
                 data = parentContext.invokeWithProps(render.onError || defaultFromError, {error})
             }

@@ -21,8 +21,6 @@ export interface IProcessor {
     createStyleSheet<V: Object>(_cssObj: V, options: any): ISheet<V>;
 }
 
-let chainCount = 0
-
 class FakeSheet<V: Object> implements ISheet<V> {
     classes: {+[id: $Keys<V>]: string} = {}
 
@@ -78,6 +76,8 @@ class SheetManager {
 
 function empty() {}
 
+type IListener = Object
+
 export default class Injector {
     parent: Injector | void
     displayName: string
@@ -132,6 +132,7 @@ export default class Injector {
 
     destroy() {
         this.parent = undefined
+        this._listeners = undefined
         this._sheetManager = (undefined: any)
     }
 
@@ -163,12 +164,24 @@ export default class Injector {
         }
     }
 
-    invokeWithProps<V>(key: Function, props?: Object): V {
+    _resolved: boolean = false
+    _listeners: IListener[] | void = undefined
+
+    invokeWithProps<V>(key: Function, props?: Object, propsChanged?: boolean): V {
         if (key.deps === undefined) {
             return key(props)
         }
-
         const args = this.resolve(key.deps)
+        if (propsChanged === true) {
+            const listeners = this._listeners
+            if (listeners !== undefined) {
+                for (let i = 0; i < listeners.length; i++) {
+                    const listener = listeners[i]
+                    listener[listener.constructor.__lom_prop] = props
+                }
+            }
+        }
+        this._resolved = true
         switch (args.length) {
             case 0: return key(props)
             case 1: return key(props, args[0])
@@ -186,27 +199,46 @@ export default class Injector {
         return new Injector(items, this._sheetManager, this, this.displayName + '_' + displayName)
     }
 
+
     resolve(argDeps?: IArg[]): any[] {
         const result = []
         const map = this._map
         if (argDeps !== undefined) {
+            const resolved = this._resolved
             for (let i = 0, l = argDeps.length; i < l; i++) {
                 let argDep = argDeps[i]
                 if (typeof argDep === 'object') {
                     const obj = {}
                     for (let prop in argDep) { // eslint-disable-line
                         const key = argDep[prop]
-                        obj[prop] = key.theme === undefined
+                        const dep = key.theme === undefined
                             ? this.value(key)
                             : this._sheetManager.sheet(key).classes
+
+                        if (resolved === false && key.__lom_prop !== undefined) {
+                            if (this._listeners === undefined) {
+                                this._listeners = []
+                            }
+                            this._listeners.push(dep)
+                        }
+
+                        obj[prop] = dep
                     }
 
                     result.push(obj)
                 } else {
-                    result.push(argDep.theme === undefined
+                    const dep = argDep.theme === undefined
                         ? this.value(argDep)
                         : this._sheetManager.sheet(argDep).classes
-                    )
+
+                    if (resolved === false && argDep.__lom_prop !== undefined) {
+                        if (this._listeners === undefined) {
+                            this._listeners = []
+                        }
+                        this._listeners.push(dep)
+                    }
+
+                    result.push(dep)
                 }
             }
         }

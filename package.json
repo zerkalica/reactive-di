@@ -73,6 +73,6 @@
     "uglify-es": "^3.0.28"
   },
   "dependencies": {
-    "lom_atom": "^1.0.13"
+    "lom_atom": "^1.0.14"
   }
 }
