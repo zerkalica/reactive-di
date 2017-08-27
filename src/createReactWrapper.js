@@ -127,6 +127,8 @@ class PropsWrapper<Props: Object> {
     }
 }
 
+const emptyArgs = []
+
 export default function createReactWrapper<IElement>(
     BaseComponent: Class<*>,
     defaultFromError: IFromError<IElement>,
@@ -213,20 +215,10 @@ export default function createReactWrapper<IElement>(
             const prevContext = parentContext
             parentContext = this._injector
 
-            const state = render.deps !== undefined
-                ? this._injector.resolve(render.deps)[0]
-                : undefined
-
             try {
-                data = render(this.props, state)
+                data = parentContext.invokeWithProps(render, this.props)
             } catch (error) {
-                const onError = render.onError || defaultFromError
-                data = onError(
-                    {error},
-                    onError.deps === undefined
-                        ? undefined
-                        : parentContext.resolve(onError.deps)[0]
-                )
+                data = parentContext.invokeWithProps(render.onError || defaultFromError, {error})
             }
             parentContext = prevContext
 
@@ -258,7 +250,6 @@ export default function createReactWrapper<IElement>(
             AtomizedComponent.call(this, props, context)
         }
         WrappedComponent.render = render
-        // render.props = render.props || (render.deps ? render.deps[0] : undefined)
         WrappedComponent.displayName = render.displayName || render.name
         WrappedComponent.prototype = Object.create(AtomizedComponent.prototype)
         WrappedComponent.prototype.constructor = WrappedComponent
