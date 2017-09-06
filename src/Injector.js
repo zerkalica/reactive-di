@@ -1,6 +1,6 @@
 // @flow
 
-import {memkey} from 'lom_atom'
+import {defaultContext, memkey} from 'lom_atom'
 
 export type IArg = Function | {+[id: string]: Function}
 export type IProvideItem = Function | Object | [Function, mixed]
@@ -74,104 +74,135 @@ class SheetManager {
     }
 }
 
-function empty() {}
-
 type IListener = Object
 
 export default class Injector {
     parent: Injector | void
     displayName: string
     _sheetManager: SheetManager
-    _map: WeakMap<Function, any>
+    _cache: Map<Function, any>
+    _instance: number
 
-    constructor(items?: IProvideItem[], sheetProcessor?: IProcessor | SheetManager, parent?: Injector, displayName?: string) {
+    _state: ?Object
+    _sticked: Set<Function> | void
+
+    constructor(
+        items?: IProvideItem[],
+        sheetProcessor?: IProcessor | SheetManager,
+        state?: ?Object,
+        parent?: Injector,
+        displayName?: string,
+        instance?: number
+    ) {
+        this._instance = instance || 0
+        this._state = state || null
         this.parent = parent
-        this.displayName = displayName || 'Injector'
+        this.displayName = displayName || '$'
         this._sheetManager = sheetProcessor instanceof SheetManager
             ? sheetProcessor
             : new SheetManager(sheetProcessor, this)
-        const map = this._map = new WeakMap()
+
+        const map = this._cache = new Map()
+        let sticked: Set<Function> | void = undefined
         if (items !== undefined) {
             for (let i = 0; i < items.length; i++) {
                 const item = items[i]
                 if (item instanceof Array) {
                     map.set(item[0], item[1])
                 } else if (typeof item === 'function') {
-                    map.set(item, empty)
+                    if (sticked === undefined) {
+                        sticked = new Set()
+                    }
+                    sticked.add(item)
                 } else {
                     map.set(item.constructor, item)
                 }
             }
         }
+        this._sticked = sticked
     }
 
     value<V>(key: Function): V {
-        let value = this._map.get(key)
+        let value = this._cache.get(key)
         if (value === undefined) {
-            let current = this.parent
-            if (current !== undefined) {
-                do {
-                    value = current._map.get(key)
-                    if (value !== undefined) {
-                        this._map.set(key, value)
-                        return value
-                    }
-                    current = current.parent
-                } while (current !== undefined)
+            if (this._sticked === undefined || !this._sticked.has(key)) {
+                let current = this.parent
+                if (current !== undefined) {
+                    do {
+                        value = current._cache.get(key)
+                        if (value !== undefined) {
+                            this._cache.set(key, value)
+                            return value
+                        }
+                        current = current.parent
+                    } while (current !== undefined)
+                }
             }
 
             value = this._fastNew(key)
-            this._map.set(key, value)
-        } else if (value === empty) {
-            value = this._fastNew(key)
-            this._map.set(key, value)
+            this._cache.set(key, value)
+            const keyName = (key.displayName || key.name) + (this._instance > 0 ? ('[' + this._instance + ']') : '')
+            value.displayName = this.displayName + '.' + keyName
+            const state = this._state
+            if (state && value.__lom_state !== undefined) {
+                if (state[keyName] === undefined) {
+                    state[keyName] = Object.create(value.__lom_state)
+                }
+                defaultContext.setState(value, state[keyName], true)
+            }
         }
 
         return value
     }
 
     destroy() {
+        this._state = undefined
+        this._cache = (undefined: any)
         this.parent = undefined
         this._listeners = undefined
         this._sheetManager = (undefined: any)
     }
 
     _fastNew<V>(key: any): V {
-        const args = this.resolve(key.deps)
-        switch (args.length) {
+        const a = this.resolve(key.deps)
+        switch (a.length) {
             case 0: return new key()
-            case 1: return new key(args[0])
-            case 2: return new key(args[0], args[1])
-            case 3: return new key(args[0], args[1], args[2])
-            case 4: return new key(args[0], args[1], args[2], args[3])
-            case 5: return new key(args[0], args[1], args[2], args[3], args[4])
-            case 6: return new key(args[0], args[1], args[2], args[3], args[4], args[5])
-            default: return new key(...args)
+            case 1: return new key(a[0])
+            case 2: return new key(a[0], a[1])
+            case 3: return new key(a[0], a[1], a[2])
+            case 4: return new key(a[0], a[1], a[2], a[3])
+            case 5: return new key(a[0], a[1], a[2], a[3], a[4])
+            case 6: return new key(a[0], a[1], a[2], a[3], a[4], a[5])
+            default: return new key(...a)
         }
     }
 
     invoke<V>(key: Function): V {
-        const args = this.resolve(key.deps)
-        switch (args.length) {
+        const a = this.resolve(key.deps)
+        switch (a.length) {
             case 0: return key()
-            case 1: return key(args[0])
-            case 2: return key(args[0], args[1])
-            case 3: return key(args[0], args[1], args[2])
-            case 4: return key(args[0], args[1], args[2], args[3])
-            case 5: return key(args[0], args[1], args[2], args[3], args[4])
-            case 6: return key(args[0], args[1], args[2], args[3], args[4], args[5])
-            default: return key(...args)
+            case 1: return key(a[0])
+            case 2: return key(a[0], a[1])
+            case 3: return key(a[0], a[1], a[2])
+            case 4: return key(a[0], a[1], a[2], a[3])
+            case 5: return key(a[0], a[1], a[2], a[3], a[4])
+            case 6: return key(a[0], a[1], a[2], a[3], a[4], a[5])
+            default: return key(...a)
         }
     }
 
     _resolved: boolean = false
     _listeners: IListener[] | void = undefined
 
+    alias(key: Function) {
+        return this._cache.get(key) || key
+    }
+
     invokeWithProps<V>(key: Function, props?: Object, propsChanged?: boolean): V {
         if (key.deps === undefined) {
             return key(props)
         }
-        const args = this.resolve(key.deps)
+        const a = this.resolve(key.deps)
         if (propsChanged === true) {
             const listeners = this._listeners
             if (listeners !== undefined) {
@@ -182,27 +213,33 @@ export default class Injector {
             }
         }
         this._resolved = true
-        switch (args.length) {
+        switch (a.length) {
             case 0: return key(props)
-            case 1: return key(props, args[0])
-            case 2: return key(props, args[0], args[1])
-            case 3: return key(props, args[0], args[1], args[2])
-            case 4: return key(props, args[0], args[1], args[2], args[3])
-            case 5: return key(props, args[0], args[1], args[2], args[3], args[4])
-            case 6: return key(props, args[0], args[1], args[2], args[3], args[4], args[5])
-            case 7: return key(props, args[0], args[1], args[2], args[3], args[4], args[5], args[6])
-            default: return key(props, ...args)
+            case 1: return key(props, a[0])
+            case 2: return key(props, a[0], a[1])
+            case 3: return key(props, a[0], a[1], a[2])
+            case 4: return key(props, a[0], a[1], a[2], a[3])
+            case 5: return key(props, a[0], a[1], a[2], a[3], a[4])
+            case 6: return key(props, a[0], a[1], a[2], a[3], a[4], a[5])
+            case 7: return key(props, a[0], a[1], a[2], a[3], a[4], a[5], a[6])
+            default: return key(props, ...a)
         }
     }
 
-    copy(items?: IProvideItem[], displayName: string): Injector {
-        return new Injector(items, this._sheetManager, this, this.displayName + '_' + displayName)
+    copy(items?: IProvideItem[], displayName: string, instance?: number): Injector {
+        return new Injector(
+            items,
+            this._sheetManager,
+            this._state,
+            this,
+            this.displayName + '.' + displayName,
+            instance
+        )
     }
-
 
     resolve(argDeps?: IArg[]): any[] {
         const result = []
-        const map = this._map
+        const map = this._cache
         if (argDeps !== undefined) {
             const resolved = this._resolved
             for (let i = 0, l = argDeps.length; i < l; i++) {

@@ -61,7 +61,7 @@
     "babel-register": "^7.0.0-alpha.19",
     "babelrc-rollup": "^3.0.0",
     "chokidar-cli": "^1.2.0",
-    "flow-bin": "^0.53.1",
+    "flow-bin": "^0.54.0",
     "mocha": "^3.5.0",
     "rimraf": "^2.6.1",
     "rollup": "^0.48.2",
@@ -73,6 +73,6 @@
     "uglify-es": "^3.0.28"
   },
   "dependencies": {
-    "lom_atom": "^1.0.14"
+    "lom_atom": "^1.1.1"
   }
 }
