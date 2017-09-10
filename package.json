@@ -13,7 +13,7 @@
   "main": "dist/reactive-di.js",
   "umd:main": "dist/reactive-di.umd.js",
   "scripts": {
-    "major": "npm run release -- --release-as major && npm run postversion",
+    "major": "npm test && npm run build && standard-version --release-as major && npm run postversion",
     "release": "npm test && npm run build && standard-version && npm run postversion",
     "postversion": "git push --follow-tags origin master && npm publish",
     "build": "rimraf dist && rollup -c && cp index.js.flow.tpl $npm_package_main.flow && cp index.js.flow.tpl $npm_package_module.flow",

@@ -164,7 +164,7 @@ export default class Injector {
     }
 
     _fastNew<V>(key: any): V {
-        const a = this.resolve(key.deps)
+        const a = this.resolve(key.deps || (key._r === undefined ? undefined : key._r[1]))
         switch (a.length) {
             case 0: return new key()
             case 1: return new key(a[0])
@@ -178,7 +178,7 @@ export default class Injector {
     }
 
     invoke<V>(key: Function): V {
-        const a = this.resolve(key.deps)
+        const a = this.resolve(key.deps || (key._r === undefined ? undefined : key._r[1]))
         switch (a.length) {
             case 0: return key()
             case 1: return key(a[0])
@@ -199,10 +199,11 @@ export default class Injector {
     }
 
     invokeWithProps<V>(key: Function, props?: Object, propsChanged?: boolean): V {
-        if (key.deps === undefined) {
+        const deps =  key.deps || (key._r === undefined ? undefined : key._r[1])
+        if (deps === undefined) {
             return key(props)
         }
-        const a = this.resolve(key.deps)
+        const a = this.resolve(deps)
         if (propsChanged === true) {
             const listeners = this._listeners
             if (listeners !== undefined) {
