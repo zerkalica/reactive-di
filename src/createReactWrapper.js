@@ -17,7 +17,7 @@ export interface IRenderFn<IElement, State> {
     displayName?: string;
     deps?: IArg[];
     onError?: IFromError<IElement>;
-    provides?: IProvideItem[];
+    aliases?: Map<Function, Function>;
 }
 
 type IFromError<IElement> = (props: {error: Error}, state?: any) => IElement
@@ -61,6 +61,12 @@ export function createCreateElement<IElement, State>(
         let newEl
         const isAtomic = typeof el === 'function' && el.constructor.render === undefined
         if (isAtomic) {
+            if (parentContext !== undefined) {
+                newEl = parentContext.alias(el)
+                if (newEl === null) return null
+                if (newEl !== undefined) el = newEl
+            }
+
             if (el.__lom === undefined) {
                 el.__lom = atomize(el)
             }
@@ -133,23 +139,15 @@ export default function createReactWrapper<IElement>(
             this._keys = Object.keys(props)
             const cns = this.constructor
             const parentInjector = props.__lom_ctx || rootInjector
-
-            const render = parentInjector._cache.get(cns.render)
-
-            if (render === null) {
-                this._el = null
-                this._keys = (undefined: any)
-                this._render = (undefined: any)
-            } else {
-                this._render = render === undefined ? cns.render : render
-                const injectorName = cns.displayName + (cns.instance ? ('[' + cns.instance + ']') : '')
-                this._injector = parentInjector.copy(
-                    this._render.provides,
-                    injectorName,
-                    cns.instance
-                )
-                cns.instance++
-            }
+            this._render = cns.render
+            const injectorName = cns.displayName + (cns.instance ? ('[' + cns.instance + ']') : '')
+            this._injector = parentInjector.copy(
+                undefined,
+                injectorName,
+                cns.instance,
+                this._render.aliases
+            )
+            cns.instance++
         }
 
         shouldComponentUpdate(props: IPropsWithContext) {
@@ -221,10 +219,6 @@ export default function createReactWrapper<IElement>(
     return function reactWrapper<State>(
         render: IRenderFn<IElement, State>
     ): Class<IReactComponent<IElement>> {
-        if (render.__lom !== undefined) {
-            return render.__lom
-        }
-
         const WrappedComponent = function(props: IPropsWithContext, context?: Object) {
             AtomizedComponent.call(this, props, context)
         }

@@ -81,6 +81,7 @@ export default class Injector {
     displayName: string
     _sheetManager: SheetManager
     _cache: Map<Function, any>
+    _aliases: Map<Function, Function> | void
     _instance: number
 
     _state: ?Object
@@ -92,8 +93,10 @@ export default class Injector {
         state?: ?Object,
         parent?: Injector,
         displayName?: string,
-        instance?: number
+        instance?: number,
+        aliases?: Map<Function, Function>
     ) {
+        this._aliases = aliases
         this._instance = instance || 0
         this._state = state || null
         this.parent = parent
@@ -122,7 +125,8 @@ export default class Injector {
         this._sticked = sticked
     }
 
-    value<V>(key: Function): V {
+    value<V>(rawKey: Function): V {
+        const key = this._aliases === undefined ? rawKey : (this._aliases.get(rawKey) || rawKey)
         let value = this._cache.get(key)
         if (value === undefined) {
             if (this._sticked === undefined || !this._sticked.has(key)) {
@@ -194,8 +198,12 @@ export default class Injector {
     _resolved: boolean = false
     _listeners: IListener[] | void = undefined
 
-    alias(key: Function) {
-        return this._cache.get(key) || key
+    alias(key: Function): ?Function {
+        if (this._aliases === undefined) return key
+        const newKey = this._aliases.get(key)
+        if (newKey === undefined) return key
+
+        return newKey
     }
 
     invokeWithProps<V>(key: Function, props?: Object, propsChanged?: boolean): V {
@@ -227,14 +235,15 @@ export default class Injector {
         }
     }
 
-    copy(items?: IProvideItem[], displayName: string, instance?: number): Injector {
+    copy(items?: IProvideItem[], displayName: string, instance?: number, aliases?: Map<Function, Function>): Injector {
         return new Injector(
             items,
             this._sheetManager,
             this._state,
             this,
             this.displayName + '.' + displayName,
-            instance
+            instance,
+            aliases
         )
     }
 
