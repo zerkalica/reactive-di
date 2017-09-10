@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="4.0.12"></a>
+## [4.0.12](https://github.com/zerkalica/reactive-di/compare/v4.0.11...v4.0.12) (2017-09-10)
+
+
+
 <a name="4.0.11"></a>
 ## [4.0.11](https://github.com/zerkalica/reactive-di/compare/v4.0.10...v4.0.11) (2017-09-10)
 
