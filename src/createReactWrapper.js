@@ -17,7 +17,7 @@ export interface IRenderFn<IElement, State> {
     displayName?: string;
     deps?: IArg[];
     onError?: IFromError<IElement>;
-    aliases?: Map<Function, Function>;
+    aliases?: IProvideItem[];
 }
 
 type IFromError<IElement> = (props: {error: Error}, state?: any) => IElement
@@ -57,12 +57,17 @@ export function createCreateElement<IElement, State>(
     return function lomCreateElement() {
         let el = arguments[0]
         let attrs = arguments[1]
-
         let newEl
         const isAtomic = typeof el === 'function' && el.constructor.render === undefined
+        const id = attrs ? attrs.id : undefined
         if (isAtomic) {
+            if (!attrs) {
+                attrs = {__lom_ctx: parentContext}
+            } else {
+                attrs.__lom_ctx = parentContext
+            }
             if (parentContext !== undefined) {
-                newEl = parentContext.alias(el)
+                newEl = parentContext.alias(el, id)
                 if (newEl === null) return null
                 if (newEl !== undefined) el = newEl
             }
@@ -71,13 +76,12 @@ export function createCreateElement<IElement, State>(
                 el.__lom = atomize(el)
             }
             newEl = el.__lom
-            if (!attrs) {
-                attrs = {__lom_ctx: parentContext}
-            } else {
-                // newEl.isKey = attrs.key !== undefined
-                attrs.__lom_ctx = parentContext
-            }
         } else {
+            if (parentContext !== undefined && id) {
+                newEl = parentContext.alias(el, id)
+                if (newEl === null) return null
+                if (newEl !== undefined) el = newEl
+            }
             newEl = el
         }
 
@@ -142,10 +146,9 @@ export default function createReactWrapper<IElement>(
             this._render = cns.render
             const injectorName = cns.displayName + (cns.instance ? ('[' + cns.instance + ']') : '')
             this._injector = parentInjector.copy(
-                undefined,
+                this._render.aliases,
                 injectorName,
-                cns.instance,
-                this._render.aliases
+                cns.instance
             )
             cns.instance++
         }

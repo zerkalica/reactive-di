@@ -17,11 +17,13 @@ function dn(fn?: ?(Function | Object | mixed)): string {
     return String(fn)
 }
 
-function provideMap(item: [Function, Function]): string {
-    return `[${dn(item[0])}, ${dn(item[1])}]`
+function provideMap(item: IProvideItem): string {
+    return item instanceof Array
+        ? `[${dn(item[0])}, ${dn(item[1])}]`
+        : dn(item)
 }
 
-export default function cloneComponent<V: Function>(fn: V, aliases: [Function, Function][], name?: string): V {
+export default function cloneComponent<V: Function>(fn: V, aliases: IProvideItem[], name?: string): V {
     const cloned = function () {
         switch (arguments.length) {
             case 1: return fn(arguments[0])
@@ -34,7 +36,7 @@ export default function cloneComponent<V: Function>(fn: V, aliases: [Function, F
     }
     cloned.deps = fn.deps
     cloned._r = fn._r
-    cloned.aliases = aliases !== undefined ? new Map(aliases) : undefined
+    cloned.aliases = fn.aliases ? fn.aliases.concat(aliases) : aliases
     cloned.displayName = name || `cloneComponent(${dn(fn)}, [${aliases.map(provideMap).join(', ')}])`
     return (cloned: any)
 }

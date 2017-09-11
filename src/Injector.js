@@ -3,7 +3,7 @@
 import {defaultContext, memkey} from 'lom_atom'
 
 export type IArg = Function | {+[id: string]: Function}
-export type IProvideItem = Function | Object | [Function, mixed]
+export type IProvideItem = Function | Object | [Function | string, Function | mixed]
 
 export type IPropsWithContext = {
     [id: string]: any;
@@ -76,75 +76,76 @@ class SheetManager {
 
 type IListener = Object
 
+type ICache = {[id: string]: any}
+
+let depId = 0
+
+class Alias<T: Function> {
+    dest: T
+    constructor(dest: T) {
+        dest.__rdi_id = '' + ++depId
+        this.dest = dest
+    }
+}
 export default class Injector {
-    parent: Injector | void
     displayName: string
     _sheetManager: SheetManager
-    _cache: Map<Function, any>
-    _aliases: Map<Function, Function> | void
+    _cache: ICache
     _instance: number
-
     _state: ?Object
-    _sticked: Set<Function> | void
 
     constructor(
         items?: IProvideItem[],
         sheetProcessor?: IProcessor | SheetManager,
         state?: ?Object,
-        parent?: Injector,
         displayName?: string,
         instance?: number,
-        aliases?: Map<Function, Function>
+        cache?: ICache
     ) {
-        this._aliases = aliases
         this._instance = instance || 0
         this._state = state || null
-        this.parent = parent
         this.displayName = displayName || '$'
         this._sheetManager = sheetProcessor instanceof SheetManager
             ? sheetProcessor
             : new SheetManager(sheetProcessor, this)
 
-        const map = this._cache = new Map()
-        let sticked: Set<Function> | void = undefined
+        const map = this._cache = cache || Object.create(null)
         if (items !== undefined) {
             for (let i = 0; i < items.length; i++) {
                 const item = items[i]
                 if (item instanceof Array) {
-                    map.set(item[0], item[1])
-                } else if (typeof item === 'function') {
-                    if (sticked === undefined) {
-                        sticked = new Set()
+                    const src: string | Function = item[0]
+                    if (typeof src === 'string') {
+                        map[src] = item[1]
+                    } else {
+                        if (src.__rdi_id === undefined) {
+                            src.__rdi_id = '' + ++depId
+                        }
+                        const dest = item[1]
+                        map[src.__rdi_id] = typeof dest === 'function' && !(dest instanceof Alias)
+                            ? new Alias(dest)
+                            : dest
                     }
-                    sticked.add(item)
                 } else {
-                    map.set(item.constructor, item)
+                    const src = item.constructor
+                    if (src.__rdi_id === undefined) {
+                        src.__rdi_id = '' + ++depId
+                    }
+                    map[src.__rdi_id] = item
                 }
             }
         }
-        this._sticked = sticked
     }
 
-    value<V>(rawKey: Function): V {
-        const key = this._aliases === undefined ? rawKey : (this._aliases.get(rawKey) || rawKey)
-        let value = this._cache.get(key)
-        if (value === undefined) {
-            if (this._sticked === undefined || !this._sticked.has(key)) {
-                let current = this.parent
-                if (current !== undefined) {
-                    do {
-                        value = current._cache.get(key)
-                        if (value !== undefined) {
-                            this._cache.set(key, value)
-                            return value
-                        }
-                        current = current.parent
-                    } while (current !== undefined)
-                }
-            }
+    value<V>(key: Function): V {
+        let id: string = key.__rdi_id
+        if (key.__rdi_id === undefined) {
+            id = key.__rdi_id = '' + ++depId
+        }
+        let value = this._cache[id]
 
-            value = this._fastNew(key)
-            this._cache.set(key, value)
+        if (value === undefined) {
+            value = this._cache[id] = this._fastNew(key)
             const keyName = (key.displayName || key.name) + (this._instance > 0 ? ('[' + this._instance + ']') : '')
             value.displayName = this.displayName + '.' + keyName
             const state = this._state
@@ -154,6 +155,8 @@ export default class Injector {
                 }
                 defaultContext.setState(value, state[keyName], true)
             }
+        } else if (value instanceof Alias) {
+            value = this._cache[id] = this.value(value.dest)
         }
 
         return value
@@ -162,7 +165,6 @@ export default class Injector {
     destroy() {
         this._state = undefined
         this._cache = (undefined: any)
-        this.parent = undefined
         this._listeners = undefined
         this._sheetManager = (undefined: any)
     }
@@ -198,9 +200,16 @@ export default class Injector {
     _resolved: boolean = false
     _listeners: IListener[] | void = undefined
 
-    alias(key: Function): ?Function {
-        if (this._aliases === undefined) return key
-        const newKey = this._aliases.get(key)
+    alias(key: Function, rawId?: string): ?Function {
+        let id: string | void = rawId
+        if (id === undefined) {
+            id = key.__rdi_id
+            if (id === undefined) {
+                id = key.__rdi_id = '' + ++depId
+            }
+        }
+        const newKey = this._cache[id]
+        if (newKey instanceof Alias) return newKey.dest 
         if (newKey === undefined) return key
 
         return newKey
@@ -235,15 +244,14 @@ export default class Injector {
         }
     }
 
-    copy(items?: IProvideItem[], displayName: string, instance?: number, aliases?: Map<Function, Function>): Injector {
+    copy(items?: IProvideItem[], displayName: string, instance?: number): Injector {
         return new Injector(
             items,
             this._sheetManager,
             this._state,
-            this,
             this.displayName + '.' + displayName,
             instance,
-            aliases
+            Object.create(this._cache)
         )
     }
 
