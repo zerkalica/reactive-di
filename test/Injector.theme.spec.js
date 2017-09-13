@@ -90,7 +90,7 @@ describe('Injector.theme', () => {
         function A(t) {
             return t.v
         }
-        A.deps = [Theme]
+        A._r = [2, [Theme]]
 
         let sheet = createSheet()
         const inj = new Injector(undefined, {

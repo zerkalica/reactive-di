@@ -623,10 +623,56 @@ defaultContext.setLogger(new Logger())
 
 ### Map config to objects
 
-## Credits
+Configs maped to object properties by class names.
 
+```js
+// @flow
+import {mem} from 'lom_atom'
+import {Injector} from 'reactive-di'
+
+const defaultDeps = []
+const injector = new Injector([], undefined, {
+    SomeService: {
+        name: 'test',
+        id: 123
+    }
+})
+
+class SomeService {
+    // setup babel-plugin-transform-metadata or define displayName, if js-uglify used
+    static displayName = 'SomeService'
+    @mem name = ''
+    id = 0
+}
+
+const someService: SomeService = injector.value(SomeService)
+
+someService.name === 'test'
+someService.id === 123
+```
+
+[babel-plugin-transform-metadata](https://github.com/zerkalica/babel-plugin-transform-metadata) can generate displayName. To enable it, add ``` ["transform-metadata", {"addDisplayName": true}] ``` into .babelrc.
+
+Example .babelrc:
+
+```json
+{
+    "presets": [
+      "flow",
+      "react",
+      ["es2015", {"loose": true}]
+    ],
+    "plugins": [
+        ["transform-metadata", {"addDisplayName": true}],
+        "transform-decorators-legacy",
+        ["transform-react-jsx", {"pragma": "lom_h"}]
+    ]
+}
+```
+
+## Credits
+* [mol](https://github.com/eigenmethod/mol) OORP ideas
 * [Ninject](https://github.com/ninject/Ninject) best dependency injector, writen in C#.
 * [inversify.io](http://inversify.io/) nice try of reimplementing Ninject in typescript.
 * [angular2](https://angular.io) ideas of hierarchical injectors.
 * [babel-plugin-angular2-annotations](https://github.com/shuhei/babel-plugin-angular2-annotations) ideas of metadata for resolving dependencies.
-* [babel-plugin-type-metadata](https://github.com/stephanos/babel-plugin-type-metadata) ideas of generating metadata for flowtypes.

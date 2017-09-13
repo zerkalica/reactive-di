@@ -177,8 +177,8 @@ export default class Injector {
     }
 
     invoke<V>(key: any): V {
-        let isFn = false
-        let deps?: IArg[] = key.deps
+        let isFn = key.theme
+        let deps: IArg[] | void = key.deps
         if (key._r !== undefined) {
             isFn = key._r[0] === 2
             deps = deps || key._r[1]
