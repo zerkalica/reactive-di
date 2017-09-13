@@ -67,10 +67,8 @@ class SheetManager {
         return oldValue
     }
 
-    _destroyProp(key?: string | Function, value?: ISheet<*>) {
-        if (value !== undefined) {
-            value.detach()
-        }
+    destroy(value: ISheet<*>) {
+        value.detach()
     }
 }
 
@@ -92,18 +90,15 @@ export default class Injector {
     _sheetManager: SheetManager
     _cache: ICache
     _instance: number
-    _state: ?Object
 
     constructor(
         items?: IProvideItem[],
         sheetProcessor?: IProcessor | SheetManager,
-        state?: ?Object,
         displayName?: string,
         instance?: number,
         cache?: ICache
     ) {
         this._instance = instance || 0
-        this._state = state || null
         this.displayName = displayName || '$'
         this._sheetManager = sheetProcessor instanceof SheetManager
             ? sheetProcessor
@@ -137,6 +132,14 @@ export default class Injector {
         }
     }
 
+    toString() {
+        return this.displayName
+    }
+
+    toJSON() {
+        return this._cache
+    }
+
     value<V>(key: Function): V {
         let id: string = key.__rdi_id
         if (key.__rdi_id === undefined) {
@@ -146,14 +149,11 @@ export default class Injector {
 
         if (value === undefined) {
             value = this._cache[id] = this._fastNew(key)
-            const keyName = (key.displayName || key.name) + (this._instance > 0 ? ('[' + this._instance + ']') : '')
-            value.displayName = this.displayName + '.' + keyName
-            const state = this._state
-            if (state && value.__lom_state !== undefined) {
-                if (state[keyName] === undefined) {
-                    state[keyName] = Object.create(value.__lom_state)
-                }
-                defaultContext.setState(value, state[keyName], true)
+            if (!value.displayName) {
+                value.displayName = this.displayName
+                    + '.'
+                    + (key.displayName || key.name)
+                    + (this._instance > 0 ? ('[' + this._instance + ']') : '')
             }
         } else if (value instanceof Alias) {
             value = this._cache[id] = this.value(value.dest)
@@ -163,7 +163,6 @@ export default class Injector {
     }
 
     destroy() {
-        this._state = undefined
         this._cache = (undefined: any)
         this._listeners = undefined
         this._sheetManager = (undefined: any)
@@ -200,7 +199,7 @@ export default class Injector {
     _resolved: boolean = false
     _listeners: IListener[] | void = undefined
 
-    alias(key: Function, rawId?: string): ?Function {
+    alias(key: Function, rawId?: string): Function {
         let id: string | void = rawId
         if (id === undefined) {
             id = key.__rdi_id
@@ -209,7 +208,7 @@ export default class Injector {
             }
         }
         const newKey = this._cache[id]
-        if (newKey instanceof Alias) return newKey.dest 
+        if (newKey instanceof Alias) return newKey.dest
         if (newKey === undefined) return key
 
         return newKey
@@ -248,7 +247,6 @@ export default class Injector {
         return new Injector(
             items,
             this._sheetManager,
-            this._state,
             this.displayName + '.' + displayName,
             instance,
             Object.create(this._cache)

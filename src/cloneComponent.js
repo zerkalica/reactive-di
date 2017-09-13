@@ -38,5 +38,6 @@ export default function cloneComponent<V: Function>(fn: V, aliases: IProvideItem
     cloned._r = fn._r
     cloned.aliases = fn.aliases ? fn.aliases.concat(aliases) : aliases
     cloned.displayName = name || `cloneComponent(${dn(fn)}, [${aliases.map(provideMap).join(', ')}])`
+
     return (cloned: any)
 }

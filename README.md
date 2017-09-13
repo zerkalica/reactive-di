@@ -2,17 +2,31 @@
 
 [![NPM](https://nodei.co/npm/reactive-di.png?downloads=true&stars=true)](https://nodei.co/npm/reactive-di/)
 
-Dependency injection, applied to react-like components with reactivity, state-management, state-to-css, state-to-dom rendering.
+Dependency injection with reactivity, applied to react-like components, css-in-js, unobtrusive state-management. Compatible with flow, react, but free from framework lock-in (no React.createElement, Inferno.createVNode), etc.
 
 Examples: [source](https://github.com/zerkalica/rdi-examples), [demo](http://zerkalica.github.io/rdi-examples/)
 
-## Motivation
+<!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
-* Free from framework lock-in (React.createElement, Inferno.createVNode), etc
-* jsx-based zero-dependency component, which can be used in any jsx-compatible render-to-dom library
-* Use typesystem metadata to glue dependencies together (like in angular2 and typescript)
-* reduce boilerplate code, using flow-types. Many decorators are unnecessary: use reflection metadata for classes, functions and components
-* Any stream is wrapper on top of domain data. We need to automate and move most of all reactive-data stream manipulations behind the scene. For example, [mobx](http://mobxjs.github.io/mobx/) is good there.
+- [Install](#install)
+- [Debug](#debug)
+- [Hello world](#hello-world)
+- [Features](#features)
+	- [Typesafe context in components](#typesafe-context-in-components)
+	- [State management based on lom_atom](#state-management-based-on-lomatom)
+	- [Asyncronous code](#asyncronous-code)
+	- [Error handling](#error-handling)
+	- [Loading status handing](#loading-status-handing)
+	- [Registering default dependencies](#registering-default-dependencies)
+	- [Components cloning](#components-cloning)
+	- [Hierarchical dependency injection](#hierarchical-dependency-injection)
+	- [Optional css-in-js support](#optional-css-in-js-support)
+	- [Passing component props to its depenendencies](#passing-component-props-to-its-depenendencies)
+	- [React compatible](#react-compatible)
+	- [Logging](#logging)
+- [Credits](#credits)
+
+<!-- /TOC -->
 
 ## Install
 
@@ -36,6 +50,8 @@ Example .babelrc:
     ]
 }
 ```
+
+babel-plugin-transform-metadata is optional, used for metadata generation.
 
 ## Debug
 
@@ -109,8 +125,8 @@ render(<HelloView prefix="Hello" />, document.body)
 ```js
 // @flow
 function HelloView(
-  {prefix}: {prefix: string},
-  {context}: {context: HelloContext}
+  {prefix}: {prefix: string}, // props
+  {context}: {context: HelloContext} // automatically injected reactive context
 ) {
     return <div>...</div>
 }
@@ -148,6 +164,8 @@ Rdi based on [lom_atom](https://github.com/zerkalica/lom_atom), state management
 Modifying state:
 
 ```js
+import {action, mem} from 'lom_atom'
+
 class HelloContext {
     @mem name = ''
 }
@@ -355,58 +373,6 @@ function HelloView(
 }
 ```
 
-### Save/restore injector state
-
-```js
-// @flow
-import {mem, action, serializable} from 'lom_atom'
-import {createReactWrapper, createCreateElement, Injector} from 'reactive-di'
-import {render, h, Component} from 'preact'
-
-const defaultState = {}
-
-const injector = new Injector(
-    undefined,
-    undefined,
-    defaultState
-)
-
-const lomCreateElement = createCreateElement(
-    createReactWrapper(
-        Component,
-        ErrorableView,
-        injector
-    ),
-    h
-)
-global['lom_h'] = lomCreateElement
-```
-
-```js
-class HelloContext {
-    @serializable @mem get name() {
-      // load name
-    }
-}
-
-function HelloView(
-  _: {},
-  {context}: {context: HelloContext}
-) {
-    return <input value={context.name} onInput={
-        action((e: Event) => {
-            context.name = (e.target: any).value
-        })
-    } />
-}
-
-renderToString(<HelloView/>)
-
-// state filled with data
-JSON.stringify(defaultState)
-defaultState.HelloContext.name
-```
-
 ### Registering default dependencies
 
 ```js
@@ -427,7 +393,7 @@ const injector = new Injector(
     ]
 )
 
-injector.value(C).a instanceof SomeConcrete
+injector.value(SomeAbstract).a instanceof SomeConcrete
 
 ```
 
@@ -459,7 +425,7 @@ class SecondCounterService {
   @mem value = 1
 }
 
-// Creates copy, but remove FirstCounterAddButton and replace FirstCounterService to SecondCounterService.
+// Create FirstCounterView copy, but remove FirstCounterAddButton and replace FirstCounterService to SecondCounterService.
 
 const SecondCounterView = cloneComponent(FirstCounterView, [
     [FirstCounterService, SecondCounterService],
@@ -469,13 +435,183 @@ const SecondCounterView = cloneComponent(FirstCounterView, [
 
 ### Hierarchical dependency injection
 
+```js
+class SharedService {}
+function Parent(
+  props: {},
+  context: {sharedService: SharedService}
+) {
+  return <Child parentService={context.sharedService} />
+}
+
+function Child(
+  context: {sharedService: SharedService}
+) {
+  // context.sharedService instance cached in parent
+}
+```
+
+```js
+class SharedService {}
+function Parent() {
+  return <Child/>
+}
+
+function Child(
+  props: {},
+  context: {sharedService: SharedService}
+) {
+  // sharedService - cached in child
+}
+```
+
 ### Optional css-in-js support
+
+Via adapters rdi supports css-in-js with reactivity and dependency injection power:
+
+Setup:
+
+```js
+// @flow
+import {mem} from 'lom_atom'
+import {createReactWrapper, createCreateElement, Injector} from 'reactive-di'
+
+import {h, Component} from 'preact'
+import {create as createJss} from 'jss'
+
+import ErrorableView from './ErrorableView'
+
+const jss = createJss()
+/*
+jss must implements IProcessor interface:
+
+export interface IProcessor {
+    createStyleSheet<V: Object>(_cssObj: V, options: any): ISheet<V>;
+}
+
+export interface ISheet<V: Object> {
+    update(name?: string, props: V): ISheet<V>;
+    attach(): ISheet<V>;
+    detach(): ISheet<V>;
+    classes: {+[id: $Keys<V>]: string};
+}
+*/
+const defaultDeps = []
+const injector = new Injector(defaultDeps, jss)
+
+const lomCreateElement = createCreateElement(
+    createReactWrapper(
+        Component,
+        ErrorableView,
+        injector
+    ),
+    h
+)
+global['lom_h'] = lomCreateElement
+```
+
+Usage:
+
+```js
+import {mem} from 'lom_atom'
+
+class ThemeVars {
+  @mem color = 'red'
+}
+
+function MyTheme(vars: ThemeVars) {
+  return {
+    wrapper: {
+      backgroundColor: vars.color
+    }
+  }
+}
+MyTheme.theme = true
+
+function MyView(
+  props: {},
+  {theme, vars}: {theme: MyTheme, vars: ThemeVars}
+) {
+  return <div class={theme.wrapper}>...<button onClick={() => vars.color = 'green'}>Change color</button></div>
+}
+```
+
+Styles automatically mounts/unmounts with component. Changing ``` vars.color ``` automatically rebuild and remount css.
+
+### Passing component props to its depenendencies
+
+Sometimes we need to pass component properties to its services.
+
+```js
+import {mem, props} from 'lom_atom'
+
+interface MyProps {
+  some: string;
+}
+
+class MyViewService {
+  @props _props: MyProps;
+  // @mem @props _props: MyProps; // for reactive props
+  @mem get some(): string {
+    return this._props.some + '-suffix'
+  }
+}
+
+function MyView(
+  props: MyProps,
+  {service}: {service: MyViewService}
+) {
+  return <div>{service.some}</div>
+}
+```
 
 ### React compatible
 
 We still can use any react/preact/inferno components together rdi components.
 
 ### Logging
+
+```js
+import {defaultContext, BaseLogger} from 'lom_atom'
+import type {ILogger} from 'lom_atom'
+
+class Logger extends BaseLogger {
+    /**
+     * Invokes before atom creating
+     *
+     * @param host Object Object with atom
+     * @param field string property name
+     * @param key mixed | void for dictionary atoms - dictionary key
+     */
+    create<V>(host: Object, field: string, key?: mixed): V | void {}
+
+    /**
+     * After atom destroy
+     */
+    destroy(atom: IAtom<*>): void {}
+
+    /**
+     * Atom status changes
+         - 'waiting' - atom fetching from server (mem.Wait throwed)
+         - 'proposeToReap' - atom probably will be destroyed on next tick
+         - 'proposeToPull' - atom will be actualized on next tick
+     */
+    status(status: ILoggerStatus, atom: IAtom<*>): void {}
+
+    /**
+     * Error while actualizing atom
+     */
+    error<V>(atom: IAtom<V>, err: Error): void {}
+
+    /**
+     * Atom value changed
+     * @param isActualize bool if true - atom handler invoked, if false - only atom.cache value getted/setted
+     */
+    newValue<V>(atom: IAtom<V>, from?: V | Error, to: V, isActualize?: boolean): void {}
+}
+
+defaultContext.setLogger(new Logger())
+```
 
 ## Credits
 

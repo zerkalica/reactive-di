@@ -1,5 +1,5 @@
 // @flow
-import {defaultContext, mem, detached} from 'lom_atom'
+import {mem, detached} from 'lom_atom'
 import type {NamesOf} from 'lom_atom'
 
 import Injector from './Injector'
@@ -25,28 +25,6 @@ type IFromError<IElement> = (props: {error: Error}, state?: any) => IElement
 type IAtomize<IElement, State> = (
     render: IRenderFn<IElement, State>
 ) => Class<IReactComponent<IElement>>
-
-function shouldUpdate<Props: Object>(oldProps: Props, props: Props): boolean {
-    if (oldProps === props) {
-        return false
-    }
-    if ((!oldProps && props) || (!props && oldProps)) {
-        return true
-    }
-
-    let lpKeys = 0
-    for (let k in oldProps) { // eslint-disable-line
-        if (oldProps[k] !== props[k]) {
-            return true
-        }
-        lpKeys++
-    }
-    for (let k in props) { // eslint-disable-line
-        lpKeys--
-    }
-
-    return lpKeys !== 0
-}
 
 let parentContext: Injector | void = undefined
 
@@ -132,7 +110,7 @@ export default function createReactWrapper<IElement>(
         static render: IRenderFn<IElement, State>
         static instance: number
 
-        _keys: string[]
+        _keys: string[] | void
         _render: IRenderFn<IElement, State>
 
         constructor(
@@ -140,7 +118,7 @@ export default function createReactWrapper<IElement>(
             reactContext?: Object
         ) {
             super(props, reactContext)
-            this._keys = Object.keys(props)
+            this._keys = props ? Object.keys(props) : undefined
             const cns = this.constructor
             const parentInjector = props.__lom_ctx || rootInjector
             this._render = cns.render
@@ -153,11 +131,19 @@ export default function createReactWrapper<IElement>(
             cns.instance++
         }
 
+        toString() {
+            return `${this._injector.displayName}.${this.constructor.displayName}`
+        }
+
+        get displayName() {
+            return this.toString()
+        }
+
         shouldComponentUpdate(props: IPropsWithContext) {
             const keys = this._keys
-            if (this._render === undefined) return false
+            if (!keys) return false
             const oldProps = this.props
-            for (let i = 0; i < keys.length; i++) { // eslint-disable-line
+            for (let i = 0, l = keys.length; i < l; i++) { // eslint-disable-line
                 const k = keys[i]
                 if (oldProps[k] !== props[k]) {
                     this._propsChanged = true
@@ -165,18 +151,15 @@ export default function createReactWrapper<IElement>(
                 }
             }
             return false
-
-            // this._propsChanged = shouldUpdate(this.props, props)
-            // return this._propsChanged
         }
 
         componentWillUnmount() {
-            defaultContext.getAtom('r', this).destroyed(true)
+            this['r()'].destroyed(true)
         }
 
-        _destroy() {
+        destroy() {
             this._el = undefined
-            this._keys = (undefined: any)
+            this._keys = undefined
             this.props = (undefined: any)
             if (this._render !== undefined) {
                 this.constructor.instance--
@@ -213,9 +196,7 @@ export default function createReactWrapper<IElement>(
         }
 
         render() {
-            return this._el === undefined
-                ? this.r(undefined, this._propsChanged)
-                : this._el
+            return this._el === undefined ? this.r(undefined, this._propsChanged) : this._el
         }
     }
 
