@@ -85,19 +85,25 @@ class Alias<T: Function> {
         this.dest = dest
     }
 }
+
+type IState = {[ns: string]: {[id: string]: any}}
+
 export default class Injector {
     displayName: string
     _sheetManager: SheetManager
     _cache: ICache
     _instance: number
+    _state: IState | void
 
     constructor(
         items?: IProvideItem[],
         sheetProcessor?: IProcessor | SheetManager,
+        state?: IState,
         displayName?: string,
         instance?: number,
         cache?: ICache
     ) {
+        this._state = state
         this._instance = instance || 0
         this.displayName = displayName || '$'
         this._sheetManager = sheetProcessor instanceof SheetManager
@@ -148,12 +154,14 @@ export default class Injector {
         let value = this._cache[id]
 
         if (value === undefined) {
-            value = this._cache[id] = this._fastNew(key)
-            if (!value.displayName) {
-                value.displayName = this.displayName
-                    + '.'
-                    + (key.displayName || key.name)
-                    + (this._instance > 0 ? ('[' + this._instance + ']') : '')
+            value = this._cache[id] = this.invoke(key)
+            const depName = (key.displayName || key.name) + (this._instance > 0 ? ('[' + this._instance + ']') : '')
+            value.displayName = `${this.displayName}.${depName}`
+            const state = this._state === undefined ? undefined : this._state[depName]
+            if (state && typeof state === 'object') {
+                for (let prop in state) {
+                    ;(value: Object)[prop] = state[prop]
+                }
             }
         } else if (value instanceof Alias) {
             value = this._cache[id] = this.value(value.dest)
@@ -168,8 +176,28 @@ export default class Injector {
         this._sheetManager = (undefined: any)
     }
 
-    _fastNew<V>(key: any): V {
-        const a = this.resolve(key.deps || (key._r === undefined ? undefined : key._r[1]))
+    invoke<V>(key: any): V {
+        let isFn = false
+        let deps?: IArg[] = key.deps
+        if (key._r !== undefined) {
+            isFn = key._r[0] === 2
+            deps = deps || key._r[1]
+        }
+
+        const a = this.resolve(deps)
+        if (isFn) {
+            switch (a.length) {
+                case 0: return key()
+                case 1: return key(a[0])
+                case 2: return key(a[0], a[1])
+                case 3: return key(a[0], a[1], a[2])
+                case 4: return key(a[0], a[1], a[2], a[3])
+                case 5: return key(a[0], a[1], a[2], a[3], a[4])
+                case 6: return key(a[0], a[1], a[2], a[3], a[4], a[5])
+                default: return key(...a)
+            }
+        }
+
         switch (a.length) {
             case 0: return new key()
             case 1: return new key(a[0])
@@ -179,20 +207,6 @@ export default class Injector {
             case 5: return new key(a[0], a[1], a[2], a[3], a[4])
             case 6: return new key(a[0], a[1], a[2], a[3], a[4], a[5])
             default: return new key(...a)
-        }
-    }
-
-    invoke<V>(key: Function): V {
-        const a = this.resolve(key.deps || (key._r === undefined ? undefined : key._r[1]))
-        switch (a.length) {
-            case 0: return key()
-            case 1: return key(a[0])
-            case 2: return key(a[0], a[1])
-            case 3: return key(a[0], a[1], a[2])
-            case 4: return key(a[0], a[1], a[2], a[3])
-            case 5: return key(a[0], a[1], a[2], a[3], a[4])
-            case 6: return key(a[0], a[1], a[2], a[3], a[4], a[5])
-            default: return key(...a)
         }
     }
 
@@ -247,6 +261,7 @@ export default class Injector {
         return new Injector(
             items,
             this._sheetManager,
+            this._state,
             this.displayName + '.' + displayName,
             instance,
             Object.create(this._cache)

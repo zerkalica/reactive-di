@@ -120,19 +120,17 @@ export default function createReactWrapper<IElement>(
             super(props, reactContext)
             this._keys = props ? Object.keys(props) : undefined
             const cns = this.constructor
-            const parentInjector = props.__lom_ctx || rootInjector
             this._render = cns.render
-            const injectorName = cns.displayName + (cns.instance ? ('[' + cns.instance + ']') : '')
-            this._injector = parentInjector.copy(
+            this._injector = (props.__lom_ctx || rootInjector).copy(
                 this._render.aliases,
-                injectorName,
+                cns.displayName + (cns.instance ? ('[' + cns.instance + ']') : ''),
                 cns.instance
             )
             cns.instance++
         }
 
         toString() {
-            return `${this._injector.displayName}.${this.constructor.displayName}`
+            return this._injector.displayName
         }
 
         get displayName() {

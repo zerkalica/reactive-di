@@ -2,9 +2,9 @@
 
 [![NPM](https://nodei.co/npm/reactive-di.png?downloads=true&stars=true)](https://nodei.co/npm/reactive-di/)
 
-Dependency injection with reactivity, applied to react-like components, css-in-js, unobtrusive state-management. Compatible with flow, react, but free from framework lock-in (no React.createElement, Inferno.createVNode), etc.
+Dependency injection with reactivity unobtrusive state-management in [mobx](https://mobx.js.org/) manner, applied to react-like components, css-in-js. Compatible with flow, react, but free from framework lock-in (no React.createElement, Inferno.createVNode), etc. Size about 10kb reactive-di.min.js + 11kb lom_atom.min.js
 
-Examples: [source](https://github.com/zerkalica/rdi-examples), [demo](http://zerkalica.github.io/rdi-examples/)
+[example source](https://github.com/zerkalica/rdi-examples), [demo](http://zerkalica.github.io/rdi-examples/), [todomvc benchmark](http://mol.js.org/app/bench/#bench=https%3A%2F%2Fzerkalica.github.io%2Ftodomvc%2Fbenchmark%2F/sample=preact-lom-rdi~preact-raw~preact-mobx)
 
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
@@ -14,7 +14,7 @@ Examples: [source](https://github.com/zerkalica/rdi-examples), [demo](http://zer
 - [Features](#features)
 	- [Typesafe context in components](#typesafe-context-in-components)
 	- [State management based on lom_atom](#state-management-based-on-lomatom)
-	- [Asyncronous code](#asyncronous-code)
+	- [Asynchronous code](#asynchronous-code)
 	- [Error handling](#error-handling)
 	- [Loading status handing](#loading-status-handing)
 	- [Registering default dependencies](#registering-default-dependencies)
@@ -24,6 +24,7 @@ Examples: [source](https://github.com/zerkalica/rdi-examples), [demo](http://zer
 	- [Passing component props to its depenendencies](#passing-component-props-to-its-depenendencies)
 	- [React compatible](#react-compatible)
 	- [Logging](#logging)
+	- [Map config to objects](#map-config-to-objects)
 - [Credits](#credits)
 
 <!-- /TOC -->
@@ -63,7 +64,7 @@ npm run watch --reactive-di:dest=../app-project
 
 ## Hello world
 
-In:
+Setup:
 
 ```js
 // @flow
@@ -96,7 +97,11 @@ const lomCreateElement = createCreateElement(
     h
 )
 global['lom_h'] = lomCreateElement
+```
 
+Usage:
+
+```js
 class HelloContext {
     @mem name = ''
 }
@@ -184,7 +189,7 @@ function HelloView(
 
 All state changes are asynchronous, but for prevent loosing cursor position in react input, action helper used.
 
-### Asyncronous code
+### Asynchronous code
 
 Loading actual state:
 
@@ -514,6 +519,7 @@ Usage:
 
 ```js
 import {mem} from 'lom_atom'
+import type {NamesOf} from 'lom_atom'
 
 class ThemeVars {
   @mem color = 'red'
@@ -530,13 +536,15 @@ MyTheme.theme = true
 
 function MyView(
   props: {},
-  {theme, vars}: {theme: MyTheme, vars: ThemeVars}
+  {theme, vars}: {theme: NamesOf<typeof MyTheme>, vars: ThemeVars}
 ) {
-  return <div class={theme.wrapper}>...<button onClick={() => vars.color = 'green'}>Change color</button></div>
+  return <div class={theme.wrapper}>...
+    <button onClick={() => vars.color = 'green'}>Change color</button>
+  </div>
 }
 ```
 
-Styles automatically mounts/unmounts with component. Changing ``` vars.color ``` automatically rebuild and remount css.
+Styles automatically mounts/unmounts together with component. Changing ``` vars.color ``` automatically rebuilds and remounts css.
 
 ### Passing component props to its depenendencies
 
@@ -567,7 +575,7 @@ function MyView(
 
 ### React compatible
 
-We still can use any react/preact/inferno components together rdi components.
+We still can use any react/preact/inferno components together with rdi components.
 
 ### Logging
 
@@ -612,6 +620,8 @@ class Logger extends BaseLogger {
 
 defaultContext.setLogger(new Logger())
 ```
+
+### Map config to objects
 
 ## Credits
 
