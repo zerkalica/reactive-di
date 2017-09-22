@@ -11,7 +11,7 @@ export type IPropsWithContext = {
 }
 
 export interface ISheet<V: Object> {
-    update(name?: string, props: V): ISheet<V>;
+    // update(props: V): ISheet<V>;
     attach(): ISheet<V>;
     detach(): ISheet<V>;
     classes: {+[id: $Keys<V>]: string};
@@ -19,6 +19,7 @@ export interface ISheet<V: Object> {
 
 export interface IProcessor {
     createStyleSheet<V: Object>(_cssObj: V, options: any): ISheet<V>;
+    removeStyleSheet<V: Object>(sheet: ISheet<V>): void;
 }
 
 class FakeSheet<V: Object> implements ISheet<V> {
@@ -40,7 +41,8 @@ class FakeSheet<V: Object> implements ISheet<V> {
 const defaultSheetProcessor: IProcessor = {
     createStyleSheet<V: Object>(cssProps: V): ISheet<V> {
         return new FakeSheet()
-    }
+    },
+    removeStyleSheet<V: Object>(sheet: ISheet<V>) {}
 }
 
 class SheetManager {
@@ -56,19 +58,19 @@ class SheetManager {
     sheet<V: Object>(key: Function, value?: ISheet<V>, force?: boolean, oldValue?: ISheet<V>): ISheet<V> {
         if (value !== undefined) return value
 
-        if (oldValue === undefined) {
-            const newValue: ISheet<V> = this._sheetProcessor.createStyleSheet(this._injector.invoke(key))
-            newValue.attach()
-            return newValue
+        if (oldValue !== undefined) {
+            this._sheetProcessor.removeStyleSheet(oldValue)
+            // oldValue.detach()
         }
+        const newValue: ISheet<V> = this._sheetProcessor.createStyleSheet(this._injector.invoke(key))
+        newValue.attach()
 
-        oldValue.update(undefined, this._injector.invoke(key))
-        oldValue.attach()
-        return oldValue
+        return newValue
     }
 
     destroy(value: ISheet<*>) {
-        value.detach()
+        this._sheetProcessor.removeStyleSheet(value)
+        // value.detach()
     }
 }
 
@@ -272,16 +274,26 @@ export default class Injector {
         const result = []
         const map = this._cache
         if (argDeps !== undefined) {
+            const sm = this._sheetManager
             const resolved = this._resolved
             for (let i = 0, l = argDeps.length; i < l; i++) {
                 let argDep = argDeps[i]
                 if (typeof argDep === 'object') {
                     const obj = {}
+                    if (!resolved) {
+                        for (let prop in argDep) { // eslint-disable-line
+                            const key = argDep[prop]
+                            if (key.theme !== undefined) {
+                                obj[prop] = sm.sheet(key).classes
+                            }
+                        }
+                    }
+
                     for (let prop in argDep) { // eslint-disable-line
                         const key = argDep[prop]
                         const dep = key.theme === undefined
                             ? this.value(key)
-                            : this._sheetManager.sheet(key).classes
+                            : sm.sheet(key).classes
 
                         if (resolved === false && key.__lom_prop !== undefined) {
                             if (this._listeners === undefined) {
@@ -297,7 +309,7 @@ export default class Injector {
                 } else {
                     const dep = argDep.theme === undefined
                         ? this.value(argDep)
-                        : this._sheetManager.sheet(argDep).classes
+                        : sm.sheet(argDep).classes
 
                     if (resolved === false && argDep.__lom_prop !== undefined) {
                         if (this._listeners === undefined) {

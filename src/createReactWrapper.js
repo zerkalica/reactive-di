@@ -201,6 +201,7 @@ export default function createReactWrapper<IElement>(
     return function reactWrapper<State>(
         render: IRenderFn<IElement, State>
     ): Class<IReactComponent<IElement>> {
+        const displayName = render.displayName || render.name
         const WrappedComponent = function(props: IPropsWithContext, context?: Object) {
             AtomizedComponent.call(this, props, context)
         }
