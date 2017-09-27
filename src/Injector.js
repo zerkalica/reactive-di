@@ -112,7 +112,7 @@ export default class Injector {
             ? sheetProcessor
             : new SheetManager(sheetProcessor, this)
 
-        const map = this._cache = cache || Object.create(null)
+        const map = this._cache = cache || (Object.create(null): Object)
         if (items !== undefined) {
             for (let i = 0; i < items.length; i++) {
                 const item = items[i]

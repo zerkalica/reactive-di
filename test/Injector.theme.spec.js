@@ -144,8 +144,7 @@ describe('Injector.theme', () => {
         assert(sheet.attach.calledOnce)
         c.isA = false
         c.v()
-        defaultContext.beginTransaction()
-        defaultContext.endTransaction()
+        defaultContext.endTransaction(defaultContext.beginTransaction('$'))
         assert(sheet.detach.calledOnce)
 
     })
