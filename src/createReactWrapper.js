@@ -1,5 +1,5 @@
 // @flow
-import {mem, detached} from 'lom_atom'
+import {detached} from 'lom_atom'
 import type {NamesOf} from 'lom_atom'
 
 import Injector from './Injector'

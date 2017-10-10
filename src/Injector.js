@@ -1,6 +1,6 @@
 // @flow
 
-import {defaultContext, memkey} from 'lom_atom'
+import {memkey} from 'lom_atom'
 
 export type IArg = Function | {+[id: string]: Function}
 export type IProvideItem = Function | Object | [Function | string, Function | mixed]

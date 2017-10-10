@@ -8,6 +8,18 @@ import babelrc from 'babelrc-rollup'
 import fs from 'fs'
 
 const pkg = JSON.parse(fs.readFileSync('./package.json'))
+const uglifyOpts = {
+    warnings: true,
+    compress: {
+        dead_code: true,
+        unused: true,
+        toplevel: true,
+        warnings: true
+    },
+    mangle: {
+        toplevel: true
+    }
+}
 
 const commonConf = {
     input: 'src/index.js',
@@ -15,7 +27,7 @@ const commonConf = {
     plugins: [
         resolve(),
         babel(babelrc())
-    ].concat(process.env.UGLIFY === '1' ? [uglify({}, minify)] : []),
+    ].concat(process.env.UGLIFY === '1' ? [uglify(uglifyOpts, minify)] : []),
     output: [
         {file: pkg.module, format: 'es'},
     ],
