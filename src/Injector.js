@@ -45,6 +45,22 @@ const defaultSheetProcessor: IProcessor = {
     removeStyleSheet<V: Object>(sheet: ISheet<V>) {}
 }
 
+class DisposableSheet<V: Object> {
+    classes: {+[id: $Keys<V>]: string}
+    _sheetProcessor: IProcessor
+    _sheet: ISheet<V>
+
+    constructor(sheet: ISheet<V>, sheetProcessor: IProcessor) {
+        this.classes = sheet.classes
+        this._sheet = sheet
+        this._sheetProcessor = sheetProcessor
+    }
+
+    destructor() {
+        this._sheetProcessor.removeStyleSheet(this._sheet)
+    }
+}
+
 class SheetManager {
     _sheetProcessor: IProcessor
     _injector: Injector
@@ -55,22 +71,13 @@ class SheetManager {
     }
 
     @memkey
-    sheet<V: Object>(key: Function, value?: ISheet<V>, force?: boolean, oldValue?: ISheet<V>): ISheet<V> {
+    sheet<V: Object>(key: Function, value?: DisposableSheet<V>, force?: boolean): DisposableSheet<V> {
         if (value !== undefined) return value
 
-        if (oldValue !== undefined) {
-            this._sheetProcessor.removeStyleSheet(oldValue)
-            // oldValue.detach()
-        }
         const newValue: ISheet<V> = this._sheetProcessor.createStyleSheet(this._injector.invoke(key))
         newValue.attach()
 
-        return newValue
-    }
-
-    destroy(value: ISheet<*>) {
-        this._sheetProcessor.removeStyleSheet(value)
-        // value.detach()
+        return new DisposableSheet(newValue, this._sheetProcessor)
     }
 }
 
@@ -172,7 +179,7 @@ export default class Injector {
         return value
     }
 
-    destroy() {
+    destructor() {
         this._cache = (undefined: any)
         this._listeners = undefined
         this._sheetManager = (undefined: any)

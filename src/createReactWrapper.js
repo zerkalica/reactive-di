@@ -152,16 +152,16 @@ export default function createReactWrapper<IElement>(
         }
 
         componentWillUnmount() {
-            this['r()'].destroyed(true)
+            this['AtomizedComponent.r()'].destructor()
         }
 
-        destroy() {
+        destructor() {
             this._el = undefined
             this._keys = undefined
             this.props = (undefined: any)
             if (this._render !== undefined) {
                 this.constructor.instance--
-                this._injector.destroy()
+                this._injector.destructor()
                 this._injector = (undefined: any)
             }
         }
