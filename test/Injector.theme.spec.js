@@ -1,151 +1,111 @@
 // @flow
 
 import assert from 'assert'
-import sinon from 'sinon'
-import {mem, defaultContext} from 'lom_atom'
 import Injector from '../src/Injector'
-import type {ISheet} from '../src/Injector'
-
-
-function createSheet(classes?: Object = {}): ISheet<*> {
-    return {
-        classes,
-        attach: sinon.spy(function (orig) {
-            return this
-        }),
-        detach: sinon.spy(function () {
-            return this
-        }),
-        update: sinon.spy(function (name, newClasses) {
-            this.classes = newClasses
-            return this
-        })
-    }
-}
+import type {ISheet, IProcessor} from '../src/interfaces'
+import theme from '../src/theme'
 
 describe('Injector.theme', () => {
-    it('theme always resolved in top injector', () => {
-        function Theme() {
-            return {a: {}}
-        }
-        Theme.theme = true
+    it('lazy attach/detach', () => {
+        const css = { main: { color: 'red' } }
         class A {
-            theme: Theme
-            static deps = [Theme]
-            constructor(t: Theme) {
-                this.theme = t
+            @theme get css() {
+                return css
             }
         }
 
-        const sheet = createSheet()
-        const parent = new Injector(undefined, {
-            createStyleSheet<V: Object>(cssProps: V): ISheet<*> {
+        let attached = false
+
+        const sheet: ISheet<any> = {
+            classes: ({ main: 'A.main' }: Object),
+            attach() {
+                attached = true
+            }
+        }
+
+        let created = null
+        let removed = null
+
+        const processor: IProcessor = {
+            createStyleSheet(css, opts) {
+                created = css
                 return sheet
             },
-            removeStyleSheet<V: Object>(sheet: ISheet<V>) {
-                sheet.detach()
+            removeStyleSheet(sheet) {
+                removed = sheet
             }
-        })
-        const child = parent.copy()
+        }
 
-        const aChild: A = child.value(A)
+        const parent = new Injector(undefined, processor)
         const aParent: A = parent.value(A)
-        assert(aParent.theme === aChild.theme)
+
+        assert(attached === false)
+        assert(created === null)
+
+        assert(aParent.css.main === sheet.classes.main)
+        assert(attached === true)
+        assert(created === css)
+
+        ;(aParent.css: Object).destructor()
+        assert(removed === sheet)
+
+        attached = false
+        created = null
+        assert(aParent.css.main === sheet.classes.main)
+        assert(attached === true)
+        assert(created === css)
     })
 
-
-    it('theme attached on access', () => {
-        function Theme() {
-            return {}
-        }
-        Theme.theme = true
+    it('one instance', () => {
+        const css = { main: { color: 'red' } }
         class A {
-            theme: Theme
-            static deps = [Theme]
+            @theme get css() {
+                return css
+            }
         }
 
-        const sheet = createSheet()
-        const inj = new Injector(undefined, {
-            createStyleSheet<V: Object>(cssProps: V): ISheet<*> {
+        const sheet: ISheet<any> = {
+            classes: ({ main: 'A.main' }: Object),
+            attach() {}
+        }
+
+        const processor: IProcessor = {
+            createStyleSheet(css, opts) {
                 return sheet
             },
-            removeStyleSheet<V: Object>(sheet: ISheet<V>) {
-                sheet.detach()
-            }
-        })
-        const a: A = inj.value(A)
-        inj.value(A)
+            removeStyleSheet() {}
+        }
 
-        assert(sheet.attach.calledOnce)
+        const parent = new Injector(undefined, processor)
+        const a1: A = parent.copy('child1').value(A)
+        const a2: A = parent.copy('child2').value(A)
+
+        assert(a1.css === a2.css)
     })
 
-
-    it('theme update on dependency changes', () => {
-        class B {
-            @mem v = 1
-        }
-        function Theme(b: B) {
-            return {
-                v: b.v
-            }
-        }
-
-        Theme.deps = [B]
-        Theme.theme = true
-
-        function A(t) {
-            return t.v
-        }
-        A._r = [2, [Theme]]
-
-        let sheet = createSheet()
-        const inj = new Injector(undefined, {
-            createStyleSheet<V: Object>(cssProps: V): ISheet<*> {
-                return sheet = createSheet(cssProps)
-            },
-            removeStyleSheet<V: Object>(sheet: ISheet<V>) {
-                sheet.detach()
-            }
-        })
-        assert(inj.invoke(A) === 1)
-        inj.value(B).v = 2
-        assert(inj.invoke(A) === 2)
-        assert(sheet.attach.calledOnce)
-        // assert(sheet.update.calledOnce)
-    })
-
-    it('theme detach on dependency unuse', () => {
-        function Theme() { return {} }
-        Theme.theme = true
+    it('multiple instances', () => {
+        const css = { main: { color: 'red' } }
         class A {
-            static deps = [Theme]
-        }
-
-        class B {}
-
-        class C {
-            @mem isA = true
-            @mem v() {
-                return this.isA ? inj.value(A) : inj.value(B)
+            @theme.self get css() {
+                return css
             }
         }
 
-        const sheet = createSheet()
-        const inj = new Injector(undefined, {
-            createStyleSheet<V: Object>(cssProps: V): ISheet<*> {
+        const sheet: ISheet<any> = {
+            classes: ({ main: 'A.main' }: Object),
+            attach() {}
+        }
+
+        const processor: IProcessor = {
+            createStyleSheet(css, opts) {
                 return sheet
             },
-            removeStyleSheet<V: Object>(sheet: ISheet<V>) {
-                sheet.detach()
-            }
-        })
-        const c = new C()
-        c.v()
-        assert(sheet.attach.calledOnce)
-        c.isA = false
-        c.v()
-        defaultContext.endTransaction(defaultContext.beginTransaction('$'))
-        assert(sheet.detach.calledOnce)
+            removeStyleSheet() {}
+        }
 
+        const parent = new Injector(undefined, processor)
+        const a1: A = parent.copy('child1', 0).value(A)
+        const a2: A = parent.copy('child2', 1).value(A)
+        assert(a1.css !== a2.css)
     })
 })

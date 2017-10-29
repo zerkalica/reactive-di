@@ -1,86 +1,8 @@
 // @flow
 
-import {memkey} from 'lom_atom'
-
-export type IArg = Function | {+[id: string]: Function}
-export type IProvideItem = Function | Object | [Function | string, Function | mixed]
-
-export type IPropsWithContext = {
-    [id: string]: any;
-    __lom_ctx?: Injector;
-}
-
-export interface ISheet<V: Object> {
-    // update(props: V): ISheet<V>;
-    attach(): ISheet<V>;
-    detach(): ISheet<V>;
-    classes: {+[id: $Keys<V>]: string};
-}
-
-export interface IProcessor {
-    createStyleSheet<V: Object>(_cssObj: V, options: any): ISheet<V>;
-    removeStyleSheet<V: Object>(sheet: ISheet<V>): void;
-}
-
-class FakeSheet<V: Object> implements ISheet<V> {
-    classes: {+[id: $Keys<V>]: string} = {}
-
-    update(name?: string, props: V): ISheet<V> {
-        return this
-    }
-
-    attach(): ISheet<V> {
-        return this
-    }
-
-    detach(): ISheet<V> {
-        return this
-    }
-}
-
-const defaultSheetProcessor: IProcessor = {
-    createStyleSheet<V: Object>(cssProps: V): ISheet<V> {
-        return new FakeSheet()
-    },
-    removeStyleSheet<V: Object>(sheet: ISheet<V>) {}
-}
-
-class DisposableSheet<V: Object> {
-    classes: {+[id: $Keys<V>]: string}
-    _sheetProcessor: IProcessor
-    _sheet: ISheet<V>
-
-    constructor(sheet: ISheet<V>, sheetProcessor: IProcessor) {
-        this.classes = sheet.classes
-        this._sheet = sheet
-        this._sheetProcessor = sheetProcessor
-    }
-
-    destructor() {
-        this._sheetProcessor.removeStyleSheet(this._sheet)
-    }
-}
-
-class SheetManager {
-    _sheetProcessor: IProcessor
-    _injector: Injector
-
-    constructor(sheetProcessor?: IProcessor, injector: Injector) {
-        this._sheetProcessor = sheetProcessor || defaultSheetProcessor
-        this._injector = injector
-    }
-
-    @memkey
-    sheet<V: Object>(key: Function, value?: DisposableSheet<V>, force?: boolean): DisposableSheet<V> {
-        if (value !== undefined) return value
-
-        const newValue: ISheet<V> = this._sheetProcessor.createStyleSheet(this._injector.invoke(key))
-        newValue.attach()
-
-        return new DisposableSheet(newValue, this._sheetProcessor)
-    }
-}
-
+import type {IArg, IProvideItem, IPropsWithContext, IDisposableSheet, IProcessor} from './interfaces'
+import SheetManager from './SheetManager'
+import theme from './theme'
 type IListener = Object
 
 type ICache = {[id: string]: any}
@@ -99,25 +21,25 @@ type IState = {[ns: string]: {[id: string]: any}}
 
 export default class Injector {
     displayName: string
-    _sheetManager: SheetManager
+    instance: number
+
     _cache: ICache
-    _instance: number
     _state: IState | void
 
     constructor(
         items?: IProvideItem[],
-        sheetProcessor?: IProcessor | SheetManager,
+        sheetProcessor?: ?IProcessor,
         state?: IState,
         displayName?: string,
         instance?: number,
         cache?: ICache
     ) {
         this._state = state
-        this._instance = instance || 0
+        this.instance = instance || 0
         this.displayName = displayName || '$'
-        this._sheetManager = sheetProcessor instanceof SheetManager
-            ? sheetProcessor
-            : new SheetManager(sheetProcessor, this)
+        if (sheetProcessor) {
+            theme.sheetManager = new SheetManager(sheetProcessor)
+        }
 
         const map = this._cache = cache || (Object.create(null): Object)
         if (items !== undefined) {
@@ -164,8 +86,9 @@ export default class Injector {
 
         if (value === undefined) {
             value = this._cache[id] = this.invoke(key)
-            const depName = (key.displayName || key.name) + (this._instance > 0 ? ('[' + this._instance + ']') : '')
+            const depName = (key.displayName || key.name) + (this.instance > 0 ? ('[' + this.instance + ']') : '')
             value.displayName = `${this.displayName}.${depName}`
+            value.__lom_di = this
             const state = this._state === undefined ? undefined : this._state[depName]
             if (state && typeof state === 'object') {
                 for (let prop in state) {
@@ -182,7 +105,6 @@ export default class Injector {
     destructor() {
         this._cache = (undefined: any)
         this._listeners = undefined
-        this._sheetManager = (undefined: any)
     }
 
     invoke<V>(key: any): V {
@@ -243,13 +165,11 @@ export default class Injector {
             return key(props)
         }
         const a = this.resolve(deps)
-        if (propsChanged === true) {
-            const listeners = this._listeners
-            if (listeners !== undefined) {
-                for (let i = 0; i < listeners.length; i++) {
-                    const listener = listeners[i]
-                    listener[listener.constructor.__lom_prop] = props
-                }
+        const listeners = this._listeners
+        if (propsChanged === true && listeners !== undefined) {
+            for (let i = 0; i < listeners.length; i++) {
+                const listener = listeners[i]
+                listener[listener.constructor.__lom_prop] = props
             }
         }
         this._resolved = true
@@ -266,10 +186,10 @@ export default class Injector {
         }
     }
 
-    copy(items?: IProvideItem[], displayName: string, instance?: number): Injector {
+    copy(displayName: string, instance?: number, items?: IProvideItem[]): Injector {
         return new Injector(
             items,
-            this._sheetManager,
+            null,
             this._state,
             this.displayName + '.' + displayName,
             instance,
@@ -279,54 +199,37 @@ export default class Injector {
 
     resolve(argDeps?: IArg[]): any[] {
         const result = []
-        const map = this._cache
-        if (argDeps !== undefined) {
-            const sm = this._sheetManager
-            const resolved = this._resolved
-            for (let i = 0, l = argDeps.length; i < l; i++) {
-                let argDep = argDeps[i]
-                if (typeof argDep === 'object') {
-                    const obj = {}
-                    if (!resolved) {
-                        for (let prop in argDep) { // eslint-disable-line
-                            const key = argDep[prop]
-                            if (key.theme !== undefined) {
-                                obj[prop] = sm.sheet(key).classes
-                            }
-                        }
-                    }
+        if (argDeps === undefined) return result
 
-                    for (let prop in argDep) { // eslint-disable-line
-                        const key = argDep[prop]
-                        const dep = key.theme === undefined
-                            ? this.value(key)
-                            : sm.sheet(key).classes
-
-                        if (resolved === false && key.__lom_prop !== undefined) {
-                            if (this._listeners === undefined) {
-                                this._listeners = []
-                            }
-                            this._listeners.push(dep)
-                        }
-
-                        obj[prop] = dep
-                    }
-
-                    result.push(obj)
-                } else {
-                    const dep = argDep.theme === undefined
-                        ? this.value(argDep)
-                        : sm.sheet(argDep).classes
-
-                    if (resolved === false && argDep.__lom_prop !== undefined) {
+        const resolved = this._resolved
+        for (let i = 0, l = argDeps.length; i < l; i++) {
+            let argDep = argDeps[i]
+            if (typeof argDep === 'object') {
+                const obj = {}
+                for (let prop in argDep) { // eslint-disable-line
+                    const key = argDep[prop]
+                    const dep = this.value(key)
+                    if (resolved === false && key.__lom_prop !== undefined) {
                         if (this._listeners === undefined) {
                             this._listeners = []
                         }
                         this._listeners.push(dep)
                     }
 
-                    result.push(dep)
+                    obj[prop] = dep
                 }
+
+                result.push(obj)
+            } else {
+                const dep = this.value(argDep)
+                if (resolved === false && argDep.__lom_prop !== undefined) {
+                    if (this._listeners === undefined) {
+                        this._listeners = []
+                    }
+                    this._listeners.push(dep)
+                }
+
+                result.push(dep)
             }
         }
 

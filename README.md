@@ -525,20 +525,26 @@ class ThemeVars {
   @mem color = 'red'
 }
 
-function MyTheme(vars: ThemeVars) {
-  return {
-    wrapper: {
-      backgroundColor: vars.color
+class MyTheme {
+    vars: ThemeVars
+    constructor(vars: ThemeVars) {
+        this._vars = vars
     }
-  }
+
+    @mem @theme get css() {
+        return {
+            wrapper: {
+                backgroundColor: this._vars.color
+            }
+        }
+    }
 }
-MyTheme.theme = true
 
 function MyView(
   props: {},
-  {theme, vars}: {theme: NamesOf<typeof MyTheme>, vars: ThemeVars}
+  {theme: {css}, vars}: {theme: MyTheme, vars: ThemeVars}
 ) {
-  return <div class={theme.wrapper}>...
+  return <div class={css.wrapper}>...
     <button onClick={() => vars.color = 'green'}>Change color</button>
   </div>
 }
@@ -551,7 +557,8 @@ Styles automatically mounts/unmounts together with component. Changing ``` vars.
 Sometimes we need to pass component properties to its services.
 
 ```js
-import {mem, props} from 'lom_atom'
+import {mem} from 'lom_atom'
+import {props} from 'reactive-di'
 
 interface MyProps {
   some: string;

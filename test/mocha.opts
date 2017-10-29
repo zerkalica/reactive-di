@@ -1,3 +1,4 @@
 --timeout 5000
---compilers js:babel-register
+--require source-map-support/register
+--require babel-register
 test/*.js

@@ -1,7 +1,6 @@
 // @flow
 
-import type {IProvideItem} from './Injector'
-import type {IRenderFn} from './createReactWrapper'
+import type {IRenderFn, IProvideItem} from './interfaces'
 
 function dn(fn?: ?(Function | Object | mixed)): string {
     if (!fn) return 'null'

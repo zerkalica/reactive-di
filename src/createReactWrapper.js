@@ -1,26 +1,9 @@
 // @flow
-import {detached} from 'lom_atom'
-import type {NamesOf} from 'lom_atom'
+import {ATOM_FORCE_NONE, ATOM_FORCE_CACHE, detached} from 'lom_atom'
+import type {IAtomForce} from 'lom_atom'
 
 import Injector from './Injector'
-import type {IProcessor, ISheet, IProvideItem, IArg, IPropsWithContext} from './Injector'
-
-type IReactComponent<IElement> = {
-    constructor(props: IPropsWithContext, context?: Object): IReactComponent<IElement>;
-    render(): IElement;
-    forceUpdate(): void;
-}
-
-export interface IRenderFn<IElement, State> {
-    (props: IPropsWithContext, state?: State): IElement;
-    __lom?: Class<IReactComponent<IElement>>;
-    displayName?: string;
-    deps?: IArg[];
-    onError?: IFromError<IElement>;
-    aliases?: IProvideItem[];
-}
-
-type IFromError<IElement> = (props: {error: Error}, state?: any) => IElement
+import type {IFromError, IRenderFn, IReactComponent, IProvideItem, IArg, IPropsWithContext} from './interfaces'
 
 type IAtomize<IElement, State> = (
     render: IRenderFn<IElement, State>
@@ -122,9 +105,9 @@ export default function createReactWrapper<IElement>(
             const cns = this.constructor
             this._render = cns.render
             this._injector = (props.__lom_ctx || rootInjector).copy(
-                this._render.aliases,
                 cns.displayName + (cns.instance ? ('[' + cns.instance + ']') : ''),
-                cns.instance
+                cns.instance,
+                this._render.aliases
             )
             cns.instance++
         }
@@ -169,7 +152,7 @@ export default function createReactWrapper<IElement>(
         _el: ?(IElement | void) = undefined
 
         @detached
-        r(element?: IElement, force?: boolean): IElement {
+        r(element?: IElement, force?: IAtomForce): IElement {
             let data: IElement
 
             const render = this._render
@@ -177,13 +160,13 @@ export default function createReactWrapper<IElement>(
             const prevContext = parentContext
             parentContext = this._injector
             try {
-                data = parentContext.invokeWithProps(render, this.props, force)
+                data = parentContext.invokeWithProps(render, this.props, this._propsChanged)
             } catch (error) {
                 data = parentContext.invokeWithProps(render.onError || defaultFromError, {error})
             }
             parentContext = prevContext
 
-            if (!force) {
+            if (!this._propsChanged) {
                 this._el = data
                 this.forceUpdate()
                 this._el = undefined
@@ -194,7 +177,9 @@ export default function createReactWrapper<IElement>(
         }
 
         render() {
-            return this._el === undefined ? this.r(undefined, this._propsChanged) : this._el
+            return this._el === undefined
+                ? this.r(undefined, this._propsChanged ? ATOM_FORCE_CACHE : ATOM_FORCE_NONE)
+                : this._el
         }
     }
 

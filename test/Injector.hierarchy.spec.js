@@ -15,7 +15,7 @@ describe('Injector.hierarchy', () => {
 
     it('dependency resolved from parent, if already exists in parent', () => {
         const parent = new Injector()
-        const child = parent.copy()
+        const child = parent.copy('child')
 
         const aParent: A = parent.value(A)
         const aChild: A = child.value(A)
@@ -25,22 +25,10 @@ describe('Injector.hierarchy', () => {
 
     it('dependency resolved from child, if not exists in parent', () => {
         const parent = new Injector()
-        const child = parent.copy()
+        const child = parent.copy('child')
 
         const aChild: A = child.value(A)
         const aParent: A = parent.value(A)
         assert(aParent !== aChild)
-    })
-
-    it.skip('dependency resolved from child, if exists in parent, but registered in child', () => {
-        const parent = new Injector()
-        const child = parent.copy([
-            A
-        ])
-
-        const aParent: A = parent.value(A)
-        const aChild: A = child.value(A)
-        assert(aChild !== aParent)
-        assert(aChild.b === aParent.b)
     })
 })
