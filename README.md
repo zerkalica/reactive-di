@@ -14,9 +14,9 @@ Typesafe dependency injection container for react-like components.
 * Easily integrates css-in-js solutions like [jss](https://github.com/cssinjs/jss).
 * Tiny size about 10kb reactive-di.min.js.
 
-[example source](https://github.com/zerkalica/rdi-examples), [demo](http://zerkalica.github.io/rdi-examples/), [todomvc benchmark](http://mol.js.org/app/bench/#bench=https%3A%2F%2Fzerkalica.github.io%2Ftodomvc%2Fbenchmark%2F/sample=preact-lom-rdi~preact-raw~preact-mobx)
-
-[fiddle](https://jsfiddle.net/zerkalica/jxo6hqf8/) example with loading and error handling demo.
+* [example source](https://github.com/zerkalica/rdi-examples), [demo](http://zerkalica.github.io/rdi-examples/)
+* [todomvc benchmark](http://mol.js.org/app/bench/#bench=https%3A%2F%2Fzerkalica.github.io%2Futb%2Fbenchmark%2F/sample=preact-lom_atom~preact-mobx~preact-raw~preact-reactive-di)
+* [fiddle](https://jsfiddle.net/zerkalica/jxo6hqf8/) example with loading and error handling demo.
 
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
