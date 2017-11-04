@@ -6,7 +6,7 @@ Typesafe dependency injection container for react-like components.
 
 * With this DI you can buit pure component based architecture.
 * With this DI you can forget about [HOC](https://reactjs.org/docs/higher-order-components.html) and any decorators around component.
-* Atomatic isolated error and loading status handling for each component. Error exception in component breaks only this component.
+* Atomatic isolated error and loading status handling for each component.
 * ReactiveDI helps you to follow [open/closed principle](https://en.wikipedia.org/wiki/Open/closed_principle) via slots (like [vue slots](https://vuejs.org/v2/guide/components.html#Content-Distribution-with-Slots)).
 * [Hierarchical Dependency Injectors](https://angular.io/guide/hierarchical-dependency-injection).
 * ReactiveDI easily integrates some state management libraries: [MobX](htttps://mobx.js.org), [lom_atom](https://github.com/zerkalica/lom_atom).
@@ -154,7 +154,7 @@ render(<HelloView name="John" />, document.body)
 ```js
 // @flow
 import {Reaction} from 'mobx'
-import {createReactWrapper, createCreateElement, creteMobxDetached} from 'reactive-di'
+import {createReactWrapper, createCreateElement, createMobxDetached} from 'reactive-di'
 import {createElement, Component} from 'react'
 import {render} from 'react-dom'
 
@@ -179,7 +179,7 @@ const lomCreateElement = createCreateElement(
     createReactWrapper(
         Component,
         ErrorableView,
-        creteMobxDetached(Reaction)
+        createMobxDetached(Reaction)
     ),
     createElement
 )
