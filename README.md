@@ -2,7 +2,17 @@
 
 [![NPM](https://nodei.co/npm/reactive-di.png?downloads=true&stars=true)](https://nodei.co/npm/reactive-di/)
 
-Dependency injection with reactivity unobtrusive state-management in [mobx](https://mobx.js.org/) manner, applied to react-like components, css-in-js. Compatible with flow, react, but free from framework lock-in (no React.createElement, Inferno.createVNode), etc. Size about 10kb reactive-di.min.js + 11kb lom_atom.min.js
+Typesafe dependency injection container for react-like components.
+
+* With this DI you can buit pure component based architecture.
+* With this DI you can forget about [HOC](https://reactjs.org/docs/higher-order-components.html) and any decorators around component.
+* Atomatic isolated error and loading status handling for each component. Error exception in component breaks only this component.
+* ReactiveDI helps you to follow [open/closed principle](https://en.wikipedia.org/wiki/Open/closed_principle) via slots (like [vue slots](https://vuejs.org/v2/guide/components.html#Content-Distribution-with-Slots)).
+* [Hierarchical Dependency Injectors](https://angular.io/guide/hierarchical-dependency-injection).
+* ReactiveDI easily integrates some state management libraries: [MobX](htttps://mobx.js.org), [lom_atom](https://github.com/zerkalica/lom_atom).
+* Framework agnostic, vendor lock-in free: no static dependencies from React, MobX, etc.
+* Easily integrates css-in-js solutions like [jss](https://github.com/cssinjs/jss).
+* Tiny size about 10kb reactive-di.min.js.
 
 [example source](https://github.com/zerkalica/rdi-examples), [demo](http://zerkalica.github.io/rdi-examples/), [todomvc benchmark](http://mol.js.org/app/bench/#bench=https%3A%2F%2Fzerkalica.github.io%2Ftodomvc%2Fbenchmark%2F/sample=preact-lom-rdi~preact-raw~preact-mobx)
 
@@ -11,16 +21,19 @@ Dependency injection with reactivity unobtrusive state-management in [mobx](http
 - [Install](#install)
 - [Debug](#debug)
 - [Hello world](#hello-world)
+	- [Setup with preact and lom_atom](#setup-with-preact-and-lomatom)
+	- [Setup with react and mobx](#setup-with-react-and-mobx)
 - [Features](#features)
 	- [Typesafe context in components](#typesafe-context-in-components)
-	- [State management based on lom_atom](#state-management-based-on-lomatom)
-	- [Asynchronous code](#asynchronous-code)
-	- [Error handling](#error-handling)
-	- [Loading status handing](#loading-status-handing)
-	- [Registering default dependencies](#registering-default-dependencies)
-	- [Components cloning](#components-cloning)
+	- [State management based on lom_atom or mobx](#state-management-based-on-lomatom-or-mobx)
+	- [Automatic error handling](#automatic-error-handling)
+	- [Custom error handler](#custom-error-handler)
+	- [Loading status handling](#loading-status-handling)
+	- [Redefine default dependencies](#redefine-default-dependencies)
+	- [Components cloning and slots](#components-cloning-and-slots)
 	- [Hierarchical dependency injection](#hierarchical-dependency-injection)
 	- [Optional css-in-js support](#optional-css-in-js-support)
+	- [Multiple css instances](#multiple-css-instances)
 	- [Passing component props to its depenendencies](#passing-component-props-to-its-depenendencies)
 	- [React compatible](#react-compatible)
 	- [Logging](#logging)
@@ -52,7 +65,7 @@ Example .babelrc:
 }
 ```
 
-babel-plugin-transform-metadata is optional, used for metadata generation.
+babel-plugin-transform-metadata is optional, used for metadata generation. ReactiveDI use type annotations for dependency resolving, without this plugin you will need to provide metadata manually.
 
 ## Debug
 
@@ -64,12 +77,14 @@ npm run watch --reactive-di:dest=../app-project
 
 ## Hello world
 
-Setup:
+ReactiveDI has no static dependencies and not a zero-setup library. Setup is usually about 30-50 SLOC, but you do it once per application. But you can integrate into ReactiveDI any component react-like, state management and css-in-js library via adapters.
+
+### Setup with preact and lom_atom
 
 ```js
 // @flow
-import {mem, action} from 'lom_atom'
-import {createReactWrapper, createCreateElement, Injector} from 'reactive-di'
+import {detached, mem, action} from 'lom_atom'
+import {createReactWrapper, createCreateElement} from 'reactive-di'
 import {render, h, Component} from 'preact'
 
 function ErrorableView({error}: {error: Error}) {
@@ -92,9 +107,10 @@ function ErrorableView({error}: {error: Error}) {
 const lomCreateElement = createCreateElement(
     createReactWrapper(
         Component,
-        ErrorableView
+        ErrorableView,
+        detached
     ),
-    h
+    (h: React$CreateElement)
 )
 global['lom_h'] = lomCreateElement
 ```
@@ -102,39 +118,118 @@ global['lom_h'] = lomCreateElement
 Usage:
 
 ```js
-class HelloContext {
-    @mem name = ''
+import {mem} from 'lom_atom'
+import {props} from 'reactive-di'
+import {render} from 'preact'
+
+interface IHelloProps {
+    name: string;
 }
 
-function HelloView(
-  {prefix}: {prefix: string},
-  {context}: {context: HelloContext}
+class HelloContext {
+    @mem name: string
+    @props set props({name}: IHelloProps) {
+        this.name = name
+    }
+}
+
+export function HelloView(
+    _: IHelloProps,
+    {context}: {context: HelloContext}
 ) {
     return <div>
-        {prefix}, {context.name}
-        <br/><input value={context.name} onInput={
-            action((e: Event) => {
-                context.name = (e.target: any).value
-            })
-        } />
+        Hello, {context.name}
+        <br/><input value={context.name} onInput={({target}) => {
+            context.name = (target: any).value
+        }} />
+    </div>
+}
+render(<HelloView name="John" />, document.body)
+```
+
+### Setup with react and mobx
+
+```js
+// @flow
+import {Reaction} from 'mobx'
+import {createReactWrapper, createCreateElement, creteMobxDetached} from 'reactive-di'
+import {createElement, Component} from 'react'
+import {render} from 'react-dom'
+
+function ErrorableView({error}: {error: Error}) {
+    return <div>
+        {error instanceof mem.Wait
+            ? <div>
+                Loading...
+            </div>
+            : <div>
+                <h3>Fatal error !</h3>
+                <div>{error.message}</div>
+                <pre>
+                    {error.stack.toString()}
+                </pre>
+            </div>
+        }
     </div>
 }
 
-render(<HelloView prefix="Hello" />, document.body)
+const lomCreateElement = createCreateElement(
+    createReactWrapper(
+        Component,
+        ErrorableView,
+        creteMobxDetached(Reaction)
+    ),
+    createElement
+)
+global['lom_h'] = lomCreateElement
+```
+
+Usage:
+
+```js
+import {observable} from 'mobx'
+import {props} from 'reactive-di'
+import {render} from 'preact'
+
+interface IHelloProps {
+    name: string;
+}
+
+class HelloContext {
+    @observable name: string
+    @props set props({name}: IHelloProps) {
+        this.name = name
+    }
+}
+
+export function HelloView(
+    _: IHelloProps,
+    {context}: {context: HelloContext}
+) {
+    return <div>
+        Hello, {context.name}
+        <br/><input value={context.name} onInput={({target}) => {
+            context.name = (target: any).value
+        }} />
+    </div>
+}
+render(<HelloView name="John" />, document.body)
 ```
 
 ## Features
 
 ### Typesafe context in components
 
+You can use [context in stateless functional components](https://reactjs.org/docs/context.html#referencing-context-in-stateless-functional-components). With [babel-plugin-transform-metadata](https://github.com/zerkalica/babel-plugin-transform-metadata) you do not need to provide metadata (like ``` Button.contextTypes = {color: PropTypes.string}; ```).
+
+Context signature generated from second argument:
+
 ```js
 // @flow
-function HelloView(
-  {prefix}: {prefix: string}, // props
-  {context}: {context: HelloContext} // automatically injected reactive context
-) {
-    return <div>...</div>
-}
+export function HelloView(
+    _: IHelloProps,
+    {context}: {context: HelloContext}
+) { ... }
 ```
 
 Or
@@ -148,9 +243,7 @@ function HelloView(
 }
 ```
 
-Context signature generated from component via  [babel-plugin-transform-metadata](https://github.com/zerkalica/babel-plugin-transform-metadata).
-
-Classes as keys. Without plugin, we need to define metadata manually:
+Class definitions used as keys for dependency resolving. For generation dependency metadata ReactiveDI do not use any library (like props-types), raw metadata only expose function arguments to injector. Without plugin, you will need to provide them manually:
 
 ```js
 HelloView.deps = [{context: HelloContext}]
@@ -162,81 +255,13 @@ Injector in createElement (lom_h) automatically initializes HelloContext and pas
 render(<HelloView prefix="Hello" />, document.body)
 ```
 
-### State management based on lom_atom
+### State management based on lom_atom or mobx
 
-Rdi based on [lom_atom](https://github.com/zerkalica/lom_atom), state management library, like mobx, but much simpler and with some killer features. Statefull or stateless components in rdi - pure functions.
+ReactiveDI is state management agnostic library. You can use mobx or [lom_atom](https://github.com/zerkalica/lom_atom) (like mobx, but much simpler and with some killer features). In ReactiveDI all components are pure functional.
 
-Modifying state:
+### Automatic error handling
 
-```js
-import {action, mem} from 'lom_atom'
-
-class HelloContext {
-    @mem name = ''
-}
-
-function HelloView(
-  _: {},
-  {context}: {context: HelloContext}
-) {
-    return <input value={context.name} onInput={
-        action((e: Event) => {
-            context.name = (e.target: any).value
-        })
-    } />
-}
-```
-
-All state changes are asynchronous, but for prevent loosing cursor position in react input, action helper used.
-
-### Asynchronous code
-
-Loading actual state:
-
-```js
-import {mem, force} from 'lom_atom'
-class HelloContext {
-    @force force: HelloContext
-
-    @mem set name(next: string | Error) {}
-    @mem get name(): string {
-      fetch('/hello')
-        .then((r: Response) => r.json())
-        .then((data: Object) => {
-          this.name = data.name
-        })
-        .catch((e: Error) => {
-          this.name = e
-        })
-
-        throw new mem.Wait()
-    }
-}
-
-function HelloView(
-  _: {},
-  context: HelloContext
-) {
-    return <div>
-      <input value={context.name} onInput={
-        action((e: Event) => {
-            context.name = (e.target: any).value
-        })
-      } />
-      <button onClick={() => { context.forced.name }}>Reload from server</button>
-    </div>
-}
-```
-
-First time ``` context.name ``` invokes fetch('/hello') and actualizes state, second time - ``` context.name ``` returns value from cache.
-
-``` context.forced.name ``` invokes fetch handler again.
-
-``` context.name = value ``` value sets directly into cache.
-
-``` context.forced.name = value ``` invokes set name handler in HelloContext and sets into cache.
-
-### Error handling
+All errors are isolated in components. They do not breaks whole application. You don't need to manually catch errors via [componentDidCatch](https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html).
 
 ```js
 class HelloContext {
@@ -249,15 +274,13 @@ function HelloView(
   _: {},
   {context}: {context: HelloContext}
 ) {
-    return <input value={context.name} onInput={
-        action((e: Event) => {
-            context.name = (e.target: any).value
-        })
-    } />
+    return <input value={context.name} onInput={({target}: Event) => {
+        context.name = (target: any).value
+    }} />
 }
 ```
 
-Accessing ``` context.name ``` throws oops, try/catch in HelloView wrapper displays default ErrorableView, registered in rdi:
+Exception in ``` get name ``` intercepted by try/catch in HelloView wrapper and displays by default ErrorableView, registered in ReactiveDI setup:
 
 ```js
 // ...
@@ -281,14 +304,17 @@ function ErrorableView({error}: {error: Error}) {
 const lomCreateElement = createCreateElement(
     createReactWrapper(
         Component,
-        ErrorableView
+        ErrorableView,
+        detached
     ),
     h
 )
 global['lom_h'] = lomCreateElement
 ```
 
-We can manually handle error:
+### Custom error handler
+
+You can provide custom error component handler:
 
 ```js
 function HelloView(
@@ -302,60 +328,16 @@ function HelloView(
       name = 'Error:' + e.message
     }
 
-    return <input value={name} onInput={
-        action((e: Event) => {
-            context.name = (e.target: any).value
-        })
-    } />
+    return <input value={name} onInput={{target}: Event) => {
+        context.name = (target: any).value
+    }} />
 }
+HelloView.onError = ({error: Error}) => (
+    <div>{error.message}</div>
+)
 ```
 
-### Loading status handing
-
-Looks like error handling. ``` throw new mem.Wait() ``` throws some specific exception.
-
-```js
-class HelloContext {
-    @force force: HelloContext
-
-    @mem set name(next: string | Error) {}
-    @mem get name(): string {
-      fetch('/hello')
-        .then((r: Response) => r.json())
-        .then((data: Object) => {
-          this.name = data.name
-        })
-        .catch((e: Error) => {
-          this.name = e
-        })
-
-        throw new mem.Wait()
-    }
-}
-```
-
-Catched in HelloComponent wrapper and default ErrorableView shows loader instead of HelloView.
-
-```js
-function ErrorableView({error}: {error: Error}) {
-    return <div>
-        {error instanceof mem.Wait
-            ? <div>
-                Loading...
-            </div>
-            : <div>
-                <h3>Fatal error !</h3>
-                <div>{error.message}</div>
-                <pre>
-                    {error.stack.toString()}
-                </pre>
-            </div>
-        }
-    </div>
-}
-```
-
-We can manually define loader in component, using try/catch:
+Or manually handle error:
 
 ```js
 function HelloView(
@@ -366,19 +348,51 @@ function HelloView(
     try {
       name = context.name
     } catch (e) {
-      if (e instanceof mem.Wait) { name = 'Loading...' }
-      else { throw e }
+      name = 'Error:' + e.message
     }
 
-    return <input value={name} onInput={
-        action((e: Event) => {
-            context.name = (e.target: any).value
-        })
-    } />
+    return <input value={name} onInput={{target}: Event) => {
+        context.name = (target: any).value
+    }} />
 }
 ```
 
-### Registering default dependencies
+### Loading status handling
+
+In ReactiveDI pending/complete status realized via exceptions. Special user defined "Wait" exception can be handled in ErrorableView.
+
+```js
+function ErrorableView({error}: {error: Error}) {
+    return <div>
+        {error instanceof mem.Wait
+            ? <div>
+                Loading...
+            </div>
+            : ...
+        }
+    </div>
+}
+```
+
+In component model ``` throw new mem.Wait() ``` catched in HelloComponent wrapper and default ErrorableView shows ``` Loading... ``` instead of HelloView.
+
+```js
+class HelloContext {
+    @force force: HelloContext
+
+    @mem set name(next: string | Error) {}
+    @mem get name(): string {
+        // fetch some data and update name
+        throw new mem.Wait()
+    }
+}
+```
+
+On fetch complete ``` fetch().then((data: string) => {this.name = data}) ``` sets new data and render HelloView instead of ErrorableView.
+
+### Redefine default dependencies
+
+Class SomeAbstract used somewhere in the application, but at ReactiveDI setup you can redefine them to SomeConcrete class instance with same interface.
 
 ```js
 class SomeAbstract {}
@@ -399,12 +413,13 @@ const injector = new Injector(
 )
 
 injector.value(SomeAbstract).a instanceof SomeConcrete
-
 ```
 
-### Components cloning
+### Components cloning and slots
 
-Creates slightly modified component.
+In vue you can use [content distribution with slots](https://vuejs.org/v2/guide/components.html#Content-Distribution-with-Slots). ReactiveDI helps you to do same thing in react-applications. Slot is a component itself or its id.
+
+Create slightly modified component, based on FirstCounterView.
 
 ```js
 import {cloneComponent} from 'reactive-di'
@@ -438,7 +453,13 @@ const SecondCounterView = cloneComponent(FirstCounterView, [
 ], 'SecondCounterView')
 ```
 
+Works like inheritance in classes, but you don't need to extract each component detail in methods. Any component part is open for extension bу default. Be careful, do not violate [Liskov substitution principle](https://en.wikipedia.org/wiki/Liskov_substitution_principle).
+
 ### Hierarchical dependency injection
+
+Each component instance has an own injector. Injector - is a cache map with instances, which types described in component context. Looks like angular [hierarchical dependency injection](https://angular.io/guide/hierarchical-dependency-injection), but no so complex.
+
+When Parent and Child components depends on on same SharedService - DI injects one instance to them. And this instance live while Parent component mounted to DOM.
 
 ```js
 class SharedService {}
@@ -450,11 +471,14 @@ function Parent(
 }
 
 function Child(
+  _: {},
   context: {sharedService: SharedService}
 ) {
   // context.sharedService instance cached in parent
 }
 ```
+
+If only Child component depends on SharedService, DI creates separated SharedService instance per Child.
 
 ```js
 class SharedService {}
@@ -472,13 +496,13 @@ function Child(
 
 ### Optional css-in-js support
 
-Via adapters rdi supports css-in-js with reactivity and dependency injection power:
+Css-in-js with reactivity and dependency injection power. ReactiveDI not statically depended on [Jss](https://github.com/cssinjs/jss), you can integrate another css-in-js solution, realizing described below interface.
 
 Setup:
 
 ```js
 // @flow
-import {mem} from 'lom_atom'
+import {detached, mem} from 'lom_atom'
 import {createReactWrapper, createCreateElement, Injector} from 'reactive-di'
 
 import {h, Component} from 'preact'
@@ -495,31 +519,27 @@ export interface IProcessor {
 }
 
 export interface ISheet<V: Object> {
-    update(name?: string, props: V): ISheet<V>;
     attach(): ISheet<V>;
-    detach(): ISheet<V>;
     classes: {+[id: $Keys<V>]: string};
 }
 */
-const defaultDeps = []
-const injector = new Injector(defaultDeps, jss)
-
 const lomCreateElement = createCreateElement(
     createReactWrapper(
         Component,
         ErrorableView,
-        injector
+        detached,
+        new Injector([], jss)
     ),
     h
 )
 global['lom_h'] = lomCreateElement
 ```
 
-Usage:
+Reactive style usage:
 
 ```js
 import {mem} from 'lom_atom'
-import type {NamesOf} from 'lom_atom'
+import {theme} from 'reactive-di'
 
 class ThemeVars {
   @mem color = 'red'
@@ -550,11 +570,70 @@ function MyView(
 }
 ```
 
-Styles automatically mounts/unmounts together with component. Changing ``` vars.color ``` automatically rebuilds and remounts css.
+Whith lom_atom, styles automatically mounts/unmounts together with component. Changing ``` vars.color ``` automatically rebuilds and remounts css.
+
+With mobx, unmount feature does not works at current moment. But still no memory leaks, due to unique theme id.
+
+Without any state management library works only css mounting without reactivity updates.
+
+```js
+import {theme} from 'reactive-di'
+class MyTheme {
+    @theme get css() {
+        return {
+            wrapper: {
+                backgroundColor: 'red'
+            }
+        }
+    }
+}
+
+function MyView(
+  props: {},
+  {theme: {css}, vars}: {theme: MyTheme}
+) {
+  return <div class={css.wrapper}>...</div>
+}
+```
+
+### Multiple css instances
+
+By default one css block generated per component function. But you can generate unique css block per component instance too. Just use ``` theme.self ``` decorator:
+
+```js
+import {mem} from 'lom_atom'
+import {props, theme} from 'reactive-di'
+
+interface MyProps {
+    color: string;
+}
+
+class MyTheme {
+    @mem @props _props: MyProps
+    @mem @theme.self get css() {
+        return {
+            wrapper: {
+                backgroundColor: this.props.color
+            }
+        }
+    }
+}
+
+function MyView(
+  props: MyProps,
+  {theme: {css}}: {theme: MyTheme}
+) {
+  return <div class={css.wrapper}>...
+  </div>
+}
+
+<MyView color="red"/>
+<MyView color="blue"/>
+```
 
 ### Passing component props to its depenendencies
 
-Sometimes we need to pass component properties to its services.
+You can pass component properties to its dependencies via ``` prop ``` decorator.
 
 ```js
 import {mem} from 'lom_atom'
@@ -580,57 +659,40 @@ function MyView(
 }
 ```
 
+If you need to react on props changes - just use combination ``` @mem ``` and ``` @props ``` decorators.
+
+```js
+class MyViewService {
+  @mem @props _props: MyProps;
+  // @mem @props _props: MyProps; // for reactive props
+  @mem get some(): string {
+    return this._props.some + '-suffix'
+  }
+}
+```
+
 ### React compatible
 
-We still can use any react/preact/inferno components together with rdi components.
+You can use any react/preact/inferno components together with rdi components.
 
 ### Logging
 
+Not ReactiveDi part, in state management libraries you can monitor state changes and user actions.
+
+Console logger in lom_atom:
+
 ```js
-import {defaultContext, BaseLogger} from 'lom_atom'
+import {defaultContext, BaseLogger, ConsoleLogger} from 'lom_atom'
 import type {ILogger} from 'lom_atom'
 
-class Logger extends BaseLogger {
-    /**
-     * Invokes before atom creating
-     *
-     * @param host Object Object with atom
-     * @param field string property name
-     * @param key mixed | void for dictionary atoms - dictionary key
-     */
-    create<V>(host: Object, field: string, key?: mixed): V | void {}
-
-    /**
-     * After atom destroy
-     */
-    destroy(atom: IAtom<*>): void {}
-
-    /**
-     * Atom status changes
-         - 'waiting' - atom fetching from server (mem.Wait throwed)
-         - 'proposeToReap' - atom probably will be destroyed on next tick
-         - 'proposeToPull' - atom will be actualized on next tick
-     */
-    status(status: ILoggerStatus, atom: IAtom<*>): void {}
-
-    /**
-     * Error while actualizing atom
-     */
-    error<V>(atom: IAtom<V>, err: Error): void {}
-
-    /**
-     * Atom value changed
-     * @param isActualize bool if true - atom handler invoked, if false - only atom.cache value getted/setted
-     */
-    newValue<V>(atom: IAtom<V>, from?: V | Error, to: V, isActualize?: boolean): void {}
-}
-
-defaultContext.setLogger(new Logger())
+defaultContext.setLogger(new ConsoleLogger())
 ```
+
+For custom loggers, implement [interface ILogger](https://github.com/zerkalica/lom_atom/blob/master/src/interfaces.js#L9).
 
 ### Map config to objects
 
-Configs maped to object properties by class names.
+Experimental feature - you can restore state on client side by providing data to class map in Injector.
 
 ```js
 // @flow
@@ -658,7 +720,7 @@ someService.name === 'test'
 someService.id === 123
 ```
 
-[babel-plugin-transform-metadata](https://github.com/zerkalica/babel-plugin-transform-metadata) can generate displayName. To enable it, add ``` ["transform-metadata", {"addDisplayName": true}] ``` into .babelrc.
+displayName in class used as a key for data mapping. [babel-plugin-transform-metadata](https://github.com/zerkalica/babel-plugin-transform-metadata) can generate displayName. To enable it, add ``` ["transform-metadata", {"addDisplayName": true}] ``` into .babelrc.
 
 Example .babelrc:
 

@@ -1,6 +1,7 @@
 // @flow
 
 import type {IArg, IProvideItem, IPropsWithContext, IDisposableSheet, IProcessor} from './interfaces'
+import {diKey} from './interfaces'
 import SheetManager from './SheetManager'
 import theme from './theme'
 type IListener = Object
@@ -8,11 +9,11 @@ type IListener = Object
 type ICache = {[id: string]: any}
 
 let depId = 0
-
+const rdiId = Symbol('rdi_id')
 class Alias<T: Function> {
     dest: T
     constructor(dest: T) {
-        dest.__rdi_id = '' + ++depId
+        dest[rdiId] = '' + ++depId
         this.dest = dest
     }
 }
@@ -50,20 +51,20 @@ export default class Injector {
                     if (typeof src === 'string') {
                         map[src] = item[1]
                     } else {
-                        if (src.__rdi_id === undefined) {
-                            src.__rdi_id = '' + ++depId
+                        if (src[rdiId] === undefined) {
+                            src[rdiId] = '' + ++depId
                         }
                         const dest = item[1]
-                        map[src.__rdi_id] = typeof dest === 'function' && !(dest instanceof Alias)
+                        map[src[rdiId]] = typeof dest === 'function' && !(dest instanceof Alias)
                             ? new Alias(dest)
                             : dest
                     }
                 } else {
                     const src = item.constructor
-                    if (src.__rdi_id === undefined) {
-                        src.__rdi_id = '' + ++depId
+                    if (src[rdiId] === undefined) {
+                        src[rdiId] = '' + ++depId
                     }
-                    map[src.__rdi_id] = item
+                    map[src[rdiId]] = item
                 }
             }
         }
@@ -78,9 +79,9 @@ export default class Injector {
     }
 
     value<V>(key: Function): V {
-        let id: string = key.__rdi_id
-        if (key.__rdi_id === undefined) {
-            id = key.__rdi_id = '' + ++depId
+        let id: string = key[rdiId]
+        if (key[rdiId] === undefined) {
+            id = key[rdiId] = '' + ++depId
         }
         let value = this._cache[id]
 
@@ -88,7 +89,7 @@ export default class Injector {
             value = this._cache[id] = this.invoke(key)
             const depName = (key.displayName || key.name) + (this.instance > 0 ? ('[' + this.instance + ']') : '')
             value.displayName = `${this.displayName}.${depName}`
-            value.__lom_di = this
+            value[diKey] = this
             const state = this._state === undefined ? undefined : this._state[depName]
             if (state && typeof state === 'object') {
                 for (let prop in state) {
@@ -147,9 +148,9 @@ export default class Injector {
     alias(key: Function, rawId?: string): Function {
         let id: string | void = rawId
         if (id === undefined) {
-            id = key.__rdi_id
+            id = key[rdiId]
             if (id === undefined) {
-                id = key.__rdi_id = '' + ++depId
+                id = key[rdiId] = '' + ++depId
             }
         }
         const newKey = this._cache[id]

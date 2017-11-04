@@ -1,9 +1,10 @@
 // @flow
-import {ATOM_FORCE_NONE, ATOM_FORCE_CACHE, detached} from 'lom_atom'
-import type {IAtomForce} from 'lom_atom'
+import {ATOM_FORCE_NONE, ATOM_FORCE_CACHE} from './interfaces'
+import type {IAtomForce, DetachedDecorator} from './interfaces'
 
 import Injector from './Injector'
 import type {IFromError, IRenderFn, IReactComponent, IProvideItem, IArg, IPropsWithContext} from './interfaces'
+import {renderedKey} from './interfaces'
 
 type IAtomize<IElement, State> = (
     render: IRenderFn<IElement, State>
@@ -11,11 +12,11 @@ type IAtomize<IElement, State> = (
 
 let parentContext: Injector | void = undefined
 
-export function createCreateElement<IElement, State>(
+export function createCreateElement<IElement, State, CreateElement: Function>(
     atomize: IAtomize<IElement, State>,
-    createElement: Function
-) {
-    return function lomCreateElement() {
+    createElement: CreateElement
+): CreateElement {
+    function lomCreateElement() {
         let el = arguments[0]
         let attrs = arguments[1]
         let newEl
@@ -77,11 +78,14 @@ export function createCreateElement<IElement, State>(
                 return createElement.apply(null, args)
         }
     }
+
+    return (lomCreateElement: any)
 }
 
 export default function createReactWrapper<IElement>(
     BaseComponent: Class<*>,
     defaultFromError: IFromError<IElement>,
+    detached: DetachedDecorator<Object, any>,
     rootInjector?: Injector = new Injector()
 ): IAtomize<IElement, *> {
     class AtomizedComponent<State> extends BaseComponent {
@@ -135,10 +139,6 @@ export default function createReactWrapper<IElement>(
         }
 
         componentWillUnmount() {
-            this['AtomizedComponent.r()'].destructor()
-        }
-
-        destructor() {
             this._el = undefined
             this._keys = undefined
             this.props = (undefined: any)
@@ -147,12 +147,12 @@ export default function createReactWrapper<IElement>(
                 this._injector.destructor()
                 this._injector = (undefined: any)
             }
+            this['r()'].destructor()
         }
 
         _el: ?(IElement | void) = undefined
 
-        @detached
-        r(element?: IElement, force?: IAtomForce): IElement {
+        @detached r(element?: IElement, force?: IAtomForce): IElement {
             let data: IElement
 
             const render = this._render
@@ -163,6 +163,7 @@ export default function createReactWrapper<IElement>(
                 data = parentContext.invokeWithProps(render, this.props, this._propsChanged)
             } catch (error) {
                 data = parentContext.invokeWithProps(render.onError || defaultFromError, {error})
+                error[renderedKey] = true
             }
             parentContext = prevContext
 

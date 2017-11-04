@@ -1,6 +1,7 @@
 // @flow
 
 import type {TypedPropertyDescriptor, ISheetManager, IDisposableSheet} from './interfaces'
+import {diKey} from './interfaces'
 
 let lastThemeId = 0
 
@@ -30,7 +31,7 @@ function themeProp<V: Object>(
         configurable: descr.configurable,
         get(): IDisposableSheet<V> {
             ;(this: {
-                __lom_di: {
+                [k: typeof diKey]: {
                     instance: number;
                 }
             })
@@ -39,7 +40,7 @@ function themeProp<V: Object>(
                 ? fakeSheet
                 : sm.sheet(
                     isInstance
-                        ? `${themeId}[${this.__lom_di.instance}]`
+                        ? `${themeId}[${this[diKey].instance}]`
                         : themeId,
                     value || this[themeId](),
                     !!this[atomId]
