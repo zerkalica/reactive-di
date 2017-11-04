@@ -5,7 +5,8 @@ import render from 'preact-render-to-string'
 import {h, Component} from 'preact'
 import {mem, detached as lomDetached} from 'lom_atom'
 import {observable as mobxObservable, Reaction} from 'mobx'
-import createReactWrapper, {createCreateElement} from '../src/createReactWrapper'
+import createReactWrapper from '../src/createReactWrapper'
+import createCreateElement from '../src/createCreateElement'
 import createMobxDetached from '../src/createMobxDetached'
 
 [

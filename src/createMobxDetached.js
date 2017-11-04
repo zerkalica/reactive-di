@@ -75,9 +75,11 @@ export default function createMobxDetached(Reaction: Class<IReaction>) {
         const value = descr.value
         const reactions: WeakMap<Object, LomReaction<any>> = new WeakMap()
 
-        proto[name + '()'] = function getAtom() {
-            return reactions.get(this)
-        }
+        Object.defineProperty(proto, `${name}()`, {
+            get() {
+                return reactions.get(this)
+            }
+        })
         proto[name + '$'] = value
 
         return {

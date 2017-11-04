@@ -6,7 +6,8 @@ import {observable as mobxObservable, Reaction,} from 'mobx'
 import {detached as lomDetached, defaultContext, mem, action} from 'lom_atom'
 import type {IAtomForce} from '../src/interfaces'
 import {ATOM_FORCE_CACHE} from '../src/interfaces'
-import createReactWrapper, {createCreateElement} from '../src/createReactWrapper'
+import createReactWrapper from '../src/createReactWrapper'
+import createCreateElement from '../src/createCreateElement'
 import createMobxDetached from '../src/createMobxDetached'
 
 [
