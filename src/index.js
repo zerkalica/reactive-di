@@ -1,6 +1,7 @@
 // @flow
 
-export {default as createReactWrapper, createCreateElement} from './createReactWrapper'
+export {default as createReactWrapper} from './createReactWrapper'
+export {default as createCreateElement} from './createCreateElement'
 export {default as Injector} from './Injector'
 export {default as cloneComponent} from './cloneComponent'
 export {default as theme} from './theme'

@@ -3,84 +3,8 @@ import {ATOM_FORCE_NONE, ATOM_FORCE_CACHE} from './interfaces'
 import type {IAtomForce, DetachedDecorator} from './interfaces'
 
 import Injector from './Injector'
-import type {IFromError, IRenderFn, IReactComponent, IProvideItem, IArg, IPropsWithContext} from './interfaces'
+import type {IAtomize, IFromError, IRenderFn, IReactComponent, IProvideItem, IArg, IPropsWithContext} from './interfaces'
 import {renderedKey} from './interfaces'
-
-type IAtomize<IElement, State> = (
-    render: IRenderFn<IElement, State>
-) => Class<IReactComponent<IElement>>
-
-let parentContext: Injector | void = undefined
-
-export function createCreateElement<IElement, State, CreateElement: Function>(
-    atomize: IAtomize<IElement, State>,
-    createElement: CreateElement
-): CreateElement {
-    function lomCreateElement() {
-        let el = arguments[0]
-        let attrs = arguments[1]
-        let newEl
-        const isAtomic = typeof el === 'function' && el.constructor.render === undefined
-        const id = attrs ? attrs.id : undefined
-        if (isAtomic) {
-            if (!attrs) {
-                attrs = {__lom_ctx: parentContext}
-            } else {
-                attrs.__lom_ctx = parentContext
-            }
-            if (parentContext !== undefined) {
-                newEl = parentContext.alias(el, id)
-                if (newEl === null) return null
-                if (newEl !== undefined) el = newEl
-            }
-
-            if (el.__lom === undefined) {
-                el.__lom = atomize(el)
-            }
-            newEl = el.__lom
-        } else {
-            if (parentContext !== undefined && id) {
-                newEl = parentContext.alias(el, id)
-                if (newEl === null) return null
-                if (newEl !== undefined) el = newEl
-            }
-            newEl = el
-        }
-
-        switch(arguments.length) {
-            case 2:
-                return createElement(newEl, attrs)
-            case 3:
-                return createElement(newEl, attrs, arguments[2])
-            case 4:
-                return createElement(newEl, attrs, arguments[2], arguments[3])
-            case 5:
-                return createElement(newEl, attrs, arguments[2], arguments[3], arguments[4])
-            case 6:
-                return createElement(newEl, attrs, arguments[2], arguments[3], arguments[4], arguments[5])
-            case 7:
-                return createElement(newEl, attrs, arguments[2], arguments[3],
-                    arguments[4], arguments[5], arguments[6])
-            case 8:
-                return createElement(newEl, attrs, arguments[2], arguments[3],
-                    arguments[4], arguments[5], arguments[6], arguments[7])
-            case 9:
-                return createElement(newEl, attrs, arguments[2], arguments[3],
-                    arguments[4], arguments[5], arguments[6], arguments[7], arguments[8])
-            default:
-                if (isAtomic === false) {
-                    return createElement.apply(null, arguments)
-                }
-                const args = [newEl, attrs]
-                for (let i = 2, l = arguments.length; i < l; i++) {
-                    args.push(arguments[i])
-                }
-                return createElement.apply(null, args)
-        }
-    }
-
-    return (lomCreateElement: any)
-}
 
 export default function createReactWrapper<IElement>(
     BaseComponent: Class<*>,
@@ -157,15 +81,15 @@ export default function createReactWrapper<IElement>(
 
             const render = this._render
 
-            const prevContext = parentContext
-            parentContext = this._injector
+            const prevContext = Injector.parentContext
+            Injector.parentContext = this._injector
             try {
-                data = parentContext.invokeWithProps(render, this.props, this._propsChanged)
+                data = this._injector.invokeWithProps(render, this.props, this._propsChanged)
             } catch (error) {
-                data = parentContext.invokeWithProps(render.onError || defaultFromError, {error})
+                data = this._injector.invokeWithProps(render.onError || defaultFromError, {error})
                 error[renderedKey] = true
             }
-            parentContext = prevContext
+            Injector.parentContext = prevContext
 
             if (!this._propsChanged) {
                 this._el = data

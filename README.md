@@ -14,9 +14,13 @@ Typesafe dependency injection container for react-like components.
 * Easily integrates css-in-js solutions like [jss](https://github.com/cssinjs/jss).
 * Tiny size about 10kb reactive-di.min.js.
 
+## Links
+
 * [example source](https://github.com/zerkalica/rdi-examples), [demo](http://zerkalica.github.io/rdi-examples/)
 * [todomvc benchmark](http://mol.js.org/app/bench/#bench=https%3A%2F%2Fzerkalica.github.io%2Futb%2Fbenchmark%2F/sample=preact-lom_atom~preact-mobx~preact-raw~preact-reactive-di)
 * [fiddle](https://jsfiddle.net/zerkalica/jxo6hqf8/) example with loading and error handling demo.
+
+## TOC
 
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
@@ -679,7 +683,7 @@ You can use any react/preact/inferno components together with rdi components.
 
 ### Logging
 
-Not ReactiveDi part, in state management libraries you can monitor state changes and user actions.
+Not ReactiveDI part, in state management libraries you can monitor state changes and user actions.
 
 Console logger in lom_atom:
 

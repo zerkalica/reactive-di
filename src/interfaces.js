@@ -68,3 +68,7 @@ export interface IRenderFn<IElement, State> {
     onError?: IFromError<IElement>;
     aliases?: IProvideItem[];
 }
+
+export type IAtomize<IElement, State> = (
+    render: IRenderFn<IElement, State>
+) => Class<IReactComponent<IElement>>

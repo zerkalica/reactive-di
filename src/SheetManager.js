@@ -28,24 +28,24 @@ class DisposableSheet<V: Object> {
 
 export default class SheetManager implements IRemover, ISheetManager {
     _sheetProcessor: IProcessor
-    _cache: Map<string, IDisposableSheet<*>> = new Map()
+    _cache: Map<string, DisposableSheet<any>> = new Map()
 
     constructor(sheetProcessor: IProcessor) {
         this._sheetProcessor = sheetProcessor
     }
 
     sheet<V: Object>(key: string, css: V, memoized: boolean): IDisposableSheet<V> {
-        let result: ?IDisposableSheet<V> = memoized ? null : this._cache.get(key)
+        let result: ?DisposableSheet<V> = memoized ? null : this._cache.get(key)
         if (!result) {
             const sheet: ISheet<V> = this._sheetProcessor.createStyleSheet(css)
             sheet.attach()
-            result = (new DisposableSheet(key, sheet, this): Object)
+            result = (new DisposableSheet(key, sheet, this))
             if (!memoized) {
                 this._cache.set(key, result)
             }
         }
 
-        return result
+        return (result: Object)
     }
 
     remove(sheet: DisposableSheet<*>) {

@@ -24,6 +24,8 @@ export default class Injector {
     displayName: string
     instance: number
 
+    static parentContext: Injector | void = undefined
+
     _cache: ICache
     _state: IState | void
 
