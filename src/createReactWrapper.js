@@ -8,9 +8,10 @@ import {renderedKey} from './interfaces'
 
 export default function createReactWrapper<IElement>(
     BaseComponent: Class<*>,
-    defaultFromError: IFromError<IElement>,
+    ErrorComponent: IFromError<IElement>,
     detached: DetachedDecorator<Object, any>,
-    rootInjector?: Injector = new Injector()
+    rootInjector?: Injector = new Injector(),
+    isFullEqual?: boolean = false
 ): IAtomize<IElement, *> {
     class AtomizedComponent<State> extends BaseComponent {
         props: IPropsWithContext
@@ -20,6 +21,7 @@ export default function createReactWrapper<IElement>(
 
         static render: IRenderFn<IElement, State>
         static instance: number
+        static isFullEqual = isFullEqual
 
         _keys: string[] | void
         _render: IRenderFn<IElement, State>
@@ -29,10 +31,16 @@ export default function createReactWrapper<IElement>(
             reactContext?: Object
         ) {
             super(props, reactContext)
-            this._keys = props ? Object.keys(props) : undefined
+            let injector: Injector = rootInjector
+            this._keys = undefined
+            if (props) {
+                this._keys = Object.keys(props)
+                if (this._keys.length === 0) this._keys = (undefined: any)
+                if (props.__lom_ctx !== undefined) injector = props.__lom_ctx
+            }
             const cns = this.constructor
             this._render = cns.render
-            this._injector = (props.__lom_ctx || rootInjector).copy(
+            this._injector = injector.copy(
                 cns.displayName + (cns.instance ? ('[' + cns.instance + ']') : ''),
                 cns.instance,
                 this._render.aliases
@@ -49,15 +57,20 @@ export default function createReactWrapper<IElement>(
         }
 
         shouldComponentUpdate(props: IPropsWithContext) {
-            const keys = this._keys
-            if (!keys) return false
+            if (this._keys === undefined) return false
             const oldProps = this.props
+            const keys = this._keys
             for (let i = 0, l = keys.length; i < l; i++) { // eslint-disable-line
                 const k = keys[i]
                 if (oldProps[k] !== props[k]) {
                     this._propsChanged = true
                     return true
                 }
+            }
+            if (this.constructor.isFullEqual === true) {
+                this._keys = Object.keys(props)
+                this._propsChanged = keys.length !== this._keys.length
+                return this._propsChanged
             }
             return false
         }
@@ -86,7 +99,7 @@ export default function createReactWrapper<IElement>(
             try {
                 data = this._injector.invokeWithProps(render, this.props, this._propsChanged)
             } catch (error) {
-                data = this._injector.invokeWithProps(render.onError || defaultFromError, {error})
+                data = this._injector.invokeWithProps(render.onError || ErrorComponent, {error})
                 error[renderedKey] = true
             }
             Injector.parentContext = prevContext
@@ -111,12 +124,12 @@ export default function createReactWrapper<IElement>(
     return function reactWrapper<State>(
         render: IRenderFn<IElement, State>
     ): Class<IReactComponent<IElement>> {
-        const displayName = render.displayName || render.name
         const WrappedComponent = function(props: IPropsWithContext, context?: Object) {
             AtomizedComponent.call(this, props, context)
         }
         WrappedComponent.instance = 0
         WrappedComponent.render = render
+        WrappedComponent.isFullEqual = render.isFullEqual || isFullEqual
         WrappedComponent.displayName = render.displayName || render.name
         WrappedComponent.prototype = Object.create(AtomizedComponent.prototype)
         WrappedComponent.prototype.constructor = WrappedComponent

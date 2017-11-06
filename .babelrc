@@ -1,6 +1,7 @@
 {
   "plugins": [
     "@babel/proposal-decorators",
+    "@babel/transform-flow-strip-types",
     ["@babel/proposal-class-properties", {"loose": true}],
 
     ["@babel/transform-template-literals", {"loose": true}],
@@ -18,7 +19,6 @@
     ["@babel/transform-parameters", {"loose": true}],
     ["@babel/transform-destructuring", {"loose": true}],
     "@babel/transform-block-scoping",
-    ["@babel/transform-modules-commonjs", {"loose": true}],
-    "@babel/transform-flow-strip-types"
+    ["@babel/transform-modules-commonjs", {"loose": true}]
   ]
 }
