@@ -7,6 +7,11 @@ let lastThemeId = 0
 
 const fakeSheet: IDisposableSheet<any> = {}
 
+interface Injector {
+    instance: number;
+    displayName: string;
+}
+
 function themeProp<V: Object>(
     proto: Object,
     name: string,
@@ -20,30 +25,22 @@ function themeProp<V: Object>(
         throw new Error(`Need ${className} { @theme get ${name}() }`)
     }
 
-    const themeId = `${className}.${name}#${++lastThemeId}`
-    const atomId = `${className}.${name}()`
     if (getSheet) {
-        proto[themeId] = getSheet
+        proto[`${name}#`] = getSheet
     }
 
     return {
         enumerable: descr.enumerable,
         configurable: descr.configurable,
         get(): IDisposableSheet<V> {
-            ;(this: {
-                [k: typeof diKey]: {
-                    instance: number;
-                }
-            })
             const sm: ISheetManager | void = theme.sheetManager
+            const di: Injector = this[diKey]
             return sm === undefined
                 ? fakeSheet
                 : sm.sheet(
-                    isInstance
-                        ? `${themeId}[${this[diKey].instance}]`
-                        : themeId,
-                    value || this[themeId](),
-                    !!this[atomId]
+                    di.displayName + (isInstance ? `[${di.instance}]` : ''),
+                    value || this[`${name}#`](),
+                    !!this[`${name}()`]
                 )
         }
     }

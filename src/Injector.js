@@ -73,7 +73,7 @@ export default class Injector {
     }
 
     toString() {
-        return this.displayName
+        return this.displayName + (this.instance ? ('[' + this.instance + ']') : '')
     }
 
     toJSON() {

@@ -91,7 +91,8 @@ export default function createMobxDetached(Reaction: Class<IReaction>) {
                     const di: Injector | void = this[diKey]
                     reaction = new LomReaction(
                         di ? `${di.displayName}.${name}` : name,
-                        this, name + '$',
+                        this,
+                        name + '$',
                         reactions
                     )
                     reactions.set(this, reaction)

@@ -25,7 +25,7 @@ class DisposableSheet<V: Object> {
         this.__lom_remover.remove(this)
     }
 }
-
+const badClassSymbols = new RegExp('[^\\w\\d]', 'g')
 export default class SheetManager implements IRemover, ISheetManager {
     _sheetProcessor: IProcessor
     _cache: Map<string, DisposableSheet<any>> = new Map()
@@ -37,9 +37,12 @@ export default class SheetManager implements IRemover, ISheetManager {
     sheet<V: Object>(key: string, css: V, memoized: boolean): IDisposableSheet<V> {
         let result: ?DisposableSheet<V> = memoized ? null : this._cache.get(key)
         if (!result) {
-            const sheet: ISheet<V> = this._sheetProcessor.createStyleSheet(css)
+            const sheet: ISheet<V> = this._sheetProcessor.createStyleSheet(css, {
+                meta: key,
+                classNamePrefix: key.replace(badClassSymbols, '_').slice(2) + '__'
+            })
             sheet.attach()
-            result = (new DisposableSheet(key, sheet, this))
+            result = new DisposableSheet(key, sheet, this)
             if (!memoized) {
                 this._cache.set(key, result)
             }

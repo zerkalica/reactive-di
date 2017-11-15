@@ -41,7 +41,7 @@ export default function createReactWrapper<IElement>(
             const cns = this.constructor
             this._render = cns.render
             this._injector = injector.copy(
-                cns.displayName + (cns.instance ? ('[' + cns.instance + ']') : ''),
+                cns.displayName,
                 cns.instance,
                 this._render.aliases
             )
@@ -49,7 +49,7 @@ export default function createReactWrapper<IElement>(
         }
 
         toString() {
-            return this._injector.displayName
+            return this._injector.toString()
         }
 
         get displayName() {
@@ -76,6 +76,7 @@ export default function createReactWrapper<IElement>(
         }
 
         componentWillUnmount() {
+            this['r()'].destructor()
             this._el = undefined
             this._keys = undefined
             this.props = (undefined: any)
@@ -84,7 +85,6 @@ export default function createReactWrapper<IElement>(
                 this._injector.destructor()
                 this._injector = (undefined: any)
             }
-            this['r()'].destructor()
         }
 
         _el: ?(IElement | void) = undefined

@@ -77,9 +77,8 @@ describe('Injector.theme', () => {
         }
 
         const parent = new Injector(undefined, processor)
-        const a1: A = parent.copy('child1').value(A)
-        const a2: A = parent.copy('child2').value(A)
-
+        const a1: A = parent.copy('child', 0).value(A)
+        const a2: A = parent.copy('child', 1).value(A)
         assert(a1.css === a2.css)
     })
 
