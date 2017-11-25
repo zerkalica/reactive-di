@@ -1,6 +1,6 @@
 // @flow
-import type {DetachedDecoratorDescriptor, IAtomForce} from './interfaces'
-import {diKey} from './interfaces'
+import type {TypedPropertyDescriptor} from './interfaces'
+import {rdiInst} from './interfaces'
 import Injector from './Injector'
 
 export interface IReaction {
@@ -12,13 +12,12 @@ export interface IReaction {
 export default function createMobxDetached(Reaction: Class<IReaction>) {
     class LomReaction<V> {
         _reaction: Reaction
-        _handler: (next?: V | Error, force?: IAtomForce) => V
+        _handler: (force: boolean) => V
         _cache: V | void
         _propName: string
         _host: Object
         _reactions: WeakMap<Object, LomReaction<any>>
-        _next: V | Error | void = undefined
-        _force: IAtomForce | void = undefined
+        _force: boolean = false
         _track: () => void
 
         constructor(
@@ -38,20 +37,18 @@ export default function createMobxDetached(Reaction: Class<IReaction>) {
 
         _onInvalidate(): void {
             this._cache = undefined
-            this.value()
+            this.value(false)
         }
 
         __track() {
-            this._cache = this._host[this._propName](this._next, this._force)
+            this._cache = this._host[this._propName](this._force)
         }
 
-        value(next?: V | Error, force?: IAtomForce): V {
+        value(force: boolean): V {
             if (this._cache === undefined || force) {
-                this._next = next
                 this._force = force
                 this._reaction.track(this._track)
-                this._next = undefined
-                this._force = undefined
+                this._force = false
             }
 
             return (this._cache: any)
@@ -70,7 +67,7 @@ export default function createMobxDetached(Reaction: Class<IReaction>) {
     return function mobxDetached<V>(
         proto: Object,
         name: string,
-        descr: DetachedDecoratorDescriptor<V>
+        descr: TypedPropertyDescriptor<(force: boolean) => V>
     ) {
         const value = descr.value
         const reactions: WeakMap<Object, LomReaction<any>> = new WeakMap()
@@ -85,10 +82,10 @@ export default function createMobxDetached(Reaction: Class<IReaction>) {
         return {
             enumerable: descr.enumerable,
             configurable: descr.configurable,
-            value(next?: V | Error, force?: IAtomForce): V {
+            value(force: boolean): V {
                 let reaction: LomReaction<V> | void = reactions.get(this)
                 if (!reaction) {
-                    const di: Injector | void = this[diKey]
+                    const di: Injector | void = this[rdiInst]
                     reaction = new LomReaction(
                         di ? `${di.displayName}.${name}` : name,
                         this,
@@ -98,7 +95,7 @@ export default function createMobxDetached(Reaction: Class<IReaction>) {
                     reactions.set(this, reaction)
                 }
 
-                return reaction.value(next, force)
+                return reaction.value(force)
             }
         }
     }

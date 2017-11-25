@@ -7,23 +7,12 @@ export type TypedPropertyDescriptor<T> = {
     value?: T;
     initializer?: () => T;
     get?: () => T;
-    set?: (value: T | Error) => void;
+    set?: (value: T) => void;
 }
 
-export const ATOM_FORCE_NONE = 0
-export const ATOM_FORCE_CACHE = 1
-export const ATOM_FORCE_UPDATE = 2
-export type IAtomForce = typeof ATOM_FORCE_CACHE | typeof ATOM_FORCE_UPDATE | typeof ATOM_FORCE_NONE
-export type IAtomPropHandler<V> = (next?: V | Error, force?: IAtomForce, oldValue?: V) => V
-export type DetachedDecoratorDescriptor<V> = TypedPropertyDescriptor<IAtomPropHandler<V>>
-export type DetachedDecorator<P: Object, V> = (
-    proto: P,
-    name: string,
-    descr: DetachedDecoratorDescriptor<V>
-) => DetachedDecoratorDescriptor<V>
-
-export const renderedKey = Symbol('lom_rendered')
-export const diKey = Symbol('rdi_di')
+export const rdiRendered = Symbol('rdiRendered')
+export const rdiInst = Symbol('rdiInst')
+export const rdiProp = Symbol('rdiProp')
 
 export type IArg = Function | {+[id: string]: Function}
 export type IProvideItem = Function | Object | [Function | string, Function | mixed]

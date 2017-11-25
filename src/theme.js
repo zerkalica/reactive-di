@@ -1,7 +1,7 @@
 // @flow
 
 import type {TypedPropertyDescriptor, ISheetManager, IDisposableSheet} from './interfaces'
-import {diKey} from './interfaces'
+import {rdiInst} from './interfaces'
 
 let lastThemeId = 0
 
@@ -34,7 +34,7 @@ function themeProp<V: Object>(
         configurable: descr.configurable,
         get(): IDisposableSheet<V> {
             const sm: ISheetManager | void = theme.sheetManager
-            const di: Injector = this[diKey]
+            const di: Injector = this[rdiInst]
             return sm === undefined
                 ? fakeSheet
                 : sm.sheet(

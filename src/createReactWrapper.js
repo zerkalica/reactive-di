@@ -1,15 +1,14 @@
 // @flow
-import {ATOM_FORCE_NONE, ATOM_FORCE_CACHE} from './interfaces'
-import type {IAtomForce, DetachedDecorator} from './interfaces'
+import type {TypedPropertyDescriptor} from './interfaces'
 
 import Injector from './Injector'
 import type {IAtomize, IFromError, IRenderFn, IReactComponent, IProvideItem, IArg, IPropsWithContext} from './interfaces'
-import {renderedKey} from './interfaces'
+import {rdiRendered} from './interfaces'
 
 export default function createReactWrapper<IElement>(
     BaseComponent: Class<*>,
     ErrorComponent: IFromError<IElement>,
-    detached: DetachedDecorator<Object, any>,
+    detached: TypedPropertyDescriptor<(force?: boolean) => any>,
     rootInjector?: Injector = new Injector(),
     isFullEqual?: boolean = false
 ): IAtomize<IElement, *> {
@@ -89,7 +88,7 @@ export default function createReactWrapper<IElement>(
 
         _el: ?(IElement | void) = undefined
 
-        @detached r(element?: IElement, force?: IAtomForce): IElement {
+        @detached r(force: boolean): IElement {
             let data: IElement
 
             const render = this._render
@@ -100,7 +99,7 @@ export default function createReactWrapper<IElement>(
                 data = this._injector.invokeWithProps(render, this.props, this._propsChanged)
             } catch (error) {
                 data = this._injector.invokeWithProps(render.onError || ErrorComponent, {error})
-                error[renderedKey] = true
+                error[rdiRendered] = true
             }
             Injector.parentContext = prevContext
 
@@ -116,7 +115,7 @@ export default function createReactWrapper<IElement>(
 
         render() {
             return this._el === undefined
-                ? this.r(undefined, this._propsChanged ? ATOM_FORCE_CACHE : ATOM_FORCE_NONE)
+                ? this.r(this._propsChanged)
                 : this._el
         }
     }

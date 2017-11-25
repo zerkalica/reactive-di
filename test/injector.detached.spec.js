@@ -4,8 +4,6 @@ import assert from 'assert'
 import {createElement, Component} from 'preact'
 import {observable as mobxObservable, Reaction,} from 'mobx'
 import {detached as lomDetached, defaultContext, mem, action} from 'lom_atom'
-import type {IAtomForce} from '../src/interfaces'
-import {ATOM_FORCE_CACHE} from '../src/interfaces'
 import createReactWrapper from '../src/createReactWrapper'
 import createCreateElement from '../src/createCreateElement'
 import createMobxDetached from '../src/createMobxDetached'
@@ -23,7 +21,7 @@ import createMobxDetached from '../src/createMobxDetached'
             let called = 0
             class B {
                 a = new A()
-                @detached foo(next?: number, force?: IAtomForce): number {
+                @detached foo(force?: boolean): number {
                     called++
                     return 1 + this.a.some
                 }
@@ -39,14 +37,14 @@ import createMobxDetached from '../src/createMobxDetached'
             let called = 0
             class B {
                 a = new A()
-                @detached foo(next?: number, force?: IAtomForce): number {
+                @detached foo(force?: boolean): number {
                     called++
                     return 1 + this.a.some
                 }
             }
             const b = new B()
             b.foo()
-            b.foo(undefined, ATOM_FORCE_CACHE)
+            b.foo(true)
             assert(called === 2)
         })
 
@@ -54,7 +52,7 @@ import createMobxDetached from '../src/createMobxDetached'
             let called = 0
             class B {
                 a = new A()
-                @detached foo(next?: number, force?: IAtomForce): number {
+                @detached foo(force?: boolean): number {
                     called++
                     return 1 + this.a.some
                 }

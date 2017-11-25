@@ -3,13 +3,13 @@
 import assert from 'assert'
 import render from 'preact-render-to-string'
 import {h, Component} from 'preact'
-import {mem, detached as lomDetached} from 'lom_atom'
+import {mem, detached as lomDetached, defaultContext, ConsoleLogger} from 'lom_atom'
 import {observable as mobxObservable, Reaction} from 'mobx'
 import createReactWrapper from '../src/createReactWrapper'
 import createCreateElement from '../src/createCreateElement'
 import createMobxDetached from '../src/createMobxDetached'
 
-[
+;[
     ['mobx', createMobxDetached(Reaction), mobxObservable],
     ['lom_atom', lomDetached, mem]
 ].forEach(([lib, detached, observable]) => {
@@ -39,6 +39,7 @@ import createMobxDetached from '../src/createMobxDetached'
             const props = {store: new Store}
 
             const myView = lom_h(MyView, props)
+
             assert(render(myView) === '<div>0</div>')
             props.store.some = 2
             assert(render(myView) === '<div>2</div>')

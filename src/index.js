@@ -7,7 +7,7 @@ export {default as cloneComponent} from './cloneComponent'
 export {default as theme} from './theme'
 export {default as props} from './props'
 export {default as createMobxDetached} from './createMobxDetached'
-export {renderedKey} from './interfaces'
+export {rdiRendered} from './interfaces'
 
 export type {
     IArg,

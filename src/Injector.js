@@ -1,7 +1,7 @@
 // @flow
 
 import type {IArg, IProvideItem, IPropsWithContext, IDisposableSheet, IProcessor} from './interfaces'
-import {diKey} from './interfaces'
+import {rdiInst, rdiProp} from './interfaces'
 import SheetManager from './SheetManager'
 import theme from './theme'
 type IListener = Object
@@ -9,7 +9,7 @@ type IListener = Object
 type ICache = {[id: string]: any}
 
 let depId = 0
-const rdiId = Symbol('rdi_id')
+const rdiId = Symbol('rdiId')
 class Alias<T: Function> {
     dest: T
     constructor(dest: T) {
@@ -91,7 +91,7 @@ export default class Injector {
             value = this._cache[id] = this.invoke(key)
             const depName = (key.displayName || key.name) + (this.instance > 0 ? ('[' + this.instance + ']') : '')
             value.displayName = `${this.displayName}.${depName}`
-            value[diKey] = this
+            value[rdiInst] = this
             const state = this._state === undefined ? undefined : this._state[depName]
             if (state && typeof state === 'object') {
                 for (let prop in state) {
@@ -111,7 +111,7 @@ export default class Injector {
     }
 
     invoke<V>(key: any): V {
-        let isFn = key.theme
+        let isFn = false
         let deps: IArg[] | void = key.deps
         if (key._r !== undefined) {
             isFn = key._r[0] === 2
@@ -172,7 +172,7 @@ export default class Injector {
         if (propsChanged === true && listeners !== undefined) {
             for (let i = 0; i < listeners.length; i++) {
                 const listener = listeners[i]
-                listener[listener.constructor.__lom_prop] = props
+                listener[listener.constructor[rdiProp]] = props
             }
         }
         this._resolved = true
@@ -203,7 +203,7 @@ export default class Injector {
     resolve(argDeps?: IArg[]): any[] {
         const result = []
         if (argDeps === undefined) return result
-
+        let listeners = this._listeners
         const resolved = this._resolved
         for (let i = 0, l = argDeps.length; i < l; i++) {
             let argDep = argDeps[i]
@@ -212,11 +212,11 @@ export default class Injector {
                 for (let prop in argDep) { // eslint-disable-line
                     const key = argDep[prop]
                     const dep = this.value(key)
-                    if (resolved === false && key.__lom_prop !== undefined) {
-                        if (this._listeners === undefined) {
-                            this._listeners = []
+                    if (resolved === false && key[rdiProp] !== undefined) {
+                        if (listeners === undefined) {
+                            this._listeners = listeners = []
                         }
-                        this._listeners.push(dep)
+                        listeners.push(dep)
                     }
 
                     obj[prop] = dep
@@ -225,11 +225,11 @@ export default class Injector {
                 result.push(obj)
             } else {
                 const dep = this.value(argDep)
-                if (resolved === false && argDep.__lom_prop !== undefined) {
-                    if (this._listeners === undefined) {
-                        this._listeners = []
+                if (resolved === false && argDep[rdiProp] !== undefined) {
+                    if (listeners === undefined) {
+                        this._listeners = listeners = []
                     }
-                    this._listeners.push(dep)
+                    listeners.push(dep)
                 }
 
                 result.push(dep)

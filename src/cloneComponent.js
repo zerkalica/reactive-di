@@ -24,13 +24,14 @@ function provideMap(item: IProvideItem): string {
 
 export default function cloneComponent<V: Function>(fn: V, aliases: IProvideItem[], name?: string): V {
     const cloned = function () {
-        switch (arguments.length) {
-            case 1: return fn(arguments[0])
-            case 2: return fn(arguments[0], arguments[1])
-            case 3: return fn(arguments[0], arguments[1], arguments[2])
-            case 4: return fn(arguments[0], arguments[1], arguments[2], arguments[3])
-            case 5: return fn(arguments[0], arguments[1], arguments[2], arguments[3], arguments[4])
-            default: return fn.apply(null, arguments)
+        const a = arguments
+        switch (a.length) {
+            case 1: return fn(a[0])
+            case 2: return fn(a[0], a[1])
+            case 3: return fn(a[0], a[1], a[2])
+            case 4: return fn(a[0], a[1], a[2], a[3])
+            case 5: return fn(a[0], a[1], a[2], a[3], a[4])
+            default: return fn.apply(null, a)
         }
     }
     cloned.deps = fn.deps
