@@ -39,7 +39,7 @@ export default class SheetManager implements IRemover, ISheetManager {
         if (!result) {
             const sheet: ISheet<V> = this._sheetProcessor.createStyleSheet(css, {
                 meta: key,
-                classNamePrefix: key.replace(badClassSymbols, '_').slice(2) + '__'
+                classNamePrefix: key.replace(badClassSymbols, '') + '_'
             })
             sheet.attach()
             result = new DisposableSheet(key, sheet, this)

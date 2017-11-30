@@ -32,15 +32,16 @@ export default function createReactWrapper<IElement>(
             super(props, reactContext)
             let injector: Injector = rootInjector
             this._keys = undefined
+            const cns = this.constructor
+            let name = cns.displayName
             if (props) {
                 this._keys = Object.keys(props)
                 if (this._keys.length === 0) this._keys = (undefined: any)
                 if (props.__lom_ctx !== undefined) injector = props.__lom_ctx
             }
-            const cns = this.constructor
             this._render = cns.render
             this._injector = injector.copy(
-                cns.displayName,
+                name,
                 cns.instance,
                 this._render.aliases
             )

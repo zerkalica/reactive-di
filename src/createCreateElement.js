@@ -8,28 +8,35 @@ export default function createCreateElement<IElement, State, CreateElement: Func
     createElement: CreateElement,
     compositeId?: boolean
 ): CreateElement {
+    let parentId = ''
     function lomCreateElement() {
         const args = arguments
         let attrs = args[1]
         let el = args[0]
         let newEl
         const isAtomic = typeof el === 'function' && el.constructor.render === undefined
-        const id: string | void = attrs ? attrs._id || attrs.id : undefined
-        const parentContext: Injector | void = Injector.parentContext
-        if (compositeId === true && id !== undefined && parentContext !== undefined) {
-            attrs.id = `${parentContext.toString()}.${id}`
-            attrs.key = attrs.key || attrs.id
+        let id: string | void = attrs ? attrs._id || attrs.id : undefined
+        const parentContext: Injector = Injector.parentContext
+
+        const oldParentId = parentId
+        if (compositeId === true) {
+            if(!attrs) attrs = {}
+            attrs.id = parentContext.toString()
+            if (id) attrs.id += '.' + id
+            parentId = attrs.id
         }
+
         if (isAtomic) {
-            if (parentContext !== undefined) {
-                newEl = parentContext.alias(el, id)
-                if (newEl === null) return null
-                if (newEl !== undefined) el = newEl
-                if (!attrs) {
-                    attrs = {__lom_ctx: parentContext}
-                } else {
-                    attrs.__lom_ctx = parentContext
-                }
+            newEl = parentContext.alias(el, id)
+            if (newEl === null) {
+                parentId = oldParentId
+                return null
+            }
+            if (newEl !== undefined) el = newEl
+            if (!attrs) {
+                attrs = {__lom_ctx: parentContext}
+            } else {
+                attrs.__lom_ctx = parentContext
             }
 
             if (el.__lom === undefined) {
@@ -37,43 +44,51 @@ export default function createCreateElement<IElement, State, CreateElement: Func
             }
             newEl = el.__lom
         } else {
-            if (parentContext !== undefined && id) {
+            if (id) {
                 newEl = parentContext.alias(el, id)
-                if (newEl === null) return null
+                if (newEl === null) {
+                    parentId = oldParentId
+                    return null
+                }
                 if (newEl !== undefined) el = newEl
             }
             newEl = el
         }
+        let result: mixed
         switch(args.length) {
             case 2:
-                return createElement(newEl, attrs)
+                result = createElement(newEl, attrs);break
             case 3:
-                return createElement(newEl, attrs, args[2])
+                result = createElement(newEl, attrs, args[2]);break
             case 4:
-                return createElement(newEl, attrs, args[2], args[3])
+                result = createElement(newEl, attrs, args[2], args[3]);break
             case 5:
-                return createElement(newEl, attrs, args[2], args[3], args[4])
+                result = createElement(newEl, attrs, args[2], args[3], args[4]);break
             case 6:
-                return createElement(newEl, attrs, args[2], args[3], args[4], args[5])
+                result = createElement(newEl, attrs, args[2], args[3], args[4], args[5]);break
             case 7:
-                return createElement(newEl, attrs, args[2], args[3],
-                    args[4], args[5], args[6])
+                result = createElement(newEl, attrs, args[2], args[3],
+                    args[4], args[5], args[6]);break
             case 8:
-                return createElement(newEl, attrs, args[2], args[3],
-                    args[4], args[5], args[6], args[7])
+                result = createElement(newEl, attrs, args[2], args[3],
+                    args[4], args[5], args[6], args[7]);break
             case 9:
-                return createElement(newEl, attrs, args[2], args[3],
-                    args[4], args[5], args[6], args[7], args[8])
+                result = createElement(newEl, attrs, args[2], args[3],
+                    args[4], args[5], args[6], args[7], args[8]);break
             default:
                 if (isAtomic === false) {
-                    return createElement.apply(null, args)
+                    result = createElement.apply(null, args)
+                } else {
+                    const newArgs = [newEl, attrs]
+                    for (let i = 2, l = args.length; i < l; i++) {
+                        newArgs.push(args[i])
+                    }
+                    result = createElement.apply(null, newArgs)
                 }
-                const newArgs = [newEl, attrs]
-                for (let i = 2, l = args.length; i < l; i++) {
-                    newArgs.push(args[i])
-                }
-                return createElement.apply(null, newArgs)
         }
+
+        parentId = oldParentId
+        return result
     }
 
     return (lomCreateElement: any)

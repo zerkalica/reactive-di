@@ -24,7 +24,7 @@ export default class Injector {
     displayName: string
     instance: number
 
-    static parentContext: Injector | void = undefined
+    static parentContext: Injector
 
     _cache: ICache
     _state: IState | void
@@ -39,7 +39,8 @@ export default class Injector {
     ) {
         this._state = state
         this.instance = instance || 0
-        this.displayName = displayName || '$'
+        this.displayName = displayName || ''
+        if (Injector.parentContext === undefined) Injector.parentContext = this
         if (sheetProcessor) {
             theme.sheetManager = new SheetManager(sheetProcessor)
         }
@@ -194,7 +195,7 @@ export default class Injector {
             items,
             null,
             this._state,
-            this.displayName + '.' + displayName,
+            displayName,
             instance,
             Object.create(this._cache)
         )

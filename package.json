@@ -62,7 +62,7 @@
     "@babel/register": "^7.0.0-beta.32",
     "chokidar-cli": "^1.2.0",
     "flow-bin": "^0.59.0",
-    "lom_atom": "^3.0.6",
+    "lom_atom": "^3.0.8",
     "mobx": "^3.3.2",
     "mocha": "^4.0.1",
     "preact": "^8.2.6",
