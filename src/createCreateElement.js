@@ -5,7 +5,8 @@ import Injector from './Injector'
 
 export default function createCreateElement<IElement, State, CreateElement: Function>(
     atomize: IAtomize<IElement, State>,
-    createElement: CreateElement
+    createElement: CreateElement,
+    compositeId?: boolean
 ): CreateElement {
     function lomCreateElement() {
         const args = arguments
@@ -15,10 +16,10 @@ export default function createCreateElement<IElement, State, CreateElement: Func
         const isAtomic = typeof el === 'function' && el.constructor.render === undefined
         const id: string | void = attrs ? attrs._id || attrs.id : undefined
         const parentContext: Injector | void = Injector.parentContext
-        // if (attrs && !attrs.id && attrs._id && parentContext) {
-        //     attrs.id = parentContext.toString() + '.' + attrs._id
-        //     attrs.key = attrs.id
-        // }
+        if (compositeId === true && id !== undefined && parentContext !== undefined) {
+            attrs.id = `${parentContext.toString()}.${id}`
+            attrs.key = attrs.key || attrs.id
+        }
         if (isAtomic) {
             if (parentContext !== undefined) {
                 newEl = parentContext.alias(el, id)

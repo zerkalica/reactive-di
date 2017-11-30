@@ -18,7 +18,7 @@ Typesafe dependency injection container for react-like components.
 
 * [example source](https://github.com/zerkalica/rdi-examples), [demo](http://zerkalica.github.io/rdi-examples/)
 * [todomvc benchmark](http://mol.js.org/app/bench/#bench=https%3A%2F%2Fzerkalica.github.io%2Futb%2Fbenchmark%2F/sample=preact-lom_atom~preact-mobx~preact-raw~preact-reactive-di)
-* [fiddle](https://jsfiddle.net/zerkalica/jxo6hqf8/) example with loading and error handling demo.
+* [fiddle](https://jsfiddle.net/jxo6hqf8/4/) example with loading and error handling demo.
 
 ## TOC
 
@@ -384,8 +384,6 @@ In component model ``` throw new mem.Wait() ``` catched in HelloComponent wrappe
 
 ```js
 class HelloContext {
-    @force force: HelloContext
-
     @mem set name(next: string | Error) {}
     @mem get name(): string {
         // fetch some data and update name
@@ -463,7 +461,7 @@ Works like inheritance in classes, but you don't need to extract each component 
 
 ### Hierarchical dependency injection
 
-Each component instance has an own injector. Injector - is a cache map with instances, which types described in component context. Looks like angular [hierarchical dependency injection](https://angular.io/guide/hierarchical-dependency-injection), but no so complex.
+Each component instance has an own injector. Injector - is a type to instance map, which types described in component context.
 
 When Parent and Child components depends on on same SharedService - DI injects one instance to them. And this instance live while Parent component mounted to DOM.
 
@@ -576,7 +574,7 @@ function MyView(
 }
 ```
 
-Whith lom_atom, styles automatically mounts/unmounts together with component. Changing ``` vars.color ``` automatically rebuilds and remounts css.
+Styles automatically mounts/unmounts together with component. Changing ``` vars.color ``` automatically rebuilds and remounts css.
 
 With mobx, unmount feature does not works at current moment. But still no memory leaks, due to unique theme id.
 
@@ -604,7 +602,7 @@ function MyView(
 
 ### Multiple css instances
 
-By default one css block generated per component function. But you can generate unique css block per component instance too. Just use ``` theme.self ``` decorator:
+By default one css block generated per component. But you can generate unique css block per component instance too. Just use ``` theme.self ``` decorator:
 
 ```js
 import {mem} from 'lom_atom'
