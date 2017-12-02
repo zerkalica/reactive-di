@@ -29,6 +29,8 @@ export default class Injector {
     _cache: ICache
     _state: IState | void
 
+    id = ''
+    rendered = ''
     constructor(
         items?: IProvideItem[],
         sheetProcessor?: ?IProcessor,

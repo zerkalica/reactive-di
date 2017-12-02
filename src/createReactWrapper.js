@@ -38,13 +38,15 @@ export default function createReactWrapper<IElement>(
                 this._keys = Object.keys(props)
                 if (this._keys.length === 0) this._keys = (undefined: any)
                 if (props.__lom_ctx !== undefined) injector = props.__lom_ctx
+                if (props.id) name = props.id
             }
             this._render = cns.render
             this._injector = injector.copy(
-                name,
+                cns.displayName,
                 cns.instance,
                 this._render.aliases
             )
+            this._injector.id = name
             cns.instance++
         }
 
@@ -95,13 +97,14 @@ export default function createReactWrapper<IElement>(
             const render = this._render
 
             const prevContext = Injector.parentContext
-            Injector.parentContext = this._injector
+            const injector = Injector.parentContext = this._injector
             try {
-                data = this._injector.invokeWithProps(render, this.props, this._propsChanged)
+                data = injector.invokeWithProps(render, this.props, this._propsChanged)
             } catch (error) {
-                data = this._injector.invokeWithProps(render.onError || ErrorComponent, {error})
+                data = injector.invokeWithProps(render.onError || ErrorComponent, {error})
                 error[rdiRendered] = true
             }
+            injector.rendered = ''
             Injector.parentContext = prevContext
 
             if (!this._propsChanged) {
