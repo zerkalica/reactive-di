@@ -91,8 +91,8 @@ export default function createReactWrapper<IElement>(
 
         _el: ?(IElement | void) = undefined
 
-        @detached r(force: boolean): IElement {
-            let data: IElement
+        @detached r(force: boolean): ?IElement {
+            let data: ?IElement = null
 
             const render = this._render
 
@@ -104,6 +104,7 @@ export default function createReactWrapper<IElement>(
                 data = injector.invokeWithProps(render.onError || ErrorComponent, {error})
                 error[rdiRendered] = true
             }
+
             injector.rendered = ''
             Injector.parentContext = prevContext
 
