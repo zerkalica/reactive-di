@@ -89,13 +89,13 @@ ReactiveDI has no static dependencies and not a zero-setup library. Setup is usu
 
 ```js
 // @flow
-import {detached, mem, action} from 'lom_atom'
+import {detached, mem, AtomWait, action} from 'lom_atom'
 import {createReactWrapper, createCreateElement} from 'reactive-di'
 import {render, h, Component} from 'preact'
 
 function ErrorableView({error}: {error: Error}) {
     return <div>
-        {error instanceof mem.Wait
+        {error instanceof AtomWait
             ? <div>
                 Loading...
             </div>
@@ -164,7 +164,7 @@ import {render} from 'react-dom'
 
 function ErrorableView({error}: {error: Error}) {
     return <div>
-        {error instanceof mem.Wait
+        {error instanceof AtomWait
             ? <div>
                 Loading...
             </div>
@@ -292,7 +292,7 @@ Exception in ``` get name ``` intercepted by try/catch in HelloView wrapper and 
 // ...
 function ErrorableView({error}: {error: Error}) {
     return <div>
-        {error instanceof mem.Wait
+        {error instanceof AtomWait
             ? <div>
                 Loading...
             </div>
@@ -370,7 +370,7 @@ In ReactiveDI pending/complete status realized via exceptions. Special user defi
 ```js
 function ErrorableView({error}: {error: Error}) {
     return <div>
-        {error instanceof mem.Wait
+        {error instanceof AtomWait
             ? <div>
                 Loading...
             </div>
@@ -380,14 +380,14 @@ function ErrorableView({error}: {error: Error}) {
 }
 ```
 
-In component model ``` throw new mem.Wait() ``` catched in HelloComponent wrapper and default ErrorableView shows ``` Loading... ``` instead of HelloView.
+In component model ``` throw new AtomWait() ``` catched in HelloComponent wrapper and default ErrorableView shows ``` Loading... ``` instead of HelloView.
 
 ```js
 class HelloContext {
     @mem set name(next: string | Error) {}
     @mem get name(): string {
         // fetch some data and update name
-        throw new mem.Wait()
+        throw new AtomWait()
     }
 }
 ```
