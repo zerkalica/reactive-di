@@ -47,7 +47,7 @@ export type IReactComponent<IElement> = {
     forceUpdate(): void;
 }
 
-export type IFromError<IElement> = (props: {error: Error}, state?: any) => IElement
+export type IFromError<IElement> = (props: {error: Error, children: any}, state?: any) => IElement
 
 export interface IRenderFn<IElement, State> {
     (props: IPropsWithContext, state?: State): IElement;

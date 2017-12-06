@@ -82,6 +82,7 @@ export default function createReactWrapper<IElement>(
             this._el = undefined
             this._keys = undefined
             this.props = (undefined: any)
+            this._lastData = null
             if (this._render !== undefined) {
                 this.constructor.instance--
                 this._injector.destructor()
@@ -90,7 +91,7 @@ export default function createReactWrapper<IElement>(
         }
 
         _el: ?(IElement | void) = undefined
-
+        _lastData: ?IElement = null
         @detached r(force: boolean): ?IElement {
             let data: ?IElement = null
 
@@ -100,8 +101,9 @@ export default function createReactWrapper<IElement>(
             const injector = Injector.parentContext = this._injector
             try {
                 data = injector.invokeWithProps(render, this.props, this._propsChanged)
+                this._lastData = data
             } catch (error) {
-                data = injector.invokeWithProps(render.onError || ErrorComponent, {error})
+                data = injector.invokeWithProps(render.onError || ErrorComponent, {error, children: this._lastData})
                 error[rdiRendered] = true
             }
 
