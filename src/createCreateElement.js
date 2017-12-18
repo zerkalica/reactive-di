@@ -5,7 +5,8 @@ import Injector from './Injector'
 
 export default function createCreateElement<IElement, State, CreateElement: Function>(
     atomize: IAtomize<IElement, State>,
-    createElement: CreateElement
+    createElement: CreateElement,
+    modifyId?: boolean
 ): CreateElement {
     function lomCreateElement() {
         const args = arguments
@@ -38,8 +39,8 @@ export default function createCreateElement<IElement, State, CreateElement: Func
                         } else attrs.style = style
                     }
                 }
-                attrs.id = pid
-            } else if (pid !== '' && attrs.id !== undefined) {
+                if (modifyId) attrs.id = pid
+            } else if (modifyId && pid !== '' && attrs.id !== undefined) {
                 attrs.id = pid + '.' + attrs.id
             }
         }
