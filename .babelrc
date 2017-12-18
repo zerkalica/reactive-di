@@ -2,8 +2,8 @@
   "plugins": [
     "@babel/proposal-decorators",
     "@babel/transform-flow-strip-types",
+    "@babel/proposal-object-rest-spread",
     ["@babel/proposal-class-properties", {"loose": true}],
-
     ["@babel/transform-template-literals", {"loose": true}],
     "@babel/transform-literals",
     "@babel/transform-function-name",

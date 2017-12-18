@@ -5,8 +5,7 @@ import Injector from './Injector'
 
 export default function createCreateElement<IElement, State, CreateElement: Function>(
     atomize: IAtomize<IElement, State>,
-    createElement: CreateElement,
-    compositeId?: boolean
+    createElement: CreateElement
 ): CreateElement {
     function lomCreateElement() {
         const args = arguments
@@ -14,18 +13,35 @@ export default function createCreateElement<IElement, State, CreateElement: Func
         let el = args[0]
         let newEl
         const isAtomic = typeof el === 'function' && el.constructor.render === undefined
-        let id: string | void = attrs ? attrs._id || attrs.id : undefined
         const parentContext: Injector = Injector.parentContext
+        const props = parentContext.props
 
-        if (compositeId === true) {
-            if(!attrs) attrs = {}
-            if (!attrs.id) {
-                if (parentContext.rendered) throw new Error(`${parentContext.rendered} need id`)
-                attrs.id = parentContext.id
-                parentContext.rendered = parentContext.displayName + '.' + el
-            } else if (parentContext.id) attrs.id = parentContext.id + '.' + attrs.id
+        let id: string | void = undefined
 
-            if (!attrs.key) attrs.key = attrs.id
+        if (attrs) {
+            const pid = parentContext.id
+            id = attrs.rdi_id || attrs.id
+            if (attrs.rdi_theme === true) {
+                attrs.rdi_theme = undefined
+                if (props) {
+                    const cls = props.class
+                    if (cls !== undefined) {
+                        attrs.class = attrs.class !== undefined ? (attrs.class + ' ' + cls) : cls
+                    }
+                    const style = props.style
+                    if (style !== undefined) {
+                        const aStyle = attrs.style
+                        if (aStyle) {
+                            for (let key in style) {
+                                aStyle[key] = style[key]
+                            }
+                        } else attrs.style = style
+                    }
+                }
+                attrs.id = pid
+            } else if (pid !== '' && attrs.id !== undefined) {
+                attrs.id = pid + '.' + attrs.id
+            }
         }
 
         if (isAtomic) {

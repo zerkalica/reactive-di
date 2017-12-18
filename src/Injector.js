@@ -30,7 +30,8 @@ export default class Injector {
     _state: IState | void
 
     id = ''
-    rendered = ''
+    props: Object | void = undefined
+
     constructor(
         items?: IProvideItem[],
         sheetProcessor?: ?IProcessor,

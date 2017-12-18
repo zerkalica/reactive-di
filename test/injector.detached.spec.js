@@ -56,12 +56,13 @@ import createMobxDetached from '../src/createMobxDetached'
                     called++
                     return 1 + this.a.some
                 }
+                @action add() {
+                    this.a.some++
+                }
             }
             const b = new B()
             b.foo()
-            action(() => {
-                b.a.some++
-            })()
+            b.add()
             b.foo()
             assert(called === 2)
         })

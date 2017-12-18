@@ -47,6 +47,7 @@ export default function createReactWrapper<IElement>(
                 this._render.aliases
             )
             this._injector.id = name
+            this._injector.props = props
             cns.instance++
         }
 
@@ -62,6 +63,7 @@ export default function createReactWrapper<IElement>(
             if (this._keys === undefined) return false
             const oldProps = this.props
             const keys = this._keys
+            this._injector.props = props
             for (let i = 0, l = keys.length; i < l; i++) { // eslint-disable-line
                 const k = keys[i]
                 if (oldProps[k] !== props[k]) {
@@ -106,8 +108,6 @@ export default function createReactWrapper<IElement>(
                 data = injector.invokeWithProps(render.onError || ErrorComponent, {error, children: this._lastData})
                 error[rdiRendered] = true
             }
-
-            injector.rendered = ''
             Injector.parentContext = prevContext
 
             if (!this._propsChanged) {
