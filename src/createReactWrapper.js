@@ -3,7 +3,11 @@ import type {TypedPropertyDescriptor} from './interfaces'
 
 import Injector from './Injector'
 import type {IAtomize, IFromError, IRenderFn, IReactComponent, IProvideItem, IArg, IPropsWithContext} from './interfaces'
-import {rdiRendered} from './interfaces'
+
+function setFunctionName(fn: Function, name: string) {
+    Object.defineProperty(fn, 'name', {value: name, writable: false})
+    fn.displayName = name
+}
 
 export default function createReactWrapper<IElement>(
     BaseComponent: Class<*>,
@@ -55,9 +59,9 @@ export default function createReactWrapper<IElement>(
             return this._injector.toString()
         }
 
-        get displayName() {
-            return this.toString()
-        }
+        // get displayName() {
+        //     return this.toString()
+        // }
 
         shouldComponentUpdate(props: IPropsWithContext) {
             if (this._keys === undefined) return false
@@ -106,7 +110,6 @@ export default function createReactWrapper<IElement>(
                 this._lastData = data
             } catch (error) {
                 data = injector.invokeWithProps(render.onError || ErrorComponent, {error, children: this._lastData})
-                error[rdiRendered] = true
             }
             Injector.parentContext = prevContext
 
@@ -136,10 +139,9 @@ export default function createReactWrapper<IElement>(
         WrappedComponent.instance = 0
         WrappedComponent.render = render
         WrappedComponent.isFullEqual = render.isFullEqual || isFullEqual
-        WrappedComponent.displayName = render.displayName || render.name
         WrappedComponent.prototype = Object.create(AtomizedComponent.prototype)
         WrappedComponent.prototype.constructor = WrappedComponent
-
+        setFunctionName(WrappedComponent, render.displayName || render.name)
         return WrappedComponent
     }
 }

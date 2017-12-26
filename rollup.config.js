@@ -19,6 +19,7 @@ babelrc.plugins = babelrc.plugins.map(
 const uglifyOpts = {
     warnings: true,
     compress: {
+        reduce_vars: false,
         dead_code: true,
         unused: true,
         toplevel: true,
@@ -31,13 +32,12 @@ const uglifyOpts = {
 
 const commonConf = {
     input: 'src/index.js',
-    sourcemap: true,
     plugins: [
         resolve(),
         babel(babelrc)
     ].concat(process.env.UGLIFY === '1' ? [uglify(uglifyOpts, minify)] : []),
     output: [
-        {file: pkg.module, format: 'es'},
+        {sourcemap: true, file: pkg.module, format: 'es'},
     ],
     external: Object.keys(pkg.dependencies || {})
 }
@@ -50,11 +50,15 @@ const cjsConf = Object.assign({}, commonConf, {
 
 const umdConf = Object.assign({}, cjsConf, {
     output: [
-        {file: pkg['umd:main'], format: 'umd', name: pkg.name}
+        {
+            file: pkg['umd:main'],
+            format: 'umd',
+            name: pkg.name,
+            globals: {
+                lom_atom: 'lom_atom'
+            }
+        }
     ],
-    globals: {
-        lom_atom: 'lom_atom'
-    }
 })
 
 export default [

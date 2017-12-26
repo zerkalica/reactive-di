@@ -1,15 +1,16 @@
 // @flow
 
-import type {IArg, IProvideItem, IPropsWithContext, IDisposableSheet, IProcessor} from './interfaces'
+import type {IArg, IProvideItem, IPropsWithContext} from './interfaces'
 import {rdiInst, rdiProp} from './interfaces'
-import SheetManager from './SheetManager'
-import theme from './theme'
+import SheetManager from './theming/SheetManager'
+import type {IAdapter} from './theming/interfaces'
+import theme from './theming/theme'
 type IListener = Object
 
 type ICache = {[id: string]: any}
 
 let depId = 0
-const rdiId = Symbol('rdiId')
+const rdiId = Symbol('rdi_id')
 class Alias<T: Function> {
     dest: T
     constructor(dest: T) {
@@ -25,16 +26,20 @@ export default class Injector {
     instance: number
 
     static parentContext: Injector
+    static sheetManager: SheetManager<*>
 
     _cache: ICache
     _state: IState | void
 
     id = ''
-    props: Object | void = undefined
+    props: {
+        class?: string;
+        style?: Object;
+    } | void = undefined
 
-    constructor(
+    constructor<V>(
         items?: IProvideItem[],
-        sheetProcessor?: ?IProcessor,
+        sheetAdapter?: ?IAdapter<V>,
         state?: IState,
         displayName?: string,
         instance?: number,
@@ -44,8 +49,8 @@ export default class Injector {
         this.instance = instance || 0
         this.displayName = displayName || ''
         if (Injector.parentContext === undefined) Injector.parentContext = this
-        if (sheetProcessor) {
-            theme.sheetManager = new SheetManager(sheetProcessor)
+        if (sheetAdapter) {
+            theme.sheetManager = new SheetManager(sheetAdapter)
         }
 
         const map = this._cache = cache || (Object.create(null): Object)
@@ -75,6 +80,10 @@ export default class Injector {
             }
         }
     }
+
+    // getClassName(data: Object, debugName?: string): string {
+    //     return Injector.sheetManager.sheet(this.displayName, css, debugName)
+    // }
 
     toString() {
         return this.displayName + (this.instance ? ('[' + this.instance + ']') : '')

@@ -10,7 +10,15 @@ export default function createCreateElement<IElement, State, CreateElement: Func
 ): CreateElement {
     function lomCreateElement() {
         const args = arguments
-        let attrs = args[1]
+        let attrs: {
+            class?: string;
+            style?: Object;
+            id?: string;
+            key?: string;
+            rdi_id?: string;
+            rdi_theme?: boolean;
+            __lom_ctx?: Injector;
+        } = args[1]
         let el = args[0]
         let newEl
         const isAtomic = typeof el === 'function' && el.constructor.render === undefined
@@ -22,21 +30,31 @@ export default function createCreateElement<IElement, State, CreateElement: Func
         if (attrs) {
             const pid = parentContext.id
             id = attrs.rdi_id || attrs.id
+
+            let aClass = attrs.class
+
+            // if (typeof aClass === 'object') {
+            //     attrs.class = aClass = parentContext.getClassName(aClass, id)
+            // }
+
             if (attrs.rdi_theme === true) {
                 attrs.rdi_theme = undefined
                 if (props) {
-                    const cls = props.class
-                    if (cls !== undefined) {
-                        attrs.class = attrs.class !== undefined ? (attrs.class + ' ' + cls) : cls
+                    const pClass: string | void = props.class
+                    const pStyle: Object | void = props.style
+                    if (pClass !== undefined) {
+                        attrs.class = aClass === undefined ? pClass : `${aClass} ${pClass}`
                     }
-                    const style = props.style
-                    if (style !== undefined) {
-                        const aStyle = attrs.style
-                        if (aStyle) {
-                            for (let key in style) {
-                                aStyle[key] = style[key]
+
+                    if (pStyle !== undefined) {
+                        const aStyle: Object | void = attrs.style
+                        if (aStyle === undefined) {
+                            attrs.style = pStyle
+                        } else {
+                            for (let key in pStyle) {
+                                aStyle[key] = pStyle[key]
                             }
-                        } else attrs.style = style
+                        }
                     }
                 }
                 if (modifyId) attrs.id = pid

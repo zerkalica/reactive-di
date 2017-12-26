@@ -10,9 +10,8 @@ export type TypedPropertyDescriptor<T> = {
     set?: (value: T) => void;
 }
 
-export const rdiRendered = Symbol('rdiRendered')
-export const rdiInst = Symbol('rdiInst')
-export const rdiProp = Symbol('rdiProp')
+export const rdiInst = Symbol('rdi_inst')
+export const rdiProp = Symbol('rdi_prop')
 
 export type IArg = Function | {+[id: string]: Function}
 export type IProvideItem = Function | Object | [Function | string, Function | mixed]
@@ -20,25 +19,6 @@ export type IProvideItem = Function | Object | [Function | string, Function | mi
 export type IPropsWithContext = {
     [id: string]: any;
     __lom_ctx?: Object;
-}
-
-export interface ISheet<V: Object> {
-    attach(): any;
-    classes: {+[id: $Keys<V>]: string};
-}
-
-export type IProcessor = {
-    createStyleSheet<V: Object>(cssObj: V, options: any): ISheet<V>;
-    removeStyleSheet<V: Object>(sheet: ISheet<V>): void;
-}
-
-export type IDisposableSheet<V: Object> = {
-    [id: $Keys<V>]: string;
-    destructor?: () => void;
-}
-
-export interface ISheetManager {
-    sheet<V: Object>(key: string, css: V, memoized: boolean): IDisposableSheet<V>;
 }
 
 export type IReactComponent<IElement> = {

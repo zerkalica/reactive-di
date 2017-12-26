@@ -1,11 +1,12 @@
 // @flow
 
-import type {TypedPropertyDescriptor, ISheetManager, IDisposableSheet} from './interfaces'
-import {rdiInst} from './interfaces'
+import type {TypedPropertyDescriptor} from '../interfaces'
+import {rdiInst} from '../interfaces'
+import type {ISheetManager} from './interfaces'
 
 let lastThemeId = 0
 
-const fakeSheet: IDisposableSheet<any> = {}
+const fakeSheet = {}
 
 interface Injector {
     instance: number;
@@ -32,11 +33,11 @@ function themeProp<V: Object>(
     return {
         enumerable: descr.enumerable,
         configurable: descr.configurable,
-        get(): IDisposableSheet<V> {
+        get(): V {
             const sm: ISheetManager | void = theme.sheetManager
             const di: Injector = this[rdiInst]
             return sm === undefined
-                ? fakeSheet
+                ? (fakeSheet: any)
                 : sm.sheet(
                     di.displayName + (isInstance ? `[${di.instance}]` : ''),
                     value || this[`${name}#`](),
