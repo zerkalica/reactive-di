@@ -45,11 +45,7 @@ export default function createReactWrapper<IElement>(
                 if (props.id) name = props.id
             }
             this._render = cns.render
-            this._injector = injector.copy(
-                cns.displayName,
-                cns.instance,
-                this._render.aliases
-            )
+            this._injector = injector.copy(cns)
             this._injector.id = name
             this._injector.props = props
             cns.instance++
@@ -130,6 +126,8 @@ export default function createReactWrapper<IElement>(
         }
     }
 
+    const names: Map<string, number> = new Map()
+
     return function reactWrapper<State>(
         render: IRenderFn<IElement, State>
     ): Class<IReactComponent<IElement>> {
@@ -139,9 +137,16 @@ export default function createReactWrapper<IElement>(
         WrappedComponent.instance = 0
         WrappedComponent.render = render
         WrappedComponent.isFullEqual = render.isFullEqual || isFullEqual
+        WrappedComponent.isDynamic = false
+        WrappedComponent.aliases = render.aliases
         WrappedComponent.prototype = Object.create(AtomizedComponent.prototype)
         WrappedComponent.prototype.constructor = WrappedComponent
-        setFunctionName(WrappedComponent, render.displayName || render.name)
-        return WrappedComponent
+        let name = render.displayName || render.name
+        let id = names.get(name) || 0
+        names.set(name, id + 1)
+        if (id > 0) name = `${name}_${id}`
+
+        setFunctionName(WrappedComponent, name)
+        return (WrappedComponent: any)
     }
 }

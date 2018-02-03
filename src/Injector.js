@@ -2,9 +2,7 @@
 
 import type {IArg, IProvideItem, IPropsWithContext} from './interfaces'
 import {rdiInst, rdiProp} from './interfaces'
-import SheetManager from './theming/SheetManager'
-import type {IAdapter} from './theming/interfaces'
-import theme from './theming/theme'
+import type {ISheetManager, ISheet} from './theming/interfaces'
 type IListener = Object
 
 type ICache = {[id: string]: any}
@@ -21,13 +19,20 @@ class Alias<T: Function> {
 
 type IState = {[ns: string]: {[id: string]: any}}
 
+export interface IInjectorFlags {
+    displayName: string;
+    instance?: number;
+    isDynamic?: boolean;
+    aliases?: IProvideItem[];
+}
 export default class Injector {
     displayName: string
     instance: number
 
     static parentContext: Injector
-    static sheetManager: SheetManager<*>
+    static sheetManager: ISheetManager
 
+    _flags: IInjectorFlags | void
     _cache: ICache
     _state: IState | void
 
@@ -37,26 +42,28 @@ export default class Injector {
         style?: Object;
     } | void = undefined
 
-    constructor<V>(
-        items?: IProvideItem[],
-        sheetAdapter?: ?IAdapter<V>,
+    constructor(
+        aliases?: IProvideItem[],
+        sheetManager?: ?ISheetManager,
         state?: IState,
         displayName?: string,
         instance?: number,
-        cache?: ICache
+        cache?: ICache,
+        flags?: IInjectorFlags
     ) {
         this._state = state
         this.instance = instance || 0
         this.displayName = displayName || ''
         if (Injector.parentContext === undefined) Injector.parentContext = this
-        if (sheetAdapter) {
-            theme.sheetManager = new SheetManager(sheetAdapter)
+        if (sheetManager) {
+            Injector.sheetManager = sheetManager
         }
+        this._flags = flags
 
         const map = this._cache = cache || (Object.create(null): Object)
-        if (items !== undefined) {
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i]
+        if (aliases !== undefined) {
+            for (let i = 0; i < aliases.length; i++) {
+                const item = aliases[i]
                 if (item instanceof Array) {
                     const src: string | Function = item[0]
                     if (typeof src === 'string') {
@@ -81,9 +88,21 @@ export default class Injector {
         }
     }
 
-    // getClassName(data: Object, debugName?: string): string {
-    //     return Injector.sheetManager.sheet(this.displayName, css, debugName)
-    // }
+    _sheet: ISheet | void = undefined
+    getClassName<V: {_dynamic?: boolean}>(data: V, debugName?: string): string {
+        let sheet = this._sheet
+        const flags = this._flags
+        if (sheet === undefined) {
+            sheet = this._sheet = Injector.sheetManager.createSheet(
+                this.displayName + (flags && flags.isDynamic ? ('_' + this.instance) : '' )
+            )
+        }
+        if (data._dynamic !== undefined && flags) {
+            flags.isDynamic = true
+        }
+
+        return sheet.addRule(data, debugName)
+    }
 
     toString() {
         return this.displayName + (this.instance ? ('[' + this.instance + ']') : '')
@@ -119,6 +138,8 @@ export default class Injector {
     }
 
     destructor() {
+        if (this._sheet) this._sheet.destructor()
+        this._sheet = undefined
         this._cache = (undefined: any)
         this._listeners = undefined
     }
@@ -202,14 +223,15 @@ export default class Injector {
         }
     }
 
-    copy(displayName: string, instance?: number, items?: IProvideItem[]): Injector {
+    copy(flags: IInjectorFlags): Injector {
         return new Injector(
-            items,
+            flags.aliases,
             null,
             this._state,
-            displayName,
-            instance,
-            Object.create(this._cache)
+            flags.displayName,
+            flags.instance,
+            Object.create(this._cache),
+            flags
         )
     }
 

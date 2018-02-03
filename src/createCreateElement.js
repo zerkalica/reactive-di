@@ -11,7 +11,7 @@ export default function createCreateElement<IElement, State, CreateElement: Func
     function lomCreateElement() {
         const args = arguments
         let attrs: {
-            class?: string;
+            class?: string | Object;
             style?: Object;
             id?: string;
             key?: string;
@@ -33,19 +33,19 @@ export default function createCreateElement<IElement, State, CreateElement: Func
 
             let aClass = attrs.class
 
-            // if (typeof aClass === 'object') {
-            //     attrs.class = aClass = parentContext.getClassName(aClass, id)
-            // }
+            if (typeof aClass === 'object') {
+                attrs.class = aClass = parentContext.getClassName(aClass, id)
+            }
 
             if (attrs.rdi_theme === true) {
                 attrs.rdi_theme = undefined
                 if (props) {
                     const pClass: string | void = props.class
-                    const pStyle: Object | void = props.style
                     if (pClass !== undefined) {
                         attrs.class = aClass === undefined ? pClass : `${aClass} ${pClass}`
                     }
 
+                    const pStyle: Object | void = props.style
                     if (pStyle !== undefined) {
                         const aStyle: Object | void = attrs.style
                         if (aStyle === undefined) {

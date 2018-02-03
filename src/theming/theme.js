@@ -1,23 +1,24 @@
 // @flow
-
 import type {TypedPropertyDescriptor} from '../interfaces'
-import {rdiInst} from '../interfaces'
-import type {ISheetManager} from './interfaces'
+import {nameId} from './JssSheetManager'
 
-let lastThemeId = 0
-
-const fakeSheet = {}
-
-interface Injector {
-    instance: number;
-    displayName: string;
+function addDebugInfo<V: Object>(obj: V): V {
+    if (obj[nameId] === undefined) {
+        for (let k in obj) {
+            const prop = obj[k]
+            if (prop && typeof prop === 'object') {
+                prop[nameId] = k
+            }
+        }
+    }
+    return obj
 }
 
 function themeProp<V: Object>(
     proto: Object,
     name: string,
     descr: TypedPropertyDescriptor<V>,
-    isInstance?: boolean
+    isSelf?: boolean
 ) {
     const className: string = proto.constructor.displayName || proto.constructor.name
     const getSheet: (() => V) | void = descr.get
@@ -34,15 +35,8 @@ function themeProp<V: Object>(
         enumerable: descr.enumerable,
         configurable: descr.configurable,
         get(): V {
-            const sm: ISheetManager | void = theme.sheetManager
-            const di: Injector = this[rdiInst]
-            return sm === undefined
-                ? (fakeSheet: any)
-                : sm.sheet(
-                    di.displayName + (isInstance ? `[${di.instance}]` : ''),
-                    value || this[`${name}#`](),
-                    !!this[`${name}()`]
-                )
+            const obj: Object = value || this[`${name}#`]()
+            return (addDebugInfo(obj): any)
         }
     }
 }
@@ -71,4 +65,4 @@ export default function theme<V: Object>(
 }
 
 theme.self = themeSelf
-theme.sheetManager = (undefined: ISheetManager | void)
+theme.fn = addDebugInfo
