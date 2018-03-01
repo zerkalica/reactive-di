@@ -138,23 +138,24 @@ class JssSheet implements ISheet {
     }
 }
 
-export const scheduleNative: (handler: () => void) => mixed = typeof requestAnimationFrame === 'function'
-    ? (handler: () => void) => requestAnimationFrame(handler)
-    : (handler: () => void) => setTimeout(handler, 16)
+function defaultSchedule(cb: () => void) {
+    setTimeout(cb, 16)
+}
 
 export default class JssSheetManager implements ISheetManager {
     _jss: JSS
     _cache: Map<string, JssSheet> = new Map()
 
     _badClassSymbols = BAD_CLASS_SYMBOLS
-
-    constructor(jss: any) {
+    _schedule: (cb: () => void) => void
+    constructor(jss: any, schedule?: (cb: () => void) => void = defaultSchedule) {
         this._jss = jss
+        this._schedule = schedule
     }
 
-    static createGenerateClassName() {
-        return function generateClassName(rule: JSSSRule, sheet: JSSSheet): string {
-            return `${sheet.options.classNamePrefix}${rule.key ? `-${rule.key}` : ''}`
+    static createGenerateClassName(): (a: any, b: any) => string {
+        return function generateClassName(rule: {+key?: string}, sheet?: {options: {classNamePrefix: string}}): string {
+            return `${sheet ? sheet.options.classNamePrefix : ''}${rule.key ? `-${rule.key}` : ''}`
         }
     }
 
@@ -180,7 +181,7 @@ export default class JssSheetManager implements ISheetManager {
     update(sheet: JssSheet) {
         const {_scheduled: scheduled} = this
         if (scheduled.length === 0) {
-            scheduleNative(this._sync)
+            this._schedule(this._sync)
         }
         scheduled.push(sheet)
     }

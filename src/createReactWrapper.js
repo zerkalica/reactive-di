@@ -1,6 +1,6 @@
 // @flow
 import type {TypedPropertyDescriptor} from './interfaces'
-
+import type {IReaction} from './reactivity/interfaces'
 import Injector from './Injector'
 import type {IAtomize, IFromError, IRenderFn, IReactComponent, IProvideItem, IArg, IPropsWithContext} from './interfaces'
 
@@ -12,22 +12,21 @@ function setFunctionName(fn: Function, name: string) {
 export default function createReactWrapper<IElement>(
     BaseComponent: Class<*>,
     ErrorComponent: IFromError<IElement>,
-    detached: TypedPropertyDescriptor<(force?: boolean) => any>,
+    Reaction: Class<IReaction<any>>,
     rootInjector?: Injector = new Injector(),
     isFullEqual?: boolean = false
 ): IAtomize<IElement, *> {
     class AtomizedComponent<State> extends BaseComponent {
         props: IPropsWithContext
         static displayName: string
-        _propsChanged: boolean = true
         _injector: Injector
 
         static render: IRenderFn<IElement, State>
         static instance: number
         static isFullEqual = isFullEqual
 
-        _keys: string[] | void
         _render: IRenderFn<IElement, State>
+        _reaction: IReaction<any>
 
         constructor(
             props: IPropsWithContext,
@@ -35,12 +34,9 @@ export default function createReactWrapper<IElement>(
         ) {
             super(props, reactContext)
             let injector: Injector = rootInjector
-            this._keys = undefined
             const cns = this.constructor
             let name = cns.displayName
             if (props) {
-                this._keys = Object.keys(props)
-                if (this._keys.length === 0) this._keys = (undefined: any)
                 if (props.__lom_ctx !== undefined) injector = props.__lom_ctx
                 if (props.id) name = props.id
             }
@@ -49,6 +45,7 @@ export default function createReactWrapper<IElement>(
             this._injector.id = name
             this._injector.props = props
             cns.instance++
+            this._reaction = new Reaction(name, this)
         }
 
         toString() {
@@ -58,31 +55,35 @@ export default function createReactWrapper<IElement>(
         // get displayName() {
         //     return this.toString()
         // }
+        //
 
         shouldComponentUpdate(props: IPropsWithContext) {
-            if (this._keys === undefined) return false
             const oldProps = this.props
-            const keys = this._keys
             this._injector.props = props
-            for (let i = 0, l = keys.length; i < l; i++) { // eslint-disable-line
-                const k = keys[i]
+            let count = 0
+            for (let k in oldProps) {
+                count++
                 if (oldProps[k] !== props[k]) {
-                    this._propsChanged = true
+                    this._reaction.reset()
                     return true
                 }
             }
-            if (this.constructor.isFullEqual === true) {
-                this._keys = Object.keys(props)
-                this._propsChanged = keys.length !== this._keys.length
-                return this._propsChanged
+            for (let k in props) {
+                count--
+                if (oldProps[k] !== props[k]) {
+                    this._reaction.reset()
+                    return true
+                }
+            }
+            if (count !== 0) {
+                this._reaction.reset()
+                return true
             }
             return false
         }
 
         componentWillUnmount() {
-            this['r()'].destructor()
-            this._el = undefined
-            this._keys = undefined
+            this._reaction.destructor()
             this.props = (undefined: any)
             this._lastData = null
             if (this._render !== undefined) {
@@ -92,37 +93,25 @@ export default function createReactWrapper<IElement>(
             }
         }
 
-        _el: ?(IElement | void) = undefined
         _lastData: ?IElement = null
-        @detached r(force: boolean): ?IElement {
+
+        value(propsChanged: boolean): ?IElement {
             let data: ?IElement = null
-
-            const render = this._render
-
             const prevContext = Injector.parentContext
             const injector = Injector.parentContext = this._injector
             try {
-                data = injector.invokeWithProps(render, this.props, this._propsChanged)
+                data = injector.invokeWithProps(this._render, this.props, propsChanged)
                 this._lastData = data
             } catch (error) {
-                data = injector.invokeWithProps(render.onError || ErrorComponent, {error, children: this._lastData})
+                data = injector.invokeWithProps(this._render.onError || ErrorComponent, {error, children: this._lastData})
             }
             Injector.parentContext = prevContext
-
-            if (!this._propsChanged) {
-                this._el = data
-                this.forceUpdate()
-                this._el = undefined
-            }
-            this._propsChanged = false
 
             return data
         }
 
         render() {
-            return this._el === undefined
-                ? this.r(this._propsChanged)
-                : this._el
+            return this._reaction.value()
         }
     }
 

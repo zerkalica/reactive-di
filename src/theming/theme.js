@@ -17,8 +17,7 @@ function addDebugInfo<V: Object>(obj: V): V {
 function themeProp<V: Object>(
     proto: Object,
     name: string,
-    descr: TypedPropertyDescriptor<V>,
-    isSelf?: boolean
+    descr: TypedPropertyDescriptor<V>
 ) {
     const className: string = proto.constructor.displayName || proto.constructor.name
     const getSheet: (() => V) | void = descr.get
@@ -48,14 +47,6 @@ declare function theme<V: Object>(
     descr: TypedPropertyDescriptor<V>
 ): TypedPropertyDescriptor<*>
 
-function themeSelf<V: Object>(
-    proto: Object,
-    name: string,
-    descr: TypedPropertyDescriptor<V>
-) {
-    return themeProp(proto, name, descr, true)
-}
-
 export default function theme<V: Object>(
     proto: Object,
     name: string,
@@ -64,5 +55,4 @@ export default function theme<V: Object>(
     return themeProp(proto, name, descr)
 }
 
-theme.self = themeSelf
 theme.fn = addDebugInfo

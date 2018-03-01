@@ -3,16 +3,16 @@
 import assert from 'assert'
 import render from 'preact-render-to-string'
 import {h, Component} from 'preact'
-import {mem, detached as lomDetached, defaultContext, ConsoleLogger} from 'lom_atom'
+import {mem, ReactAtom, defaultContext, ConsoleLogger} from 'lom_atom'
 import {observable as mobxObservable, Reaction} from 'mobx'
 import createReactWrapper from '../src/createReactWrapper'
 import createCreateElement from '../src/createCreateElement'
-import createMobxDetached from '../src/createMobxDetached'
+import createMobxReaction from '../src/reactivity/createMobxReaction'
 
 ;[
-    ['mobx', createMobxDetached(Reaction), mobxObservable],
-    ['lom_atom', lomDetached, mem]
-].forEach(([lib, detached, observable]) => {
+    ['mobx', createMobxReaction(Reaction), mobxObservable],
+    ['lom_atom', ReactAtom, mem]
+].forEach(([lib, RdiAtom, observable]) => {
     describe('createReactWrapper.' + lib, () => {
         it('recursive autoresolve deps', () => {
             function ErrorView({error}: {error: Error}) {
@@ -23,7 +23,7 @@ import createMobxDetached from '../src/createMobxDetached'
                 createReactWrapper(
                     Component,
                     ErrorView,
-                    detached
+                    RdiAtom
                 ),
                 (h: React$CreateElement)
             )

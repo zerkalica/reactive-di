@@ -89,7 +89,7 @@ ReactiveDI has no static dependencies and not a zero-setup library. Setup is usu
 
 ```js
 // @flow
-import {detached, mem, AtomWait, action} from 'lom_atom'
+import {ReactAtom, mem, AtomWait, action} from 'lom_atom'
 import {createReactWrapper, createCreateElement} from 'reactive-di'
 import {render, h, Component} from 'preact'
 
@@ -114,7 +114,7 @@ const lomCreateElement = createCreateElement(
     createReactWrapper(
         Component,
         ErrorableView,
-        detached
+        ReactAtom
     ),
     (h: React$CreateElement)
 )
@@ -158,7 +158,7 @@ render(<HelloView name="John" />, document.body)
 ```js
 // @flow
 import {Reaction} from 'mobx'
-import {createReactWrapper, createCreateElement, createMobxDetached} from 'reactive-di'
+import {createReactWrapper, createCreateElement, createMobxReaction} from 'reactive-di'
 import {createElement, Component} from 'react'
 import {render} from 'react-dom'
 
@@ -183,7 +183,7 @@ const lomCreateElement = createCreateElement(
     createReactWrapper(
         Component,
         ErrorableView,
-        createMobxDetached(Reaction)
+        createMobxReaction(Reaction)
     ),
     createElement
 )
@@ -311,7 +311,7 @@ const lomCreateElement = createCreateElement(
     createReactWrapper(
         Component,
         ErrorableView,
-        detached
+        ReactAtom
     ),
     h
 )
@@ -506,15 +506,15 @@ Setup:
 
 ```js
 // @flow
-import {detached, mem} from 'lom_atom'
-import {createReactWrapper, createCreateElement, Injector} from 'reactive-di'
+import {ReactAtom, mem, defer} from 'lom_atom'
+import {JssSheetManager, createReactWrapper, createCreateElement, Injector} from 'reactive-di'
 
 import {h, Component} from 'preact'
 import {create as createJss} from 'jss'
 
 import ErrorableView from './ErrorableView'
 
-const jss = createJss()
+const jss = new JssSheetManager(createJss(), defer.add)
 /*
 jss must implements IProcessor interface:
 
@@ -531,7 +531,7 @@ const lomCreateElement = createCreateElement(
     createReactWrapper(
         Component,
         ErrorableView,
-        detached,
+        ReactAtom,
         new Injector([], jss)
     ),
     h
