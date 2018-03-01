@@ -18,7 +18,7 @@ Typesafe dependency injection container for react-like components.
 
 * [example source](https://github.com/zerkalica/rdi-examples), [demo](http://zerkalica.github.io/rdi-examples/)
 * [todomvc benchmark](http://mol.js.org/app/bench/#bench=https%3A%2F%2Fzerkalica.github.io%2Futb%2Fbenchmark%2F/sample=preact-lom_atom~preact-mobx~preact-raw~preact-reactive-di)
-* [fiddle](https://jsfiddle.net/zerkalica/jxo6hqf8/6/) example with loading and error handling demo.
+* [fiddle](https://jsfiddle.net/zerkalica/jxo6hqf8/9/) example with loading and error handling demo.
 
 ## TOC
 
