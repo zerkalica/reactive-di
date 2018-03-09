@@ -22,7 +22,7 @@ function provideMap(item: IProvideItem): string {
         : dn(item)
 }
 
-export default function cloneComponent<V: Function>(fn: V, aliases: IProvideItem[], name?: string): V {
+export default function cloneComponent<V: Function>(fn: V, contextAliases: IProvideItem[], name?: string): V {
     const cloned = function () {
         const a = arguments
         switch (a.length) {
@@ -36,8 +36,8 @@ export default function cloneComponent<V: Function>(fn: V, aliases: IProvideItem
     }
     cloned.deps = fn.deps
     cloned._r = fn._r
-    cloned.aliases = fn.aliases ? fn.aliases.concat(aliases) : aliases
-    cloned.displayName = name || `cloneComponent(${dn(fn)}, [${aliases.map(provideMap).join(', ')}])`
+    cloned.contextAliases = fn.contextAliases ? fn.contextAliases.concat(contextAliases) : contextAliases
+    cloned.displayName = name || `cloneComponent(${dn(fn)}, [${contextAliases.map(provideMap).join(', ')}])`
 
     return (cloned: any)
 }

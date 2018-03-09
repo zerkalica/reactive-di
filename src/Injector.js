@@ -23,7 +23,7 @@ export interface IInjectorFlags {
     displayName: string;
     instance?: number;
     isDynamic?: boolean;
-    aliases?: IProvideItem[];
+    contextAliases?: IProvideItem[];
 }
 export default class Injector {
     displayName: string
@@ -43,7 +43,7 @@ export default class Injector {
     } | void = undefined
 
     constructor(
-        aliases?: IProvideItem[],
+        contextAliases?: IProvideItem[],
         sheetManager?: ?ISheetManager,
         state?: IState,
         displayName?: string,
@@ -61,9 +61,9 @@ export default class Injector {
         this._flags = flags
 
         const map = this._cache = cache || (Object.create(null): Object)
-        if (aliases !== undefined) {
-            for (let i = 0; i < aliases.length; i++) {
-                const item = aliases[i]
+        if (contextAliases !== undefined) {
+            for (let i = 0; i < contextAliases.length; i++) {
+                const item = contextAliases[i]
                 if (item instanceof Array) {
                     const src: string | Function = item[0]
                     if (typeof src === 'string') {
@@ -196,36 +196,24 @@ export default class Injector {
         return newKey
     }
 
-    invokeWithProps<V>(key: Function, props?: Object, propsChanged?: boolean): V {
+    getContext<Context, Props>(key: Function, props?: Props): Context {
         const deps =  key.deps || (key._r === undefined ? undefined : key._r[1])
-        if (deps === undefined) {
-            return key(props)
-        }
+        if (deps === undefined) return (undefined: any)
         const a = this.resolve(deps)
         const listeners = this._listeners
-        if (propsChanged === true && listeners !== undefined) {
+        if (props !== undefined && listeners !== undefined) {
             for (let i = 0; i < listeners.length; i++) {
                 const listener = listeners[i]
                 listener[listener.constructor[rdiProp]] = props
             }
         }
         this._resolved = true
-        switch (a.length) {
-            case 0: return key(props)
-            case 1: return key(props, a[0])
-            case 2: return key(props, a[0], a[1])
-            case 3: return key(props, a[0], a[1], a[2])
-            case 4: return key(props, a[0], a[1], a[2], a[3])
-            case 5: return key(props, a[0], a[1], a[2], a[3], a[4])
-            case 6: return key(props, a[0], a[1], a[2], a[3], a[4], a[5])
-            case 7: return key(props, a[0], a[1], a[2], a[3], a[4], a[5], a[6])
-            default: return key(props, ...a)
-        }
+        return a[0]
     }
 
     copy(flags: IInjectorFlags): Injector {
         return new Injector(
-            flags.aliases,
+            flags.contextAliases,
             null,
             this._state,
             flags.displayName,

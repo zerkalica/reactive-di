@@ -65,7 +65,7 @@
     "@babel/register": "^7.0.0-beta.40",
     "chokidar-cli": "^1.2.0",
     "flow-bin": "^0.66.0",
-    "lom_atom": "^4.0.0",
+    "lom_atom": "^4.0.1",
     "mobx": "^3.5.1",
     "mocha": "^5.0.1",
     "preact": "^8.2.7",
@@ -77,5 +77,8 @@
     "rollup-plugin-uglify": "^3.0.0",
     "standard-version": "^4.3.0",
     "uglify-es": "^3.3.9"
+  },
+  "dependencies": {
+    "urc": "^1.0.3"
   }
 }
