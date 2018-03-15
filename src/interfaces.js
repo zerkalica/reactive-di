@@ -34,8 +34,7 @@ export interface IRenderFn<IElement, State> {
     __lom?: Class<IReactComponent<IElement>>;
     displayName?: string;
     deps?: IArg[];
-    onError?: IFromError<IElement>;
-    aliases?: IProvideItem[];
+    contextAliases?: IProvideItem[];
 }
 
 export type IAtomize<IElement, State> = (

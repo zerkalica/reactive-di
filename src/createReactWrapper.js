@@ -2,14 +2,15 @@
 import {createConnect, AtomizedComponent} from 'urc'
 import type {IReactHost, IReactAtom, IRenderError, ErrorProps} from 'urc'
 import Injector from './Injector'
+import type {IRenderFn} from './interfaces'
 
-export default function createReactWrapper<Element>(
+export default function createReactWrapper<IElement>(
     BaseComponent: Class<*>,
-    renderError: IRenderError<Element, *>,
-    ReactAtom: Class<IReactAtom<Element>>,
+    renderError: IRenderError<IElement, *>,
+    ReactAtom: Class<IReactAtom<IElement>>,
     rootInjector?: Injector = new Injector(),
 ) {
-    class MixinComponent<Props: Object, State, Context> extends AtomizedComponent<Props, State, Context, Element> {
+    class MixinComponent<Props: Object, State, Context> extends AtomizedComponent<Props, State, Context, IElement> {
         _injector: Injector
         static instance: number
         props: Props
@@ -50,10 +51,10 @@ export default function createReactWrapper<Element>(
         }
     }
 
-    return createConnect({
+    return ((createConnect({
         ReactAtom,
         renderError,
         BaseComponent,
         MixinComponent
-    })
+    }): any): IRenderFn<*, *>)
 }

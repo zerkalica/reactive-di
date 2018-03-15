@@ -5,25 +5,25 @@ import render from 'preact-render-to-string'
 import {h, Component} from 'preact'
 import {mem, ReactAtom, defaultContext, ConsoleLogger} from 'lom_atom'
 import {observable as mobxObservable, Reaction} from 'mobx'
+import createMobxAtom from 'urc/dist/createMobxAtom'
+
 import createReactWrapper from '../src/createReactWrapper'
 import createCreateElement from '../src/createCreateElement'
-import createMobxReaction from '../src/reactivity/createMobxReaction'
 
 ;[
-    ['mobx', createMobxReaction(Reaction), mobxObservable],
+    ['mobx', createMobxAtom(Reaction), mobxObservable],
     ['lom_atom', ReactAtom, mem]
-].forEach(([lib, RdiAtom, observable]) => {
+].forEach(([lib, ReactAtom, observable]) => {
     describe('createReactWrapper.' + lib, () => {
         it('recursive autoresolve deps', () => {
             function ErrorView({error}: {error: Error}) {
                 return lom_h('div', null, error.message)
             }
-
             const lom_h = createCreateElement(
                 createReactWrapper(
                     Component,
                     ErrorView,
-                    RdiAtom
+                    ReactAtom
                 ),
                 (h: React$CreateElement)
             )
