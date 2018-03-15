@@ -1,5 +1,5 @@
 // @flow
-import {createConnect, AtomizedComponent} from 'urc'
+import {createConnect, CatchableComponent} from 'urc'
 import type {IReactHost, IReactAtom, IRenderError, ErrorProps} from 'urc'
 import Injector from './Injector'
 import type {IRenderFn} from './interfaces'
@@ -10,7 +10,21 @@ export default function createReactWrapper<IElement>(
     ReactAtom: Class<IReactAtom<IElement>>,
     rootInjector?: Injector = new Injector(),
 ) {
-    class MixinComponent<Props: Object, State, Context> extends AtomizedComponent<Props, State, Context, IElement> {
+    const names: Map<string, number> = new Map()
+    function normalizeClass(cls: {displayName: string}) {
+        let prefix = names.get(cls.displayName)
+        if (prefix !== undefined) {
+            prefix++
+            names.set(cls.displayName, prefix)
+            cls.displayName = cls.displayName + prefix
+        } else {
+            names.set(cls.displayName, 0)
+        }
+
+        return cls
+    }
+
+    class MixinComponent<Props: Object, State, Context> extends CatchableComponent<Props, State, Context, IElement> {
         _injector: Injector
         static instance: number
         props: Props
@@ -55,6 +69,7 @@ export default function createReactWrapper<IElement>(
         ReactAtom,
         renderError,
         BaseComponent,
-        MixinComponent
+        MixinComponent,
+        normalizeClass
     }): any): IRenderFn<*, *>)
 }

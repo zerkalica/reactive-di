@@ -55,7 +55,8 @@ const umdConf = Object.assign({}, cjsConf, {
             format: 'umd',
             name: pkg.name,
             globals: {
-                lom_atom: 'lom_atom'
+                lom_atom: 'lom_atom',
+                urc: 'urc'
             }
         }
     ],
