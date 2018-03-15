@@ -11,7 +11,7 @@ export default function createReactWrapper<IElement>(
     rootInjector?: Injector = new Injector(),
 ) {
     const names: Map<string, number> = new Map()
-    function normalizeClass(cls: {displayName: string}) {
+    function normalizeClass<A: {displayName: string}>(cls: A): A {
         let prefix = names.get(cls.displayName)
         if (prefix !== undefined) {
             prefix++
