@@ -89,13 +89,13 @@ ReactiveDI has no static dependencies and not a zero-setup library. Setup is usu
 
 ```js
 // @flow
-import {ReactAtom, mem, AtomWait, action} from 'lom_atom'
+import {ReactAtom, mem, action} from 'lom_atom'
 import {createReactWrapper, createCreateElement} from 'reactive-di'
 import {render, h, Component} from 'preact'
 
 function ErrorableView({error}: {error: Error}) {
     return <div>
-        {error instanceof AtomWait
+        {!(error instanceof Error)
             ? <div>
                 Loading...
             </div>
@@ -164,7 +164,7 @@ import {render} from 'react-dom'
 
 function ErrorableView({error}: {error: Error}) {
     return <div>
-        {error instanceof AtomWait
+        {!(error instanceof Error)
             ? <div>
                 Loading...
             </div>
@@ -292,7 +292,7 @@ Exception in ``` get name ``` intercepted by try/catch in HelloView wrapper and 
 // ...
 function ErrorableView({error}: {error: Error}) {
     return <div>
-        {error instanceof AtomWait
+        {!(error instanceof Error)
             ? <div>
                 Loading...
             </div>
@@ -365,12 +365,12 @@ function HelloView(
 
 ### Loading status handling
 
-In ReactiveDI pending/complete status realized via exceptions. Special user defined "Wait" exception can be handled in ErrorableView.
+In ReactiveDI pending/complete status realized via Promise exception.
 
 ```js
-function ErrorableView({error}: {error: Error}) {
+function ErrorableView({error}: {error: Error | Promise<*>}) {
     return <div>
-        {error instanceof AtomWait
+        {!(error instanceof Error)
             ? <div>
                 Loading...
             </div>
@@ -380,7 +380,7 @@ function ErrorableView({error}: {error: Error}) {
 }
 ```
 
-In component model ``` throw new AtomWait() ``` catched in HelloComponent wrapper and default ErrorableView shows ``` Loading... ``` instead of HelloView.
+In component model ``` throw new Promise() ``` catched in HelloComponent wrapper and default ErrorableView shows ``` Loading... ``` instead of HelloView.
 
 ```js
 class HelloContext {
